@@ -1,0 +1,976 @@
+<title>Daily Brief</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: phone app. Large-title header, sticky tabs across the top (For you, Local, Headlines, Politics, Finance,
+   Tech, AI, plus the reader's own topics). Stories open in a full-screen reader; settings is a full-screen sheet.
+   Queensland maroon is the single accent. */
+:root {
+  --bg: #f4f3f1;
+  --surface: #ffffff;
+  --ink: #17161a;
+  --muted: #6a6670;
+  --faint: #a19da6;
+  --line: #e4e1e3;
+  --accent: #7a1d33;
+  --accent-ink: #ffffff;
+  --accent-soft: #f1e3e7;
+  --ok: #2f9a5b;
+  --shade: rgba(23, 22, 26, 0.06);
+  --display: "Newsreader", Georgia, "Times New Roman", serif;
+  --ui: "Public Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --r-lg: 18px;
+  --r-md: 12px;
+  --gut-l: max(16px, env(safe-area-inset-left, 0px));
+  --gut-r: max(16px, env(safe-area-inset-right, 0px));
+  --read-size: 1.12rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f0e11; --surface: #1a191d; --ink: #efecf1; --muted: #a8a4ae; --faint: #6c6872; --line: #2a282e;
+    --accent: #ec8fa3; --accent-ink: #2a0b13; --accent-soft: #34191f; --ok: #4cc27d; --shade: rgba(0, 0, 0, 0.35); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f0e11; --surface: #1a191d; --ink: #efecf1; --muted: #a8a4ae; --faint: #6c6872; --line: #2a282e;
+  --accent: #ec8fa3; --accent-ink: #2a0b13; --accent-soft: #34191f; --ok: #4cc27d; --shade: rgba(0, 0, 0, 0.35); color-scheme: dark;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { background: var(--bg); color: var(--ink); font-family: var(--ui); font-size: 15px; line-height: 1.45; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 20; background: var(--bg); }
+body.locked { overflow: hidden; }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: 0; padding: 0; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 8px; }
+
+.wrap { max-width: 680px; margin: 0 auto; padding-left: var(--gut-l); padding-right: var(--gut-r); }
+main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
+
+/* ---------- Header ---------- */
+.head { padding-block: 18px 4px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.head > div:first-child { min-width: 0; }
+.eyebrow { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--accent); }
+.title { font-family: var(--display); font-weight: 700; font-size: 1.85rem; line-height: 1.05; letter-spacing: -0.015em; margin: 4px 0 0; text-wrap: balance; }
+.stamp { margin-top: 6px; font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 6px; }
+.live { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); flex: none; }
+.live.stale { background: var(--faint); }
+.live.busy { background: var(--accent); animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: 0.25; } }
+.head-actions { display: flex; gap: 8px; flex: none; }
+.icon-btn {
+  position: relative; width: 40px; height: 40px; border-radius: 50%; flex: none; margin-top: 2px;
+  display: grid; place-items: center; background: var(--surface); box-shadow: 0 0 0 1px var(--line), 0 2px 6px var(--shade);
+  transition: transform 0.15s ease;
+}
+.icon-btn:active { transform: scale(0.92); }
+.icon-btn svg { width: 19px; height: 19px; }
+.icon-btn:disabled { cursor: default; }
+.icon-btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); box-shadow: none; }
+.icon-btn[aria-pressed="true"] svg path { fill: currentColor; }
+.icon-btn.spin svg { animation: spin 0.9s linear infinite; color: var(--accent); }
+@keyframes spin { to { transform: rotate(360deg); } }
+.badge { position: absolute; top: -3px; right: -3px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-size: 0.66rem; font-weight: 700; display: grid; place-items: center; font-variant-numeric: tabular-nums; box-shadow: 0 0 0 2px var(--bg); }
+.icon-btn[aria-pressed="true"] .badge { background: var(--surface); color: var(--accent); }
+
+/* ---------- Tabs ---------- */
+.tabs-bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); margin-top: 8px; border-bottom: 1px solid var(--line); }
+.tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; margin-inline: -6px; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { flex: none; position: relative; padding: 12px 10px 13px; font-size: 0.95rem; font-weight: 600; white-space: nowrap; color: var(--muted); }
+.tab::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: -1px; height: 3px; border-radius: 3px 3px 0 0; background: transparent; }
+.tab[aria-selected="true"] { color: var(--ink); }
+.tab[aria-selected="true"]::after { background: var(--accent); }
+.tab.topic { font-style: italic; font-family: var(--display); font-size: 1.02rem; }
+
+/* ---------- Shared story bits ---------- */
+.meta { display: flex; align-items: center; gap: 7px; font-size: 0.72rem; color: var(--muted); min-width: 0; overflow: hidden; }
+.src { font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sec { font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink); white-space: nowrap; }
+.meta time { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.sep { width: 3px; height: 3px; border-radius: 50%; background: var(--faint); flex: none; }
+.full { white-space: nowrap; font-weight: 600; color: var(--ok); }
+.h { font-family: var(--display); font-weight: 600; letter-spacing: -0.005em; text-wrap: pretty; margin: 0; }
+.dek { color: var(--muted); margin: 0; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+.read .h, .read .dek { color: var(--faint); }
+.read .src, .read .sec { color: var(--faint); }
+.read img { opacity: 0.55; }
+
+.pic { position: relative; overflow: hidden; background: var(--accent-soft); }
+.pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; max-width: 100%; }
+.mono { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--display); font-weight: 700; color: var(--accent); letter-spacing: -0.01em; }
+
+.story { position: relative; }
+.story .link::after { content: ""; position: absolute; inset: 0; z-index: 1; }
+.save { position: relative; z-index: 2; width: 34px; height: 34px; margin: -8px -8px -8px 0; flex: none; display: grid; place-items: center; color: var(--faint); border-radius: 50%; }
+.save svg { width: 17px; height: 17px; }
+.save[aria-pressed="true"] { color: var(--accent); }
+.save[aria-pressed="true"] svg path { fill: currentColor; }
+
+.lead { display: block; margin-top: 14px; }
+.lead .pic { aspect-ratio: 16 / 9; border-radius: var(--r-lg); max-width: 100%; box-shadow: 0 6px 22px var(--shade); }
+.lead .mono { font-size: 3rem; }
+.lead .body { padding: 14px 2px 4px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 7px; }
+.lead .h { font-size: 1.62rem; line-height: 1.14; }
+.lead .dek { font-size: 0.95rem; -webkit-line-clamp: 3; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.tag { display: inline-block; padding: 4px 9px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+
+.feature { display: block; padding-block: 18px; border-bottom: 1px solid var(--line); }
+.feature .pic { aspect-ratio: 16 / 9; border-radius: var(--r-md); max-width: 100%; }
+.feature .mono { font-size: 2.4rem; }
+.feature .body { padding-top: 12px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
+.feature .h { font-size: 1.28rem; line-height: 1.2; }
+.feature .dek { font-size: 0.9rem; -webkit-line-clamp: 2; }
+
+.list-tools { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 14px; font-size: 0.82rem; color: var(--muted); }
+.switch { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; color: var(--ink); }
+.track { width: 40px; height: 24px; border-radius: 999px; background: var(--line); position: relative; transition: background 0.2s ease; flex: none; }
+.track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--surface); box-shadow: 0 1px 3px rgba(0,0,0,0.25); transition: transform 0.2s ease; }
+[aria-checked="true"] > .track { background: var(--accent); }
+[aria-checked="true"] > .track::after { transform: translateX(16px); }
+
+.rows { margin-top: 6px; }
+.item { display: flex; gap: 14px; padding-block: 14px; border-bottom: 1px solid var(--line); align-items: flex-start; }
+.item .body { flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 5px; }
+.item .h { font-size: 1.08rem; line-height: 1.25; }
+.item .dek { font-size: 0.86rem; -webkit-line-clamp: 2; }
+.item .pic { flex: none; width: 96px; aspect-ratio: 3 / 2; border-radius: 10px; max-width: 100%; }
+.item .mono { font-size: 1.2rem; }
+
+.banner { margin-top: 14px; padding: 14px 14px 14px 16px; border-radius: var(--r-md); background: var(--accent-soft); display: flex; align-items: center; gap: 12px; }
+.banner p { margin: 0; flex: 1; font-size: 0.88rem; }
+.banner strong { display: block; font-family: var(--display); font-size: 1.08rem; }
+.pill-btn { flex: none; padding: 9px 14px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: 0.84rem; }
+.x-btn { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); }
+.x-btn svg { width: 16px; height: 16px; }
+
+/* ---------- States ---------- */
+.empty { text-align: center; padding: 56px 20px; color: var(--muted); }
+.glyph { width: 56px; height: 56px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; margin: 0 auto 14px; }
+.glyph svg { width: 24px; height: 24px; }
+.empty h2 { font-family: var(--display); font-size: 1.35rem; color: var(--ink); margin: 0 0 6px; }
+.empty p { margin: 0 auto 14px; max-width: 32ch; }
+.sk { background: linear-gradient(90deg, var(--line), var(--surface), var(--line)); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; border-radius: 8px; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+.sk-hero { aspect-ratio: 16 / 9; border-radius: var(--r-lg); margin-top: 14px; max-width: 100%; }
+.sk-line { height: 18px; margin-top: 14px; width: 88%; }
+.sk-line.short { width: 55%; height: 14px; }
+.foot { margin-top: 34px; font-size: 0.76rem; line-height: 1.55; color: var(--faint); text-align: center; text-wrap: balance; }
+
+/* ---------- Full-screen sheets (reader, settings) ---------- */
+.sheet {
+  position: fixed; inset: 0; z-index: 40; background: var(--bg); overflow-y: auto; overscroll-behavior: contain;
+  transform: translateX(100%); transition: transform 0.28s cubic-bezier(.2,.8,.2,1); visibility: hidden;
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 40px);
+}
+.sheet.up { transform: translateY(100%); }
+.sheet.open { transform: none; visibility: visible; }
+.bar {
+  position: sticky; top: 0; z-index: 2; background: var(--bg); border-bottom: 1px solid transparent; transition: border-color 0.2s ease;
+}
+.sheet.scrolled .bar { border-bottom-color: var(--line); }
+.bar .wrap { height: 54px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.back { display: inline-flex; align-items: center; gap: 2px; font-weight: 600; color: var(--accent); padding: 8px 8px 8px 0; font-size: 0.95rem; }
+.back svg { width: 22px; height: 22px; }
+.bar-title { font-weight: 700; font-size: 0.95rem; flex: 1; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0; transition: opacity 0.2s ease; }
+.sheet.scrolled .bar-title { opacity: 1; }
+.bar-actions { display: flex; gap: 4px; }
+.bar-btn { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: var(--ink); }
+.bar-btn svg { width: 20px; height: 20px; }
+.bar-btn[aria-pressed="true"] { color: var(--accent); }
+.bar-btn[aria-pressed="true"] svg path { fill: currentColor; }
+.done { font-weight: 700; color: var(--accent); padding: 8px 0 8px 8px; font-size: 0.95rem; }
+
+/* Reader */
+.article { max-width: 640px; margin: 0 auto; padding-left: var(--gut-l); padding-right: var(--gut-r); }
+.article .kicker { display: flex; gap: 8px; align-items: center; margin-top: 10px; font-size: 0.74rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.article .kicker .s { color: var(--accent); }
+.article h1 { font-family: var(--display); font-weight: 700; font-size: 1.95rem; line-height: 1.12; letter-spacing: -0.015em; margin: 10px 0 12px; text-wrap: balance; }
+.byline { font-size: 0.84rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.byline b { color: var(--ink); font-weight: 600; }
+.hero { margin-top: 16px; aspect-ratio: 16 / 9; border-radius: var(--r-md); max-width: 100%; }
+.hero .mono { font-size: 3rem; }
+.prose { margin-top: 20px; font-family: var(--display); font-size: var(--read-size); line-height: 1.62; }
+.prose p { margin: 0 0 1.05em; }
+.prose h3 { font-family: var(--ui); font-size: 0.98em; font-weight: 700; margin: 1.5em 0 0.6em; }
+.prose .lede { font-size: 1.12em; line-height: 1.5; color: var(--ink); }
+.prose li { margin: 0 0 0.5em; }
+.prose ul { padding-left: 1.2em; margin: 0 0 1.05em; }
+.partial {
+  margin: 8px 0 22px; padding: 18px; border-radius: var(--r-md); background: var(--surface); box-shadow: 0 0 0 1px var(--line);
+  font-family: var(--ui); font-size: 0.9rem; color: var(--muted);
+}
+.partial strong { display: block; color: var(--ink); font-size: 1rem; margin-bottom: 4px; }
+.cta {
+  display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 14px;
+  padding: 15px 18px; border-radius: 14px; background: var(--accent); color: var(--accent-ink); font-family: var(--ui); font-weight: 700; font-size: 0.98rem;
+}
+.cta svg { width: 17px; height: 17px; }
+.cta.ghost { background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--line); font-weight: 600; }
+.licence { margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--line); font-family: var(--ui); font-size: 0.8rem; color: var(--muted); }
+.licence a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.next { margin-top: 30px; padding-top: 16px; border-top: 2px solid var(--ink); }
+.next .label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.next .item { border-bottom: 0; }
+.r-sk { margin-top: 22px; }
+.r-sk .sk { height: 16px; margin-top: 12px; }
+
+/* Settings */
+.settings { max-width: 640px; margin: 0 auto; padding-left: var(--gut-l); padding-right: var(--gut-r); }
+.settings h1 { font-family: var(--display); font-weight: 700; font-size: 1.85rem; margin: 6px 0 4px; }
+.group { margin-top: 24px; }
+.group > h2 { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px 4px; }
+.group > .hint { font-size: 0.8rem; color: var(--muted); margin: 8px 4px 0; }
+.card { background: var(--surface); border-radius: var(--r-md); box-shadow: 0 0 0 1px var(--line); overflow: hidden; }
+.field { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 8px 14px; border-bottom: 1px solid var(--line); width: 100%; text-align: left; }
+.field:last-child { border-bottom: 0; }
+.field label, .field .lbl { font-weight: 500; flex: none; }
+.field input[type="text"], .field select {
+  flex: 1; min-width: 0; text-align: right; border: 0; background: transparent; padding: 8px 0; color: var(--ink); font-size: 1rem; outline: none;
+}
+.field select { appearance: none; -webkit-appearance: none; cursor: pointer; color: var(--accent); font-weight: 600; text-align-last: right; }
+.field input::placeholder { color: var(--faint); }
+.field .sub { display: block; font-size: 0.78rem; color: var(--muted); font-weight: 400; }
+.seg { display: inline-flex; background: var(--bg); border-radius: 10px; padding: 3px; gap: 2px; box-shadow: inset 0 0 0 1px var(--line); }
+.seg button { padding: 6px 11px; border-radius: 8px; font-size: 0.84rem; font-weight: 600; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px var(--shade), 0 0 0 1px var(--line); }
+.tokens { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.tokens:empty { display: none; }
+.token { display: inline-flex; align-items: center; gap: 4px; padding: 6px 6px 6px 12px; border-radius: 999px; background: var(--accent-soft); font-size: 0.86rem; font-weight: 600; }
+.token button { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; color: var(--accent); }
+.token button svg { width: 13px; height: 13px; }
+.add { display: flex; gap: 8px; padding: 8px 8px 8px 14px; align-items: center; }
+.add input { flex: 1; min-width: 0; border: 0; background: transparent; padding: 10px 0; font-size: 1rem; outline: none; }
+.add button { padding: 8px 14px; border-radius: 999px; background: var(--ink); color: var(--bg); font-weight: 700; font-size: 0.84rem; }
+.danger { color: #b3261e; font-weight: 600; }
+:root[data-theme="dark"] .danger { color: #ff8a80; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .danger { color: #ff8a80; } }
+.about { margin-top: 26px; font-size: 0.8rem; line-height: 1.6; color: var(--muted); text-align: center; text-wrap: balance; }
+
+/* ---------- Toast ---------- */
+.toast {
+  position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); z-index: 60;
+  transform: translate(-50%, 12px); opacity: 0; pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease;
+  width: max-content; max-width: min(92vw, 420px); padding: 11px 16px; border-radius: 14px;
+  background: var(--ink); color: var(--bg); font-size: 0.85rem; font-weight: 500; box-shadow: 0 8px 24px rgba(0,0,0,0.22);
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+@media (min-width: 640px) {
+  .title { font-size: 2.3rem; }
+  .lead .h { font-size: 1.9rem; }
+  .article h1 { font-size: 2.4rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+
+<main id="home">
+  <div class="wrap">
+    <header class="head">
+      <div>
+        <div class="eyebrow" id="eyebrow">Today</div>
+        <h1 class="title" id="title">Daily Brief</h1>
+        <div class="stamp"><span class="live stale" id="live"></span><span id="stamp">Loading the latest stories</span></div>
+      </div>
+      <div class="head-actions">
+        <button class="icon-btn" id="savedBtn" type="button" aria-pressed="false" aria-label="Saved stories" title="Saved stories">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11a1 1 0 0 1 1 1V20l-6.5-4-6.5 4V4.5a1 1 0 0 1 1-1z"/></svg>
+          <span class="badge" id="savedBadge" hidden></span>
+        </button>
+        <button class="icon-btn" id="refresh" type="button" aria-label="Check for new stories" title="Check for new stories" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg>
+        </button>
+        <button class="icon-btn" id="settingsBtn" type="button" aria-label="Settings" title="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg>
+        </button>
+      </div>
+    </header>
+  </div>
+  <div class="tabs-bar"><div class="wrap"><nav class="tabs" id="tabs" role="tablist" aria-label="Filter stories"></nav></div></div>
+
+  <div id="view">
+    <div class="wrap" aria-hidden="true">
+      <div class="sk sk-hero"></div>
+      <div class="sk sk-line"></div>
+      <div class="sk sk-line short"></div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <p class="foot">Free, full-article sources only: ABC, Guardian Australia, SBS, The Conversation, BBC, Ars Technica, TechCrunch and iTnews. No paywalls, no sport.</p>
+  </div>
+</main>
+
+<section class="sheet" id="reader" role="dialog" aria-modal="true" aria-label="Story" hidden>
+  <div class="bar"><div class="wrap">
+    <button class="back" type="button" data-close="reader"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg>Back</button>
+    <div class="bar-title" id="rBarTitle"></div>
+    <div class="bar-actions">
+      <button class="bar-btn" type="button" id="rShare" aria-label="Share story" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 12v6.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V12"/></svg></button>
+      <button class="bar-btn" type="button" id="rSave" aria-pressed="false" aria-label="Save for later"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11a1 1 0 0 1 1 1V20l-6.5-4-6.5 4V4.5a1 1 0 0 1 1-1z"/></svg></button>
+    </div>
+  </div></div>
+  <article class="article" id="rBody"></article>
+</section>
+
+<section class="sheet up" id="settings" role="dialog" aria-modal="true" aria-label="Settings" hidden>
+  <div class="bar"><div class="wrap">
+    <span></span>
+    <div class="bar-title">Settings</div>
+    <button class="done" type="button" data-close="settings">Done</button>
+  </div></div>
+  <div class="settings" id="sBody"></div>
+</section>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  // ======================================================================
+  // Config
+  // ======================================================================
+  const DEFAULT_NAME = "";            // set per build (the private copy greets its owner)
+  const SECTIONS = [
+    { id: "local", label: "Local", tag: "Local" },
+    { id: "headlines", label: "Headlines", tag: "Headlines" },
+    { id: "politics", label: "Politics", tag: "Politics" },
+    { id: "finance", label: "Finance", tag: "Finance" },
+    { id: "tech", label: "Tech", tag: "Tech" },
+    { id: "ai", label: "AI", tag: "AI" },
+  ];
+  const PUBLISHERS = [
+    { id: "ABC", label: "ABC News" }, { id: "Guardian", label: "The Guardian" }, { id: "SBS", label: "SBS News" },
+    { id: "BBC", label: "BBC" }, { id: "The Conversation", label: "The Conversation" }, { id: "Ars", label: "Ars Technica" },
+    { id: "TechCrunch", label: "TechCrunch" }, { id: "iTnews", label: "iTnews" },
+  ];
+  const REGION_FALLBACK = [{ id: "qld", label: "Queensland" }];
+  const FOR_YOU_PER_SECTION = 7;
+  const FEATURE_EVERY = 6;
+  const MONO = { "ABC": "ABC", "SBS": "SBS", "BBC": "BBC", "Guardian": "G", "Ars": "Ars", "TechCrunch": "TC", "iTnews": "iT", "The Conversation": "C" };
+  const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || "Australia/Brisbane";
+  const SIZES = { s: "1rem", m: "1.12rem", l: "1.24rem", xl: "1.38rem" };
+
+  // ======================================================================
+  // Per-device storage
+  // ======================================================================
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  };
+  const defaults = {
+    name: DEFAULT_NAME, region: "qld",
+    tabs: { local: true, headlines: true, politics: true, finance: true, tech: true, ai: true },
+    topics: [], muted: [], hiddenSources: [],
+    openIn: "app", textSize: "m", theme: "system", welcomed: false,
+  };
+  const saved = store.get("brief.settings", null);
+  const S = Object.assign({}, defaults, saved || {}, { tabs: Object.assign({}, defaults.tabs, (saved || {}).tabs) });
+  if (!saved && DEFAULT_NAME) S.welcomed = true;
+  const saveSettings = () => store.set("brief.settings", S);
+
+  const hash = location.hash.slice(1);
+  const state = {
+    tab: hash || store.get("brief.tab3", "foryou"),
+    showSaved: hash === "saved",
+    hideRead: store.get("brief.hideRead", false),
+    read: new Set(store.get("brief.read", [])),
+    saved: store.get("brief.saved", []),
+    feeds: {}, status: null, loaded: false, refreshing: false,
+    mode: null,          // "claude" (private copy, Claude database) or "static" (GitHub Pages files)
+    readerList: [], readerId: null,
+  };
+
+  const use = name => (window.claude && typeof window.claude.use === "function") ? window.claude.use(name).catch(() => null) : Promise.resolve(null);
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const isSaved = id => state.saved.some(s => s.id === id);
+
+  // ======================================================================
+  // Theme and reading size
+  // ======================================================================
+  const hostTheme = document.documentElement.getAttribute("data-theme");
+  function applyLook() {
+    const root = document.documentElement;
+    if (S.theme === "light" || S.theme === "dark") root.setAttribute("data-theme", S.theme);
+    else if (hostTheme) root.setAttribute("data-theme", hostTheme);
+    else root.removeAttribute("data-theme");
+    root.style.setProperty("--read-size", SIZES[S.textSize] || SIZES.m);
+  }
+  applyLook();
+
+  // ======================================================================
+  // Formatting
+  // ======================================================================
+  function ago(iso) {
+    const t = Date.parse(iso);
+    if (!t) return "";
+    const m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    if (m < 1) return "Just now";
+    if (m < 60) return m + "m ago";
+    const h = Math.round(m / 60);
+    if (h < 24) return h + "h ago";
+    const d = Math.round(h / 24);
+    return d === 1 ? "Yesterday" : d + "d ago";
+  }
+  const hourNow = () => Number(new Intl.DateTimeFormat("en-AU", { hour: "numeric", hourCycle: "h23", timeZone: TZ }).format(new Date()));
+  function greeting() {
+    const h = hourNow();
+    const g = h < 5 ? "Late night" : h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+    const n = (S.name || "").trim();
+    return n ? `${g}, ${n}` : g;
+  }
+  const today = () => new Intl.DateTimeFormat("en-AU", { weekday: "long", day: "numeric", month: "long", timeZone: TZ }).format(new Date());
+  const longDate = iso => new Intl.DateTimeFormat("en-AU", { day: "numeric", month: "long", hour: "numeric", minute: "2-digit", timeZone: TZ }).format(new Date(iso));
+  const mono = source => { const k = Object.keys(MONO).find(k => source.startsWith(k)); return k ? MONO[k] : source.slice(0, 2); };
+  const publisherOf = source => PUBLISHERS.find(p => source.startsWith(p.id))?.label || source;
+  const regionLabel = () => (state.status?.regions || REGION_FALLBACK).find(r => r.id === S.region)?.label || "your area";
+
+  // ======================================================================
+  // Icons
+  // ======================================================================
+  const I = {
+    bookmark: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11a1 1 0 0 1 1 1V20l-6.5-4-6.5 4V4.5a1 1 0 0 1 1-1z"/></svg>`,
+    tick: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>`,
+    out: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/></svg>`,
+    x: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>`,
+    search: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>`,
+    sliders: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg>`,
+  };
+
+  // ======================================================================
+  // Data
+  // ======================================================================
+  const sectionKey = id => id === "local" ? `local-${S.region}` : id;
+  const tagFor = id => SECTIONS.find(s => s.id === id)?.tag;
+  const mutedRe = () => S.muted.length ? new RegExp(`\\b(${S.muted.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "i") : null;
+  function allowed(list) {
+    const mr = mutedRe();
+    const hidden = S.hiddenSources;
+    return list.filter(i => !hidden.some(h => i.source.startsWith(h)) && !(mr && mr.test(`${i.title} ${i.summary || ""}`)));
+  }
+  function items(id) {
+    let list = (state.feeds[sectionKey(id)]?.items || []).map(i => ({ ...i, _sec: tagFor(id) }));
+    if (id === "headlines") {  // stories already in your Local tab don't repeat here
+      const local = new Set((state.feeds[sectionKey("local")]?.items || []).map(i => i.id));
+      list = list.filter(i => !local.has(i.id));
+    }
+    return allowed(list);
+  }
+  const enabledSections = () => SECTIONS.filter(s => S.tabs[s.id] !== false);
+  const visible = list => state.hideRead ? list.filter(i => !state.read.has(i.id)) : list;
+  function everything() {
+    const seen = new Set(), out = [];
+    for (const s of SECTIONS) for (const i of items(s.id)) if (!seen.has(i.id)) { seen.add(i.id); out.push(i); }
+    return out;
+  }
+  function topicItems(topic) {
+    const re = new RegExp(`\\b${topic.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "i");
+    return everything().filter(i => re.test(`${i.title} ${i.summary || ""}`)).sort((a, b) => b.published.localeCompare(a.published));
+  }
+  const findItem = id => everything().find(i => i.id === id) || state.saved.find(i => i.id === id);
+
+  // For you: the freshest few from each tab you've switched on, taken in turns
+  // so no single topic floods the top. Stories matching your topics go first.
+  function forYou() {
+    const secs = enabledSections();
+    const lanes = secs.map(s => visible(items(s.id)).slice(0, FOR_YOU_PER_SECTION).sort((a, b) => b.published.localeCompare(a.published)));
+    const order = secs.map((_, n) => n).sort((a, b) => (lanes[b][0]?.published || "").localeCompare(lanes[a][0]?.published || ""));
+    const out = [], seen = new Set();
+    for (const t of S.topics) for (const i of visible(topicItems(t)).slice(0, 3)) if (!seen.has(i.id)) { seen.add(i.id); out.push({ ...i, _sec: t }); }
+    for (let round = 0; round < FOR_YOU_PER_SECTION; round++) {
+      for (const n of order) {
+        const it = lanes[n][round];
+        if (it && !seen.has(it.id)) { seen.add(it.id); out.push(it); }
+      }
+    }
+    const leadAt = out.slice(0, 8).findIndex(i => i.image);
+    if (leadAt > 0) out.unshift(out.splice(leadAt, 1)[0]);
+    return out;
+  }
+
+  // ======================================================================
+  // Story fragments
+  // ======================================================================
+  const pic = (i, cls = "") => `<div class="pic ${cls}">${i.image ? `<img src="${esc(i.image)}" alt="" loading="${cls ? "eager" : "lazy"}" decoding="async" referrerpolicy="no-referrer">` : ""}<span class="mono" aria-hidden="true"${i.image ? " hidden" : ""}>${esc(mono(i.source))}</span></div>`;
+  const meta = (i, withSec) => `<div class="meta">${withSec && i._sec ? `<span class="sec">${esc(i._sec)}</span><span class="sep"></span>` : ""}<span class="src">${esc(i.source)}</span><span class="sep"></span><time datetime="${esc(i.published)}">${esc(ago(i.published))}</time></div>`;
+  function saveBtn(i) {
+    const on = isSaved(i.id);
+    return `<button class="save" type="button" data-save="${esc(i.id)}" aria-pressed="${on}" aria-label="${on ? "Remove from saved" : "Save for later"}">${I.bookmark}</button>`;
+  }
+  const link = (i, inner) => `<a class="link" href="${esc(i.url)}" target="_blank" rel="noopener" data-open="${esc(i.id)}">${inner}</a>`;
+  const readCls = i => state.read.has(i.id) ? " read" : "";
+  const leadHTML = (i, label, withSec) => `<article class="story lead${readCls(i)}">${pic(i)}<div class="body">
+      ${label ? `<div><span class="tag">${esc(label)}</span></div>` : ""}
+      <h2 class="h">${link(i, esc(i.title))}</h2>${i.summary ? `<p class="dek">${esc(i.summary)}</p>` : ""}
+      <div class="row">${meta(i, withSec)}${saveBtn(i)}</div></div></article>`;
+  const featureHTML = (i, withSec) => `<article class="story feature${readCls(i)}">${pic(i)}<div class="body">
+      <h3 class="h">${link(i, esc(i.title))}</h3>${i.summary ? `<p class="dek">${esc(i.summary)}</p>` : ""}
+      <div class="row">${meta(i, withSec)}${saveBtn(i)}</div></div></article>`;
+  const rowHTML = (i, withSec) => `<article class="story item${readCls(i)}"><div class="body">
+      <h3 class="h">${link(i, esc(i.title))}</h3>${i.summary ? `<p class="dek">${esc(i.summary)}</p>` : ""}
+      <div class="row">${meta(i, withSec)}${saveBtn(i)}</div></div>${pic(i)}</article>`;
+  const emptyHTML = (title, text, icon, action) => `<div class="empty"><div class="glyph">${icon || I.bookmark}</div><h2>${title}</h2><p>${text}</p>${action || ""}</div>`;
+
+  // ======================================================================
+  // Home views
+  // ======================================================================
+  const toolsHTML = (label) => `<div class="list-tools"><span>${label}</span>
+      <button class="switch" type="button" role="switch" id="hideRead" aria-checked="${state.hideRead}">Hide read<span class="track"></span></button></div>`;
+  const welcomeHTML = () => S.welcomed ? "" : `<div class="banner"><p><strong>Make it yours</strong>Add your name, pick your local area and choose your tabs.</p>
+      <button class="pill-btn" type="button" data-open-settings>Set up</button>
+      <button class="x-btn" type="button" id="dismissWelcome" aria-label="Dismiss">${I.x}</button></div>`;
+
+  function listHTML(list, withSec, leadLabel) {
+    state.lastList = list.map(i => i.id);
+    let html = leadHTML(list[0], leadLabel, withSec);
+    list.slice(1).forEach((i, n) => { html += ((n + 1) % FEATURE_EVERY === 0 && i.image) ? featureHTML(i, withSec) : rowHTML(i, withSec); });
+    return html;
+  }
+
+  function renderForYou() {
+    if (!SECTIONS.some(s => (state.feeds[sectionKey(s.id)]?.items || []).length)) {
+      return emptyHTML("No stories yet", "The first batch arrives with the next refresh. Check back soon.");
+    }
+    const list = forYou();
+    if (!list.length) return welcomeHTML() + toolsHTML("0 stories") + emptyHTML("All caught up", "You've opened everything in your mix. Turn off Hide read to see it again.", I.tick);
+    return welcomeHTML() + toolsHTML(`${list.length} stories in your mix`) + listHTML(list, true, "Top story");
+  }
+  function renderSection(id) {
+    const all = items(id), list = visible(all);
+    const label = id === "local" ? `${regionLabel()} · ${list.length} stories` : `${list.length} stories`;
+    if (!all.length) {
+      return id === "local"
+        ? emptyHTML("Quiet in " + esc(regionLabel()), "No local stories in the last few days. Pick another area in Settings.", I.sliders, `<button class="pill-btn" type="button" data-open-settings>Open settings</button>`)
+        : emptyHTML("Nothing here yet", "Stories for this tab arrive with the next refresh.");
+    }
+    if (!list.length) return toolsHTML("0 unread") + emptyHTML("All caught up", "You've opened every story here. Turn off Hide read to see them again.", I.tick);
+    return toolsHTML(label) + listHTML(list, false);
+  }
+  function renderTopic(t) {
+    const list = visible(topicItems(t));
+    if (!list.length) return toolsHTML(`“${esc(t)}”`) + emptyHTML(`No stories about ${esc(t)}`, "Nothing in today's stories mentions this topic yet. It fills up as news comes in.", I.search);
+    return toolsHTML(`${list.length} stories mention “${esc(t)}”`) + listHTML(list, true);
+  }
+  function renderSaved() {
+    if (!state.saved.length) return emptyHTML("Nothing saved yet", "Tap the bookmark on any story to keep it here for later.");
+    state.lastList = state.saved.map(i => i.id);
+    return `<div class="list-tools"><span>${state.saved.length} saved</span></div><div class="rows">${state.saved.map(i => rowHTML(i, true)).join("")}</div>`;
+  }
+
+  const tabList = () => [{ id: "foryou", label: "For you" }, ...enabledSections(), ...S.topics.map(t => ({ id: "topic:" + t, label: t, topic: true }))];
+  function currentTab() {
+    const tabs = tabList();
+    return tabs.some(t => t.id === state.tab) ? state.tab : "foryou";
+  }
+  function renderTabs() {
+    const cur = currentTab();
+    $("tabs").innerHTML = tabList().map(t => `<button class="tab${t.topic ? " topic" : ""}" type="button" role="tab" data-tab="${esc(t.id)}" aria-selected="${!state.showSaved && t.id === cur}">${esc(t.label)}</button>`).join("");
+  }
+  function renderHeader() {
+    $("eyebrow").textContent = today();
+    $("title").textContent = state.showSaved ? "Saved" : greeting();
+    const s = state.status, live = $("live");
+    live.className = "live";
+    if (state.refreshing) { live.classList.add("busy"); $("stamp").textContent = state.mode === "claude" ? "Fetching fresh stories, about 2 to 4 minutes" : "Checking for new stories"; }
+    else if (!s?.updatedAt) { live.classList.add("stale"); $("stamp").textContent = state.loaded ? "Waiting for the first refresh" : "Loading the latest stories"; }
+    else {
+      if (Date.now() - Date.parse(s.updatedAt) > 8 * 3600e3) live.classList.add("stale");
+      const at = new Date(s.updatedAt).toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit", timeZone: TZ });
+      $("stamp").textContent = `Updated ${ago(s.updatedAt).toLowerCase()} · ${at}`;
+    }
+    $("savedBtn").setAttribute("aria-pressed", String(state.showSaved));
+    $("savedBadge").textContent = state.saved.length;
+    $("savedBadge").hidden = !state.saved.length;
+  }
+  function render(keepScroll) {
+    renderHeader();
+    renderTabs();
+    if (!state.loaded) return;
+    const y = window.scrollY, cur = currentTab();
+    const body = state.showSaved ? renderSaved()
+      : cur === "foryou" ? renderForYou()
+      : cur.startsWith("topic:") ? renderTopic(cur.slice(6))
+      : renderSection(cur);
+    $("view").innerHTML = `<div class="wrap">${body}</div>`;
+    if (keepScroll) window.scrollTo(0, y);
+  }
+  function selectTab(id) {
+    state.tab = id;
+    state.showSaved = false;
+    store.set("brief.tab3", id);
+    try { history.replaceState(history.state, "", "#" + (id.startsWith("topic:") ? "foryou" : id)); } catch {}
+    render();
+    const bar = document.querySelector(".tabs-bar");
+    if (bar && window.scrollY > bar.offsetTop) window.scrollTo(0, bar.offsetTop);
+    document.querySelector(`.tab[data-tab="${CSS.escape(id)}"]`)?.scrollIntoView({ inline: "center", block: "nearest" });
+  }
+
+  // ======================================================================
+  // Sheets (reader and settings) with back-button support
+  // ======================================================================
+  let openSheet = null;
+  function showSheet(id) {
+    const el = $(id);
+    el.hidden = false;
+    el.scrollTop = 0;
+    el.classList.remove("scrolled");
+    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("open")));
+    document.body.classList.add("locked");
+    if (openSheet !== id) { try { history.pushState({ sheet: id }, ""); } catch {} }
+    openSheet = id;
+  }
+  function hideSheet(id, fromPop) {
+    const el = $(id);
+    if (!el.classList.contains("open")) return;
+    el.classList.remove("open");
+    setTimeout(() => { if (!el.classList.contains("open")) el.hidden = true; }, 320);
+    document.body.classList.remove("locked");
+    openSheet = null;
+    if (!fromPop) { try { if (history.state && history.state.sheet) history.back(); } catch {} }
+    if (id === "reader" || id === "settings") render(true);
+  }
+  window.addEventListener("popstate", () => { if (openSheet) hideSheet(openSheet, true); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && openSheet) hideSheet(openSheet); });
+  ["reader", "settings"].forEach(id => $(id).addEventListener("scroll", e => e.currentTarget.classList.toggle("scrolled", e.currentTarget.scrollTop > 60), { passive: true }));
+
+  // ======================================================================
+  // Reader
+  // ======================================================================
+  const textCache = {};
+  async function loadText(ref) {
+    if (!ref) return null;
+    if (!textCache[ref]) {
+      textCache[ref] = (async () => {
+        try {
+          if (state.mode === "claude") { const snap = await state.db.doc("text/" + ref).get(); return snap.exists ? snap.data().articles : {}; }
+          const r = await fetch(`data/text/${ref}.json?v=${encodeURIComponent(state.status?.updatedAt || "")}`);
+          return r.ok ? (await r.json()).articles : {};
+        } catch { delete textCache[ref]; return {}; }
+      })();
+    }
+    return textCache[ref];
+  }
+  function prose(paras) {
+    let html = "", inList = false;
+    paras.forEach((p, n) => {
+      const bullet = /^[-•–]\s+/.test(p);
+      if (bullet && !inList) { html += "<ul>"; inList = true; }
+      if (!bullet && inList) { html += "</ul>"; inList = false; }
+      if (bullet) html += `<li>${esc(p.replace(/^[-•–]\s+/, ""))}</li>`;
+      else if (p.length < 70 && !/[.!?:"”’)]$/.test(p) && n > 0) html += `<h3>${esc(p)}</h3>`;
+      else html += `<p${n === 0 ? ' class="lede"' : ""}>${esc(p)}</p>`;
+    });
+    return html + (inList ? "</ul>" : "");
+  }
+  function readerHTML(i, body) {
+    const idx = state.readerList.indexOf(i.id);
+    const nextId = idx >= 0 ? state.readerList.slice(idx + 1).find(id => findItem(id)) : null;
+    const next = nextId ? findItem(nextId) : null;
+    return `
+      <div class="kicker">${i._sec ? `<span>${esc(i._sec)}</span><span class="sep"></span>` : ""}<span class="s">${esc(i.source)}</span></div>
+      <h1>${esc(i.title)}</h1>
+      <div class="byline">${body.author ? `<span>By <b>${esc(body.author)}</b></span>` : ""}<span>${esc(longDate(i.published))}</span></div>
+      ${i.image ? pic(i, "hero") : ""}
+      <div class="prose">${body.html}</div>
+      ${next ? `<div class="next"><div class="label">Next story</div>${rowHTML(next, true)}</div>` : ""}`;
+  }
+  async function openReader(id) {
+    const i = findItem(id);
+    if (!i) return;
+    state.readerId = id;
+    markRead(id);
+    $("rBarTitle").textContent = i.source;
+    $("rSave").setAttribute("aria-pressed", String(isSaved(id)));
+    $("rShare").hidden = !(state.mode === "static" && navigator.share);
+    const pub = publisherOf(i.source);
+    const original = (label, ghost) => `<a class="cta${ghost ? " ghost" : ""}" href="${esc(i.url)}" target="_blank" rel="noopener">${label} ${I.out}</a>`;
+    const skeleton = `${i.summary ? `<p class="lede">${esc(i.summary)}</p>` : ""}<div class="r-sk" aria-hidden="true"><div class="sk"></div><div class="sk"></div><div class="sk" style="width:70%"></div></div>`;
+    $("rBody").innerHTML = readerHTML(i, { html: i.text ? skeleton : "" });
+    if (!$("reader").classList.contains("open")) showSheet("reader"); else $("reader").scrollTop = 0;
+
+    let body;
+    const t = i.text ? (await loadText(i.text))?.[i.id] : null;
+    if (state.readerId !== id) return;
+    if (t && t.paras?.length) {
+      body = { author: t.author, html: prose(t.paras) + (t.cc
+        ? `<p class="licence">This article is republished from <a href="https://theconversation.com" target="_blank" rel="noopener">The Conversation</a> under a Creative Commons licence. <a href="${esc(i.url)}" target="_blank" rel="noopener">Read the original article</a>.</p>`
+        : original(`Open on ${esc(pub)}`, true)) };
+    } else {
+      body = { html: `${i.summary ? `<p class="lede">${esc(i.summary)}</p>` : ""}
+        <div class="partial"><strong>The full story is on ${esc(pub)}</strong>Only a preview can be shown here. Tap below to read the whole article, free.${original(`Read full article`)}</div>` };
+    }
+    $("rBody").innerHTML = readerHTML(i, body);
+  }
+  function markRead(id) {
+    state.read.add(id);
+    store.set("brief.read", [...state.read].slice(-1500));
+  }
+
+  // ======================================================================
+  // Settings
+  // ======================================================================
+  const seg = (name, value, opts) => `<div class="seg" role="group">${opts.map(([v, l, aria]) => `<button type="button" data-seg="${name}" data-val="${v}" aria-pressed="${value === v}"${aria ? ` aria-label="${aria}"` : ""}>${l}</button>`).join("")}</div>`;
+  const toggle = (attr, key, on, label, sub) => `<button class="field" type="button" role="switch" ${attr}="${esc(key)}" aria-checked="${on}"><span class="lbl">${label}${sub ? `<span class="sub">${sub}</span>` : ""}</span><span class="track"></span></button>`;
+  const tokens = (kind, list) => `<div class="tokens">${list.map((w, n) => `<span class="token">${esc(w)}<button type="button" data-remove="${kind}" data-n="${n}" aria-label="Remove ${esc(w)}">${I.x}</button></span>`).join("")}</div>`;
+  function renderSettings() {
+    const regions = state.status?.regions || REGION_FALLBACK;
+    const counts = state.status?.counts || {};
+    $("sBody").innerHTML = `
+      <h1>Settings</h1>
+      <div class="group"><h2>You</h2><div class="card">
+        <div class="field"><label for="setName">Your name</label><input type="text" id="setName" placeholder="Optional" autocomplete="given-name" maxlength="30" value="${esc(S.name)}"></div>
+        <div class="field"><label for="setRegion">Local news</label><select id="setRegion">${regions.map(r => `<option value="${r.id}"${r.id === S.region ? " selected" : ""}>${esc(r.label)}${counts["local-" + r.id] != null ? ` (${counts["local-" + r.id]})` : ""}</option>`).join("")}</select></div>
+      </div><p class="hint">Your name is used in the greeting. Everything here stays on this device.</p></div>
+
+      <div class="group"><h2>Tabs</h2><div class="card">
+        ${SECTIONS.map(s => toggle("data-tabtoggle", s.id, S.tabs[s.id] !== false, s.id === "local" ? `Local <span style="color:var(--muted);font-weight:400">· ${esc(regionLabel())}</span>` : s.label)).join("")}
+      </div><p class="hint">For you mixes stories from every tab that's switched on.</p></div>
+
+      <div class="group"><h2>Your topics</h2><div class="card">
+        ${tokens("topics", S.topics)}
+        <form class="add" data-add="topics"><input type="text" id="addTopic" placeholder="Add a topic, e.g. Logan or Apple" maxlength="30" aria-label="Add a topic"><button type="submit">Add</button></form>
+      </div><p class="hint">Each topic gets its own tab, and matching stories go to the top of For you.</p></div>
+
+      <div class="group"><h2>Sources</h2><div class="card">
+        ${PUBLISHERS.map(p => toggle("data-source", p.id, !S.hiddenSources.includes(p.id), p.label)).join("")}
+      </div></div>
+
+      <div class="group"><h2>Mute words</h2><div class="card">
+        ${tokens("muted", S.muted)}
+        <form class="add" data-add="muted"><input type="text" id="addMuted" placeholder="Hide stories that mention…" maxlength="30" aria-label="Add a word to mute"><button type="submit">Mute</button></form>
+      </div></div>
+
+      <div class="group"><h2>Reading</h2><div class="card">
+        <div class="field"><span class="lbl">Open stories</span>${seg("openIn", S.openIn, [["app", "In the app"], ["site", "On the website"]])}</div>
+        <div class="field"><span class="lbl">Text size</span>${seg("textSize", S.textSize, [["s", "A", "Small"], ["m", "A", "Medium"], ["l", "A", "Large"], ["xl", "A", "Extra large"]])}</div>
+        <div class="field"><span class="lbl">Appearance</span>${seg("theme", S.theme, [["system", "Auto"], ["light", "Light"], ["dark", "Dark"]])}</div>
+      </div></div>
+
+      <div class="group"><h2>Your data</h2><div class="card">
+        <button class="field danger" type="button" id="clearRead">Clear read history <span class="sub" style="color:var(--muted)">${state.read.size} stories</span></button>
+        <button class="field danger" type="button" id="clearSaved">Clear saved stories <span class="sub" style="color:var(--muted)">${state.saved.length} saved</span></button>
+      </div></div>
+
+      <p class="about">Daily Brief pulls from free, full-article sources only: ABC, Guardian Australia, SBS, The Conversation, BBC, Ars Technica, TechCrunch and iTnews. No paywalls, no sport.${state.status?.updatedAt ? `<br>Stories last updated ${esc(longDate(state.status.updatedAt))}.` : ""}</p>`;
+    // Size the A buttons so they read as small to large.
+    document.querySelectorAll('[data-seg="textSize"]').forEach((b, n) => { b.style.fontSize = ["0.78rem", "0.9rem", "1.02rem", "1.16rem"][n]; });
+  }
+  function openSettings() {
+    S.welcomed = true; saveSettings();
+    renderSettings();
+    showSheet("settings");
+  }
+  const pendingConfirm = {};
+  function confirmTap(btn, key, label, run) {
+    if (pendingConfirm[key]) { clearTimeout(pendingConfirm[key]); delete pendingConfirm[key]; run(); return; }
+    btn.firstChild.textContent = label + " ";
+    pendingConfirm[key] = setTimeout(() => { delete pendingConfirm[key]; renderSettings(); }, 3000);
+  }
+
+  // ======================================================================
+  // Toast
+  // ======================================================================
+  let toastTimer;
+  function toast(msg, ms = 3200) {
+    const t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove("show"), ms);
+  }
+
+  // ======================================================================
+  // Events
+  // ======================================================================
+  function toggleSave(id) {
+    if (isSaved(id)) { state.saved = state.saved.filter(s => s.id !== id); toast("Removed from Saved"); }
+    else {
+      const it = findItem(id);
+      if (!it) return;
+      const { image, ...rest } = it;
+      state.saved = [{ ...rest, image: image && !image.startsWith("data:") ? image : undefined }, ...state.saved].slice(0, 200);
+      toast("Saved for later");
+    }
+    store.set("brief.saved", state.saved);
+    $("rSave").setAttribute("aria-pressed", String(isSaved(state.readerId)));
+  }
+
+  document.addEventListener("click", e => {
+    const t = e.target;
+    const close = t.closest("[data-close]");
+    if (close) { hideSheet(close.dataset.close); return; }
+    if (t.closest("[data-open-settings]") || t.closest("#settingsBtn")) { openSettings(); return; }
+    if (t.closest("#dismissWelcome")) { S.welcomed = true; saveSettings(); render(true); return; }
+    const tab = t.closest("[data-tab]");
+    if (tab) { selectTab(tab.dataset.tab); return; }
+    if (t.closest("#savedBtn")) {
+      state.showSaved = !state.showSaved;
+      try { history.replaceState(history.state, "", "#" + (state.showSaved ? "saved" : currentTab())); } catch {}
+      render(); window.scrollTo(0, 0); return;
+    }
+    if (t.closest("#hideRead")) { state.hideRead = !state.hideRead; store.set("brief.hideRead", state.hideRead); render(true); return; }
+    if (t.closest("#rSave")) { toggleSave(state.readerId); return; }
+    if (t.closest("#rShare")) { const i = findItem(state.readerId); if (i) navigator.share({ title: i.title, url: i.url }).catch(() => {}); return; }
+    const sv = t.closest("[data-save]");
+    if (sv) { toggleSave(sv.dataset.save); if (!openSheet) render(true); else sv.setAttribute("aria-pressed", String(isSaved(sv.dataset.save))); return; }
+    const open = t.closest("[data-open]");
+    if (open) {
+      if (S.openIn === "app") {
+        e.preventDefault();
+        if (!openSheet) state.readerList = state.lastList || [];
+        openReader(open.dataset.open);
+      }
+      else { markRead(open.dataset.open); setTimeout(() => open.closest(".story")?.classList.add("read"), 400); }
+      return;
+    }
+    // ---- settings controls ----
+    const tt = t.closest("[data-tabtoggle]");
+    if (tt) {
+      const id = tt.dataset.tabtoggle, on = S.tabs[id] === false;
+      if (!on && enabledSections().length <= 1) { toast("Keep at least one tab switched on"); return; }
+      S.tabs[id] = on; saveSettings(); tt.setAttribute("aria-checked", String(on)); return;
+    }
+    const src = t.closest("[data-source]");
+    if (src) {
+      const id = src.dataset.source, hidden = S.hiddenSources.includes(id);
+      S.hiddenSources = hidden ? S.hiddenSources.filter(x => x !== id) : [...S.hiddenSources, id];
+      saveSettings(); src.setAttribute("aria-checked", String(hidden)); return;
+    }
+    const sg = t.closest("[data-seg]");
+    if (sg) {
+      S[sg.dataset.seg] = sg.dataset.val; saveSettings(); applyLook();
+      sg.parentElement.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b === sg))); return;
+    }
+    const rm = t.closest("[data-remove]");
+    if (rm) { S[rm.dataset.remove].splice(Number(rm.dataset.n), 1); saveSettings(); renderSettings(); return; }
+    const cr = t.closest("#clearRead");
+    if (cr) { confirmTap(cr, "read", "Tap again to clear read history", () => { state.read.clear(); store.set("brief.read", []); renderSettings(); toast("Read history cleared"); }); return; }
+    const cs = t.closest("#clearSaved");
+    if (cs) { confirmTap(cs, "saved", "Tap again to clear saved stories", () => { state.saved = []; store.set("brief.saved", []); renderSettings(); renderHeader(); toast("Saved stories cleared"); }); return; }
+  });
+
+  document.addEventListener("submit", e => {
+    const f = e.target.closest("[data-add]");
+    if (!f) return;
+    e.preventDefault();
+    const input = f.querySelector("input"), word = input.value.trim().replace(/\s+/g, " ");
+    const kind = f.dataset.add, list = S[kind];
+    if (!word) { input.focus(); return; }
+    if (list.some(w => w.toLowerCase() === word.toLowerCase())) { toast(`“${word}” is already there`); return; }
+    if (kind === "topics" && list.length >= 6) { toast("You can follow up to 6 topics"); return; }
+    list.push(word); saveSettings(); renderSettings();
+    toast(kind === "topics" ? `Added a ${word} tab` : `Muted “${word}”`);
+    document.getElementById(kind === "topics" ? "addTopic" : "addMuted")?.focus();
+  });
+  document.addEventListener("change", e => {
+    if (e.target.id === "setRegion") { S.region = e.target.value; saveSettings(); renderSettings(); toast(`Local news: ${regionLabel()}`); }
+  });
+  document.addEventListener("input", e => {
+    if (e.target.id === "setName") { S.name = e.target.value.slice(0, 30); saveSettings(); renderHeader(); }
+  });
+  // A picture that fails to load falls back to the source's monogram.
+  document.addEventListener("error", e => {
+    const img = e.target;
+    if (img.tagName === "IMG" && img.parentElement?.classList.contains("pic")) { img.nextElementSibling && (img.nextElementSibling.hidden = false); img.remove(); }
+  }, true);
+
+  // ======================================================================
+  // Loading data: Claude database (private copy) or files (GitHub Pages)
+  // ======================================================================
+  render();
+  setInterval(() => { if (state.loaded && !document.hidden && !openSheet) render(true); }, 60000);
+
+  function finishRefresh(changed) {
+    if (!state.refreshing) return;
+    state.refreshing = false;
+    $("refresh").disabled = false;
+    $("refresh").classList.remove("spin");
+    renderHeader();
+    if (changed) toast("Fresh stories are in");
+  }
+
+  // ---- Static files (GitHub Pages) ----
+  async function loadStatic(manual) {
+    try {
+      const st = await (await fetch(`data/status.json?t=${Date.now()}`, { cache: "no-store" })).json();
+      const changed = st.updatedAt !== state.status?.updatedAt;
+      if (changed || !state.loaded) {
+        const v = encodeURIComponent(st.updatedAt);
+        const names = st.sections || [];
+        const docs = await Promise.all(names.map(n => fetch(`data/feeds/${n}.json?v=${v}`).then(r => r.ok ? r.json() : null).catch(() => null)));
+        const feeds = {};
+        names.forEach((n, k) => { if (docs[k]) feeds[n] = docs[k]; });
+        state.feeds = feeds;
+        state.status = st;
+        for (const k in textCache) delete textCache[k];
+      }
+      state.loaded = true;
+      if (manual) { finishRefresh(changed); if (!changed) toast("You're up to date"); }
+      if (!openSheet) render(true);
+    } catch {
+      state.loaded = true;
+      if (manual) finishRefresh(false);
+      render();
+      toast("Stories couldn't load. Check your connection and try again.", 5000);
+    }
+  }
+
+  // ---- Claude database (private copy) ----
+  function loadClaude(db) {
+    state.db = db;
+    let first = 2;
+    const arrived = () => { if (--first <= 0) state.loaded = true; if (!openSheet) render(true); else renderHeader(); };
+    db.collection("feeds").onSnapshot(snap => {
+      const next = {};
+      snap.docs.forEach(d => { if (d.exists) next[d.id] = d.data(); });
+      state.feeds = next;
+      arrived();
+    }, () => { state.loaded = true; render(); toast("Stories couldn't load. Check your connection and reopen the page.", 6000); });
+    db.doc("meta/status").onSnapshot(snap => {
+      const prev = state.status?.updatedAt;
+      state.status = snap.exists ? snap.data() : null;
+      if (state.status?.updatedAt !== prev) for (const k in textCache) delete textCache[k];
+      if (state.refreshing && state.status?.updatedAt && state.status.updatedAt !== prev) finishRefresh(true);
+      if (state.status?.triggerId && state.mcp) $("refresh").hidden = false;
+      arrived();
+    }, () => arrived());
+    use("mcp").then(m => { state.mcp = m; if (m && state.status?.triggerId) $("refresh").hidden = false; });
+  }
+
+  $("refresh").addEventListener("click", async () => {
+    if (state.refreshing) return;
+    state.refreshing = true;
+    $("refresh").disabled = true;
+    $("refresh").classList.add("spin");
+    renderHeader();
+    if (state.mode === "static") { loadStatic(true); return; }
+    try {
+      await state.mcp.callTool("Claude Code Remote", "fire_trigger", { trigger_id: state.status.triggerId }, { cache: false });
+      toast("Refreshing. New stories will appear on their own.", 4000);
+      setTimeout(() => finishRefresh(false), 600000);
+    } catch (e) {
+      finishRefresh(false);
+      const c = e && e.code;
+      if (c === "not_in_manifest") toast("Refresh is switched off. Allow Claude Code Remote in this page's permissions.", 6000);
+      else if (c === "server_not_connected" || c === "needs_reauth") toast("Refresh needs the Claude Code Remote connector. Stories still update on schedule.", 6000);
+      else toast("Refresh couldn't start. Stories still update on schedule.", 5000);
+    }
+  });
+
+  use("db").then(db => {
+    if (db) { state.mode = "claude"; loadClaude(db); return; }
+    state.mode = "static";
+    $("refresh").hidden = false;
+    loadStatic(false);
+    // Pick up new stories while the app stays open.
+    setInterval(() => { if (!document.hidden) loadStatic(false); }, 10 * 60000);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - Date.parse(state.status?.updatedAt || 0) > 30 * 60000) loadStatic(false); });
+  });
+})();
+</script>
