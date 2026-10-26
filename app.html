@@ -256,7 +256,6 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
 .appcard .tg { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
 .ok-line { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 0.82rem; font-weight: 700; color: var(--ok); }
 .ok-line svg { width: 16px; height: 16px; }
-.platforms { padding: 12px 14px 4px; display: flex; justify-content: center; }
 .steps { list-style: none; margin: 0; padding: 6px 16px 16px; counter-reset: step; display: grid; gap: 12px; }
 .steps li { counter-increment: step; display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 12px; align-items: start; font-size: 0.92rem; }
 .steps li::before { content: counter(step); width: 28px; height: 28px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 0.84rem; display: grid; place-items: center; }
@@ -761,33 +760,60 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   const isIOS = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
   const isAndroid = /Android/.test(ua);
   const standalone = () => window.matchMedia?.("(display-mode: standalone)").matches || navigator.standalone === true;
-  let stepsFor = isAndroid ? "android" : "ios";
+  // Work out the phone and browser so Settings shows just the steps that apply.
+  const device = (() => {
+    if (isIOS) {
+      const b = /CriOS/.test(ua) ? "chrome" : /FxiOS/.test(ua) ? "firefox" : /EdgiOS/.test(ua) ? "edge" : "safari";
+      return { os: "ios", name: /iPad/.test(ua) || (/Macintosh/.test(ua)) ? "iPad" : "iPhone", browser: b };
+    }
+    if (isAndroid) {
+      const b = /SamsungBrowser/.test(ua) ? "samsung" : /Firefox/.test(ua) ? "firefox" : "chrome";
+      return { os: "android", name: "Android phone", browser: b };
+    }
+    return { os: "desktop", name: "computer", browser: "" };
+  })();
   const shareUrl = () => state.mode === "static" && /^https?:/.test(location.protocol) ? location.origin + location.pathname : PUBLIC_URL;
   const K = {
     share: `<span class="kbd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-label="Share"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 12v6.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V12"/></svg></span>`,
     plus: `<span class="kbd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-label="Add"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M12 8v8M8 12h8"/></svg></span>`,
     dots: `<span class="kbd"><svg viewBox="0 0 24 24" fill="currentColor" aria-label="Menu"><circle cx="12" cy="5.5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="18.5" r="1.8"/></svg></span>`,
   };
-  const steps = k => ({
-    ios: `<ol class="steps">
-        <li><span>Open ${state.mode === "claude" ? "the link" : "this page"} in <b>Safari</b> and tap the Share button ${K.share} at the bottom.</span></li>
-        <li><span>Scroll down and tap <b>Add to Home Screen</b> ${K.plus}<span class="note">In Chrome on iPhone, the Share button is in the address bar.</span></span></li>
-        <li><span>Tap <b>Add</b>. The ${APP_NAME} icon is now on your home screen.</span></li></ol>`,
-    android: `<ol class="steps">
-        <li><span>Open ${state.mode === "claude" ? "the link" : "this page"} in <b>Chrome</b> and tap the menu ${K.dots} at the top right.</span></li>
+  function stepsHTML() {
+    const here = state.mode === "claude" ? "the link" : "this page";
+    const done = `<li><span>Tap <b>Add</b>. The ${APP_NAME} icon is now on your home screen.</span></li>`;
+    if (device.os === "ios") {
+      const first = device.browser === "safari"
+        ? `<li><span>Tap the Share button ${K.share} at the bottom of Safari.<span class="note">On newer iPhones it's inside the ⋯ button.</span></span></li>`
+        : `<li><span>Tap the Share button ${K.share} in the address bar.</span></li>`;
+      const openIn = state.mode === "claude" ? `<li><span>Open ${here} in <b>Safari</b>.</span></li>` : "";
+      return `<ol class="steps">${openIn}${first}
+        <li><span>Scroll down and tap <b>Add to Home Screen</b> ${K.plus}</span></li>${done}</ol>`;
+    }
+    if (device.os === "android") {
+      const openIn = state.mode === "claude" ? `<li><span>Open ${here} in <b>Chrome</b>.</span></li>` : "";
+      if (device.browser === "samsung") {
+        return `<ol class="steps">${openIn}
+          <li><span>Tap the menu <b>☰</b> at the bottom right.</span></li>
+          <li><span>Tap <b>Add page to</b>, then <b>Home screen</b>.</span></li>${done}</ol>`;
+      }
+      return `<ol class="steps">${openIn}
+        <li><span>Tap the menu ${K.dots} at the top right.</span></li>
         <li><span>Tap <b>Add to Home screen</b> or <b>Install app</b>.</span></li>
-        <li><span>Tap <b>Install</b>. ${APP_NAME} opens full screen, just like an app.</span></li></ol>`,
-  })[k];
+        <li><span>Tap <b>Install</b>. ${APP_NAME} opens full screen, just like an app.</span></li></ol>`;
+    }
+    return `<div class="qr" style="border-top:0"><div class="code" data-qr aria-label="QR code to open ${APP_NAME}"></div>
+      <p><b>Open it on your phone</b>Point your phone's camera at this code. Then open Settings there and the steps for your phone appear here.</p></div>`;
+  }
   function getAppHTML() {
     const head = `<div class="appcard"><img class="appicon" src="${APP_ICON}" alt=""><div><div class="nm">${APP_NAME}</div><div class="tg">Local, politics, finance, tech and AI news</div>
       ${standalone() ? `<div class="ok-line">${I.tick} You're using the app</div>` : ""}</div></div>`;
     if (standalone()) return `<div class="group"><h2>Phone app</h2><div class="card">${head}</div></div>`;
     const install = installEvent ? `<div class="btn-row"><button class="cta" type="button" id="installBtn">Install ${APP_NAME}</button></div>` : "";
-    const openPublic = state.mode === "claude" ? `<div class="btn-row"><a class="cta" href="${esc(PUBLIC_URL)}" target="_blank" rel="noopener">Open ${APP_NAME} on your phone ${I.out}</a></div>` : "";
+    const openPublic = state.mode === "claude" && device.os !== "desktop" ? `<div class="btn-row"><a class="cta" href="${esc(PUBLIC_URL)}" target="_blank" rel="noopener">Open ${APP_NAME} on your phone ${I.out}</a></div>` : "";
     return `<div class="group"><h2>Get the app</h2><div class="card">${head}
       ${install}${openPublic}
-      <div class="platforms">${seg("stepsFor", stepsFor, [["ios", "iPhone"], ["android", "Android"]])}</div>
-      ${steps(stepsFor)}
+      ${device.os === "desktop" ? "" : `<p class="hint" style="margin:14px 16px 2px">Steps for your ${device.name}</p>`}
+      ${stepsHTML()}
     </div><p class="hint">No app store needed. It works offline for stories you've already loaded.</p></div>`;
   }
 
@@ -802,20 +828,22 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
       </div>
       <div class="linkbox"><input type="text" id="shareLink" readonly value="${esc(url)}" aria-label="Link to ${APP_NAME}"><button type="button" id="copyLink">Copy</button></div>
       ${canShare ? `<div class="btn-row"><button class="cta" type="button" id="shareApp">Share with a friend</button></div>` : ""}
-      <div class="qr"><div class="code" id="qrCode" aria-label="QR code for ${esc(url)}"></div><p><b>Scan to open</b>Point a phone camera at this code to open ${APP_NAME}.</p></div>
+      <div class="qr"><div class="code" data-qr aria-label="QR code for ${esc(url)}"></div><p><b>Scan to open</b>Point a phone camera at this code to open ${APP_NAME}.</p></div>
     </div></div>`;
   }
   let qrLib = null;
   function drawQR() {
-    const box = $("qrCode");
-    if (!box) return;
+    const boxes = [...document.querySelectorAll("[data-qr]")];
+    if (!boxes.length) return;
+    const hide = () => boxes.forEach(b => { b.parentElement.hidden = true; });
     const paint = () => {
       try {
         const qr = window.qrcode(0, "M");
         qr.addData(shareUrl());
         qr.make();
-        box.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
-      } catch { box.parentElement.hidden = true; }
+        const svg = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+        boxes.forEach(b => { b.innerHTML = svg; });
+      } catch { hide(); }
     };
     if (window.qrcode) return paint();
     if (!qrLib) {
@@ -826,7 +854,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
         document.head.appendChild(sc);
       });
     }
-    qrLib.then(paint, () => { box.parentElement.hidden = true; });
+    qrLib.then(paint, hide);
   }
   async function copyLink() {
     const url = shareUrl(), input = $("shareLink");
@@ -965,7 +993,6 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
       saveSettings(); src.setAttribute("aria-checked", String(hidden)); return;
     }
     const sg = t.closest("[data-seg]");
-    if (sg && sg.dataset.seg === "stepsFor") { stepsFor = sg.dataset.val; renderSettings(); return; }
     if (sg) {
       S[sg.dataset.seg] = sg.dataset.val; saveSettings(); applyLook();
       sg.parentElement.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b === sg))); return;
