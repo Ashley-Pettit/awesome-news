@@ -1,10 +1,15 @@
-# Daily Brief
+# Awesome News
 
 A phone-friendly news reader for Australians. It pulls the latest stories from free, full-article sources, sorts them into tabs and lets you read them without leaving the app.
 
-**Open it:** https://ashley-pettit.github.io/daily-brief/
+**Open it:** https://ashley-pettit.github.io/awesome-news/
 
-On your phone, open the link and choose **Add to Home Screen** to use it like an app.
+## Put it on your phone
+
+- **iPhone:** open the link in Safari, tap the Share button, then **Add to Home Screen**.
+- **Android:** open the link in Chrome, tap the ⋮ menu, then **Install app** (or **Add to Home screen**).
+
+Settings in the app shows these steps too, plus a link and QR code to share it with friends.
 
 ## What's in it
 
@@ -26,7 +31,8 @@ Only The Conversation's articles are shown in full, because they're published un
 
 - `fetcher.py` reads the publishers' RSS feeds, filters out sport, video, podcasts and sponsored posts, sorts stories into sections and writes JSON files.
 - `app.html` is the whole app: one HTML file with no build tools or libraries.
-- `build.py` wraps `app.html` into a full web page with the home-screen icon.
+- `build.py` wraps `app.html` into a full web page with the home-screen icon and link preview.
+- `sw.js` keeps a copy of the app so it still opens with no signal.
 - `.github/workflows/pages.yml` runs every hour: fetch the news, build the page and publish it to GitHub Pages.
 
 ### Run it yourself

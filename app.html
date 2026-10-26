@@ -1,4 +1,4 @@
-<title>Daily Brief</title>
+<title>Awesome News</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -249,6 +249,38 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
 .danger { color: #b3261e; font-weight: 600; }
 :root[data-theme="dark"] .danger { color: #ff8a80; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .danger { color: #ff8a80; } }
+/* Get the app + share */
+.appcard { display: flex; align-items: center; gap: 14px; padding: 16px; border-bottom: 1px solid var(--line); }
+.appicon { width: 64px; height: 64px; border-radius: 15px; flex: none; box-shadow: 0 6px 16px rgba(74, 14, 32, 0.35); max-width: 100%; }
+.appcard .nm { font-family: var(--display); font-weight: 700; font-size: 1.25rem; line-height: 1.15; }
+.appcard .tg { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
+.ok-line { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 0.82rem; font-weight: 700; color: var(--ok); }
+.ok-line svg { width: 16px; height: 16px; }
+.platforms { padding: 12px 14px 4px; display: flex; justify-content: center; }
+.steps { list-style: none; margin: 0; padding: 6px 16px 16px; counter-reset: step; display: grid; gap: 12px; }
+.steps li { counter-increment: step; display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 12px; align-items: start; font-size: 0.92rem; }
+.steps li::before { content: counter(step); width: 28px; height: 28px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 0.84rem; display: grid; place-items: center; }
+.steps b { font-weight: 700; }
+.kbd { display: inline-flex; align-items: center; justify-content: center; vertical-align: -5px; width: 24px; height: 24px; border-radius: 6px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--line); color: var(--accent); margin: 0 2px; }
+.kbd svg { width: 15px; height: 15px; }
+.steps .note { display: block; margin-top: 3px; font-size: 0.8rem; color: var(--muted); }
+.btn-row { display: flex; gap: 10px; padding: 0 16px 16px; flex-wrap: wrap; }
+.btn-row .cta { margin-top: 0; flex: 1 1 140px; padding: 13px 14px; font-size: 0.92rem; }
+.preview { margin: 16px; border-radius: 14px; overflow: hidden; box-shadow: 0 0 0 1px var(--line); background: var(--bg); }
+.preview .banner-img { background: linear-gradient(120deg, #7a1d33, #340a18); padding: 18px; display: flex; align-items: center; gap: 14px; color: #faf3ec; }
+.preview .banner-img img { width: 54px; height: 54px; border-radius: 13px; flex: none; max-width: 100%; }
+.preview .banner-img .nm { font-family: var(--display); font-weight: 700; font-size: 1.3rem; }
+.preview .banner-img .tg { font-size: 0.78rem; color: #f6c8d4; }
+.preview .meta-line { padding: 10px 14px 12px; font-size: 0.8rem; color: var(--muted); }
+.preview .meta-line b { display: block; color: var(--ink); font-size: 0.9rem; }
+.linkbox { display: flex; align-items: center; gap: 8px; margin: 0 16px 14px; padding: 4px 4px 4px 12px; border-radius: 10px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--line); }
+.linkbox input { flex: 1; min-width: 0; border: 0; background: transparent; font-size: 0.86rem; color: var(--ink); padding: 8px 0; outline: none; text-overflow: ellipsis; }
+.linkbox button { flex: none; padding: 8px 12px; border-radius: 8px; background: var(--ink); color: var(--bg); font-weight: 700; font-size: 0.8rem; }
+.qr { display: flex; align-items: center; gap: 16px; padding: 14px 16px 16px; border-top: 1px solid var(--line); }
+.qr .code { width: 112px; height: 112px; flex: none; border-radius: 12px; background: #ffffff; padding: 8px; display: grid; place-items: center; }
+.qr .code svg { width: 100%; height: 100%; display: block; }
+.qr p { margin: 0; font-size: 0.86rem; color: var(--muted); }
+.qr p b { display: block; color: var(--ink); font-size: 0.95rem; margin-bottom: 2px; }
 .about { margin-top: 26px; font-size: 0.8rem; line-height: 1.6; color: var(--muted); text-align: center; text-wrap: balance; }
 
 /* ---------- Toast ---------- */
@@ -275,7 +307,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     <header class="head">
       <div>
         <div class="eyebrow" id="eyebrow">Today</div>
-        <h1 class="title" id="title">Daily Brief</h1>
+        <h1 class="title" id="title">Awesome News</h1>
         <div class="stamp"><span class="live stale" id="live"></span><span id="stamp">Loading the latest stories</span></div>
       </div>
       <div class="head-actions">
@@ -336,6 +368,9 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   // Config
   // ======================================================================
   const DEFAULT_NAME = "";            // set per build (the private copy greets its owner)
+  const APP_NAME = "Awesome News";
+  const PUBLIC_URL = "https://ashley-pettit.github.io/awesome-news/";
+  const APP_ICON = "data:image/png;base64,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";
   const SECTIONS = [
     { id: "local", label: "Local", tag: "Local" },
     { id: "headlines", label: "Headlines", tag: "Headlines" },
@@ -522,7 +557,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   // ======================================================================
   const toolsHTML = (label) => `<div class="list-tools"><span>${label}</span>
       <button class="switch" type="button" role="switch" id="hideRead" aria-checked="${state.hideRead}">Hide read<span class="track"></span></button></div>`;
-  const welcomeHTML = () => S.welcomed ? "" : `<div class="banner"><p><strong>Make it yours</strong>Add your name, pick your local area and choose your tabs.</p>
+  const welcomeHTML = () => S.welcomed ? "" : `<div class="banner"><p><strong>Make it yours</strong>Add your name, pick your local area, and put ${APP_NAME} on your home screen.</p>
       <button class="pill-btn" type="button" data-open-settings>Set up</button>
       <button class="x-btn" type="button" id="dismissWelcome" aria-label="Dismiss">${I.x}</button></div>`;
 
@@ -718,11 +753,94 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   const seg = (name, value, opts) => `<div class="seg" role="group">${opts.map(([v, l, aria]) => `<button type="button" data-seg="${name}" data-val="${v}" aria-pressed="${value === v}"${aria ? ` aria-label="${aria}"` : ""}>${l}</button>`).join("")}</div>`;
   const toggle = (attr, key, on, label, sub) => `<button class="field" type="button" role="switch" ${attr}="${esc(key)}" aria-checked="${on}"><span class="lbl">${label}${sub ? `<span class="sub">${sub}</span>` : ""}</span><span class="track"></span></button>`;
   const tokens = (kind, list) => `<div class="tokens">${list.map((w, n) => `<span class="token">${esc(w)}<button type="button" data-remove="${kind}" data-n="${n}" aria-label="Remove ${esc(w)}">${I.x}</button></span>`).join("")}</div>`;
+  // ---------- Get the app ----------
+  let installEvent = null;
+  window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvent = e; if (openSheet === "settings") renderSettings(); });
+  window.addEventListener("appinstalled", () => { installEvent = null; toast(`${APP_NAME} is on your home screen`); if (openSheet === "settings") renderSettings(); });
+  const ua = navigator.userAgent || "";
+  const isIOS = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/.test(ua);
+  const standalone = () => window.matchMedia?.("(display-mode: standalone)").matches || navigator.standalone === true;
+  let stepsFor = isAndroid ? "android" : "ios";
+  const shareUrl = () => state.mode === "static" && /^https?:/.test(location.protocol) ? location.origin + location.pathname : PUBLIC_URL;
+  const K = {
+    share: `<span class="kbd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-label="Share"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 12v6.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V12"/></svg></span>`,
+    plus: `<span class="kbd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-label="Add"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M12 8v8M8 12h8"/></svg></span>`,
+    dots: `<span class="kbd"><svg viewBox="0 0 24 24" fill="currentColor" aria-label="Menu"><circle cx="12" cy="5.5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="18.5" r="1.8"/></svg></span>`,
+  };
+  const steps = k => ({
+    ios: `<ol class="steps">
+        <li><span>Open ${state.mode === "claude" ? "the link" : "this page"} in <b>Safari</b> and tap the Share button ${K.share} at the bottom.</span></li>
+        <li><span>Scroll down and tap <b>Add to Home Screen</b> ${K.plus}<span class="note">In Chrome on iPhone, the Share button is in the address bar.</span></span></li>
+        <li><span>Tap <b>Add</b>. The ${APP_NAME} icon is now on your home screen.</span></li></ol>`,
+    android: `<ol class="steps">
+        <li><span>Open ${state.mode === "claude" ? "the link" : "this page"} in <b>Chrome</b> and tap the menu ${K.dots} at the top right.</span></li>
+        <li><span>Tap <b>Add to Home screen</b> or <b>Install app</b>.</span></li>
+        <li><span>Tap <b>Install</b>. ${APP_NAME} opens full screen, just like an app.</span></li></ol>`,
+  })[k];
+  function getAppHTML() {
+    const head = `<div class="appcard"><img class="appicon" src="${APP_ICON}" alt=""><div><div class="nm">${APP_NAME}</div><div class="tg">Local, politics, finance, tech and AI news</div>
+      ${standalone() ? `<div class="ok-line">${I.tick} You're using the app</div>` : ""}</div></div>`;
+    if (standalone()) return `<div class="group"><h2>Phone app</h2><div class="card">${head}</div></div>`;
+    const install = installEvent ? `<div class="btn-row"><button class="cta" type="button" id="installBtn">Install ${APP_NAME}</button></div>` : "";
+    const openPublic = state.mode === "claude" ? `<div class="btn-row"><a class="cta" href="${esc(PUBLIC_URL)}" target="_blank" rel="noopener">Open ${APP_NAME} on your phone ${I.out}</a></div>` : "";
+    return `<div class="group"><h2>Get the app</h2><div class="card">${head}
+      ${install}${openPublic}
+      <div class="platforms">${seg("stepsFor", stepsFor, [["ios", "iPhone"], ["android", "Android"]])}</div>
+      ${steps(stepsFor)}
+    </div><p class="hint">No app store needed. It works offline for stories you've already loaded.</p></div>`;
+  }
+
+  // ---------- Share ----------
+  function shareHTML() {
+    const url = shareUrl();
+    const canShare = state.mode === "static" && typeof navigator.share === "function";
+    return `<div class="group"><h2>Share ${APP_NAME}</h2><div class="card">
+      <div class="preview" aria-hidden="true">
+        <div class="banner-img"><img src="${APP_ICON}" alt=""><div><div class="nm">${APP_NAME}</div><div class="tg">Free full articles. No paywalls, no sport.</div></div></div>
+        <div class="meta-line"><b>${APP_NAME}</b>${esc(url.replace(/^https?:\/\//, "").replace(/\/$/, ""))}</div>
+      </div>
+      <div class="linkbox"><input type="text" id="shareLink" readonly value="${esc(url)}" aria-label="Link to ${APP_NAME}"><button type="button" id="copyLink">Copy</button></div>
+      ${canShare ? `<div class="btn-row"><button class="cta" type="button" id="shareApp">Share with a friend</button></div>` : ""}
+      <div class="qr"><div class="code" id="qrCode" aria-label="QR code for ${esc(url)}"></div><p><b>Scan to open</b>Point a phone camera at this code to open ${APP_NAME}.</p></div>
+    </div></div>`;
+  }
+  let qrLib = null;
+  function drawQR() {
+    const box = $("qrCode");
+    if (!box) return;
+    const paint = () => {
+      try {
+        const qr = window.qrcode(0, "M");
+        qr.addData(shareUrl());
+        qr.make();
+        box.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+      } catch { box.parentElement.hidden = true; }
+    };
+    if (window.qrcode) return paint();
+    if (!qrLib) {
+      qrLib = new Promise((ok, bad) => {
+        const sc = document.createElement("script");
+        sc.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js";
+        sc.onload = ok; sc.onerror = bad;
+        document.head.appendChild(sc);
+      });
+    }
+    qrLib.then(paint, () => { box.parentElement.hidden = true; });
+  }
+  async function copyLink() {
+    const url = shareUrl(), input = $("shareLink");
+    try { await navigator.clipboard.writeText(url); toast("Link copied"); }
+    catch { if (input) { input.focus(); input.select(); } toast("Link selected. Copy it from the box."); }
+  }
+
   function renderSettings() {
     const regions = state.status?.regions || REGION_FALLBACK;
     const counts = state.status?.counts || {};
     $("sBody").innerHTML = `
       <h1>Settings</h1>
+      ${getAppHTML()}
+      ${shareHTML()}
       <div class="group"><h2>You</h2><div class="card">
         <div class="field"><label for="setName">Your name</label><input type="text" id="setName" placeholder="Optional" autocomplete="given-name" maxlength="30" value="${esc(S.name)}"></div>
         <div class="field"><label for="setRegion">Local news</label><select id="setRegion">${regions.map(r => `<option value="${r.id}"${r.id === S.region ? " selected" : ""}>${esc(r.label)}${counts["local-" + r.id] != null ? ` (${counts["local-" + r.id]})` : ""}</option>`).join("")}</select></div>
@@ -757,9 +875,10 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
         <button class="field danger" type="button" id="clearSaved">Clear saved stories <span class="sub" style="color:var(--muted)">${state.saved.length} saved</span></button>
       </div></div>
 
-      <p class="about">Daily Brief pulls from free, full-article sources only: ABC, Guardian Australia, SBS, The Conversation, BBC, Ars Technica, TechCrunch and iTnews. No paywalls, no sport.${state.status?.updatedAt ? `<br>Stories last updated ${esc(longDate(state.status.updatedAt))}.` : ""}</p>`;
+      <p class="about">Awesome News pulls from free, full-article sources only: ABC, Guardian Australia, SBS, The Conversation, BBC, Ars Technica, TechCrunch and iTnews. No paywalls, no sport.${state.status?.updatedAt ? `<br>Stories last updated ${esc(longDate(state.status.updatedAt))}.` : ""}</p>`;
     // Size the A buttons so they read as small to large.
     document.querySelectorAll('[data-seg="textSize"]').forEach((b, n) => { b.style.fontSize = ["0.78rem", "0.9rem", "1.02rem", "1.16rem"][n]; });
+    drawQR();
   }
   function openSettings() {
     S.welcomed = true; saveSettings();
@@ -816,6 +935,9 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     }
     if (t.closest("#hideRead")) { state.hideRead = !state.hideRead; store.set("brief.hideRead", state.hideRead); render(true); return; }
     if (t.closest("#rSave")) { toggleSave(state.readerId); return; }
+    if (t.closest("#copyLink")) { copyLink(); return; }
+    if (t.closest("#shareApp")) { navigator.share({ title: APP_NAME, text: "Local, politics, finance, tech and AI news. Free full articles, no paywalls, no sport.", url: shareUrl() }).catch(() => {}); return; }
+    if (t.closest("#installBtn") && installEvent) { installEvent.prompt(); installEvent.userChoice.finally(() => { installEvent = null; renderSettings(); }); return; }
     if (t.closest("#rShare")) { const i = findItem(state.readerId); if (i) navigator.share({ title: i.title, url: i.url }).catch(() => {}); return; }
     const sv = t.closest("[data-save]");
     if (sv) { toggleSave(sv.dataset.save); if (!openSheet) render(true); else sv.setAttribute("aria-pressed", String(isSaved(sv.dataset.save))); return; }
@@ -843,6 +965,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
       saveSettings(); src.setAttribute("aria-checked", String(hidden)); return;
     }
     const sg = t.closest("[data-seg]");
+    if (sg && sg.dataset.seg === "stepsFor") { stepsFor = sg.dataset.val; renderSettings(); return; }
     if (sg) {
       S[sg.dataset.seg] = sg.dataset.val; saveSettings(); applyLook();
       sg.parentElement.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b === sg))); return;
@@ -967,6 +1090,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     if (db) { state.mode = "claude"; loadClaude(db); return; }
     state.mode = "static";
     $("refresh").hidden = false;
+    if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
     loadStatic(false);
     // Pick up new stories while the app stays open.
     setInterval(() => { if (!document.hidden) loadStatic(false); }, 10 * 60000);

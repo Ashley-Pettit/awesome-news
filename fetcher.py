@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Daily Brief fetcher.
+"""Awesome News fetcher.
 
 Pulls free, full-article RSS feeds, drops paywalled, video, promo and sport
 items, sorts stories into sections and writes JSON the app reads.
@@ -157,7 +157,7 @@ SPORT_TITLE = re.compile(r"\b(AFLW?|NRLW?|A-League|Socceroos?|Matildas|Wallabies
                          r"coach|striker|goalkeeper|batter|bowler|jockey|golfer|tennis|boxer|UFC|NFL|NBA|MLB|"
                          r"Kangaroos (?:vs|v)\b|Constellation Cup)\b", re.I)
 
-UA = "Mozilla/5.0 (compatible; DailyBrief news reader)"
+UA = "Mozilla/5.0 (compatible; AwesomeNews reader)"
 NS = {
     "atom": "http://www.w3.org/2005/Atom",
     "media": "http://search.yahoo.com/mrss/",

@@ -16,7 +16,12 @@ here = os.path.dirname(os.path.abspath(__file__))
 app = open(os.path.join(here, "app.html"), encoding="utf-8").read()
 
 m = re.search(r"<title>(.*?)</title>", app)
-title = m.group(1) if m else "Daily Brief"
+title = m.group(1) if m else "Awesome News"
+# Public address, used for the link preview when someone shares the site.
+repo = os.environ.get("GITHUB_REPOSITORY", "Ashley-Pettit/awesome-news")
+owner, name = repo.split("/", 1)
+site_url = os.environ.get("SITE_URL", f"https://{owner.lower()}.github.io/{name}/")
+desc = "Local, politics, finance, tech and AI news from free, full-article sources. No paywalls, no sport."
 body = re.sub(r"<title>.*?</title>\s*", "", app, count=1)
 body = re.sub(r'<meta name="claude:[^"]+"[^>]*>\s*', "", body)
 
@@ -26,12 +31,27 @@ head = f"""<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>{title}</title>
-<meta name="description" content="Brisbane and Australian news, politics, finance, tech and AI from free, full-article sources. No paywalls, no sport.">
+<meta name="description" content="{desc}">
+<link rel="canonical" href="{site_url}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{title}">
+<meta property="og:title" content="{title}">
+<meta property="og:description" content="{desc}">
+<meta property="og:url" content="{site_url}">
+<meta property="og:image" content="{site_url}icons/share-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Awesome News app icon and name">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{title}">
+<meta name="twitter:description" content="{desc}">
+<meta name="twitter:image" content="{site_url}icons/share-card.png">
 <meta name="theme-color" content="#f4f3f1" media="(prefers-color-scheme: light)">
+<meta name="format-detection" content="telephone=no">
 <meta name="theme-color" content="#0f0e11" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Daily Brief">
+<meta name="apple-mobile-web-app-title" content="{title}">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icons/favicon-64.png">
@@ -51,5 +71,6 @@ with open(os.path.join(site, "index.html"), "w", encoding="utf-8") as f:
     f.write(head + body.strip() + "\n</body>\n</html>\n")
 shutil.copytree(os.path.join(here, "icons"), os.path.join(site, "icons"), dirs_exist_ok=True)
 shutil.copy(os.path.join(here, "manifest.webmanifest"), site)
+shutil.copy(os.path.join(here, "sw.js"), site)
 open(os.path.join(site, ".nojekyll"), "w").close()
 print(f"Built {site}/index.html")
