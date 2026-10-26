@@ -480,6 +480,8 @@ def main():
             d = {k: v for k, v in st.items() if not k.startswith("_")}
             if st["id"] in text_ref:
                 d["text"] = text_ref[st["id"]]
+                words = sum(len(p.split()) for p in texts[st["id"]]["paras"])
+                d["mins"] = max(1, round(words / 230))
             out_items.append(d)
         doc = {"section": name, "updatedAt": stamp, "items": out_items}
         for it in reversed(out_items):  # stay under the database document limit

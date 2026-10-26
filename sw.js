@@ -1,6 +1,6 @@
 // Awesome News service worker: network first, so news is always fresh when
 // you're online, with the last copy kept so the app still opens offline.
-const CACHE = "awesome-news-v1";
+const CACHE = "awesome-news-v2";
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", e => e.waitUntil(self.clients.claim()));
