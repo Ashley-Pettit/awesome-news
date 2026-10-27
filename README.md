@@ -11,6 +11,8 @@ A phone-friendly news reader for Australians. It pulls the latest stories from f
 
 Settings in the app shows these steps too, plus a link and QR code to share it with friends.
 
+**iPhone home screen widget:** install the free Scriptable app, paste in [`widget/awesome-news-widget.js`](widget/awesome-news-widget.js) and add a Scriptable widget. The steps are at the top of the script. Tapping a headline opens that story.
+
 ## What's in it
 
 - **Interests:** pick from Local, Headlines, World, Politics, Finance, Tech, AI, Science, Space, Cyber security, Gaming, Cars & EVs, Startups, Health, Education, Cities & housing, Good news, Arts & entertainment, Environment & climate and Wildlife & nature. Each gets its own tab, and For you mixes them all.

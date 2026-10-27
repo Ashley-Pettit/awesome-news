@@ -647,7 +647,9 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     applyVault();
   }
 
-  const hash = location.hash.slice(1);
+  const rawHash = location.hash.slice(1);
+  let pendingStory = rawHash.startsWith("story=") ? decodeURIComponent(rawHash.slice(6)) : "";  // link from the home screen widget
+  const hash = pendingStory ? "" : rawHash;
   const state = {
     tab: hash || store.get("brief.tab3", "foryou"),
     showSaved: hash === "saved",
@@ -1744,6 +1746,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
       else if (state.refreshing && changed) finishRefresh(true);
       bgRefresh();
       if (!openSheet) render(true);
+      if (pendingStory) { const id = pendingStory; pendingStory = ""; history.replaceState(null, "", location.pathname); if (findItem(id)) openReader(id); }
       saveOffline();
       if (!state.wx) loadWeather();
     } catch {
