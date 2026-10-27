@@ -38,14 +38,14 @@ head = f"""<!doctype html>
 <meta property="og:title" content="{title}">
 <meta property="og:description" content="{desc}">
 <meta property="og:url" content="{site_url}">
-<meta property="og:image" content="{site_url}icons/share-card.png">
+<meta property="og:image" content="{site_url}icons/share-card.png?v=2">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Awesome News app icon and name">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{title}">
 <meta name="twitter:description" content="{desc}">
-<meta name="twitter:image" content="{site_url}icons/share-card.png">
+<meta name="twitter:image" content="{site_url}icons/share-card.png?v=2">
 <meta name="theme-color" content="#f4f3f1" media="(prefers-color-scheme: light)">
 <meta name="format-detection" content="telephone=no">
 <meta name="theme-color" content="#0f0e11" media="(prefers-color-scheme: dark)">
@@ -54,8 +54,8 @@ head = f"""<!doctype html>
 <meta name="apple-mobile-web-app-title" content="{title}">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/png" href="icons/favicon-64.png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/favicon-64.png?v=2">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
 <style>
 :root{{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}}
 body{{margin:0;font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}}
