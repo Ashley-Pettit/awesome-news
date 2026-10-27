@@ -50,7 +50,6 @@ SBS_LATEST = "https://www.sbs.com.au/news/topic/latest/feed"
 SBS_AUSTRALIA = "https://www.sbs.com.au/news/topic/australia/feed"
 CONV = "https://theconversation.com/au/{}/articles.atom"
 GU = "https://www.theguardian.com/{}/rss"
-NCA = "https://www.news.com.au/content-feeds/latest-news-{}/"
 SEVEN = "https://7news.com.au/{}/feed"
 ROADMAP = "https://www.microsoft.com/releasecommunications/api/v2/m365/rss"  # official Microsoft 365 feature roadmap
 
@@ -71,7 +70,6 @@ SECTION_FEEDS = [
     ("finance", "ABC News", ABC_BUSINESS, "finance"),
     ("finance", "SmartCompany", "https://www.smartcompany.com.au/feed/", "all"),
     ("finance", "The Guardian", GU.format("au/business"), "finance"),
-    ("finance", "news.com.au", NCA.format("finance"), "all"),
     ("finance", "7NEWS", SEVEN.format("business/finance"), "all"),
     ("ai", "The Conversation", "https://theconversation.com/topics/artificial-intelligence-ai-90/articles.atom", "all"),
     ("ai", "Ars Technica", "https://arstechnica.com/ai/feed/", "all"),
@@ -83,13 +81,11 @@ SECTION_FEEDS = [
     ("tech", "TechCrunch", "https://techcrunch.com/feed/", "all"),
     ("tech", "Engadget", "https://www.engadget.com/rss.xml", "all"),
     ("tech", "The Guardian", GU.format("au/technology"), "all"),
-    ("tech", "news.com.au", NCA.format("technology"), "all"),
     ("tech", "7NEWS", SEVEN.format("technology"), "all"),
     ("headlines", "ABC News", ABC_TOP, "all"),
     ("headlines", "SBS News", SBS_LATEST, "all"),
     ("headlines", "BBC World", "https://feeds.bbci.co.uk/news/world/rss.xml", "all"),
     ("headlines", "The Guardian", GU.format("australia-news"), "all"),
-    ("headlines", "news.com.au", NCA.format("national"), "all"),
     ("headlines", "7NEWS", SEVEN.format("news"), "all"),
 ]
 
@@ -113,7 +109,7 @@ REGIONS = {
 # National feeds mined for each region's place names.
 REGION_MINE = [("ABC News", ABC_JUST_IN), ("ABC News", ABC_TOP), ("SBS News", SBS_AUSTRALIA), ("SBS News", SBS_LATEST),
                ("The Conversation", CONV.format("politics")), ("The Conversation", CONV.format("environment")),
-               ("The Guardian", GU.format("australia-news")), ("news.com.au", NCA.format("national")),
+               ("The Guardian", GU.format("australia-news")),
                ("7NEWS", SEVEN.format("news"))]
 
 # Interests people can switch on. Each takes its own feeds plus any story, from any feed,
@@ -122,7 +118,7 @@ INTERESTS = [
     # id, label, group, [(source, url)], headline keywords (or None)
     ("world", "World", "news", [("SBS News", "https://www.sbs.com.au/news/topic/world/feed"), ("BBC World", "https://feeds.bbci.co.uk/news/world/rss.xml"),
                                 ("Global Voices", "https://globalvoices.org/feed/"), ("360info", "https://360info.org/feed/"),
-                                ("The Guardian", GU.format("world")), ("news.com.au", NCA.format("world"))], None),
+                                ("The Guardian", GU.format("world"))], None),
     ("science", "Science", "tech", [("Ars Technica", "https://arstechnica.com/science/feed/"), ("BBC Science", "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml"),
                                     ("ScienceAlert", "https://www.sciencealert.com/feed"), ("New Atlas", "https://newatlas.com/index.rss"),
                                     ("Knowable Magazine", "https://knowablemagazine.org/rss"), ("The Guardian", GU.format("science"))],
@@ -320,7 +316,7 @@ def parse_xml(raw):
     except ET.ParseError:
         t = raw.decode("utf-8", "ignore") if isinstance(raw, bytes) else raw
         if re.search(r"<html[\s>]", t[:3000], re.I):
-            raise  # a web page (block or error page), not a feed
+            raise ValueError("sent a web page, not a feed (blocked or moved)")
         t = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", t)
         t = re.sub(r"&(?!(?:#\d+|#x[0-9a-fA-F]+|amp|lt|gt|quot|apos);)", "&amp;", t)
         t = re.sub(r"^\s*<\?xml[^>]*\?>", "", t)

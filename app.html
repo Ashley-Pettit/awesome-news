@@ -494,7 +494,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   </div>
 
   <div class="wrap">
-    <p class="foot">Free sources only: ABC, SBS, BBC, The Guardian, news.com.au, 7NEWS, The Conversation, 360info, Global Voices, NASA and more. Stories marked Full open right here. No paywalls, no sport.</p>
+    <p class="foot">Free sources only: ABC, SBS, BBC, The Guardian, 7NEWS, The Conversation, 360info, Global Voices, NASA and more. Stories marked Full open right here. No paywalls, no sport.</p>
   </div>
 </main>
 
@@ -561,7 +561,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   const DEFAULT_ON = [];                // set per build: interests switched on out of the box
   const OWN_COLOUR = new Set([...CORE_IDS, "copilot"]);
   const PUBLISHERS = [
-    { id: "ABC", label: "ABC News" }, { id: "SBS", label: "SBS News" }, { id: "BBC", label: "BBC" }, { id: "The Guardian", label: "The Guardian" }, { id: "news.com.au", label: "news.com.au" }, { id: "7NEWS", label: "7NEWS" },
+    { id: "ABC", label: "ABC News" }, { id: "SBS", label: "SBS News" }, { id: "BBC", label: "BBC" }, { id: "The Guardian", label: "The Guardian" }, { id: "7NEWS", label: "7NEWS" },
     { id: "The Conversation", label: "The Conversation" }, { id: "360info", label: "360info" }, { id: "Global Voices", label: "Global Voices" },
     { id: "NASA", label: "NASA" }, { id: "EFF", label: "EFF" }, { id: "Ars", label: "Ars Technica" }, { id: "TechCrunch", label: "TechCrunch" },
     { id: "iTnews", label: "iTnews" }, { id: "Engadget", label: "Engadget" }, { id: "SmartCompany", label: "SmartCompany" },
@@ -574,7 +574,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   const REGION_FALLBACK = [{ id: "qld", label: "Queensland" }];
   const FOR_YOU_PER_SECTION = 7;
   const FEATURE_EVERY = 6;
-  const MONO = { "ABC": "ABC", "SBS": "SBS", "BBC": "BBC", "M365": "365", "Microsoft": "MS", "Office 365": "IT", "Windows Central": "WC", "Ars": "Ars", "360info": "360", "Global Voices": "GV", "NASA": "NASA", "EFF": "EFF", "TechCrunch": "TC", "iTnews": "iT", "The Conversation": "C", "The Guardian": "G", "news.com.au": "N", "7NEWS": "7" };
+  const MONO = { "ABC": "ABC", "SBS": "SBS", "BBC": "BBC", "M365": "365", "Microsoft": "MS", "Office 365": "IT", "Windows Central": "WC", "Ars": "Ars", "360info": "360", "Global Voices": "GV", "NASA": "NASA", "EFF": "EFF", "TechCrunch": "TC", "iTnews": "iT", "The Conversation": "C", "The Guardian": "G", "7NEWS": "7" };
   const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || "Australia/Brisbane";
   const SIZES = { s: "1rem", m: "1.12rem", l: "1.24rem", xl: "1.38rem" };
 
@@ -1407,7 +1407,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
       </div></div>`,
       app: `${getAppHTML()}
       ${shareHTML()}
-      <p class="about" id="aboutLine">Awesome News pulls from free sources only: ABC, SBS, BBC, The Guardian, news.com.au, 7NEWS, The Conversation, 360info, Global Voices, NASA, EFF, Ars Technica, TechCrunch, iTnews and more. ${privateMode() ? "Stories open in full right here." : "Stories marked Full are free to republish, so they open in full right here."} No paywalls, no sport.${state.status?.updatedAt ? `<br>Stories last updated ${esc(longDate(state.status.updatedAt))}.` : ""}</p>
+      <p class="about" id="aboutLine">Awesome News pulls from free sources only: ABC, SBS, BBC, The Guardian, 7NEWS, The Conversation, 360info, Global Voices, NASA, EFF, Ars Technica, TechCrunch, iTnews and more. ${privateMode() ? "Stories open in full right here." : "Stories marked Full are free to republish, so they open in full right here."} No paywalls, no sport.${state.status?.updatedAt ? `<br>Stories last updated ${esc(longDate(state.status.updatedAt))}.` : ""}</p>
       ${adminAsk && !A.unlocked ? passForm("Unlock") : ""}`,
       admin: `<div class="group"><h2>Admin</h2><div class="card">
         ${vaultKey ? toggle("data-admin", "full", A.full, "Full articles in the app", "Every story opens in full right here, like the Claude app. No links out.") : ""}

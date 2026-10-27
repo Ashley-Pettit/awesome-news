@@ -28,7 +28,7 @@ Settings in the app shows these steps too, plus a link and QR code to share it w
 
 ## Sources
 
-ABC News, SBS News, BBC, The Guardian, news.com.au, 7NEWS, The Conversation, 360info, Global Voices, NASA, EFF, Ars Technica, TechCrunch, iTnews, Engadget, SmartCompany, Startup Daily, ScienceAlert, New Atlas, Knowable Magazine, Space.com, PC Gamer, Kotaku, Good News Network and Positive News. Paywalled outlets are left out on purpose. Guardian live blogs are skipped.
+ABC News, SBS News, BBC, The Guardian, 7NEWS, The Conversation, 360info, Global Voices, NASA, EFF, Ars Technica, TechCrunch, iTnews, Engadget, SmartCompany, Startup Daily, ScienceAlert, New Atlas, Knowable Magazine, Space.com, PC Gamer, Kotaku, Good News Network and Positive News. Paywalled outlets are left out on purpose. Guardian live blogs are skipped.
 
 Stories from The Conversation (CC BY-ND), 360info (CC BY), Global Voices (CC BY), EFF (CC BY) and NASA (public domain) are shown in full, with credit, because their licences allow it. They carry a **Full** badge and get priority in the feed. Every other story shows a preview that links to the publisher, so they get the visit. Settings has a **Full stories only** switch to hide the previews.
 
