@@ -38,78 +38,97 @@ from email.utils import parsedate_to_datetime
 # Sources. Only outlets that publish full articles free of charge.
 # Left out on purpose: Courier-Mail, The Australian, AFR, Brisbane Times / SMH /
 # The Age, The Verge, Reuters, Bloomberg, MIT Tech Review (paywalls or meters).
+# The Guardian is left out at the owner's request.
 # ---------------------------------------------------------------------------
 ABC_JUST_IN = "https://www.abc.net.au/news/feed/51120/rss.xml"
 ABC_TOP = "https://www.abc.net.au/news/feed/45910/rss.xml"
 ABC_BUSINESS = "https://www.abc.net.au/news/feed/51892/rss.xml"
-GUARDIAN_AU = "https://www.theguardian.com/australia-news/rss"
 SBS_LATEST = "https://www.sbs.com.au/news/topic/latest/feed"
+SBS_AUSTRALIA = "https://www.sbs.com.au/news/topic/australia/feed"
+CONV = "https://theconversation.com/au/{}/articles.atom"
 
 SECTION_FEEDS = [
     # section, source label, url, keep ("all" or a keyword filter name)
-    ("politics", "Guardian Politics", "https://www.theguardian.com/australia-news/australian-politics/rss", "all"),
-    ("politics", "The Conversation", "https://theconversation.com/au/politics/articles.atom", "all"),
+    ("politics", "The Conversation", CONV.format("politics"), "all"),
     ("politics", "ABC News", ABC_JUST_IN, "politics"),
+    ("politics", "SBS News", SBS_AUSTRALIA, "politics"),
+    ("finance", "The Conversation", CONV.format("business"), "all"),
     ("finance", "ABC News", ABC_BUSINESS, "finance"),
-    ("finance", "The Conversation", "https://theconversation.com/au/business/articles.atom", "all"),
-    ("finance", "Guardian Economics", "https://www.theguardian.com/business/economics/rss", "all"),
-    ("finance", "Guardian Business", "https://www.theguardian.com/business/rss", "all"),
-    ("ai", "Guardian AI", "https://www.theguardian.com/technology/artificialintelligenceai/rss", "all"),
+    ("finance", "SmartCompany", "https://www.smartcompany.com.au/feed/", "all"),
+    ("ai", "The Conversation", "https://theconversation.com/topics/artificial-intelligence-ai-90/articles.atom", "all"),
     ("ai", "Ars Technica", "https://arstechnica.com/ai/feed/", "all"),
     ("ai", "TechCrunch", "https://techcrunch.com/category/artificial-intelligence/feed/", "all"),
-    ("ai", "The Conversation", "https://theconversation.com/topics/artificial-intelligence-ai-90/articles.atom", "all"),
+    ("tech", "The Conversation", CONV.format("technology"), "all"),
     ("tech", "iTnews", "https://www.itnews.com.au/RSS/rss.ashx", "all"),
     ("tech", "Ars Technica", "https://feeds.arstechnica.com/arstechnica/index", "all"),
-    ("tech", "Guardian Tech", "https://www.theguardian.com/technology/rss", "all"),
     ("tech", "TechCrunch", "https://techcrunch.com/feed/", "all"),
+    ("tech", "Engadget", "https://www.engadget.com/rss.xml", "all"),
     ("headlines", "ABC News", ABC_TOP, "all"),
-    ("headlines", "Guardian Australia", GUARDIAN_AU, "all"),
     ("headlines", "SBS News", SBS_LATEST, "all"),
     ("headlines", "BBC World", "https://feeds.bbci.co.uk/news/world/rss.xml", "all"),
 ]
 
 REGIONS = {
     # id: (label, [(source, url)], place names (any case), abbreviations (exact case))
-    "qld": ("Queensland", [
-        ("ABC Brisbane", "https://www.abc.net.au/news/feed/8053540/rss.xml"),
-        ("Guardian Qld", "https://www.theguardian.com/australia-news/queensland/rss"),
-        ("Guardian Brisbane", "https://www.theguardian.com/australia-news/brisbane/rss"),
-    ], r"Brisbane|Queensland(?:ers?)?|Gold Coast|Sunshine Coast|Logan|Ipswich|Moreton Bay|Redland|Toowoomba|Cairns|"
-       r"Townsville|Mackay|Rockhampton|Bundaberg|Gympie|Crisafulli", r"Qld|QLD"),
-    "nsw": ("New South Wales", [
-        ("ABC Sydney", "https://www.abc.net.au/news/feed/8055316/rss.xml"),
-        ("Guardian NSW", "https://www.theguardian.com/australia-news/new-south-wales/rss"),
-        ("Guardian Sydney", "https://www.theguardian.com/australia-news/sydney/rss"),
-    ], r"Sydney|New South Wales|Newcastle|Wollongong|Central Coast|Blue Mountains|Parramatta|Minns", r"NSW"),
-    "vic": ("Victoria", [
-        ("ABC Melbourne", "https://www.abc.net.au/news/feed/8057136/rss.xml"),
-        ("Guardian Vic", "https://www.theguardian.com/australia-news/victoria/rss"),
-        ("Guardian Melbourne", "https://www.theguardian.com/australia-news/melbourne/rss"),
-    ], r"Melbourne|Victorian?s?|Geelong|Ballarat|Bendigo|Gippsland|Jacinta Allan", r"Vic"),
-    "wa": ("Western Australia", [
-        ("ABC Perth", "https://www.abc.net.au/news/feed/8057096/rss.xml"),
-        ("Guardian WA", "https://www.theguardian.com/australia-news/western-australia/rss"),
-    ], r"Perth|Western Australian?s?|Fremantle|Bunbury|Kimberley|Pilbara|Kalgoorlie", r"WA"),
-    "sa": ("South Australia", [
-        ("ABC Adelaide", "https://www.abc.net.au/news/feed/8057540/rss.xml"),
-        ("Guardian SA", "https://www.theguardian.com/australia-news/south-australia/rss"),
-        ("Guardian Adelaide", "https://www.theguardian.com/australia-news/adelaide/rss"),
-    ], r"Adelaide|South Australian?s?|Mount Gambier|Whyalla|Port Augusta|Malinauskas", r"SA"),
-    "tas": ("Tasmania", [
-        ("Guardian Tas", "https://www.theguardian.com/australia-news/tasmania/rss"),
-        ("Guardian Hobart", "https://www.theguardian.com/australia-news/hobart/rss"),
-    ], r"Tasmanian?s?|Hobart|Launceston|Devonport|Burnie", r"Tas"),
-    "act": ("Canberra", [
-        ("Guardian ACT", "https://www.theguardian.com/australia-news/australian-capital-territory/rss"),
-        ("Guardian Canberra", "https://www.theguardian.com/australia-news/canberra/rss"),
-    ], r"Canberra|Australian Capital Territory", r"ACT"),
-    "nt": ("Northern Territory", [
-        ("Guardian NT", "https://www.theguardian.com/australia-news/northern-territory/rss"),
-        ("Guardian Darwin", "https://www.theguardian.com/australia-news/darwin/rss"),
-    ], r"Darwin|Northern Territory|Alice Springs|Katherine|Arnhem|Tiwi|Wadeye", r"NT"),
+    "qld": ("Queensland", [("ABC Brisbane", "https://www.abc.net.au/news/feed/8053540/rss.xml")],
+            r"Brisbane|Queensland(?:ers?)?|Gold Coast|Sunshine Coast|Logan|Ipswich|Moreton Bay|Redland|Toowoomba|Cairns|"
+            r"Townsville|Mackay|Rockhampton|Bundaberg|Gympie|Crisafulli", r"Qld|QLD"),
+    "nsw": ("New South Wales", [("ABC Sydney", "https://www.abc.net.au/news/feed/8055316/rss.xml")],
+            r"Sydney|New South Wales|Newcastle|Wollongong|Central Coast|Blue Mountains|Parramatta|Minns", r"NSW"),
+    "vic": ("Victoria", [("ABC Melbourne", "https://www.abc.net.au/news/feed/8057136/rss.xml")],
+            r"Melbourne|Victorian?s?|Geelong|Ballarat|Bendigo|Gippsland|Jacinta Allan", r"Vic"),
+    "wa": ("Western Australia", [("ABC Perth", "https://www.abc.net.au/news/feed/8057096/rss.xml")],
+           r"Perth|Western Australian?s?|Fremantle|Bunbury|Kimberley|Pilbara|Kalgoorlie", r"WA"),
+    "sa": ("South Australia", [("ABC Adelaide", "https://www.abc.net.au/news/feed/8057540/rss.xml")],
+           r"Adelaide|South Australian?s?|Mount Gambier|Whyalla|Port Augusta|Malinauskas", r"SA"),
+    "tas": ("Tasmania", [], r"Tasmanian?s?|Hobart|Launceston|Devonport|Burnie", r"Tas"),
+    "act": ("Canberra", [], r"Canberra|Australian Capital Territory", r"ACT"),
+    "nt": ("Northern Territory", [], r"Darwin|Northern Territory|Alice Springs|Katherine|Arnhem|Tiwi|Wadeye", r"NT"),
 }
 # National feeds mined for each region's place names.
-REGION_MINE = [("ABC News", ABC_JUST_IN), ("ABC News", ABC_TOP), ("Guardian Australia", GUARDIAN_AU), ("SBS News", SBS_LATEST)]
+REGION_MINE = [("ABC News", ABC_JUST_IN), ("ABC News", ABC_TOP), ("SBS News", SBS_AUSTRALIA), ("SBS News", SBS_LATEST),
+               ("The Conversation", CONV.format("politics")), ("The Conversation", CONV.format("environment"))]
+
+# Interests people can switch on. Each takes its own feeds plus any story, from any feed,
+# whose headline matches its keywords. Groups set the colour and where it sits in the picker.
+INTERESTS = [
+    # id, label, group, [(source, url)], headline keywords (or None)
+    ("world", "World", "news", [("SBS News", "https://www.sbs.com.au/news/topic/world/feed"), ("BBC World", "https://feeds.bbci.co.uk/news/world/rss.xml"),
+                                ("Global Voices", "https://globalvoices.org/feed/"), ("360info", "https://360info.org/feed/")], None),
+    ("science", "Science", "tech", [("Ars Technica", "https://arstechnica.com/science/feed/"), ("BBC Science", "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml"),
+                                    ("ScienceAlert", "https://www.sciencealert.com/feed"), ("New Atlas", "https://newatlas.com/index.rss"),
+                                    ("Knowable Magazine", "https://knowablemagazine.org/rss")],
+     r"scientists?|researchers?|new study|study finds|physics|chemistry|biolog\w*|fossils?|evolution|DNA|genes?|genetic\w*|quantum|dinosaurs?"),
+    ("space", "Space", "tech", [("NASA", "https://www.nasa.gov/feed/"), ("Ars Technica", "https://arstechnica.com/space/feed/"), ("Space.com", "https://www.space.com/feeds/all")],
+     r"space|NASA|rockets?|astronauts?|the moon|lunar|Mars|telescopes?|planets?|galax\w+|asteroids?|comets?|satellites?|SpaceX|orbit\w*|cosmic|black holes?"),
+    ("cyber", "Cyber security", "tech", [("Ars Technica", "https://arstechnica.com/security/feed/"), ("EFF", "https://www.eff.org/rss/updates.xml"),
+                                         ("The Conversation", "https://theconversation.com/topics/cybersecurity-535/articles.atom")],
+     r"cyber\w*|hack(?:er|ers|ed|ing|s)?|data breach\w*|breach(?:es|ed)?|ransomware|malware|phishing|scam(?:s|mers)?|privacy|passwords?|spyware"),
+    ("gaming", "Gaming", "tech", [("Ars Technica", "https://arstechnica.com/gaming/feed/"), ("PC Gamer", "https://www.pcgamer.com/rss/"), ("Kotaku", "https://kotaku.com/rss")],
+     r"video games?|gaming|gamers?|Nintendo|PlayStation|Xbox|Steam"),
+    ("cars", "Cars & EVs", "tech", [("Ars Technica", "https://arstechnica.com/cars/feed/")],
+     r"EVs?|electric vehicles?|electric cars?|Tesla|BYD|cars?|motorists?|driverless|self-driving|fuel prices?|petrol"),
+    ("startups", "Startups", "tech", [("TechCrunch", "https://techcrunch.com/category/startups/feed/"), ("SmartCompany", "https://www.smartcompany.com.au/feed/"),
+                                      ("Startup Daily", "https://www.startupdaily.net/feed/")], r"start-?ups?|founders?|venture capital|unicorn"),
+    ("health", "Health", "life", [("The Conversation", CONV.format("health")), ("BBC Health", "https://feeds.bbci.co.uk/news/health/rss.xml")],
+     r"health|hospitals?|doctors?|GPs?|cancer|vaccines?|diet|sleep|disease|medicine|medical|patients?|nurses?|dementia|obesity|nutrition"),
+    ("education", "Education", "life", [("The Conversation", CONV.format("education"))],
+     r"schools?|students?|teachers?|universit\w+|education|HECS|childcare|early childhood|NAPLAN"),
+    ("housing", "Cities & housing", "life", [("The Conversation", CONV.format("cities"))],
+     r"housing|rent(?:ers|al|s)?|property|mortgages?|home ?owners?|house prices|landlords?|apartments?|suburbs?"),
+    ("goodnews", "Good news", "life", [("Good News Network", "https://www.goodnewsnetwork.org/feed/"), ("Positive News", "https://www.positive.news/feed/")], None),
+    ("arts", "Arts & entertainment", "culture", [("The Conversation", CONV.format("arts")), ("BBC Entertainment", "https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml")],
+     r"films?|movies?|TV|television|series|albums?|music|singers?|bands?|concerts?|festival|books?|novels?|authors?|artists?|gallery|theatre|exhibition|Netflix|Oscars?"),
+    ("environment", "Environment & climate", "planet", [("The Conversation", CONV.format("environment")),
+                                                        ("The Conversation", "https://theconversation.com/topics/climate-change-27/articles.atom")],
+     r"climate|emissions?|renewables?|solar|wind farms?|coal|net zero|pollution|plastics?|recycling|drought|floods?|flooding|bushfires?|heatwaves?|environment\w*|carbon"),
+    ("wildlife", "Wildlife & nature", "planet", [],
+     r"wildlife|species|animals?|birds?|koalas?|kangaroos?|reefs?|whales?|sharks?|crocs?|crocodiles?|turtles?|conservation|endangered|extinct\w*|insects?|bees?|forests?|national parks?"),
+]
+INTEREST_GROUPS = [("news", "News"), ("tech", "Tech & science"), ("life", "Life"), ("culture", "Culture"), ("planet", "Planet")]
+PER_INTEREST = 30
+NO_MINE = {"PC Gamer", "Kotaku", "Startup Daily", "Good News Network", "Positive News"}  # too niche to lend stories to other interests
+MAX_AGE_INTEREST = timedelta(days=10)  # niche feeds publish less often
 
 SECTION_ORDER = ["politics", "finance", "ai", "tech", "headlines"]
 PER_SECTION = 40
@@ -164,7 +183,15 @@ NS = {
     "content": "http://purl.org/rss/1.0/modules/content/",
     "dc": "http://purl.org/dc/elements/1.1/",
 }
-CC_SOURCES = {"The Conversation"}  # CC BY-ND: may be republished unchanged, with credit
+# Sources whose licence lets anyone republish the full article (with credit), so the
+# public site can show them in full. Everything else is a preview that links out.
+CC_SOURCES = {
+    "The Conversation": ("CC BY-ND 4.0", "https://creativecommons.org/licenses/by-nd/4.0/"),
+    "360info": ("CC BY 4.0", "https://creativecommons.org/licenses/by/4.0/"),
+    "Global Voices": ("CC BY 3.0", "https://creativecommons.org/licenses/by/3.0/"),
+    "EFF": ("CC BY 4.0", "https://creativecommons.org/licenses/by/4.0/"),
+    "NASA": ("Public domain", "https://www.nasa.gov/nasa-brand-center/images-and-media/"),
+}
 
 
 # ---------------------------------------------------------------------------
@@ -306,7 +333,7 @@ def to_story(it, source, now, max_age=MAX_AGE):
 # Article pages: share picture and (where allowed) the article text
 # ---------------------------------------------------------------------------
 JUNK_PARA = re.compile(r"^(-\s*)?(Read more|Related|Advertisement|Loading|Share this|Sign up|Follow us|Topics?:|Posted |Updated |Published$|"
-                       r"For the latest from SBS|Get all the latest|Download our app|Subscribe to)", re.I)
+                       r"For the latest from SBS|Get all the latest|Download our app|Subscribe to|Tomorrow's picture)", re.I)
 
 
 def read_page(story, want_text):
@@ -359,12 +386,16 @@ def main():
     ap.add_argument("--regions", default="all")
     ap.add_argument("--images", choices=["url", "inline"], default="url")
     ap.add_argument("--text", choices=["cc", "all", "none"], default="cc")
+    ap.add_argument("--interests", choices=["all", "none"], default="none")
     a = ap.parse_args()
     regions = list(REGIONS) if a.regions == "all" else [r.strip() for r in a.regions.split(",") if r.strip() in REGIONS]
     now = datetime.now(timezone.utc)
 
     # 1. Fetch every feed once.
     urls = {u for _, _, u, _ in SECTION_FEEDS} | {u for _, u in REGION_MINE}
+    interests = INTERESTS if a.interests == "all" else []
+    for _, _, _, ifeeds, _ in interests:
+        urls |= {u for _, u in ifeeds}
     for r in regions:
         urls |= {u for _, u in REGIONS[r][1]}
     raw, errors = {}, []
@@ -418,6 +449,32 @@ def main():
                 items.append(st)
         sections[f"local-{r}"] = sorted(items, key=lambda x: x["published"], reverse=True)[:PER_REGION]
 
+    # 3b. Interests: own feeds first, then any story whose headline matches the keywords.
+    feed_source = {}
+    for _, src, u, _ in SECTION_FEEDS:
+        feed_source.setdefault(u, src)
+    for _, ifeeds, *_ in [(x[0], x[3]) for x in interests]:
+        for src, u in ifeeds:
+            feed_source.setdefault(u, src)
+    for iid, _, _, ifeeds, words in interests:
+        kw = re.compile(rf"\b({words})\b", re.I) if words else None
+        items, su, stt = [], set(), set()
+        own = {u for _, u in ifeeds}
+        cands = [(src, u) for src, u in ifeeds] + ([(feed_source[u], u) for u in raw
+                                                    if u not in own and u in feed_source and feed_source[u] not in NO_MINE] if kw else [])
+        for source, url in cands:
+            for it in raw.get(url, []):
+                st = to_story(it, source, now, MAX_AGE_INTEREST)
+                if not st or (url not in own and not kw.search(st["title"])):
+                    continue
+                k, t = url_key(st["url"]), title_key(st["title"])
+                if k in su or t in stt:
+                    continue
+                su.add(k)
+                stt.add(t)
+                items.append(st)
+        sections[iid] = sorted(items, key=lambda x: x["published"], reverse=True)[:PER_INTEREST]
+
     # Same story in several sections -> one shared object, so pictures and text are fetched once.
     unique = {}
     for name, items in sections.items():
@@ -434,7 +491,8 @@ def main():
             if img and not st["_img"]:
                 st["_img"] = img
             if text:
-                texts[st["id"]] = dict(text, cc=st["source"] in CC_SOURCES)
+                lic = CC_SOURCES.get(st["source"])
+                texts[st["id"]] = dict(text, cc=bool(lic), licence=lic[0] if lic else "", licenceUrl=lic[1] if lic else "")
 
     # 5. Pictures.
     if a.images == "url":
@@ -498,6 +556,9 @@ def main():
         "updatedAt": stamp,
         "counts": counts,
         "regions": [{"id": r, "label": REGIONS[r][0]} for r in regions],
+        "interests": [{"id": i[0], "label": i[1], "group": i[2]} for i in interests],
+        "groups": [{"id": g, "label": l} for g, l in INTEREST_GROUPS],
+        "fullSources": sorted(CC_SOURCES),
         "sections": list(sections),
         "textChunks": [f"t{n:02d}" for n in range(1, len(chunks) + 1)],
         "articlesWithText": len(text_ref),

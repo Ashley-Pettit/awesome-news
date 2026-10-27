@@ -28,18 +28,21 @@
   --read-size: 1.12rem;
   /* one colour per section, so you can tell them apart at a glance */
   --c-local: #7a1d33; --c-headlines: #2b4c7e; --c-politics: #6a3fa0; --c-finance: #1f7a52; --c-tech: #0b6e8a; --c-ai: #b25a00; --c-topic: #7a1d33; --c-foryou: #7a1d33;
+  --c-g-news: #2b4c7e; --c-g-tech: #0b6e8a; --c-g-life: #1f7a52; --c-g-culture: #a3306f; --c-g-planet: #4d7a1f;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #0f0e11; --surface: #1a191d; --ink: #efecf1; --muted: #a8a4ae; --faint: #6c6872; --line: #2a282e;
     --accent: #ec8fa3; --accent-ink: #2a0b13; --accent-soft: #34191f; --ok: #4cc27d; --shade: rgba(0, 0, 0, 0.35); color-scheme: dark;
     --c-local: #ec8fa3; --c-headlines: #8fb3ff; --c-politics: #c4a5ff; --c-finance: #6fd6a3; --c-tech: #6cd3ef; --c-ai: #ffb86b; --c-topic: #ec8fa3; --c-foryou: #ec8fa3;
+    --c-g-news: #8fb3ff; --c-g-tech: #6cd3ef; --c-g-life: #6fd6a3; --c-g-culture: #f39acb; --c-g-planet: #a8d672;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0f0e11; --surface: #1a191d; --ink: #efecf1; --muted: #a8a4ae; --faint: #6c6872; --line: #2a282e;
   --accent: #ec8fa3; --accent-ink: #2a0b13; --accent-soft: #34191f; --ok: #4cc27d; --shade: rgba(0, 0, 0, 0.35); color-scheme: dark;
     --c-local: #ec8fa3; --c-headlines: #8fb3ff; --c-politics: #c4a5ff; --c-finance: #6fd6a3; --c-tech: #6cd3ef; --c-ai: #ffb86b; --c-topic: #ec8fa3; --c-foryou: #ec8fa3;
+    --c-g-news: #8fb3ff; --c-g-tech: #6cd3ef; --c-g-life: #6fd6a3; --c-g-culture: #f39acb; --c-g-planet: #a8d672;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -107,6 +110,23 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
 .sec { display: inline-flex; align-items: center; gap: 5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--sc, var(--ink)); white-space: nowrap; }
 .sec::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
 .new { flex: none; padding: 2px 6px; border-radius: 5px; background: var(--accent); color: var(--accent-ink); font-size: 0.6rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; }
+.fullb { flex: none; padding: 2px 7px; border-radius: 6px; background: rgba(47, 154, 91, 0.14); color: var(--ok); font-size: 0.66rem; font-weight: 800; letter-spacing: 0.03em; white-space: nowrap; }
+.hcard .fullb { background: rgba(76, 194, 125, 0.25); color: #c9f5da; }
+.addtab { color: var(--accent); display: inline-flex; align-items: center; }
+.addtab svg { width: 18px; height: 18px; }
+#interests { z-index: 42; }
+.lead-hint { color: var(--muted); margin: 6px 0 0; max-width: 46ch; }
+.pick { display: flex; flex-wrap: wrap; gap: 10px; }
+.pchip { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px 9px 9px; border-radius: 999px; background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line); font-weight: 600; font-size: 0.95rem; color: var(--ink); transition: box-shadow 0.2s ease, transform 0.15s ease; }
+.pchip:active { transform: scale(0.96); }
+.pchip .ck { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; box-shadow: inset 0 0 0 2px var(--pc); color: transparent; transition: background-color 0.2s ease, color 0.2s ease; flex: none; }
+.pchip .ck svg { width: 14px; height: 14px; }
+.pchip[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--pc); }
+.pchip[aria-pressed="true"] .ck { background: var(--pc); color: var(--bg); }
+.pchip .n { font-size: 0.72rem; color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
+.field .sub.clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.chev { color: var(--faint); font-size: 1.5rem; line-height: 1; flex: none; }
 .mins { white-space: nowrap; flex: 0 100 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .meta time, .meta .sec, .meta .new { flex: none; }
 .meta .src { flex: 0 1 auto; min-width: 3.5em; }
@@ -417,7 +437,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   </div>
 
   <div class="wrap">
-    <p class="foot">Free, full-article sources only: ABC, Guardian Australia, SBS, The Conversation, BBC, Ars Technica, TechCrunch and iTnews. No paywalls, no sport.</p>
+    <p class="foot">Free sources only: ABC, SBS, BBC, The Conversation, 360info, Global Voices, NASA, Ars Technica and more. Stories marked Full open right here. No paywalls, no sport.</p>
   </div>
 </main>
 
@@ -442,6 +462,15 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   <div class="settings" id="sBody"></div>
 </section>
 
+<section class="sheet up" id="interests" role="dialog" aria-modal="true" aria-label="Your interests" hidden>
+  <div class="bar"><div class="wrap">
+    <span></span>
+    <div class="bar-title">Your interests</div>
+    <button class="done" type="button" data-close="interests">Done</button>
+  </div></div>
+  <div class="settings" id="iBody"></div>
+</section>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="ptr" id="ptr" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></div>
 
@@ -454,23 +483,28 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   const APP_NAME = "Awesome News";
   const PUBLIC_URL = "https://ashley-pettit.github.io/awesome-news/";
   const APP_ICON = "data:image/png;base64,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";
-  const SECTIONS = [
-    { id: "local", label: "Local", tag: "Local" },
-    { id: "headlines", label: "Headlines", tag: "Headlines" },
-    { id: "politics", label: "Politics", tag: "Politics" },
-    { id: "finance", label: "Finance", tag: "Finance" },
-    { id: "tech", label: "Tech", tag: "Tech" },
-    { id: "ai", label: "AI", tag: "AI" },
+  const SECTIONS = [  // always available; more interests arrive with the news data
+    { id: "local", label: "Local", tag: "Local", group: "news" },
+    { id: "headlines", label: "Headlines", tag: "Headlines", group: "news" },
+    { id: "politics", label: "Politics", tag: "Politics", group: "news" },
+    { id: "finance", label: "Finance", tag: "Finance", group: "news" },
+    { id: "tech", label: "Tech", tag: "Tech", group: "tech" },
+    { id: "ai", label: "AI", tag: "AI", group: "tech" },
   ];
+  const CORE_IDS = new Set(SECTIONS.map(s => s.id));
   const PUBLISHERS = [
-    { id: "ABC", label: "ABC News" }, { id: "Guardian", label: "The Guardian" }, { id: "SBS", label: "SBS News" },
-    { id: "BBC", label: "BBC" }, { id: "The Conversation", label: "The Conversation" }, { id: "Ars", label: "Ars Technica" },
-    { id: "TechCrunch", label: "TechCrunch" }, { id: "iTnews", label: "iTnews" },
+    { id: "ABC", label: "ABC News" }, { id: "SBS", label: "SBS News" }, { id: "BBC", label: "BBC" },
+    { id: "The Conversation", label: "The Conversation" }, { id: "360info", label: "360info" }, { id: "Global Voices", label: "Global Voices" },
+    { id: "NASA", label: "NASA" }, { id: "EFF", label: "EFF" }, { id: "Ars", label: "Ars Technica" }, { id: "TechCrunch", label: "TechCrunch" },
+    { id: "iTnews", label: "iTnews" }, { id: "Engadget", label: "Engadget" }, { id: "SmartCompany", label: "SmartCompany" },
+    { id: "Startup Daily", label: "Startup Daily" }, { id: "ScienceAlert", label: "ScienceAlert" }, { id: "New Atlas", label: "New Atlas" },
+    { id: "Knowable", label: "Knowable Magazine" }, { id: "Space.com", label: "Space.com" }, { id: "PC Gamer", label: "PC Gamer" },
+    { id: "Kotaku", label: "Kotaku" }, { id: "Good News Network", label: "Good News Network" }, { id: "Positive News", label: "Positive News" },
   ];
   const REGION_FALLBACK = [{ id: "qld", label: "Queensland" }];
   const FOR_YOU_PER_SECTION = 7;
   const FEATURE_EVERY = 6;
-  const MONO = { "ABC": "ABC", "SBS": "SBS", "BBC": "BBC", "Guardian": "G", "Ars": "Ars", "TechCrunch": "TC", "iTnews": "iT", "The Conversation": "C" };
+  const MONO = { "ABC": "ABC", "SBS": "SBS", "BBC": "BBC", "Ars": "Ars", "360info": "360", "Global Voices": "GV", "NASA": "NASA", "EFF": "EFF", "TechCrunch": "TC", "iTnews": "iT", "The Conversation": "C" };
   const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || "Australia/Brisbane";
   const SIZES = { s: "1rem", m: "1.12rem", l: "1.24rem", xl: "1.38rem" };
 
@@ -485,7 +519,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     name: DEFAULT_NAME, region: "qld",
     tabs: { local: true, headlines: true, politics: true, finance: true, tech: true, ai: true },
     topics: [], muted: [], hiddenSources: [],
-    openIn: "app", textSize: "m", theme: "system", welcomed: false,
+    openIn: "app", textSize: "m", theme: "system", welcomed: false, fullOnly: false,
   };
   const saved = store.get("brief.settings", null);
   const S = Object.assign({}, defaults, saved || {}, { tabs: Object.assign({}, defaults.tabs, (saved || {}).tabs) });
@@ -565,7 +599,15 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   // Data
   // ======================================================================
   const sectionKey = id => id === "local" ? `local-${S.region}` : id;
-  const tagFor = id => SECTIONS.find(s => s.id === id)?.tag;
+  // Core sections plus every interest the news data offers.
+  const allSections = () => [...SECTIONS, ...((state.status?.interests) || [])
+    .filter(x => !CORE_IDS.has(x.id)).map(x => ({ id: x.id, label: x.label, tag: x.label, group: x.group }))];
+  const isOn = s => S.tabs[s.id] !== undefined ? S.tabs[s.id] !== false : CORE_IDS.has(s.id);
+  const tagFor = id => allSections().find(s => s.id === id)?.tag;
+  const colourOf = id => !id || id === "topic" ? "var(--c-topic)" : CORE_IDS.has(id) ? `var(--c-${id})`
+    : `var(--c-g-${allSections().find(s => s.id === id)?.group || "news"})`;
+  // Stories you can read right here get a 6-hour head start in the order.
+  const rank = i => Date.parse(i.published) + (state.mode === "static" && i.text ? 6 * 3600e3 : 0);
   const mutedRe = () => S.muted.length ? new RegExp(`\\b(${S.muted.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "i") : null;
   function allowed(list) {
     const mr = mutedRe();
@@ -578,13 +620,18 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
       const local = new Set((state.feeds[sectionKey("local")]?.items || []).map(i => i.id));
       list = list.filter(i => !local.has(i.id));
     }
-    return allowed(list);
+    list = allowed(list);
+    if (state.mode === "static") {
+      if (S.fullOnly) list = list.filter(i => i.text);
+      list.sort((a, b) => rank(b) - rank(a));
+    }
+    return list;
   }
-  const enabledSections = () => SECTIONS.filter(s => S.tabs[s.id] !== false);
+  const enabledSections = () => allSections().filter(isOn);
   const visible = list => state.hideRead ? list.filter(i => !state.read.has(i.id)) : list;
   function everything() {
     const seen = new Set(), out = [];
-    for (const s of SECTIONS) for (const i of items(s.id)) if (!seen.has(i.id)) { seen.add(i.id); out.push(i); }
+    for (const s of allSections()) for (const i of items(s.id)) if (!seen.has(i.id)) { seen.add(i.id); out.push(i); }
     return out;
   }
   function topicItems(topic) {
@@ -597,8 +644,8 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   // so no single topic floods the top. Stories matching your topics go first.
   function forYou() {
     const secs = enabledSections();
-    const lanes = secs.map(s => visible(items(s.id)).slice(0, FOR_YOU_PER_SECTION).sort((a, b) => b.published.localeCompare(a.published)));
-    const order = secs.map((_, n) => n).sort((a, b) => (lanes[b][0]?.published || "").localeCompare(lanes[a][0]?.published || ""));
+    const lanes = secs.map(s => visible(items(s.id)).slice(0, FOR_YOU_PER_SECTION).sort((a, b) => rank(b) - rank(a)));
+    const order = secs.map((_, n) => n).sort((a, b) => (lanes[b][0] ? rank(lanes[b][0]) : 0) - (lanes[a][0] ? rank(lanes[a][0]) : 0));
     const out = [], seen = new Set();
     for (const t of S.topics) for (const i of visible(topicItems(t)).slice(0, 3)) if (!seen.has(i.id)) { seen.add(i.id); out.push({ ...i, _sec: t, _sid: "topic" }); }
     for (let round = 0; round < FOR_YOU_PER_SECTION; round++) {
@@ -614,8 +661,8 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   // Story fragments
   // ======================================================================
   const pic = (i, cls = "") => `<div class="pic ${cls}">${i.image ? `<img src="${esc(i.image)}" alt="" loading="${cls ? "eager" : "lazy"}" decoding="async" referrerpolicy="no-referrer">` : ""}<span class="mono" aria-hidden="true"${i.image ? " hidden" : ""}>${esc(mono(i.source))}</span></div>`;
-  const secColour = i => `var(--c-${i._sid || "topic"})`;
-  const meta = (i, withSec) => `<div class="meta">${i._new && !state.read.has(i.id) ? `<span class="new">New</span>` : ""}${withSec && i._sec ? `<span class="sec" style="--sc:${secColour(i)}">${esc(i._sec)}</span><span class="sep"></span>` : ""}<span class="src">${esc(i.source)}</span><span class="sep"></span><time datetime="${esc(i.published)}">${esc(ago(i.published))}</time>${i.text && i.mins ? `<span class="sep"></span><span class="mins">${i.mins} min</span>` : ""}</div>`;
+  const secColour = i => colourOf(i._sid);
+  const meta = (i, withSec) => `<div class="meta">${i._new && !state.read.has(i.id) ? `<span class="new">New</span>` : ""}${withSec && i._sec ? `<span class="sec" style="--sc:${secColour(i)}">${esc(i._sec)}</span><span class="sep"></span>` : ""}<span class="src">${esc(i.source)}</span><span class="sep"></span><time datetime="${esc(i.published)}">${esc(ago(i.published))}</time>${i.text && i.mins ? (state.mode === "static" ? `<span class="fullb" title="${i.mins} min read">${withSec ? "Full" : `Full · ${i.mins} min`}</span>` : `<span class="sep"></span><span class="mins">${i.mins} min</span>`) : ""}</div>`;
   const heroCard = (i, solo, withSec, eager) => `<article class="story hcard${solo ? " solo" : ""}${readCls(i)}" style="--hc:${secColour(i)}">
       ${pic(i, eager ? "eager" : "")}
       <div class="body">
@@ -645,8 +692,8 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   // ======================================================================
   const toolsHTML = (label) => `<div class="list-tools"><span>${label}</span>
       <button class="switch" type="button" role="switch" id="hideRead" aria-checked="${state.hideRead}">Hide read<span class="track"></span></button></div>`;
-  const welcomeHTML = () => S.welcomed ? "" : `<div class="banner"><p><strong>Make it yours</strong>Add your name, pick your local area, and put ${APP_NAME} on your home screen.</p>
-      <button class="pill-btn" type="button" data-open-settings>Set up</button>
+  const welcomeHTML = () => S.welcomed ? "" : `<div class="banner"><p><strong>Make it yours</strong>Pick the things you're into, from space to good news. Each one gets its own tab.</p>
+      <button class="pill-btn" type="button" data-open-interests>Pick interests</button>
       <button class="x-btn" type="button" id="dismissWelcome" aria-label="Dismiss">${I.x}</button></div>`;
 
   function listHTML(list, withSec, carousel) {
@@ -674,7 +721,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   }
 
   function renderForYou() {
-    if (!SECTIONS.some(s => (state.feeds[sectionKey(s.id)]?.items || []).length)) {
+    if (!allSections().some(s => (state.feeds[sectionKey(s.id)]?.items || []).length)) {
       return emptyHTML("No stories yet", "The first batch arrives with the next refresh. Check back soon.");
     }
     const list = forYou();
@@ -710,7 +757,8 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   }
   function renderTabs() {
     const cur = currentTab();
-    $("tabs").innerHTML = tabList().map(t => `<button class="tab${t.topic ? " topic" : ""}" type="button" role="tab" data-tab="${esc(t.id)}" data-colour="var(--c-${t.topic ? "topic" : t.id})" aria-selected="${!state.showSaved && t.id === cur}">${esc(t.label)}</button>`).join("")
+    $("tabs").innerHTML = tabList().map(t => `<button class="tab${t.topic ? " topic" : ""}" type="button" role="tab" data-tab="${esc(t.id)}" data-colour="${t.id === "foryou" ? "var(--c-foryou)" : t.topic ? "var(--c-topic)" : colourOf(t.id)}" aria-selected="${!state.showSaved && t.id === cur}">${esc(t.label)}</button>`).join("")
+      + `<button class="tab addtab" type="button" data-open-interests aria-label="Add interests" title="Add interests"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>`
       + `<span class="ink" id="tabInk" aria-hidden="true"></span>`;
     placeInk();
   }
@@ -789,6 +837,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   // Sheets (reader and settings) with back-button support
   // ======================================================================
   let openSheet = null;
+  const sheetStack = [];
   function showSheet(id) {
     const el = $(id);
     el.hidden = false;
@@ -796,7 +845,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     el.classList.remove("scrolled");
     requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("open")));
     document.body.classList.add("locked");
-    if (openSheet !== id) { try { history.pushState({ sheet: id }, ""); } catch {} }
+    if (!sheetStack.includes(id)) { sheetStack.push(id); try { history.pushState({ sheet: id }, ""); } catch {} }
     openSheet = id;
   }
   function hideSheet(id, fromPop) {
@@ -804,14 +853,17 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     if (!el.classList.contains("open")) return;
     el.classList.remove("open");
     setTimeout(() => { if (!el.classList.contains("open")) el.hidden = true; }, 320);
-    document.body.classList.remove("locked");
-    openSheet = null;
+    const at = sheetStack.indexOf(id);
+    if (at >= 0) sheetStack.splice(at, 1);
+    openSheet = sheetStack[sheetStack.length - 1] || null;
+    if (!openSheet) document.body.classList.remove("locked");
     if (!fromPop) { try { if (history.state && history.state.sheet) history.back(); } catch {} }
-    if (id === "reader" || id === "settings") render(true);
+    if (id === "interests" && openSheet === "settings") renderSettings();
+    if (!openSheet) render(true);
   }
   window.addEventListener("popstate", () => { if (openSheet) hideSheet(openSheet, true); });
   document.addEventListener("keydown", e => { if (e.key === "Escape" && openSheet) hideSheet(openSheet); });
-  ["reader", "settings"].forEach(id => $(id).addEventListener("scroll", e => e.currentTarget.classList.toggle("scrolled", e.currentTarget.scrollTop > 60), { passive: true }));
+  ["reader", "settings", "interests"].forEach(id => $(id).addEventListener("scroll", e => e.currentTarget.classList.toggle("scrolled", e.currentTarget.scrollTop > 60), { passive: true }));
   $("reader").addEventListener("scroll", e => {
     const el = e.currentTarget, max = el.scrollHeight - el.clientHeight;
     $("rProg").style.width = (max > 0 ? Math.min(100, (el.scrollTop / max) * 100) : 0) + "%";
@@ -925,8 +977,9 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     const t = i.text ? (await loadText(i.text))?.[i.id] : null;
     if (state.readerId !== id) return;
     if (t && t.paras?.length) {
+      const lic = t.licence || "a Creative Commons licence";
       body = { author: t.author, html: prose(t.paras) + (t.cc
-        ? `<p class="licence">This article is republished from <a href="https://theconversation.com" target="_blank" rel="noopener">The Conversation</a> under a Creative Commons licence. <a href="${esc(i.url)}" target="_blank" rel="noopener">Read the original article</a>.</p>`
+        ? `<p class="licence">Republished from <a href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.source)}</a>${/public domain/i.test(lic) ? ", public domain" : ` under ${t.licenceUrl ? `<a href="${esc(t.licenceUrl)}" target="_blank" rel="noopener">${esc(lic)}</a>` : esc(lic)}`}. Text reformatted for this app. <a href="${esc(i.url)}" target="_blank" rel="noopener">Read the original article</a>.</p>`
         : original(`Open on ${esc(pub)}`, true)) };
     } else {
       body = { html: `${i.summary ? `<p class="lede">${esc(i.summary)}</p>` : ""}
@@ -1067,9 +1120,9 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
         <div class="field"><label for="setRegion">Local news</label><select id="setRegion">${regions.map(r => `<option value="${r.id}"${r.id === S.region ? " selected" : ""}>${esc(r.label)}${counts["local-" + r.id] != null ? ` (${counts["local-" + r.id]})` : ""}</option>`).join("")}</select></div>
       </div><p class="hint">Your name is used in the greeting. Everything here stays on this device.</p></div>
 
-      <div class="group"><h2>Tabs</h2><div class="card">
-        ${SECTIONS.map(s => toggle("data-tabtoggle", s.id, S.tabs[s.id] !== false, s.id === "local" ? `Local <span style="color:var(--muted);font-weight:400">· ${esc(regionLabel())}</span>` : s.label)).join("")}
-      </div><p class="hint">For you mixes stories from every tab that's switched on.</p></div>
+      <div class="group"><h2>Your interests</h2><div class="card">
+        <button class="field" type="button" data-open-interests><span class="lbl">Choose what you see<span class="sub clamp">${esc(enabledSections().map(s => s.id === "local" ? `Local (${regionLabel()})` : s.label).join(", "))}</span></span><span class="chev" aria-hidden="true">›</span></button>
+      </div><p class="hint">Each interest gets its own tab, and For you mixes them all.</p></div>
 
       <div class="group"><h2>Your topics</h2><div class="card">
         ${tokens("topics", S.topics)}
@@ -1086,6 +1139,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
       </div></div>
 
       <div class="group"><h2>Reading</h2><div class="card">
+        ${state.mode === "static" ? toggle("data-fullonly", "1", !!S.fullOnly, "Full stories only", "Hide previews that open the publisher's site") : ""}
         <div class="field"><span class="lbl">Open stories</span>${seg("openIn", S.openIn, [["app", "In the app"], ["site", "On the website"]])}</div>
         <div class="field"><span class="lbl">Text size</span>${seg("textSize", S.textSize, [["s", "A", "Small"], ["m", "A", "Medium"], ["l", "A", "Large"], ["xl", "A", "Extra large"]])}</div>
         <div class="field"><span class="lbl">Appearance</span>${seg("theme", S.theme, [["system", "Auto"], ["light", "Light"], ["dark", "Dark"]])}</div>
@@ -1096,11 +1150,34 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
         <button class="field danger" type="button" id="clearSaved">Clear saved stories <span class="sub" style="color:var(--muted)">${state.saved.length} saved</span></button>
       </div></div>
 
-      <p class="about">Awesome News pulls from free, full-article sources only: ABC, Guardian Australia, SBS, The Conversation, BBC, Ars Technica, TechCrunch and iTnews. No paywalls, no sport.${state.status?.updatedAt ? `<br>Stories last updated ${esc(longDate(state.status.updatedAt))}.` : ""}</p>`;
+      <p class="about">Awesome News pulls from free sources only: ABC, SBS, BBC, The Conversation, 360info, Global Voices, NASA, EFF, Ars Technica, TechCrunch, iTnews and more. Stories marked Full are free to republish, so they open in full right here. No paywalls, no sport.${state.status?.updatedAt ? `<br>Stories last updated ${esc(longDate(state.status.updatedAt))}.` : ""}</p>`;
     // Size the A buttons so they read as small to large.
     document.querySelectorAll('[data-seg="textSize"]').forEach((b, n) => { b.style.fontSize = ["0.78rem", "0.9rem", "1.02rem", "1.16rem"][n]; });
     drawQR();
   }
+  const tickSmall = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>`;
+  function renderInterests() {
+    const groups = state.status?.groups || [{ id: "news", label: "News" }, { id: "tech", label: "Tech & science" }];
+    const all = allSections();
+    const count = id => (state.feeds[sectionKey(id)]?.items || []).length;
+    let html = `<h1>What are you into?</h1><p class="lead-hint">Pick as many as you like. Each one gets its own tab, and For you mixes them all together.</p>`;
+    for (const g of groups) {
+      const list = all.filter(x => x.group === g.id && (CORE_IDS.has(x.id) || count(x.id) > 0));
+      if (!list.length) continue;
+      html += `<div class="group"><h2>${esc(g.label)}</h2><div class="pick">${list.map(x => {
+        const label = x.id === "local" ? `Local · ${regionLabel()}` : x.label;
+        return `<button class="pchip" type="button" data-pick="${esc(x.id)}" aria-pressed="${isOn(x)}" style="--pc:${colourOf(x.id)}"><span class="ck">${tickSmall}</span>${esc(label)}<span class="n">${count(x.id)}</span></button>`;
+      }).join("")}</div></div>`;
+    }
+    html += `<p class="hint" id="pickCount" style="margin-top:22px">${enabledSections().length} picked. Want something more specific? Add your own topics in Settings.</p>`;
+    $("iBody").innerHTML = html;
+  }
+  function openInterests() {
+    S.welcomed = true; saveSettings();
+    renderInterests();
+    showSheet("interests");
+  }
+
   function openSettings() {
     S.welcomed = true; saveSettings();
     renderSettings();
@@ -1148,6 +1225,21 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     const close = t.closest("[data-close]");
     if (close) { hideSheet(close.dataset.close); return; }
     if (t.closest("[data-open-settings]") || t.closest("#settingsBtn")) { openSettings(); return; }
+    if (t.closest("[data-open-interests]")) { openInterests(); return; }
+    const pk = t.closest("[data-pick]");
+    if (pk) {
+      const sec = allSections().find(x => x.id === pk.dataset.pick);
+      if (!sec) return;
+      const on = !isOn(sec);
+      if (!on && enabledSections().length <= 1) { toast("Keep at least one interest switched on"); return; }
+      S.tabs[sec.id] = on; saveSettings(); buzz();
+      pk.setAttribute("aria-pressed", String(on));
+      $("pickCount").firstChild.textContent = `${enabledSections().length} picked. Want something more specific? Add your own topics in Settings.`;
+      renderTabs();
+      return;
+    }
+    const fo = t.closest("[data-fullonly]");
+    if (fo) { S.fullOnly = !S.fullOnly; saveSettings(); fo.setAttribute("aria-checked", String(S.fullOnly)); return; }
     if (t.closest("#dismissWelcome")) { S.welcomed = true; saveSettings(); render(true); return; }
     const tab = t.closest("[data-tab]");
     if (tab) { selectTab(tab.dataset.tab); return; }

@@ -32,9 +32,9 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Fetch the news
-        # Public site: every state's Local edition, publisher image links, and
-        # article text only where the licence allows it (The Conversation).
-        run: python fetcher.py _site/data --regions all --images url --text cc
+        # Public site: every state's Local edition, every interest, publisher image links,
+        # and article text only where the licence allows it (CC and public-domain sources).
+        run: python fetcher.py _site/data --regions all --images url --text cc --interests all
 
       - name: Build the page
         run: python build.py _site

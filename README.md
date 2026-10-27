@@ -13,7 +13,7 @@ Settings in the app shows these steps too, plus a link and QR code to share it w
 
 ## What's in it
 
-- **Tabs:** For you (a mix of everything), Local, Headlines, Politics, Finance, Tech and AI
+- **Interests:** pick from Local, Headlines, World, Politics, Finance, Tech, AI, Science, Space, Cyber security, Gaming, Cars & EVs, Startups, Health, Education, Cities & housing, Good news, Arts & entertainment, Environment & climate and Wildlife & nature. Each gets its own tab, and For you mixes them all.
 - **Local news for every state and territory:** pick yours in Settings
 - **Your topics:** follow words like "Logan" or "Apple" and each gets its own tab
 - **Settings:** your name for the greeting, which tabs and sources to show, words to mute, text size and light or dark mode. Settings stay on your device.
@@ -23,9 +23,9 @@ Settings in the app shows these steps too, plus a link and QR code to share it w
 
 ## Sources
 
-ABC News, The Guardian (Australia), SBS News, The Conversation, BBC, Ars Technica, TechCrunch and iTnews. Paywalled outlets are left out on purpose.
+ABC News, SBS News, BBC, The Conversation, 360info, Global Voices, NASA, EFF, Ars Technica, TechCrunch, iTnews, Engadget, SmartCompany, Startup Daily, ScienceAlert, New Atlas, Knowable Magazine, Space.com, PC Gamer, Kotaku, Good News Network and Positive News. Paywalled outlets are left out on purpose, and so is The Guardian.
 
-Only The Conversation's articles are shown in full, because they're published under a Creative Commons licence that allows it. Every other story links to the publisher, so they get the visit.
+Stories from The Conversation (CC BY-ND), 360info (CC BY), Global Voices (CC BY), EFF (CC BY) and NASA (public domain) are shown in full, with credit, because their licences allow it. They carry a **Full** badge and get priority in the feed. Every other story shows a preview that links to the publisher, so they get the visit. Settings has a **Full stories only** switch to hide the previews.
 
 ## How it works
 
