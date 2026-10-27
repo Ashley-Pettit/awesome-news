@@ -104,6 +104,14 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
 .wx b { color: var(--ink); font-size: 0.95rem; font-variant-numeric: tabular-nums; }
 .wx .hl { font-variant-numeric: tabular-nums; }
 .newcount { color: var(--accent); font-weight: 700; }
+/* Compact status row: weather chip and update time side by side, small */
+.hstat { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 8px; }
+.hstat .wx { margin-top: 0; padding: 3px 9px 3px 6px; gap: 2px 6px; font-size: 0.72rem; border-radius: 14px; }
+.hstat .wx svg { width: 15px; height: 15px; }
+.hstat .wx b { font-size: 0.8rem; }
+.hstat .wx .more { font-size: 0.9rem; }
+.hstat .stamp { margin-top: 0; font-size: 0.72rem; gap: 5px; }
+.hstat .live { width: 6px; height: 6px; }
 .title { font-family: var(--display); font-weight: 700; font-size: 2.1rem; line-height: 1.05; letter-spacing: -0.015em; margin: 4px 0 0; text-wrap: balance; }
 .stamp { margin-top: 6px; font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 6px; }
 .live { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); flex: none; }
@@ -177,6 +185,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
 .mono { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--display); font-weight: 700; color: var(--accent); letter-spacing: -0.01em; }
 
 .story { position: relative; }
+.story a.link:not([href]) { cursor: pointer; }
 .story .link::after { content: ""; position: absolute; inset: 0; z-index: 1; }
 .save { position: relative; z-index: 2; width: 34px; height: 34px; margin: -8px -8px -8px 0; flex: none; display: grid; place-items: center; color: var(--faint); border-radius: 50%; }
 .save svg { width: 17px; height: 17px; }
@@ -319,6 +328,8 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
 .article h1 { font-family: var(--display); font-weight: 700; font-size: 1.95rem; line-height: 1.12; letter-spacing: -0.015em; margin: 10px 0 12px; text-wrap: balance; }
 .byline { font-size: 0.84rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 10px; }
 .byline b { color: var(--ink); font-weight: 600; }
+.byline .orig { display: inline-flex; align-items: center; gap: 4px; color: var(--accent); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+.byline .orig svg { width: 13px; height: 13px; }
 .hero { margin-top: 16px; aspect-ratio: 16 / 9; border-radius: var(--r-md); max-width: 100%; }
 .hero .mono { font-size: 3rem; }
 .prose { margin-top: 20px; font-family: var(--display); font-size: var(--read-size); line-height: 1.62; }
@@ -407,6 +418,14 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
 .qr .code svg { width: 100%; height: 100%; display: block; }
 .qr p { margin: 0; font-size: 0.86rem; color: var(--muted); }
 .qr p b { display: block; color: var(--ink); font-size: 0.95rem; margin-bottom: 2px; }
+.stabs { position: sticky; top: 54px; z-index: 1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; margin: 14px 0 0; padding: 3px; border-radius: 12px; background: var(--surface); box-shadow: 0 0 0 1px var(--line); }
+.stabs button { padding: 8px 4px; border-radius: 9px; font-size: 0.88rem; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.stabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+.field.col { flex-direction: column; align-items: stretch; gap: 8px; padding-block: 12px; }
+.field.col .top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.negval { font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+.negslider { width: 100%; margin: 4px 0 0; accent-color: var(--accent); height: 28px; cursor: pointer; }
+.negscale { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--muted); }
 .about { margin-top: 26px; font-size: 0.8rem; line-height: 1.6; color: var(--muted); text-align: center; text-wrap: balance; }
 
 /* ---------- Toast ---------- */
@@ -445,9 +464,6 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11a1 1 0 0 1 1 1V20l-6.5-4-6.5 4V4.5a1 1 0 0 1 1-1z"/></svg>
           <span class="badge" id="savedBadge" hidden></span>
         </button>
-        <button class="icon-btn" id="refresh" type="button" aria-label="Check for new stories" title="Check for new stories" hidden>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg>
-        </button>
         <button class="icon-btn" id="settingsBtn" type="button" aria-label="Settings" title="Settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </button>
@@ -455,8 +471,10 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
       </div>
       <div class="dateline" id="eyebrow">Today</div>
       <h1 class="title" id="title">Awesome News</h1>
+      <div class="hstat">
       <button class="wx" type="button" id="wx" data-open-weather aria-label="Open the full forecast" hidden></button>
       <div class="stamp"><span class="live stale" id="live"></span><span id="stamp">Loading the latest stories</span><span class="newcount" id="newCount" hidden></span></div>
+      </div>
     </header>
   </div>
   <div class="tabs-bar"><div class="wrap"><nav class="tabs" id="tabs" role="tablist" aria-label="Filter stories"></nav></div></div>
@@ -470,7 +488,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   </div>
 
   <div class="wrap">
-    <p class="foot">Free sources only: ABC, SBS, BBC, The Conversation, 360info, Global Voices, NASA, Ars Technica and more. Stories marked Full open right here. No paywalls, no sport.</p>
+    <p class="foot">Free sources only: ABC, SBS, BBC, The Guardian, The Conversation, 360info, Global Voices, NASA, Ars Technica and more. Stories marked Full open right here. No paywalls, no sport.</p>
   </div>
 </main>
 
@@ -537,7 +555,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   const DEFAULT_ON = [];                // set per build: interests switched on out of the box
   const OWN_COLOUR = new Set([...CORE_IDS, "copilot"]);
   const PUBLISHERS = [
-    { id: "ABC", label: "ABC News" }, { id: "SBS", label: "SBS News" }, { id: "BBC", label: "BBC" },
+    { id: "ABC", label: "ABC News" }, { id: "SBS", label: "SBS News" }, { id: "BBC", label: "BBC" }, { id: "The Guardian", label: "The Guardian" },
     { id: "The Conversation", label: "The Conversation" }, { id: "360info", label: "360info" }, { id: "Global Voices", label: "Global Voices" },
     { id: "NASA", label: "NASA" }, { id: "EFF", label: "EFF" }, { id: "Ars", label: "Ars Technica" }, { id: "TechCrunch", label: "TechCrunch" },
     { id: "iTnews", label: "iTnews" }, { id: "Engadget", label: "Engadget" }, { id: "SmartCompany", label: "SmartCompany" },
@@ -550,7 +568,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   const REGION_FALLBACK = [{ id: "qld", label: "Queensland" }];
   const FOR_YOU_PER_SECTION = 7;
   const FEATURE_EVERY = 6;
-  const MONO = { "ABC": "ABC", "SBS": "SBS", "BBC": "BBC", "M365": "365", "Microsoft": "MS", "Office 365": "IT", "Windows Central": "WC", "Ars": "Ars", "360info": "360", "Global Voices": "GV", "NASA": "NASA", "EFF": "EFF", "TechCrunch": "TC", "iTnews": "iT", "The Conversation": "C" };
+  const MONO = { "ABC": "ABC", "SBS": "SBS", "BBC": "BBC", "M365": "365", "Microsoft": "MS", "Office 365": "IT", "Windows Central": "WC", "Ars": "Ars", "360info": "360", "Global Voices": "GV", "NASA": "NASA", "EFF": "EFF", "TechCrunch": "TC", "iTnews": "iT", "The Conversation": "C", "The Guardian": "G" };
   const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || "Australia/Brisbane";
   const SIZES = { s: "1rem", m: "1.12rem", l: "1.24rem", xl: "1.38rem" };
 
@@ -565,7 +583,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     name: DEFAULT_NAME, region: "qld",
     tabs: { local: true, headlines: true, politics: true, finance: true, tech: true, ai: true },
     topics: [], muted: [], hiddenSources: [],
-    openIn: "app", textSize: "m", theme: "system", welcomed: false, fullOnly: false,
+    openIn: "app", textSize: "m", theme: "system", welcomed: false, fullOnly: false, negCut: 0,
   };
   const saved = store.get("brief.settings", null);
   const S = Object.assign({}, defaults, saved || {}, { tabs: Object.assign({}, defaults.tabs, (saved || {}).tabs) });
@@ -660,6 +678,45 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     const hidden = S.hiddenSources;
     return list.filter(i => !hidden.some(h => i.source.startsWith(h)) && !(mr && mr.test(`${i.title} ${i.summary || ""}`)));
   }
+  // Negative-news dial: each story gets a negativity score from its headline and summary
+  // (headline words count double). The slider hides that share of negative stories,
+  // most negative first.
+  const NEG_STRONG = /\b(?:kill(?:s|ed|ing)?|dead|deaths?|dies|died|dying|murder\w*|homicide|manslaughter|wars?|warfare|attacks?|attacked|bomb\w*|missiles?|airstrikes?|shooting|gunman|stabb\w*|terror\w*|massacre|genocide|rape\w*|sexual assault|abuse\w*|assault\w*|violen\w*|hostages?|fatal\w*|tragedy|tragic|disaster\w*|catastroph\w*|famine|starv\w*|earthquake|cyclone|tsunami|bushfires?|wildfires?|floods?|flooding|drown\w*|crash\w*|collapse\w*|recession|layoffs?|laid off|sacked|bankrupt\w*|insolven\w*|jailed|prison|sentenced|charged|arrest\w*|convicted|fraud\w*|scam\w*|scandal|corrupt\w*|ransomware|data breach|hack(?:ed|ers?)|outbreak|pandemic|overdose|suicide|victims?|injur\w*|hospitalis\w*|critical condition|missing|evacuat\w*|crisis|crises)\b/gi;
+  const NEG_MILD = /\b(?:fears?|feared|warn\w*|threat\w*|risk\w*|danger\w*|crackdown|protest\w*|riots?|clash\w*|slump\w*|plunge\w*|tumbl\w*|losses|lose|losing|cuts?|shortage\w*|struggl\w*|decline\w*|worst|fail\w*|blame\w*|lawsuit|sued|fined|penalt\w*|probe|investigat\w*|police|court|accused|allegation\w*|toxic|pollut\w*|extinct\w*|endangered|drought|heatwave|inflation|debt|deficit|backlash|outrage|anger|angry|grief|mourn\w*|condemn\w*|sanctions?|tariffs?|strikes?|delay\w*|outage|vulnerab\w*|malware|spyware|leak\w*)\b/gi;
+  const NEG_AT = 4;
+  const negCache = new Map();
+  const hits = (re, t) => (t.match(re) || []).length;
+  function negScore(i) {
+    if (negCache.has(i.id)) return negCache.get(i.id);
+    const t = i.title || "", s = String(i.summary || "").replace(/<[^>]+>/g, " ");
+    const n = 2 * (2 * hits(NEG_STRONG, t) + hits(NEG_MILD, t)) + 2 * hits(NEG_STRONG, s) + hits(NEG_MILD, s);
+    negCache.set(i.id, n);
+    return n;
+  }
+  const isNegative = i => negScore(i) >= NEG_AT;
+  function calmer(list) {
+    const cut = Number(S.negCut) || 0;
+    if (!cut) return list;
+    const neg = list.filter(isNegative).sort((a, b) => negScore(b) - negScore(a));
+    const drop = new Set(neg.slice(0, Math.round(neg.length * cut / 100)).map(i => i.id));
+    return drop.size ? list.filter(i => !drop.has(i.id)) : list;
+  }
+  function negStats() {
+    const seen = new Set();
+    let all = 0, neg = 0;
+    for (const sec of allSections()) for (const i of allowed(state.feeds[sectionKey(sec.id)]?.items || [])) {
+      if (seen.has(i.id) || (state.mode === "claude" && !i.text)) continue;
+      seen.add(i.id); all++; if (isNegative(i)) neg++;
+    }
+    return { all, neg, hidden: Math.round(neg * (Number(S.negCut) || 0) / 100) };
+  }
+  function negHint() {
+    const st = negStats();
+    if (!st.all) return "Hides a share of the negative stories, most negative first.";
+    return Number(S.negCut) ? `Hiding about ${st.hidden} of ${st.neg} negative stories today. Most negative go first.`
+      : `${st.neg} of ${st.all} stories today read as negative. Slide to see fewer of them.`;
+  }
+
   function items(id) {
     let list = (state.feeds[sectionKey(id)]?.items || []).map(i => ({ ...i, _sec: tagFor(id), _sid: id, _new: !!state.prevVisit && Date.parse(i.published) > state.prevVisit }));
     if (id === "headlines") {  // stories already in your Local tab don't repeat here
@@ -668,6 +725,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     }
     list = allowed(list);
     if (state.mode === "claude") list = list.filter(i => i.text);  // the private copy shows only stories it can open in full
+    list = calmer(list);
     if (state.mode === "static") {
       if (S.fullOnly) list = list.filter(i => i.text);
       list.sort((a, b) => rank(b) - rank(a));
@@ -720,7 +778,9 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     const on = isSaved(i.id);
     return `<button class="save" type="button" data-save="${esc(i.id)}" aria-pressed="${on}" aria-label="${on ? "Remove from saved" : "Save for later"}">${I.bookmark}</button>`;
   }
-  const link = (i, inner) => `<a class="link" href="${esc(i.url)}" target="_blank" rel="noopener" data-open="${esc(i.id)}">${inner}</a>`;
+  const link = (i, inner) => state.mode === "claude"
+    ? `<a class="link" role="link" tabindex="0" data-open="${esc(i.id)}">${inner}</a>`  // private copy: always opens in the app
+    : `<a class="link" href="${esc(i.url)}" target="_blank" rel="noopener" data-open="${esc(i.id)}">${inner}</a>`;
   const readCls = i => state.read.has(i.id) ? " read" : "";
   const leadHTML = (i, label, withSec) => `<article class="story lead${readCls(i)}">${pic(i)}<div class="body">
       ${label ? `<div><span class="tag">${esc(label)}</span></div>` : ""}
@@ -841,10 +901,10 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     else {
       if (Date.now() - Date.parse(s.updatedAt) > 8 * 3600e3) live.classList.add("stale");
       const at = new Date(s.updatedAt).toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit", timeZone: TZ });
-      $("stamp").textContent = `Updated ${ago(s.updatedAt).toLowerCase()} · ${at}`;
+      $("stamp").textContent = `Updated ${at}`;
     }
     const fresh = state.loaded && state.prevVisit ? everything().filter(i => Date.parse(i.published) > state.prevVisit && !state.read.has(i.id)).length : 0;
-    $("newCount").textContent = fresh ? ` · ${fresh} new since you last looked` : "";
+    $("newCount").textContent = fresh ? `· ${fresh} new` : "";
     $("newCount").hidden = !fresh || state.refreshing;
     if (!state.saved.length && state.showSaved) state.showSaved = false;
     $("savedBtn").hidden = !state.saved.length;
@@ -915,7 +975,10 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     if (!openSheet) render(true);
   }
   window.addEventListener("popstate", () => { if (openSheet) hideSheet(openSheet, true); });
-  document.addEventListener("keydown", e => { if (e.key === "Escape" && openSheet) hideSheet(openSheet); });
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && openSheet) hideSheet(openSheet);
+    if (e.key === "Enter" && e.target.matches?.("a.link[data-open]:not([href])")) e.target.click();
+  });
   ["reader", "settings", "interests", "weather"].forEach(id => $(id).addEventListener("scroll", e => e.currentTarget.classList.toggle("scrolled", e.currentTarget.scrollTop > 60), { passive: true }));
   $("reader").addEventListener("scroll", e => {
     const el = e.currentTarget, max = el.scrollHeight - el.clientHeight;
@@ -952,7 +1015,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
       el.style.opacity = p ? String(Math.min(1, p / 40)) : "0";
     };
     window.addEventListener("touchstart", e => {
-      y0 = (openSheet || window.scrollY > 0 || $("refresh").hidden || state.refreshing) ? null : e.touches[0].clientY;
+      y0 = (openSheet || window.scrollY > 0 || !state.canPull || state.refreshing) ? null : e.touches[0].clientY;
       pull = 0;
     }, { passive: true });
     window.addEventListener("touchmove", e => {
@@ -964,7 +1027,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     }, { passive: true });
     window.addEventListener("touchend", () => {
       if (y0 == null) return;
-      if (pull >= 64) { buzz(); $("refresh").click(); }
+      if (pull >= 64) { buzz(); refreshNow(); }
       y0 = null; pull = 0; set(0);
     }, { passive: true });
   })();
@@ -1093,7 +1156,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
       const lic = t.licence || "a Creative Commons licence";
       body = { author: t.author, html: prose(t.paras) + (t.cc
         ? `<p class="licence">Republished from <a href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.source)}</a>${/public domain/i.test(lic) ? ", public domain" : ` under ${t.licenceUrl ? `<a href="${esc(t.licenceUrl)}" target="_blank" rel="noopener">${esc(lic)}</a>` : esc(lic)}`}. Text reformatted for this app. <a href="${esc(i.url)}" target="_blank" rel="noopener">Read the original article</a>.</p>`
-        : original(`Open on ${esc(pub)}`, true)) };
+        : state.mode === "claude" ? "" : original(`Open on ${esc(pub)}`, true)) };
     } else {
       body = { html: `${i.summary ? `<p class="lede">${esc(i.summary)}</p>` : ""}
         <div class="partial"><strong>The full story is on ${esc(pub)}</strong>Only a preview can be shown here. Tap below to read the whole article, free.${original(`Read full article`)}</div>` };
@@ -1221,48 +1284,54 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     catch { if (input) { input.focus(); input.select(); } toast("Link selected. Copy it from the box."); }
   }
 
+  const STABS = [["news", "News"], ["filters", "Filters"], ["reading", "Reading"], ["app", "App"]];
+  state.sTab = store.get("brief.sTab", "news");
   function renderSettings() {
     const regions = state.status?.regions || REGION_FALLBACK;
     const counts = state.status?.counts || {};
-    $("sBody").innerHTML = `
-      <h1>Settings</h1>
-      ${getAppHTML()}
-      ${shareHTML()}
-      <div class="group"><h2>You</h2><div class="card">
+    const tab = STABS.some(t => t[0] === state.sTab) ? state.sTab : "news";
+    const panes = {
+      news: `<div class="group"><h2>You</h2><div class="card">
         <div class="field"><label for="setName">Your name</label><input type="text" id="setName" placeholder="Optional" autocomplete="given-name" maxlength="30" value="${esc(S.name)}"></div>
         <div class="field"><label for="setRegion">Local news</label><select id="setRegion">${regions.map(r => `<option value="${r.id}"${r.id === S.region ? " selected" : ""}>${esc(r.label)}${counts["local-" + r.id] != null ? ` (${counts["local-" + r.id]})` : ""}</option>`).join("")}</select></div>
       </div><p class="hint">Your name is used in the greeting. Everything here stays on this device.</p></div>
-
       <div class="group"><h2>Your interests</h2><div class="card">
         <button class="field" type="button" data-open-interests><span class="lbl">Choose what you see<span class="sub clamp">${esc(enabledSections().map(s => s.id === "local" ? `Local (${regionLabel()})` : s.label).join(", "))}</span></span><span class="chev" aria-hidden="true">›</span></button>
       </div><p class="hint">Each interest gets its own tab, and For you mixes them all.</p></div>
-
       <div class="group"><h2>Your topics</h2><div class="card">
         ${tokens("topics", S.topics)}
         <form class="add" data-add="topics"><input type="text" id="addTopic" placeholder="Add a topic, e.g. Logan or Apple" maxlength="30" aria-label="Add a topic"><button type="submit">Add</button></form>
       </div><p class="hint">Each topic gets its own tab, and matching stories go to the top of For you.</p></div>
-
       <div class="group"><h2>Sources</h2><div class="card">
         ${PUBLISHERS.map(p => toggle("data-source", p.id, !S.hiddenSources.includes(p.id), p.label)).join("")}
-      </div></div>
-
-      <div class="group"><h2>Mute words</h2><div class="card">
+      </div></div>`,
+      filters: `<div class="group"><h2>Mute words</h2><div class="card">
         ${tokens("muted", S.muted)}
         <form class="add" data-add="muted"><input type="text" id="addMuted" placeholder="Hide stories that mention…" maxlength="30" aria-label="Add a word to mute"><button type="submit">Mute</button></form>
       </div></div>
-
-      <div class="group"><h2>Reading</h2><div class="card">
+      <div class="group"><h2>Negative news</h2><div class="card">
+        <div class="field col"><div class="top"><label for="negCut" class="lbl">Show less negative news</label><span class="negval" id="negVal">${Number(S.negCut) ? S.negCut + "% less" : "Off"}</span></div>
+          <input type="range" class="negslider" id="negCut" min="0" max="100" step="10" value="${Number(S.negCut) || 0}" aria-describedby="negHint">
+          <div class="negscale" aria-hidden="true"><span>All news</span><span>No negative news</span></div>
+        </div>
+      </div><p class="hint" id="negHint">${esc(negHint())}</p></div>`,
+      reading: `<div class="group"><h2>Reading</h2><div class="card">
         ${state.mode === "static" ? toggle("data-fullonly", "1", !!S.fullOnly, "Full stories only", "Hide previews that open the publisher's site") : ""}
         <div class="field"><span class="lbl">Text size</span>${seg("textSize", S.textSize, [["s", "A", "Small"], ["m", "A", "Medium"], ["l", "A", "Large"], ["xl", "A", "Extra large"]])}</div>
         <div class="field"><span class="lbl">Appearance</span>${seg("theme", S.theme, [["system", "Auto"], ["light", "Light"], ["dark", "Dark"]])}</div>
       </div><p class="hint">Offline reading: ${offlineArticles ? `${Object.keys(offlineArticles).length} full stories kept on this device.` : "stories are kept on this device as they load."} Open the app on wifi now and then, and it keeps working with no connection.</p></div>
-
       <div class="group"><h2>Your data</h2><div class="card">
         <button class="field danger" type="button" id="clearRead">Clear read history <span class="sub" style="color:var(--muted)">${state.read.size} stories</span></button>
         <button class="field danger" type="button" id="clearSaved">Clear saved stories <span class="sub" style="color:var(--muted)">${state.saved.length} saved</span></button>
-      </div></div>
-
-      <p class="about">Awesome News pulls from free sources only: ABC, SBS, BBC, The Conversation, 360info, Global Voices, NASA, EFF, Ars Technica, TechCrunch, iTnews and more. Stories marked Full are free to republish, so they open in full right here. No paywalls, no sport.${state.status?.updatedAt ? `<br>Stories last updated ${esc(longDate(state.status.updatedAt))}.` : ""}</p>`;
+      </div></div>`,
+      app: `${getAppHTML()}
+      ${shareHTML()}
+      <p class="about">Awesome News pulls from free sources only: ABC, SBS, BBC, The Guardian, The Conversation, 360info, Global Voices, NASA, EFF, Ars Technica, TechCrunch, iTnews and more. ${state.mode === "claude" ? "Stories open in full right here." : "Stories marked Full are free to republish, so they open in full right here."} No paywalls, no sport.${state.status?.updatedAt ? `<br>Stories last updated ${esc(longDate(state.status.updatedAt))}.` : ""}</p>`,
+    };
+    $("sBody").innerHTML = `
+      <h1>Settings</h1>
+      <div class="stabs" role="tablist" aria-label="Settings sections">${STABS.map(([id, label]) => `<button type="button" role="tab" data-stab="${id}" aria-selected="${id === tab}">${label}</button>`).join("")}</div>
+      <div role="tabpanel">${panes[tab]}</div>`;
     // Size the A buttons so they read as small to large.
     document.querySelectorAll('[data-seg="textSize"]').forEach((b, n) => { b.style.fontSize = ["0.78rem", "0.9rem", "1.02rem", "1.16rem"][n]; });
     drawQR();
@@ -1377,6 +1446,8 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
       return;
     }
     // ---- settings controls ----
+    const stb = t.closest("[data-stab]");
+    if (stb) { state.sTab = stb.dataset.stab; store.set("brief.sTab", state.sTab); renderSettings(); $("settings").scrollTop = 0; return; }
     const tt = t.closest("[data-tabtoggle]");
     if (tt) {
       const id = tt.dataset.tabtoggle, on = S.tabs[id] === false;
@@ -1420,6 +1491,11 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   });
   document.addEventListener("input", e => {
     if (e.target.id === "setName") { S.name = e.target.value.slice(0, 30); saveSettings(); renderHeader(); }
+    if (e.target.id === "negCut") {
+      S.negCut = Number(e.target.value) || 0; saveSettings();
+      $("negVal").textContent = S.negCut ? S.negCut + "% less" : "Off";
+      $("negHint").textContent = negHint();
+    }
   });
   // A picture that fails to load falls back to the source's monogram.
   document.addEventListener("error", e => {
@@ -1475,8 +1551,8 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     const box = $("wx"), w = state.wx;
     if (!w) { box.hidden = true; return; }
     const cur = w.d.current, dy = w.d.daily, rain = dy.precipitation_probability_max?.[0] ?? 0;
-    box.innerHTML = `${wxIcon(cur.weather_code, cur.is_day)}<b>${Math.round(cur.temperature_2m)}°</b><span>${w.city} · ${wxLabel(cur.weather_code, cur.is_day)}</span>`
-      + `<span class="hl">H ${Math.round(dy.temperature_2m_max[0])}° L ${Math.round(dy.temperature_2m_min[0])}°${rain >= 30 ? ` · ${rain}% rain` : ""}</span><span class="more" aria-hidden="true">›</span>`;
+    box.innerHTML = `${wxIcon(cur.weather_code, cur.is_day)}<b>${Math.round(cur.temperature_2m)}°</b><span>${wxLabel(cur.weather_code, cur.is_day)}</span>`
+      + `${rain >= 30 ? `<span class="hl">${rain}% rain</span>` : ""}<span class="more" aria-hidden="true">›</span>`;
     box.hidden = false;
   }
   const clock = t => { const [h, m] = t.slice(11, 16).split(":").map(Number); return `${h % 12 || 12}${m ? ":" + String(m).padStart(2, "0") : ""}${h < 12 ? "am" : "pm"}`; };
@@ -1545,8 +1621,6 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   function finishRefresh(changed) {
     if (!state.refreshing) return;
     state.refreshing = false;
-    $("refresh").disabled = false;
-    $("refresh").classList.remove("spin");
     renderHeader();
     if (changed) toast("Fresh stories are in");
   }
@@ -1603,11 +1677,9 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     }, () => arrived());
   }
 
-  $("refresh").addEventListener("click", async () => {
+  async function refreshNow() {
     if (state.refreshing) return;
     state.refreshing = true;
-    $("refresh").disabled = true;
-    $("refresh").classList.add("spin");
     renderHeader();
     if (state.mode === "static") { loadStatic(true); return; }
     try {
@@ -1621,7 +1693,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
       else if (c === "server_not_connected" || c === "needs_reauth") toast("Refresh needs the Claude Code Remote connector. Stories still update on schedule.", 6000);
       else toast("Refresh couldn't start. Stories still update on schedule.", 5000);
     }
-  });
+  }
 
   // Show the copy kept on this device straight away; live data replaces it when it arrives.
   Promise.all([idb.get("feeds"), idb.get("status")]).then(([f, s]) => {
@@ -1633,7 +1705,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   use("db").then(db => {
     if (db) { state.mode = "claude"; loadClaude(db); return; }
     state.mode = "static";
-    $("refresh").hidden = false;
+    state.canPull = true;
     if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
     loadStatic(false);
     loadWeather();

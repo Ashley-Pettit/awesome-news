@@ -16,7 +16,8 @@ Settings in the app shows these steps too, plus a link and QR code to share it w
 - **Interests:** pick from Local, Headlines, World, Politics, Finance, Tech, AI, Science, Space, Cyber security, Gaming, Cars & EVs, Startups, Health, Education, Cities & housing, Good news, Arts & entertainment, Environment & climate and Wildlife & nature. Each gets its own tab, and For you mixes them all.
 - **Local news for every state and territory:** pick yours in Settings
 - **Your topics:** follow words like "Logan" or "Apple" and each gets its own tab
-- **Settings:** your name for the greeting, which tabs and sources to show, words to mute, text size and light or dark mode. Settings stay on your device.
+- **Settings:** four tabs. News: your name, area, interests, topics and sources. Filters: muted words and a Show less negative news slider. Reading: text size, light or dark mode and your data. App: install steps and sharing. Settings stay on your device.
+- **Less negative news:** each story gets a negativity score from its headline and summary. The slider hides that share of negative stories, most negative first.
 - **Reader:** stories open inside the app. Articles from The Conversation show in full. Other stories show a preview with a button to read the full article on the publisher's site.
 - **Saved:** bookmark stories to read later
 - **Weather:** tap the weather in the header for the full forecast: now, the next 24 hours and the next 7 days
@@ -26,7 +27,7 @@ Settings in the app shows these steps too, plus a link and QR code to share it w
 
 ## Sources
 
-ABC News, SBS News, BBC, The Conversation, 360info, Global Voices, NASA, EFF, Ars Technica, TechCrunch, iTnews, Engadget, SmartCompany, Startup Daily, ScienceAlert, New Atlas, Knowable Magazine, Space.com, PC Gamer, Kotaku, Good News Network and Positive News. Paywalled outlets are left out on purpose, and so is The Guardian.
+ABC News, SBS News, BBC, The Guardian, The Conversation, 360info, Global Voices, NASA, EFF, Ars Technica, TechCrunch, iTnews, Engadget, SmartCompany, Startup Daily, ScienceAlert, New Atlas, Knowable Magazine, Space.com, PC Gamer, Kotaku, Good News Network and Positive News. Paywalled outlets are left out on purpose. Guardian live blogs are skipped.
 
 Stories from The Conversation (CC BY-ND), 360info (CC BY), Global Voices (CC BY), EFF (CC BY) and NASA (public domain) are shown in full, with credit, because their licences allow it. They carry a **Full** badge and get priority in the feed. Every other story shows a preview that links to the publisher, so they get the visit. Settings has a **Full stories only** switch to hide the previews.
 

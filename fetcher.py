@@ -38,7 +38,7 @@ from email.utils import parsedate_to_datetime
 # Sources. Only outlets that publish full articles free of charge.
 # Left out on purpose: Courier-Mail, The Australian, AFR, Brisbane Times / SMH /
 # The Age, The Verge, Reuters, Bloomberg, MIT Tech Review (paywalls or meters).
-# The Guardian is left out at the owner's request.
+# The Guardian is in at the owner's request (free RSS; live blogs are skipped).
 # ---------------------------------------------------------------------------
 ABC_JUST_IN = "https://www.abc.net.au/news/feed/51120/rss.xml"
 ABC_TOP = "https://www.abc.net.au/news/feed/45910/rss.xml"
@@ -46,6 +46,7 @@ ABC_BUSINESS = "https://www.abc.net.au/news/feed/51892/rss.xml"
 SBS_LATEST = "https://www.sbs.com.au/news/topic/latest/feed"
 SBS_AUSTRALIA = "https://www.sbs.com.au/news/topic/australia/feed"
 CONV = "https://theconversation.com/au/{}/articles.atom"
+GU = "https://www.theguardian.com/{}/rss"
 ROADMAP = "https://www.microsoft.com/releasecommunications/api/v2/m365/rss"  # official Microsoft 365 feature roadmap
 
 SECTION_FEEDS = [
@@ -59,25 +60,30 @@ SECTION_FEEDS = [
     ("politics", "The Conversation", CONV.format("politics"), "all"),
     ("politics", "ABC News", ABC_JUST_IN, "politics"),
     ("politics", "SBS News", SBS_AUSTRALIA, "politics"),
+    ("politics", "The Guardian", GU.format("australia-news/australian-politics"), "all"),
     ("finance", "The Conversation", CONV.format("business"), "all"),
     ("finance", "ABC News", ABC_BUSINESS, "finance"),
     ("finance", "SmartCompany", "https://www.smartcompany.com.au/feed/", "all"),
+    ("finance", "The Guardian", GU.format("au/business"), "finance"),
     ("ai", "The Conversation", "https://theconversation.com/topics/artificial-intelligence-ai-90/articles.atom", "all"),
     ("ai", "Ars Technica", "https://arstechnica.com/ai/feed/", "all"),
     ("ai", "TechCrunch", "https://techcrunch.com/category/artificial-intelligence/feed/", "all"),
+    ("ai", "The Guardian", GU.format("technology/artificialintelligenceai"), "all"),
     ("tech", "The Conversation", CONV.format("technology"), "all"),
     ("tech", "iTnews", "https://www.itnews.com.au/RSS/rss.ashx", "all"),
     ("tech", "Ars Technica", "https://feeds.arstechnica.com/arstechnica/index", "all"),
     ("tech", "TechCrunch", "https://techcrunch.com/feed/", "all"),
     ("tech", "Engadget", "https://www.engadget.com/rss.xml", "all"),
+    ("tech", "The Guardian", GU.format("au/technology"), "all"),
     ("headlines", "ABC News", ABC_TOP, "all"),
     ("headlines", "SBS News", SBS_LATEST, "all"),
     ("headlines", "BBC World", "https://feeds.bbci.co.uk/news/world/rss.xml", "all"),
+    ("headlines", "The Guardian", GU.format("australia-news"), "all"),
 ]
 
 REGIONS = {
     # id: (label, [(source, url)], place names (any case), abbreviations (exact case))
-    "qld": ("Queensland", [("ABC Brisbane", "https://www.abc.net.au/news/feed/8053540/rss.xml")],
+    "qld": ("Queensland", [("ABC Brisbane", "https://www.abc.net.au/news/feed/8053540/rss.xml"), ("The Guardian", GU.format("australia-news/queensland"))],
             r"Brisbane|Queensland(?:ers?)?|Gold Coast|Sunshine Coast|Logan|Ipswich|Moreton Bay|Redland|Toowoomba|Cairns|"
             r"Townsville|Mackay|Rockhampton|Bundaberg|Gympie|Crisafulli", r"Qld|QLD"),
     "nsw": ("New South Wales", [("ABC Sydney", "https://www.abc.net.au/news/feed/8055316/rss.xml")],
@@ -94,17 +100,19 @@ REGIONS = {
 }
 # National feeds mined for each region's place names.
 REGION_MINE = [("ABC News", ABC_JUST_IN), ("ABC News", ABC_TOP), ("SBS News", SBS_AUSTRALIA), ("SBS News", SBS_LATEST),
-               ("The Conversation", CONV.format("politics")), ("The Conversation", CONV.format("environment"))]
+               ("The Conversation", CONV.format("politics")), ("The Conversation", CONV.format("environment")),
+               ("The Guardian", GU.format("australia-news"))]
 
 # Interests people can switch on. Each takes its own feeds plus any story, from any feed,
 # whose headline matches its keywords. Groups set the colour and where it sits in the picker.
 INTERESTS = [
     # id, label, group, [(source, url)], headline keywords (or None)
     ("world", "World", "news", [("SBS News", "https://www.sbs.com.au/news/topic/world/feed"), ("BBC World", "https://feeds.bbci.co.uk/news/world/rss.xml"),
-                                ("Global Voices", "https://globalvoices.org/feed/"), ("360info", "https://360info.org/feed/")], None),
+                                ("Global Voices", "https://globalvoices.org/feed/"), ("360info", "https://360info.org/feed/"),
+                                ("The Guardian", GU.format("world"))], None),
     ("science", "Science", "tech", [("Ars Technica", "https://arstechnica.com/science/feed/"), ("BBC Science", "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml"),
                                     ("ScienceAlert", "https://www.sciencealert.com/feed"), ("New Atlas", "https://newatlas.com/index.rss"),
-                                    ("Knowable Magazine", "https://knowablemagazine.org/rss")],
+                                    ("Knowable Magazine", "https://knowablemagazine.org/rss"), ("The Guardian", GU.format("science"))],
      r"scientists?|researchers?|new study|study finds|physics|chemistry|biolog\w*|fossils?|evolution|DNA|genes?|genetic\w*|quantum|dinosaurs?"),
     ("space", "Space", "tech", [("NASA", "https://www.nasa.gov/feed/"), ("Ars Technica", "https://arstechnica.com/space/feed/"), ("Space.com", "https://www.space.com/feeds/all")],
      r"space|NASA|rockets?|astronauts?|the moon|lunar|Mars|telescopes?|planets?|galax\w+|asteroids?|comets?|satellites?|SpaceX|orbit\w*|cosmic|black holes?"),
@@ -127,7 +135,8 @@ INTERESTS = [
     ("arts", "Arts & entertainment", "culture", [("The Conversation", CONV.format("arts")), ("BBC Entertainment", "https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml")],
      r"films?|movies?|TV|television|series|albums?|music|singers?|bands?|concerts?|festival|books?|novels?|authors?|artists?|gallery|theatre|exhibition|Netflix|Oscars?"),
     ("environment", "Environment & climate", "planet", [("The Conversation", CONV.format("environment")),
-                                                        ("The Conversation", "https://theconversation.com/topics/climate-change-27/articles.atom")],
+                                                        ("The Conversation", "https://theconversation.com/topics/climate-change-27/articles.atom"),
+                                                        ("The Guardian", GU.format("au/environment"))],
      r"climate|emissions?|renewables?|solar|wind farms?|coal|net zero|pollution|plastics?|recycling|drought|floods?|flooding|bushfires?|heatwaves?|environment\w*|carbon"),
     ("wildlife", "Wildlife & nature", "planet", [],
      r"wildlife|species|animals?|birds?|koalas?|kangaroos?|reefs?|whales?|sharks?|crocs?|crocodiles?|turtles?|conservation|endangered|extinct\w*|insects?|bees?|forests?|national parks?"),
@@ -179,7 +188,7 @@ KEYWORDS = {
 SKIP_TITLE = re.compile(r"^(video|watch|listen|podcast|quiz|crossword|photos?)\b|[–-] (video|podcast|audio|in pictures)$|"
                         r"\b(sponsored|partner content|paid post|deal of the day|promo code|discount code|"
                         r"tickets?\b.*\b(disrupt|sessions)|best deals?)\b", re.I)
-SKIP_URL = re.compile(r"/(video|videos|audio|podcasts?|sounds|programs|live-?blog-?ads|"
+SKIP_URL = re.compile(r"/(video|videos|audio|podcasts?|sounds|programs|live-?blog-?ads|live|"
                       r"crosswords|quiz|gallery|newsletters?)/|/ad/|/sponsored", re.I)
 
 # No sport at all: drop by feed category, by URL path, then by title words.
