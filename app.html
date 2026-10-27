@@ -349,6 +349,10 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
 }
 .cta svg { width: 17px; height: 17px; }
 .cta.ghost { background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--line); font-weight: 600; }
+.adminpass { display: flex; gap: 8px; margin-top: 14px; }
+.adminpass input { flex: 1; min-width: 0; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); }
+.adminpass button { padding: 11px 16px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.adminpass button:disabled { opacity: 0.6; }
 .licence { margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--line); font-family: var(--ui); font-size: 0.8rem; color: var(--muted); }
 .licence a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
 .next { margin-top: 30px; padding-top: 16px; border-top: 2px solid var(--ink); }
@@ -488,7 +492,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   </div>
 
   <div class="wrap">
-    <p class="foot">Free sources only: ABC, SBS, BBC, The Guardian, The Conversation, 360info, Global Voices, NASA, Ars Technica and more. Stories marked Full open right here. No paywalls, no sport.</p>
+    <p class="foot">Free sources only: ABC, SBS, BBC, The Guardian, news.com.au, 7NEWS, The Conversation, 360info, Global Voices, NASA and more. Stories marked Full open right here. No paywalls, no sport.</p>
   </div>
 </main>
 
@@ -555,7 +559,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   const DEFAULT_ON = [];                // set per build: interests switched on out of the box
   const OWN_COLOUR = new Set([...CORE_IDS, "copilot"]);
   const PUBLISHERS = [
-    { id: "ABC", label: "ABC News" }, { id: "SBS", label: "SBS News" }, { id: "BBC", label: "BBC" }, { id: "The Guardian", label: "The Guardian" },
+    { id: "ABC", label: "ABC News" }, { id: "SBS", label: "SBS News" }, { id: "BBC", label: "BBC" }, { id: "The Guardian", label: "The Guardian" }, { id: "news.com.au", label: "news.com.au" }, { id: "7NEWS", label: "7NEWS" },
     { id: "The Conversation", label: "The Conversation" }, { id: "360info", label: "360info" }, { id: "Global Voices", label: "Global Voices" },
     { id: "NASA", label: "NASA" }, { id: "EFF", label: "EFF" }, { id: "Ars", label: "Ars Technica" }, { id: "TechCrunch", label: "TechCrunch" },
     { id: "iTnews", label: "iTnews" }, { id: "Engadget", label: "Engadget" }, { id: "SmartCompany", label: "SmartCompany" },
@@ -568,7 +572,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   const REGION_FALLBACK = [{ id: "qld", label: "Queensland" }];
   const FOR_YOU_PER_SECTION = 7;
   const FEATURE_EVERY = 6;
-  const MONO = { "ABC": "ABC", "SBS": "SBS", "BBC": "BBC", "M365": "365", "Microsoft": "MS", "Office 365": "IT", "Windows Central": "WC", "Ars": "Ars", "360info": "360", "Global Voices": "GV", "NASA": "NASA", "EFF": "EFF", "TechCrunch": "TC", "iTnews": "iT", "The Conversation": "C", "The Guardian": "G" };
+  const MONO = { "ABC": "ABC", "SBS": "SBS", "BBC": "BBC", "M365": "365", "Microsoft": "MS", "Office 365": "IT", "Windows Central": "WC", "Ars": "Ars", "360info": "360", "Global Voices": "GV", "NASA": "NASA", "EFF": "EFF", "TechCrunch": "TC", "iTnews": "iT", "The Conversation": "C", "The Guardian": "G", "news.com.au": "N", "7NEWS": "7" };
   const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || "Australia/Brisbane";
   const SIZES = { s: "1rem", m: "1.12rem", l: "1.24rem", xl: "1.38rem" };
 
@@ -589,6 +593,57 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   const S = Object.assign({}, defaults, saved || {}, { tabs: Object.assign({}, defaults.tabs, (saved || {}).tabs) });
   if (!saved && DEFAULT_NAME) S.welcomed = true;
   const saveSettings = () => store.set("brief.settings", S);
+  // Admin (hidden): the website's full text is published locked. A passphrase entered here
+  // unlocks it on this device, and the app then reads like the private Claude copy.
+  const A = Object.assign({ unlocked: false, full: true }, store.get("brief.admin", {}));
+  const saveAdmin = () => store.set("brief.admin", A);
+  let vaultKey = null;  // CryptoKey, once the passphrase checks out
+  const GH_DISPATCH = "https://api.github.com/repos/ashley-pettit/awesome-news/actions/workflows/pages.yml/dispatches";
+  const STALE_MS = 3 * 3600e3;
+  let bgTried = false;
+  // Opening the app with stories over 3 hours old starts an update in the background (at most every 30 minutes).
+  async function bgRefresh() {
+    if (bgTried || !navigator.onLine || !state.status?.updatedAt) return;
+    if (Date.now() - Date.parse(state.status.updatedAt) < STALE_MS) return;
+    if (Date.now() - store.get("brief.bgAt", 0) < 30 * 60000) return;
+    const tok = store.get("brief.ghToken", "");
+    if (state.mode === "claude" ? !(state.mcp && state.status.triggerId) : !tok) return;
+    bgTried = true; store.set("brief.bgAt", Date.now());
+    try {
+      if (state.mode === "claude") await state.mcp.callTool("Claude Code Remote", "fire_trigger", { trigger_id: state.status.triggerId }, { cache: false });
+      else {
+        const r = await fetch(GH_DISPATCH, { method: "POST", headers: { Authorization: `Bearer ${tok}`, Accept: "application/vnd.github+json" }, body: JSON.stringify({ ref: "main" }) });
+        if (r.status === 401 || r.status === 403 || r.status === 404) { A.ghBad = true; saveAdmin(); return; }
+        A.ghBad = false; saveAdmin();
+      }
+      state.refreshing = true; renderHeader();
+      setTimeout(() => finishRefresh(false), 600000);
+    } catch {}  // quiet: the daily update still runs
+  }
+  const fullOn = () => state.mode === "static" && A.unlocked && A.full && !!vaultKey;
+  const privateMode = () => state.mode === "claude" || fullOn();
+  const b64 = t => Uint8Array.from(atob(t), c => c.charCodeAt(0));
+  const unlockBox = async box => new TextDecoder().decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(box.iv) }, vaultKey, b64(box.data)));
+  async function keyFrom(raw) { return crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["decrypt"]); }
+  async function deriveKey(pass, v) {
+    const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pass), "PBKDF2", false, ["deriveBits"]);
+    return new Uint8Array(await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: b64(v.salt), iterations: v.iter }, base, 256));
+  }
+  // Point stories at their locked text when full articles are on, and back again when off.
+  function applyVault() {
+    const on = fullOn();
+    for (const d of Object.values(state.feeds)) for (const i of d?.items || []) if (i.ptext) i.text = on ? i.ptext : undefined;
+  }
+  // Re-check the saved key against the latest status: a changed passphrase locks this device again.
+  async function checkVault() {
+    const v = state.status?.vault, raw = store.get("brief.vaultKey", "");
+    vaultKey = null;
+    if (state.mode === "static" && v?.check && raw) {
+      try { vaultKey = await keyFrom(b64(raw)); if (await unlockBox(v.check) !== "awesome-news") throw 0; }
+      catch { vaultKey = null; store.set("brief.vaultKey", ""); if (A.unlocked) toast("The passphrase changed. Enter the new one in Admin.", 5000); }
+    }
+    applyVault();
+  }
 
   const hash = location.hash.slice(1);
   const state = {
@@ -705,7 +760,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     const seen = new Set();
     let all = 0, neg = 0;
     for (const sec of allSections()) for (const i of allowed(state.feeds[sectionKey(sec.id)]?.items || [])) {
-      if (seen.has(i.id) || (state.mode === "claude" && !i.text)) continue;
+      if (seen.has(i.id) || (privateMode() && !i.text)) continue;
       seen.add(i.id); all++; if (isNegative(i)) neg++;
     }
     return { all, neg, hidden: Math.round(neg * (Number(S.negCut) || 0) / 100) };
@@ -724,7 +779,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
       list = list.filter(i => !local.has(i.id));
     }
     list = allowed(list);
-    if (state.mode === "claude") list = list.filter(i => i.text);  // the private copy shows only stories it can open in full
+    if (privateMode()) list = list.filter(i => i.text);  // the private copy (or an unlocked website) shows only stories it can open in full
     list = calmer(list);
     if (state.mode === "static") {
       if (S.fullOnly) list = list.filter(i => i.text);
@@ -767,7 +822,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   // ======================================================================
   const pic = (i, cls = "") => `<div class="pic ${cls}">${i.image ? `<img src="${esc(i.image)}" alt="" loading="${cls ? "eager" : "lazy"}" decoding="async" referrerpolicy="no-referrer">` : ""}<span class="mono" aria-hidden="true"${i.image ? " hidden" : ""}>${esc(mono(i.source))}</span></div>`;
   const secColour = i => colourOf(i._sid);
-  const meta = (i, withSec) => `<div class="meta">${i._new && !state.read.has(i.id) ? `<span class="new">New</span>` : ""}${withSec && i._sec ? `<span class="sec" style="--sc:${secColour(i)}">${esc(i._sec)}</span><span class="sep"></span>` : ""}<span class="src">${esc(i.source)}</span><span class="sep"></span><time datetime="${esc(i.published)}">${esc(ago(i.published))}</time>${i.text && i.mins ? (state.mode === "static" ? `<span class="fullb" title="${i.mins} min read">${withSec ? "Full" : `Full · ${i.mins} min`}</span>` : `<span class="sep"></span><span class="mins">${i.mins} min</span>`) : ""}</div>`;
+  const meta = (i, withSec) => `<div class="meta">${i._new && !state.read.has(i.id) ? `<span class="new">New</span>` : ""}${withSec && i._sec ? `<span class="sec" style="--sc:${secColour(i)}">${esc(i._sec)}</span><span class="sep"></span>` : ""}<span class="src">${esc(i.source)}</span><span class="sep"></span><time datetime="${esc(i.published)}">${esc(ago(i.published))}</time>${i.text && i.mins ? (!privateMode() ? `<span class="fullb" title="${i.mins} min read">${withSec ? "Full" : `Full · ${i.mins} min`}</span>` : `<span class="sep"></span><span class="mins">${i.mins} min</span>`) : ""}</div>`;
   const heroCard = (i, solo, withSec, eager) => `<article class="story hcard${solo ? " solo" : ""}${readCls(i)}" style="--hc:${secColour(i)}">
       ${pic(i, eager ? "eager" : "")}
       <div class="body">
@@ -778,7 +833,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     const on = isSaved(i.id);
     return `<button class="save" type="button" data-save="${esc(i.id)}" aria-pressed="${on}" aria-label="${on ? "Remove from saved" : "Save for later"}">${I.bookmark}</button>`;
   }
-  const link = (i, inner) => state.mode === "claude"
+  const link = (i, inner) => privateMode()
     ? `<a class="link" role="link" tabindex="0" data-open="${esc(i.id)}">${inner}</a>`  // private copy: always opens in the app
     : `<a class="link" href="${esc(i.url)}" target="_blank" rel="noopener" data-open="${esc(i.id)}">${inner}</a>`;
   const readCls = i => state.read.has(i.id) ? " read" : "";
@@ -979,6 +1034,24 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     if (e.key === "Escape" && openSheet) hideSheet(openSheet);
     if (e.key === "Enter" && e.target.matches?.("a.link[data-open]:not([href])")) e.target.click();
   });
+  document.addEventListener("submit", async e => {
+    if (e.target.id === "ghForm") { e.preventDefault(); const v = $("ghTok").value.trim(); if (!v) return; store.set("brief.ghToken", v); A.ghBad = false; saveAdmin(); bgTried = false; store.set("brief.bgAt", 0); renderSettings(); toast("Saved. Opening the app now keeps stories fresh."); bgRefresh(); return; }
+    if (e.target.id !== "adminForm") return;
+    e.preventDefault();
+    const v = state.status?.vault, pass = $("adminPass").value.trim(), btn = e.target.querySelector("button");
+    if (!v?.check) { toast("Full articles aren't set up on the website yet.", 4000); return; }
+    if (!pass) return;
+    btn.disabled = true;
+    let ok = false, raw;
+    try { raw = await deriveKey(pass, v); vaultKey = await keyFrom(raw); ok = await unlockBox(v.check) === "awesome-news"; } catch {}
+    btn.disabled = false;
+    if (!ok) { vaultKey = null; toast("That passphrase isn't right"); $("adminPass").value = ""; return; }
+    store.set("brief.vaultKey", btoa(String.fromCharCode(...raw)));
+    A.unlocked = true; A.full = true; adminAsk = false; saveAdmin();
+    applyVault(); for (const k in textCache) delete textCache[k]; store.set("brief.offlineAt", ""); saveOffline();
+    state.sTab = "admin"; store.set("brief.sTab", "admin"); renderSettings(); $("settings").scrollTop = 0; render(true);
+    toast("Full articles are on");
+  });
   ["reader", "settings", "interests", "weather"].forEach(id => $(id).addEventListener("scroll", e => e.currentTarget.classList.toggle("scrolled", e.currentTarget.scrollTop > 60), { passive: true }));
   $("reader").addEventListener("scroll", e => {
     const el = e.currentTarget, max = el.scrollHeight - el.clientHeight;
@@ -1045,7 +1118,9 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     }
     const r = await withTimeout(fetch(`data/text/${ref}.json?v=${encodeURIComponent(state.status?.updatedAt || "")}`), 15000);
     if (!r.ok) throw new Error("http " + r.status);
-    return (await r.json()).articles || {};
+    const doc = await r.json();
+    if (ref.startsWith("p")) { if (!vaultKey) throw new Error("locked"); return JSON.parse(await unlockBox(doc)).articles || {}; }
+    return doc.articles || {};
   }
   async function loadText(ref) {
     if (!ref) return null;
@@ -1096,7 +1171,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
       const keep = new Set([...Object.values(state.feeds).flatMap(d => (d?.items || []).map(i => i.id)), ...state.saved.map(s => s.id)]);
       for (const id of keep) if (old[id]) next[id] = old[id];
       let complete = true;
-      for (const ref of st.textChunks || []) {
+      for (const ref of [...(st.textChunks || []), ...(fullOn() ? st.vault?.chunks || [] : [])]) {
         try { const a = await fetchChunk(ref); textCache[ref] = Promise.resolve(a); Object.assign(next, a); }
         catch { complete = false; }
       }
@@ -1155,11 +1230,11 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     if (t && t.paras?.length) {
       const lic = t.licence || "a Creative Commons licence";
       body = { author: t.author, html: prose(t.paras) + (t.cc
-        ? `<p class="licence">Republished from <a href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.source)}</a>${/public domain/i.test(lic) ? ", public domain" : ` under ${t.licenceUrl ? `<a href="${esc(t.licenceUrl)}" target="_blank" rel="noopener">${esc(lic)}</a>` : esc(lic)}`}. Text reformatted for this app. <a href="${esc(i.url)}" target="_blank" rel="noopener">Read the original article</a>.</p>`
-        : state.mode === "claude" ? "" : original(`Open on ${esc(pub)}`, true)) };
+        ? `<p class="licence">Republished from <a href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.source)}</a>${/public domain/i.test(lic) ? ", public domain" : ` under ${t.licenceUrl ? `<a href="${esc(t.licenceUrl)}" target="_blank" rel="noopener">${esc(lic)}</a>` : esc(lic)}`}. Text reformatted for this app.${privateMode() ? "" : ` <a href="${esc(i.url)}" target="_blank" rel="noopener">Read the original article</a>.`}</p>`
+        : privateMode() ? "" : original(`Open on ${esc(pub)}`, true)) };
     } else {
       body = { html: `${i.summary ? `<p class="lede">${esc(i.summary)}</p>` : ""}
-        <div class="partial"><strong>The full story is on ${esc(pub)}</strong>Only a preview can be shown here. Tap below to read the whole article, free.${original(`Read full article`)}</div>` };
+        <div class="partial"><strong>The full story is on ${esc(pub)}</strong>${privateMode() ? "The full story couldn't load. Try again in a moment." : `Only a preview can be shown here. Tap below to read the whole article, free.${original(`Read full article`)}`}</div>` };
     }
     $("rBody").innerHTML = readerHTML(i, body);
   }
@@ -1284,11 +1359,15 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     catch { if (input) { input.focus(); input.select(); } toast("Link selected. Copy it from the box."); }
   }
 
-  const STABS = [["news", "News"], ["filters", "Filters"], ["reading", "Reading"], ["app", "App"]];
+  const BASE_STABS = [["news", "News"], ["filters", "Filters"], ["reading", "Reading"], ["app", "App"]];
+  let STABS = BASE_STABS;
+  let adminTaps = 0, adminTapAt = 0, adminAsk = false;
   state.sTab = store.get("brief.sTab", "news");
+  const passForm = label => `<form class="adminpass" id="adminForm"><input type="password" id="adminPass" placeholder="Passphrase" aria-label="Passphrase" autocomplete="current-password"><button type="submit">${label}</button></form>`;
   function renderSettings() {
     const regions = state.status?.regions || REGION_FALLBACK;
     const counts = state.status?.counts || {};
+    STABS = A.unlocked && state.mode === "static" ? [...BASE_STABS, ["admin", "Admin"]] : BASE_STABS;
     const tab = STABS.some(t => t[0] === state.sTab) ? state.sTab : "news";
     const panes = {
       news: `<div class="group"><h2>You</h2><div class="card">
@@ -1326,7 +1405,16 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
       </div></div>`,
       app: `${getAppHTML()}
       ${shareHTML()}
-      <p class="about">Awesome News pulls from free sources only: ABC, SBS, BBC, The Guardian, The Conversation, 360info, Global Voices, NASA, EFF, Ars Technica, TechCrunch, iTnews and more. ${state.mode === "claude" ? "Stories open in full right here." : "Stories marked Full are free to republish, so they open in full right here."} No paywalls, no sport.${state.status?.updatedAt ? `<br>Stories last updated ${esc(longDate(state.status.updatedAt))}.` : ""}</p>`,
+      <p class="about" id="aboutLine">Awesome News pulls from free sources only: ABC, SBS, BBC, The Guardian, news.com.au, 7NEWS, The Conversation, 360info, Global Voices, NASA, EFF, Ars Technica, TechCrunch, iTnews and more. ${privateMode() ? "Stories open in full right here." : "Stories marked Full are free to republish, so they open in full right here."} No paywalls, no sport.${state.status?.updatedAt ? `<br>Stories last updated ${esc(longDate(state.status.updatedAt))}.` : ""}</p>
+      ${adminAsk && !A.unlocked ? passForm("Unlock") : ""}`,
+      admin: `<div class="group"><h2>Admin</h2><div class="card">
+        ${vaultKey ? toggle("data-admin", "full", A.full, "Full articles in the app", "Every story opens in full right here, like the Claude app. No links out.") : ""}
+        <div class="field col"><div class="top"><span class="lbl">Update when I open the app<span class="sub">${store.get("brief.ghToken", "") ? (A.ghBad ? "GitHub key isn't working. Paste a new one." : "On. Opening the app updates stories over 3 hours old.") : "Paste a GitHub key to turn this on. Otherwise it updates once a day."}</span></span></div>
+          <form class="adminpass" id="ghForm" style="margin-top:0"><input type="password" id="ghTok" placeholder="${store.get("brief.ghToken", "") ? "Saved. Paste to replace" : "GitHub key"}" aria-label="GitHub key" autocomplete="off"><button type="submit">Save</button></form></div>
+        <button class="field" type="button" id="adminLock"><span class="lbl">Lock admin<span class="sub">Forgets the passphrase on this device and hides this tab</span></span></button>
+      </div>
+      ${vaultKey ? "" : state.status?.vault ? `<p class="hint">Enter the passphrase to turn on full articles.</p>${passForm("Unlock")}` : `<p class="hint">Full articles aren't set up on the website yet. They switch on after the next update once the passphrase is added on GitHub.</p>`}
+      <p class="hint">Admin settings apply on this device only.${state.status?.vault?.articles ? ` ${state.status.vault.articles} full stories in the latest update.` : ""}</p></div>`,
     };
     $("sBody").innerHTML = `
       <h1>Settings</h1>
@@ -1446,6 +1534,14 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
       return;
     }
     // ---- settings controls ----
+    const adm = t.closest("[data-admin]");
+    if (adm) { A.full = !A.full; saveAdmin(); adm.setAttribute("aria-checked", String(A.full)); applyVault(); for (const k in textCache) delete textCache[k]; store.set("brief.offlineAt", ""); saveOffline(); render(true); return; }
+    if (t.closest("#adminLock")) { A.unlocked = false; adminAsk = false; saveAdmin(); store.set("brief.vaultKey", ""); store.set("brief.ghToken", ""); vaultKey = null; applyVault(); state.sTab = "app"; renderSettings(); render(true); return; }
+    if (t.closest("#aboutLine") && !A.unlocked && state.mode === "static") {
+      const now = Date.now(); adminTaps = now - adminTapAt < 1500 ? adminTaps + 1 : 1; adminTapAt = now;
+      if (adminTaps >= 7 && !adminAsk) { adminAsk = true; renderSettings(); $("adminPass")?.focus(); }
+      return;
+    }
     const stb = t.closest("[data-stab]");
     if (stb) { state.sTab = stb.dataset.stab; store.set("brief.sTab", state.sTab); renderSettings(); $("settings").scrollTop = 0; return; }
     const tt = t.closest("[data-tabtoggle]");
@@ -1639,9 +1735,12 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
         state.feeds = feeds;
         state.status = st;
         for (const k in textCache) delete textCache[k];
+        await checkVault();
       }
       state.loaded = true;
       if (manual) { finishRefresh(changed); if (!changed) toast("You're up to date"); }
+      else if (state.refreshing && changed) finishRefresh(true);
+      bgRefresh();
       if (!openSheet) render(true);
       saveOffline();
       if (!state.wx) loadWeather();
@@ -1673,6 +1772,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
       state.status = snap.exists ? snap.data() : null;
       if (state.status?.updatedAt !== prev) for (const k in textCache) delete textCache[k];
       if (state.refreshing && state.status?.updatedAt && state.status.updatedAt !== prev) finishRefresh(true);
+      bgRefresh();
       arrived();
     }, () => arrived());
   }
@@ -1683,6 +1783,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     renderHeader();
     if (state.mode === "static") { loadStatic(true); return; }
     try {
+      if (!state.mcp) throw { code: "server_not_connected" };
       await state.mcp.callTool("Claude Code Remote", "fire_trigger", { trigger_id: state.status.triggerId }, { cache: false });
       toast("Refreshing. New stories will appear on their own.", 4000);
       setTimeout(() => finishRefresh(false), 600000);
@@ -1699,11 +1800,12 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   Promise.all([idb.get("feeds"), idb.get("status")]).then(([f, s]) => {
     if (!f || !Object.keys(f).length || (state.loaded && Object.keys(state.feeds).length)) return;
     state.feeds = f; state.status = state.status || s || null; state.fromCache = true; state.loaded = true;
+    if (state.mode === "static") { const raw = store.get("brief.vaultKey", ""); if (raw && A.unlocked && A.full) keyFrom(b64(raw)).then(k => { vaultKey = vaultKey || k; applyVault(); if (!openSheet) render(true); }).catch(() => {}); }
     if (!openSheet) render(true); else renderHeader();
   });
 
   use("db").then(db => {
-    if (db) { state.mode = "claude"; loadClaude(db); return; }
+    if (db) { state.mode = "claude"; loadClaude(db); use("mcp").then(m => { state.mcp = m; bgRefresh(); }); return; }
     state.mode = "static";
     state.canPull = true;
     if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});

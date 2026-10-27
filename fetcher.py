@@ -39,6 +39,9 @@ from email.utils import parsedate_to_datetime
 # Left out on purpose: Courier-Mail, The Australian, AFR, Brisbane Times / SMH /
 # The Age, The Verge, Reuters, Bloomberg, MIT Tech Review (paywalls or meters).
 # The Guardian is in at the owner's request (free RSS; live blogs are skipped).
+# --private-text ENV: the full text of every other story too, but only ever written
+# encrypted (AES-GCM, key from the passphrase in that environment variable), so the
+# public site hosts locked files that only the owner's devices can open.
 # ---------------------------------------------------------------------------
 ABC_JUST_IN = "https://www.abc.net.au/news/feed/51120/rss.xml"
 ABC_TOP = "https://www.abc.net.au/news/feed/45910/rss.xml"
@@ -47,6 +50,8 @@ SBS_LATEST = "https://www.sbs.com.au/news/topic/latest/feed"
 SBS_AUSTRALIA = "https://www.sbs.com.au/news/topic/australia/feed"
 CONV = "https://theconversation.com/au/{}/articles.atom"
 GU = "https://www.theguardian.com/{}/rss"
+NCA = "https://www.news.com.au/content-feeds/latest-news-{}/"
+SEVEN = "https://7news.com.au/{}/feed"
 ROADMAP = "https://www.microsoft.com/releasecommunications/api/v2/m365/rss"  # official Microsoft 365 feature roadmap
 
 SECTION_FEEDS = [
@@ -61,10 +66,13 @@ SECTION_FEEDS = [
     ("politics", "ABC News", ABC_JUST_IN, "politics"),
     ("politics", "SBS News", SBS_AUSTRALIA, "politics"),
     ("politics", "The Guardian", GU.format("australia-news/australian-politics"), "all"),
+    ("politics", "7NEWS", SEVEN.format("politics"), "all"),
     ("finance", "The Conversation", CONV.format("business"), "all"),
     ("finance", "ABC News", ABC_BUSINESS, "finance"),
     ("finance", "SmartCompany", "https://www.smartcompany.com.au/feed/", "all"),
     ("finance", "The Guardian", GU.format("au/business"), "finance"),
+    ("finance", "news.com.au", NCA.format("finance"), "all"),
+    ("finance", "7NEWS", SEVEN.format("business/finance"), "all"),
     ("ai", "The Conversation", "https://theconversation.com/topics/artificial-intelligence-ai-90/articles.atom", "all"),
     ("ai", "Ars Technica", "https://arstechnica.com/ai/feed/", "all"),
     ("ai", "TechCrunch", "https://techcrunch.com/category/artificial-intelligence/feed/", "all"),
@@ -75,15 +83,19 @@ SECTION_FEEDS = [
     ("tech", "TechCrunch", "https://techcrunch.com/feed/", "all"),
     ("tech", "Engadget", "https://www.engadget.com/rss.xml", "all"),
     ("tech", "The Guardian", GU.format("au/technology"), "all"),
+    ("tech", "news.com.au", NCA.format("technology"), "all"),
+    ("tech", "7NEWS", SEVEN.format("technology"), "all"),
     ("headlines", "ABC News", ABC_TOP, "all"),
     ("headlines", "SBS News", SBS_LATEST, "all"),
     ("headlines", "BBC World", "https://feeds.bbci.co.uk/news/world/rss.xml", "all"),
     ("headlines", "The Guardian", GU.format("australia-news"), "all"),
+    ("headlines", "news.com.au", NCA.format("national"), "all"),
+    ("headlines", "7NEWS", SEVEN.format("news"), "all"),
 ]
 
 REGIONS = {
     # id: (label, [(source, url)], place names (any case), abbreviations (exact case))
-    "qld": ("Queensland", [("ABC Brisbane", "https://www.abc.net.au/news/feed/8053540/rss.xml"), ("The Guardian", GU.format("australia-news/queensland"))],
+    "qld": ("Queensland", [("ABC Brisbane", "https://www.abc.net.au/news/feed/8053540/rss.xml"), ("The Guardian", GU.format("australia-news/queensland")), ("7NEWS Brisbane", SEVEN.format("news/qld"))],
             r"Brisbane|Queensland(?:ers?)?|Gold Coast|Sunshine Coast|Logan|Ipswich|Moreton Bay|Redland|Toowoomba|Cairns|"
             r"Townsville|Mackay|Rockhampton|Bundaberg|Gympie|Crisafulli", r"Qld|QLD"),
     "nsw": ("New South Wales", [("ABC Sydney", "https://www.abc.net.au/news/feed/8055316/rss.xml")],
@@ -101,7 +113,8 @@ REGIONS = {
 # National feeds mined for each region's place names.
 REGION_MINE = [("ABC News", ABC_JUST_IN), ("ABC News", ABC_TOP), ("SBS News", SBS_AUSTRALIA), ("SBS News", SBS_LATEST),
                ("The Conversation", CONV.format("politics")), ("The Conversation", CONV.format("environment")),
-               ("The Guardian", GU.format("australia-news"))]
+               ("The Guardian", GU.format("australia-news")), ("news.com.au", NCA.format("national")),
+               ("7NEWS", SEVEN.format("news"))]
 
 # Interests people can switch on. Each takes its own feeds plus any story, from any feed,
 # whose headline matches its keywords. Groups set the colour and where it sits in the picker.
@@ -109,7 +122,7 @@ INTERESTS = [
     # id, label, group, [(source, url)], headline keywords (or None)
     ("world", "World", "news", [("SBS News", "https://www.sbs.com.au/news/topic/world/feed"), ("BBC World", "https://feeds.bbci.co.uk/news/world/rss.xml"),
                                 ("Global Voices", "https://globalvoices.org/feed/"), ("360info", "https://360info.org/feed/"),
-                                ("The Guardian", GU.format("world"))], None),
+                                ("The Guardian", GU.format("world")), ("news.com.au", NCA.format("world"))], None),
     ("science", "Science", "tech", [("Ars Technica", "https://arstechnica.com/science/feed/"), ("BBC Science", "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml"),
                                     ("ScienceAlert", "https://www.sciencealert.com/feed"), ("New Atlas", "https://newatlas.com/index.rss"),
                                     ("Knowable Magazine", "https://knowablemagazine.org/rss"), ("The Guardian", GU.format("science"))],
@@ -439,6 +452,22 @@ def make_inline(url, size, quality):
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+VAULT_SALT = b"awesome-news-vault-v1"
+VAULT_ITER = 310_000
+
+
+def vault_key(passphrase):
+    return hashlib.pbkdf2_hmac("sha256", passphrase.encode(), VAULT_SALT, VAULT_ITER, 32)
+
+
+def lock(key, data):
+    """bytes -> {iv, data} (base64), readable by the app with Web Crypto AES-GCM."""
+    import base64
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    iv = os.urandom(12)
+    return {"iv": base64.b64encode(iv).decode(), "data": base64.b64encode(AESGCM(key).encrypt(iv, data, None)).decode()}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("out")
@@ -446,7 +475,11 @@ def main():
     ap.add_argument("--images", choices=["url", "inline"], default="url")
     ap.add_argument("--text", choices=["cc", "all", "none"], default="cc")
     ap.add_argument("--interests", choices=["all", "none"], default="none")
+    ap.add_argument("--private-text", metavar="ENV", default="",
+                    help="also save every story's full text, encrypted with the passphrase in this environment variable")
     a = ap.parse_args()
+    passphrase = os.environ.get(a.private_text, "") if a.private_text else ""
+    key = vault_key(passphrase) if passphrase and a.text == "cc" else None
     regions = list(REGIONS) if a.regions == "all" else [r.strip() for r in a.regions.split(",") if r.strip() in REGIONS]
     now = datetime.now(timezone.utc)
 
@@ -548,7 +581,7 @@ def main():
 
     # 4. Article pages: fetch once per story that needs a picture or text.
     def wants_text(st):
-        return a.text == "all" or (a.text == "cc" and st["source"] in CC_SOURCES)
+        return a.text == "all" or (a.text == "cc" and (st["source"] in CC_SOURCES or key is not None))
 
     if a.text == "none":
         for st in unique.values():
@@ -562,6 +595,8 @@ def main():
             if text:
                 lic = CC_SOURCES.get(st["source"])
                 texts[st["id"]] = dict(text, cc=bool(lic), licence=lic[0] if lic else "", licenceUrl=lic[1] if lic else "")
+                if key is not None and not lic:
+                    texts[st["id"]]["_private"] = True
 
     # 5. Pictures.
     if a.images == "url":
@@ -581,19 +616,26 @@ def main():
                     st["image"] = data
 
     # 6. Article text in chunks under 200 KB (a Claude database document holds at most 256 KiB).
-    chunks, cur, cur_size = [], {}, 0
-    for sid, t in texts.items():
-        size = len(json.dumps(t, ensure_ascii=False).encode())
-        if size > 190_000:
-            continue
-        if cur and cur_size + size > 190_000:
-            chunks.append(cur)
-            cur, cur_size = {}, 0
-        cur[sid] = t
-        cur_size += size
-    if cur:
-        chunks.append(cur)
+    def chunked(pairs):
+        out, cur, cur_size = [], {}, 0
+        for sid, t in pairs:
+            size = len(json.dumps(t, ensure_ascii=False).encode())
+            if size > 190_000:
+                continue
+            if cur and cur_size + size > 190_000:
+                out.append(cur)
+                cur, cur_size = {}, 0
+            cur[sid] = t
+            cur_size += size
+        if cur:
+            out.append(cur)
+        return out
+
+    private = {sid for sid, t in texts.items() if t.pop("_private", False)}
+    chunks = chunked((sid, t) for sid, t in texts.items() if sid not in private)
+    pchunks = chunked((sid, t) for sid, t in texts.items() if sid in private)
     text_ref = {sid: f"t{n:02d}" for n, ch in enumerate(chunks, 1) for sid in ch}
+    ptext_ref = {sid: f"p{n:02d}" for n, ch in enumerate(pchunks, 1) for sid in ch}
 
     # 6b. Weather for each local area: a snapshot for copies of the app that can't fetch it live.
     weather = {}
@@ -623,8 +665,11 @@ def main():
         out_items = []
         for st in items:
             d = {k: v for k, v in st.items() if not k.startswith("_")}
-            if st["id"] in text_ref:
-                d["text"] = text_ref[st["id"]]
+            if st["id"] in text_ref or st["id"] in ptext_ref:
+                if st["id"] in text_ref:
+                    d["text"] = text_ref[st["id"]]
+                else:
+                    d["ptext"] = ptext_ref[st["id"]]  # locked: only devices with the passphrase can open it
                 words = sum(len(p.split()) for p in texts[st["id"]]["paras"])
                 d["mins"] = max(1, round(words / 230))
             out_items.append(d)
@@ -639,6 +684,12 @@ def main():
     for n, ch in enumerate(chunks, 1):
         with open(os.path.join(a.out, "text", f"t{n:02d}.json"), "w") as f:
             json.dump({"articles": ch}, f, ensure_ascii=False, separators=(",", ":"))
+    for n, ch in enumerate(pchunks, 1):
+        with open(os.path.join(a.out, "text", f"p{n:02d}.json"), "w") as f:
+            json.dump(lock(key, json.dumps({"articles": ch}, ensure_ascii=False, separators=(",", ":")).encode()), f)
+    source_counts = {}
+    for st in unique.values():
+        source_counts[st["source"]] = source_counts.get(st["source"], 0) + 1
     status = {
         "updatedAt": stamp,
         "counts": counts,
@@ -650,8 +701,14 @@ def main():
         "sections": list(sections),
         "textChunks": [f"t{n:02d}" for n in range(1, len(chunks) + 1)],
         "articlesWithText": len(text_ref),
+        "sourceCounts": dict(sorted(source_counts.items())),
         "errors": errors[:10],
     }
+    if key is not None:
+        import base64
+        status["vault"] = {"salt": base64.b64encode(VAULT_SALT).decode(), "iter": VAULT_ITER,
+                           "check": lock(key, b"awesome-news"), "chunks": [f"p{n:02d}" for n in range(1, len(pchunks) + 1)],
+                           "articles": len(ptext_ref)}
     with open(os.path.join(a.out, "status.json"), "w") as f:
         json.dump(status, f, ensure_ascii=False)
     print(json.dumps({k: status[k] for k in ("updatedAt", "counts", "textChunks", "articlesWithText", "errors")}, indent=1))
