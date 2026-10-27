@@ -353,6 +353,13 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
 .adminpass input { flex: 1; min-width: 0; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); }
 .adminpass button { padding: 11px 16px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); font-weight: 700; }
 .adminpass button:disabled { opacity: 0.6; }
+.unlock input[type="password"] { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); font-size: 1rem; }
+.unlock input[type="password"]:focus { border-color: var(--accent); outline: none; }
+.confirmrow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+.unlock.confirm .sub { font-size: 0.92rem; color: var(--ink); margin-top: 6px; }
+.unlockbtn { width: 100%; padding: 13px; border-radius: 12px; background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.unlockbtn:disabled { opacity: 0.6; }
+.unlockbtn.ghost { background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--line); font-weight: 600; }
 .licence { margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--line); font-family: var(--ui); font-size: 0.8rem; color: var(--muted); }
 .licence a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
 .next { margin-top: 30px; padding-top: 16px; border-top: 2px solid var(--ink); }
@@ -1042,20 +1049,25 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     if (e.target.id === "ghForm") { e.preventDefault(); const v = $("ghTok").value.trim(); if (!v) return; store.set("brief.ghToken", v); A.ghBad = false; saveAdmin(); bgTried = false; store.set("brief.bgAt", 0); renderSettings(); toast("Saved. Opening the app now keeps stories fresh."); bgRefresh(); return; }
     if (e.target.id !== "adminForm") return;
     e.preventDefault();
-    const v = state.status?.vault, pass = $("adminPass").value.trim(), btn = e.target.querySelector("button");
-    if (!v?.check) { toast("Full articles aren't set up on the website yet.", 4000); return; }
+    const pass = $("adminPass").value.trim();
     if (!pass) return;
+    unlock.pass = pass; unlock.step = "confirm"; renderSettings(); $("unlockConfirm")?.focus();
+  });
+  async function confirmUnlock(btn) {
+    const v = state.status?.vault, pass = unlock.pass;
+    if (!v?.check) { toast("Full articles aren't set up on the website yet.", 4000); return; }
     btn.disabled = true;
     let ok = false, raw;
     try { raw = await deriveKey(pass, v); vaultKey = await keyFrom(raw); ok = await unlockBox(v.check) === "awesome-news"; } catch {}
     btn.disabled = false;
-    if (!ok) { vaultKey = null; toast("That passphrase isn't right"); $("adminPass").value = ""; return; }
+    unlock.pass = ""; unlock.step = "pass";
+    if (!ok) { vaultKey = null; renderSettings(); toast("That passphrase isn't right"); $("adminPass")?.focus(); return; }
     store.set("brief.vaultKey", btoa(String.fromCharCode(...raw)));
-    A.unlocked = true; A.full = true; adminAsk = false; saveAdmin();
+    A.unlocked = true; A.full = true; A.agreedAt = new Date().toISOString(); saveAdmin();
     applyVault(); for (const k in textCache) delete textCache[k]; store.set("brief.offlineAt", ""); saveOffline();
-    state.sTab = "admin"; store.set("brief.sTab", "admin"); renderSettings(); $("settings").scrollTop = 0; render(true);
+    renderSettings(); render(true);
     toast("Full articles are on");
-  });
+  }
   ["reader", "settings", "interests", "weather"].forEach(id => $(id).addEventListener("scroll", e => e.currentTarget.classList.toggle("scrolled", e.currentTarget.scrollTop > 60), { passive: true }));
   $("reader").addEventListener("scroll", e => {
     const el = e.currentTarget, max = el.scrollHeight - el.clientHeight;
@@ -1365,13 +1377,35 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
 
   const BASE_STABS = [["news", "News"], ["filters", "Filters"], ["reading", "Reading"], ["app", "App"]];
   let STABS = BASE_STABS;
-  let adminTaps = 0, adminTapAt = 0, adminAsk = false;
   state.sTab = store.get("brief.sTab", "news");
-  const passForm = label => `<form class="adminpass" id="adminForm"><input type="password" id="adminPass" placeholder="Passphrase" aria-label="Passphrase" autocomplete="current-password"><button type="submit">${label}</button></form>`;
+  // Full articles: a passphrase plus a personal-use confirmation unlocks the locked text on this device.
+  const unlock = { step: "pass", pass: "" };
+  function fullHTML() {
+    if (state.mode !== "static" || !state.status?.vault) return "";
+    const n = state.status.vault.articles;
+    if (!vaultKey && unlock.step === "confirm") return `<div class="group"><h2>Full articles</h2><div class="card">
+      <div class="field col unlock confirm">
+        <span class="lbl">Please confirm<span class="sub">I'm a friend of Ash and this is for my personal use only.</span></span>
+        <div class="confirmrow"><button type="button" class="unlockbtn ghost" id="unlockBack">Back</button><button type="button" class="unlockbtn" id="unlockConfirm">I confirm</button></div>
+      </div></div></div>`;
+    if (!vaultKey) return `<div class="group"><h2>Full articles</h2><div class="card">
+      <form class="field col unlock" id="adminForm">
+        <label for="adminPass" class="lbl">Passphrase<span class="sub">Friends of Ash can read every story in full, right here in the app.</span></label>
+        <input type="password" id="adminPass" placeholder="Type the passphrase" autocomplete="current-password" required>
+        <button type="submit" class="unlockbtn">Unlock</button>
+      </form></div><p class="hint">The passphrase is saved on this device only.</p></div>`;
+    const gh = store.get("brief.ghToken", "");
+    return `<div class="group"><h2>Full articles</h2><div class="card">
+      ${toggle("data-admin", "full", A.full, "Full articles in the app", "Every story opens in full right here. No links out.")}
+      <div class="field col"><div class="top"><span class="lbl">Update when I open the app<span class="sub">${gh ? (A.ghBad ? "GitHub key isn't working. Paste a new one." : "On. Opening the app updates stories over 3 hours old.") : "Optional, for Ash. Paste a GitHub key to turn this on. Otherwise stories update once a day."}</span></span></div>
+        <form class="adminpass" id="ghForm" style="margin-top:0"><input type="password" id="ghTok" placeholder="${gh ? "Saved. Paste to replace" : "GitHub key"}" aria-label="GitHub key" autocomplete="off"><button type="submit">Save</button></form></div>
+      <button class="field" type="button" id="adminLock"><span class="lbl">Forget passphrase<span class="sub">Locks full articles on this device again</span></span></button>
+    </div><p class="hint">Saved on this device only.${n ? ` ${n} full stories in the latest update.` : ""}</p></div>`;
+  }
   function renderSettings() {
     const regions = state.status?.regions || REGION_FALLBACK;
     const counts = state.status?.counts || {};
-    STABS = A.unlocked && state.mode === "static" ? [...BASE_STABS, ["admin", "Admin"]] : BASE_STABS;
+    STABS = BASE_STABS;
     const tab = STABS.some(t => t[0] === state.sTab) ? state.sTab : "news";
     const panes = {
       news: `<div class="group"><h2>You</h2><div class="card">
@@ -1398,7 +1432,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
           <div class="negscale" aria-hidden="true"><span>All news</span><span>No negative news</span></div>
         </div>
       </div><p class="hint" id="negHint">${esc(negHint())}</p></div>`,
-      reading: `<div class="group"><h2>Reading</h2><div class="card">
+      reading: `${fullHTML()}<div class="group"><h2>Reading</h2><div class="card">
         ${state.mode === "static" && !fullOn() ? toggle("data-fullonly", "1", !!S.fullOnly, "Full stories only", "Hide previews that open the publisher's site") : ""}
         <div class="field"><span class="lbl">Text size</span>${seg("textSize", S.textSize, [["s", "A", "Small"], ["m", "A", "Medium"], ["l", "A", "Large"], ["xl", "A", "Extra large"]])}</div>
         <div class="field"><span class="lbl">Appearance</span>${seg("theme", S.theme, [["system", "Auto"], ["light", "Light"], ["dark", "Dark"]])}</div>
@@ -1409,16 +1443,8 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
       </div></div>`,
       app: `${getAppHTML()}
       ${shareHTML()}
-      <p class="about" id="aboutLine">Awesome News pulls from free sources only: ABC, SBS, BBC, The Guardian, 7NEWS, The Conversation, 360info, Global Voices, NASA, EFF, Ars Technica, TechCrunch, iTnews and more. ${privateMode() ? "Stories open in full right here." : "Stories marked Full are free to republish, so they open in full right here."} No paywalls, no sport.${state.status?.updatedAt ? `<br>Stories last updated ${esc(longDate(state.status.updatedAt))}.` : ""}</p>
-      ${adminAsk && !A.unlocked ? passForm("Unlock") : ""}`,
-      admin: `<div class="group"><h2>Admin</h2><div class="card">
-        ${vaultKey ? toggle("data-admin", "full", A.full, "Full articles in the app", "Every story opens in full right here, like the Claude app. No links out.") : ""}
-        <div class="field col"><div class="top"><span class="lbl">Update when I open the app<span class="sub">${store.get("brief.ghToken", "") ? (A.ghBad ? "GitHub key isn't working. Paste a new one." : "On. Opening the app updates stories over 3 hours old.") : "Paste a GitHub key to turn this on. Otherwise it updates once a day."}</span></span></div>
-          <form class="adminpass" id="ghForm" style="margin-top:0"><input type="password" id="ghTok" placeholder="${store.get("brief.ghToken", "") ? "Saved. Paste to replace" : "GitHub key"}" aria-label="GitHub key" autocomplete="off"><button type="submit">Save</button></form></div>
-        <button class="field" type="button" id="adminLock"><span class="lbl">Lock admin<span class="sub">Forgets the passphrase on this device and hides this tab</span></span></button>
-      </div>
-      ${vaultKey ? "" : state.status?.vault ? `<p class="hint">Enter the passphrase to turn on full articles.</p>${passForm("Unlock")}` : `<p class="hint">Full articles aren't set up on the website yet. They switch on after the next update once the passphrase is added on GitHub.</p>`}
-      <p class="hint">Admin settings apply on this device only.${state.status?.vault?.articles ? ` ${state.status.vault.articles} full stories in the latest update.` : ""}</p></div>`,
+      <p class="about">Awesome News pulls from free sources only: ABC, SBS, BBC, The Guardian, 7NEWS, The Conversation, 360info, Global Voices, NASA, EFF, Ars Technica, TechCrunch, iTnews and more. ${privateMode() ? "Stories open in full right here." : "Stories marked Full are free to republish, so they open in full right here."} No paywalls, no sport.${state.status?.updatedAt ? `<br>Stories last updated ${esc(longDate(state.status.updatedAt))}.` : ""}</p>
+`,
     };
     $("sBody").innerHTML = `
       <h1>Settings</h1>
@@ -1538,14 +1564,11 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
       return;
     }
     // ---- settings controls ----
+    if (t.closest("#unlockConfirm")) { confirmUnlock(t.closest("#unlockConfirm")); return; }
+    if (t.closest("#unlockBack")) { unlock.pass = ""; unlock.step = "pass"; renderSettings(); $("adminPass")?.focus(); return; }
     const adm = t.closest("[data-admin]");
     if (adm) { A.full = !A.full; saveAdmin(); adm.setAttribute("aria-checked", String(A.full)); applyVault(); for (const k in textCache) delete textCache[k]; store.set("brief.offlineAt", ""); saveOffline(); render(true); return; }
-    if (t.closest("#adminLock")) { A.unlocked = false; adminAsk = false; saveAdmin(); store.set("brief.vaultKey", ""); store.set("brief.ghToken", ""); vaultKey = null; applyVault(); state.sTab = "app"; renderSettings(); render(true); return; }
-    if (t.closest("#aboutLine") && !A.unlocked && state.mode === "static") {
-      const now = Date.now(); adminTaps = now - adminTapAt < 1500 ? adminTaps + 1 : 1; adminTapAt = now;
-      if (adminTaps >= 7 && !adminAsk) { adminAsk = true; renderSettings(); $("adminPass")?.focus(); }
-      return;
-    }
+    if (t.closest("#adminLock")) { A.unlocked = false; saveAdmin(); store.set("brief.vaultKey", ""); store.set("brief.ghToken", ""); vaultKey = null; applyVault(); renderSettings(); render(true); return; }
     const stb = t.closest("[data-stab]");
     if (stb) { state.sTab = stb.dataset.stab; store.set("brief.sTab", state.sTab); renderSettings(); $("settings").scrollTop = 0; return; }
     const tt = t.closest("[data-tabtoggle]");
