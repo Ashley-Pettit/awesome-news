@@ -2,7 +2,7 @@ name: Update news and publish
 
 on:
   schedule:
-    - cron: "47 19 * * *"   # once a day, 5:47am Brisbane. Opening the app can start extra updates (Admin > Update when I open the app).
+    - cron: "47 19 * * *"   # once a day, 5:47am Brisbane. Opening the app can start extra updates (Settings > Reading > Update when I open the app).
   workflow_dispatch:
   push:
     branches: [main]
@@ -35,7 +35,7 @@ jobs:
         # Public site: every state's Local edition, every interest, publisher image links,
         # and open article text only where the licence allows it (CC and public-domain sources).
         # Every other story's full text is published locked with the NEWS_KEY passphrase, so only
-        # devices that enter it in Admin can read it. Without the secret, that part is skipped.
+        # devices that enter it in Settings > Reading can read it. Without the secret, that part is skipped.
         env:
           NEWS_KEY: ${{ secrets.NEWS_KEY }}
         run: python fetcher.py _site/data --regions all --images url --text cc --interests all --private-text NEWS_KEY
