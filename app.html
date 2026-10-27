@@ -376,7 +376,9 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
 }
 .field select { appearance: none; -webkit-appearance: none; cursor: pointer; color: var(--accent); font-weight: 600; text-align-last: right; }
 .field input::placeholder { color: var(--faint); }
-.field .sub { display: block; font-size: 0.78rem; color: var(--muted); font-weight: 400; }
+.field .sub { display: block; font-size: 0.78rem; color: var(--muted); font-weight: 400; line-height: 1.35; margin-top: 2px; text-wrap: pretty; }
+.field[role="switch"] .lbl, .field.col .lbl, button.field > .lbl { flex: 1 1 auto; min-width: 0; }
+.field[role="switch"], button.field { padding-block: 10px; }
 .seg { display: inline-flex; background: var(--bg); border-radius: 10px; padding: 3px; gap: 2px; box-shadow: inset 0 0 0 1px var(--line); }
 .seg button { padding: 6px 11px; border-radius: 8px; font-size: 0.84rem; font-weight: 600; color: var(--muted); }
 .seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px var(--shade), 0 0 0 1px var(--line); }
@@ -422,8 +424,8 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
 .qr .code svg { width: 100%; height: 100%; display: block; }
 .qr p { margin: 0; font-size: 0.86rem; color: var(--muted); }
 .qr p b { display: block; color: var(--ink); font-size: 0.95rem; margin-bottom: 2px; }
-.stabs { position: sticky; top: 54px; z-index: 1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; margin: 14px 0 0; padding: 3px; border-radius: 12px; background: var(--surface); box-shadow: 0 0 0 1px var(--line); }
-.stabs button { padding: 8px 4px; border-radius: 9px; font-size: 0.88rem; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.stabs { position: sticky; top: 54px; z-index: 1; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 2px; margin: 14px 0 0; padding: 3px; border-radius: 12px; background: var(--surface); box-shadow: 0 0 0 1px var(--line); }
+.stabs button { min-height: 40px; padding: 8px 2px; border-radius: 9px; font-size: 0.88rem; font-weight: 600; color: var(--muted); white-space: nowrap; }
 .stabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
 .field.col { flex-direction: column; align-items: stretch; gap: 8px; padding-block: 12px; }
 .field.col .top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
@@ -861,7 +863,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   function listHTML(list, withSec, carousel) {
     let top = "", rest = list;
     if (carousel) {  // swipeable top stories, picture-led
-      const picks = list.slice(0, 14).filter(i => i.image).slice(0, 5);
+      const picks = list.slice(0, 30).filter(i => i.image).slice(0, 10);
       if (picks.length >= 2) {
         const ids = new Set(picks.map(i => i.id));
         rest = list.filter(i => !ids.has(i.id));
@@ -1395,7 +1397,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
         </div>
       </div><p class="hint" id="negHint">${esc(negHint())}</p></div>`,
       reading: `<div class="group"><h2>Reading</h2><div class="card">
-        ${state.mode === "static" ? toggle("data-fullonly", "1", !!S.fullOnly, "Full stories only", "Hide previews that open the publisher's site") : ""}
+        ${state.mode === "static" && !fullOn() ? toggle("data-fullonly", "1", !!S.fullOnly, "Full stories only", "Hide previews that open the publisher's site") : ""}
         <div class="field"><span class="lbl">Text size</span>${seg("textSize", S.textSize, [["s", "A", "Small"], ["m", "A", "Medium"], ["l", "A", "Large"], ["xl", "A", "Extra large"]])}</div>
         <div class="field"><span class="lbl">Appearance</span>${seg("theme", S.theme, [["system", "Auto"], ["light", "Light"], ["dark", "Dark"]])}</div>
       </div><p class="hint">Offline reading: ${offlineArticles ? `${Object.keys(offlineArticles).length} full stories kept on this device.` : "stories are kept on this device as they load."} Open the app on wifi now and then, and it keeps working with no connection.</p></div>
