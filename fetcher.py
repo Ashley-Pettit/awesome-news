@@ -313,8 +313,22 @@ def html_image(*chunks):
     return None
 
 
+def parse_xml(raw):
+    """Strict first; if a feed has stray characters (bare & or control codes), clean them and try again."""
+    try:
+        return ET.fromstring(raw)
+    except ET.ParseError:
+        t = raw.decode("utf-8", "ignore") if isinstance(raw, bytes) else raw
+        if re.search(r"<html[\s>]", t[:3000], re.I):
+            raise  # a web page (block or error page), not a feed
+        t = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", t)
+        t = re.sub(r"&(?!(?:#\d+|#x[0-9a-fA-F]+|amp|lt|gt|quot|apos);)", "&amp;", t)
+        t = re.sub(r"^\s*<\?xml[^>]*\?>", "", t)
+        return ET.fromstring(t)
+
+
 def parse_feed(url):
-    root = ET.fromstring(get(url, timeout=25))
+    root = parse_xml(get(url, timeout=25))
     out = []
     for it in root.findall(".//item"):
         out.append({
