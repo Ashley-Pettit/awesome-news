@@ -19,6 +19,9 @@ Settings in the app shows these steps too, plus a link and QR code to share it w
 - **Settings:** your name for the greeting, which tabs and sources to show, words to mute, text size and light or dark mode. Settings stay on your device.
 - **Reader:** stories open inside the app. Articles from The Conversation show in full. Other stories show a preview with a button to read the full article on the publisher's site.
 - **Saved:** bookmark stories to read later
+- **Weather:** tap the weather in the header for the full forecast: now, the next 24 hours and the next 7 days
+- **Offline:** stories and full articles are kept on your phone, so it still reads with no signal
+- **Microsoft Copilot:** an interest that follows Microsoft 365 Copilot news and the official roadmap
 - **No paywalls, no sport**
 
 ## Sources

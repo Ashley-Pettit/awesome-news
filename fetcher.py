@@ -46,9 +46,16 @@ ABC_BUSINESS = "https://www.abc.net.au/news/feed/51892/rss.xml"
 SBS_LATEST = "https://www.sbs.com.au/news/topic/latest/feed"
 SBS_AUSTRALIA = "https://www.sbs.com.au/news/topic/australia/feed"
 CONV = "https://theconversation.com/au/{}/articles.atom"
+ROADMAP = "https://www.microsoft.com/releasecommunications/api/v2/m365/rss"  # official Microsoft 365 feature roadmap
 
 SECTION_FEEDS = [
     # section, source label, url, keep ("all" or a keyword filter name)
+    # Microsoft 365 Copilot (Word, Teams, Outlook, Excel...). GitHub Copilot is left to the AI and Tech tabs.
+    ("copilot", "M365 Roadmap", ROADMAP, "roadmap"),
+    ("copilot", "Office 365 for IT Pros", "https://office365itpros.com/feed/", "copilot"),
+    ("copilot", "Microsoft 365 Blog", "https://www.microsoft.com/en-us/microsoft-365/blog/feed/", "copilot"),
+    ("copilot", "Microsoft Blog", "https://blogs.microsoft.com/feed/", "copilot"),
+    ("copilot", "Windows Central", "https://www.windowscentral.com/feeds/all", "copilot365"),
     ("politics", "The Conversation", CONV.format("politics"), "all"),
     ("politics", "ABC News", ABC_JUST_IN, "politics"),
     ("politics", "SBS News", SBS_AUSTRALIA, "politics"),
@@ -130,18 +137,37 @@ PER_INTEREST = 30
 NO_MINE = {"PC Gamer", "Kotaku", "Startup Daily", "Good News Network", "Positive News"}  # too niche to lend stories to other interests
 MAX_AGE_INTEREST = timedelta(days=10)  # niche feeds publish less often
 
-SECTION_ORDER = ["politics", "finance", "ai", "tech", "headlines"]
+CITIES = {"qld": ("Brisbane", -27.47, 153.03), "nsw": ("Sydney", -33.87, 151.21), "vic": ("Melbourne", -37.81, 144.96),
+          "wa": ("Perth", -31.95, 115.86), "sa": ("Adelaide", -34.93, 138.6), "tas": ("Hobart", -42.88, 147.33),
+          "act": ("Canberra", -35.28, 149.13), "nt": ("Darwin", -12.46, 130.84)}
+SECTION_ORDER = ["copilot", "politics", "finance", "ai", "tech", "headlines"]
 PER_SECTION = 40
 PER_REGION = 30
 MAX_AGE = timedelta(days=4)
 MAX_AGE_LOCAL = timedelta(days=10)  # smaller states publish less, so look back further
+MAX_AGE_COPILOT = timedelta(days=21)  # product blogs post a few times a week
 
 # ---------------------------------------------------------------------------
 # Filters
 # ---------------------------------------------------------------------------
 AI_RE = re.compile(r"\b(AI|A\.I\.|artificial intelligence|OpenAI|Anthropic|ChatGPT|Claude|Gemini|"
                    r"LLMs?|chatbots?|machine learning|deepfakes?|Copilot|generative)\b", re.I)
+COPILOT_RE = re.compile(r"\bCopilot\b", re.I)
+GITHUB_RE = re.compile(r"\b(GitHub|VS ?Code|Visual Studio)\b", re.I)
+M365_CATS = {"Microsoft Copilot (Microsoft 365)", "Word", "Excel", "PowerPoint", "Outlook", "Microsoft Teams", "OneNote",
+             "OneDrive", "SharePoint", "Planner", "Microsoft Loop", "Microsoft 365 app", "Microsoft 365"}
+NOT_M365_RE = re.compile(r"^(Dynamics 365|Power (Apps|Automate|BI|Pages|Platform)|Microsoft Dataverse|Microsoft Copilot Studio|Microsoft Fabric|Azure)")
+ROADMAP_STATUS = ("Rolling out", "Launched", "In development")
+ROADMAP_MAX = 20  # the roadmap changes in bulk; keep it from crowding out articles
+
+
+def is_m365_copilot(text):
+    return bool(COPILOT_RE.search(text) and not GITHUB_RE.search(text))
+
+
 KEYWORDS = {
+    "copilot": re.compile(r"\bCopilot\b(?!.*\bGitHub\b)", re.I | re.S),
+    "copilot365": re.compile(r"(?=.*\bCopilot\b)(?=.*\b(Microsoft 365|M365|Word|Excel|PowerPoint|Outlook|Teams|OneNote|SharePoint)\b)(?!.*\bGitHub\b)", re.S),
     "politics": re.compile(r"\b(Albanese|Dutton|Ley|Crisafulli|Miles|parliament|Senate|senator|Coalition|"
                            r"Labor|Liberals?|Nationals|Greens|One Nation|premier|prime minister|minister|"
                            r"election|by-election|budget|Canberra|teal)\b", re.I),
@@ -301,7 +327,9 @@ def is_sport(it):
 
 
 def url_key(url):
-    return re.sub(r"[?#].*$", "", url).rstrip("/")
+    base = re.sub(r"[?#].*$", "", url).rstrip("/")
+    m = re.search(r"[?&]id=(\d+)", url)
+    return f"{base}#{m.group(1)}" if m and base.endswith("/roadmap") else base  # roadmap entries differ only by ?id=
 
 
 def title_key(title):
@@ -326,7 +354,29 @@ def to_story(it, source, now, max_age=MAX_AGE):
         "summary": clean(it["summary"], 260),
         "published": pub.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "_img": it["image"] or "",
+        "_raw": it["summary"],
+        "_cats": [c for c in it.get("cats", []) if c],
     }
+
+
+def roadmap_story(st):
+    """Microsoft 365 roadmap entry: the feed holds the whole feature note, so it becomes the article."""
+    cats = st["_cats"]
+    if not (set(cats) & M365_CATS) or not COPILOT_RE.search(st["title"]) or NOT_M365_RE.search(st["title"]):
+        return None
+    status = next((c for c in cats if c in ROADMAP_STATUS), "")
+    raw = re.sub(r"(?i)<br\s*/?>", "\n", st["_raw"])
+    raw = re.sub(r"(?i)</p>|</li>|<li>", "\n", raw)
+    paras = [clean(p) for p in raw.split("\n")]
+    paras = [p for p in paras if p]
+    dates = [p for p in paras if re.match(r"^(GA|Preview) date:", p)]
+    body = [p for p in paras if p not in dates]
+    platforms = [c for c in cats if c in ("Desktop", "Web", "Mac", "iOS", "Android")]
+    facts = " · ".join(x for x in [status, ", ".join(platforms)] + dates if x)
+    st["summary"] = clean(f"{status + ': ' if status else ''}{' '.join(body)}", 260)
+    st["_text"] = {"paras": body + ([f"Status: {facts}."] if facts else []), "author": "Microsoft 365 roadmap"}
+    st["_img"] = ""
+    return st
 
 
 # ---------------------------------------------------------------------------
@@ -410,19 +460,26 @@ def main():
     # 2. Topic sections, deduped across sections in priority order.
     buckets = {s: [] for s in SECTION_ORDER}
     seen_u, seen_t = set(), set()
+    roadmap_left = ROADMAP_MAX
     feeds = sorted(SECTION_FEEDS, key=lambda f: (SECTION_ORDER.index(f[0]), f[3] != "all"))
     for section, source, url, keep in feeds:
         for it in raw.get(url, []):
-            st = to_story(it, source, now)
+            st = to_story(it, source, now, MAX_AGE_COPILOT if section == "copilot" else MAX_AGE)
             if not st:
                 continue
             k, t = url_key(st["url"]), title_key(st["title"])
             if k in seen_u or t in seen_t:
                 continue
-            if keep != "all" and not KEYWORDS[keep].search(f"{st['title']} {st['summary']}"):
+            if keep == "roadmap":
+                if roadmap_left <= 0 or not roadmap_story(st):
+                    continue
+                roadmap_left -= 1
+            elif keep != "all" and not KEYWORDS[keep].search(f"{st['title']} {st['summary']}"):
                 continue
             target = section
-            if section in ("tech", "headlines", "finance") and AI_RE.search(st["title"]):
+            if is_m365_copilot(st["title"]):
+                target = "copilot"  # Microsoft 365 Copilot news from any feed goes to its own tab
+            elif section in ("tech", "headlines", "finance") and AI_RE.search(st["title"]):
                 target = "ai"
             seen_u.add(k)
             seen_t.add(t)
@@ -484,8 +541,11 @@ def main():
     def wants_text(st):
         return a.text == "all" or (a.text == "cc" and st["source"] in CC_SOURCES)
 
-    todo = [st for st in unique.values() if wants_text(st) or not st["_img"]]
-    texts = {}
+    if a.text == "none":
+        for st in unique.values():
+            st.pop("_text", None)
+    texts = {st["id"]: dict(st["_text"], cc=False) for st in unique.values() if st.get("_text")}
+    todo = [st for st in unique.values() if not st.get("_text") and (wants_text(st) or not st["_img"])]
     with cf.ThreadPoolExecutor(12) as ex:
         for st, (img, text) in zip(todo, ex.map(lambda s: read_page(s, wants_text(s)), todo)):
             if img and not st["_img"]:
@@ -526,6 +586,24 @@ def main():
         chunks.append(cur)
     text_ref = {sid: f"t{n:02d}" for n, ch in enumerate(chunks, 1) for sid in ch}
 
+    # 6b. Weather for each local area: a snapshot for copies of the app that can't fetch it live.
+    weather = {}
+    def get_weather(r):
+        city, lat, lon = CITIES[r]
+        u = (f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&timezone=auto&forecast_days=7"
+             "&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,weather_code,is_day,uv_index,precipitation"
+             "&hourly=temperature_2m,weather_code,precipitation_probability,is_day"
+             "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,uv_index_max,sunrise,sunset,wind_speed_10m_max")
+        return r, json.loads(get(u, timeout=15))
+    with cf.ThreadPoolExecutor(2) as ex:
+        for fut in [ex.submit(get_weather, r) for r in regions if r in CITIES]:  # gentle on the free service
+            try:
+                r, w = fut.result()
+                w["fetchedAt"] = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+                weather[r] = w
+            except Exception:
+                pass  # no weather is fine; the app hides it
+
     # 7. Write.
     for sub in ("feeds", "text"):
         shutil.rmtree(os.path.join(a.out, sub), ignore_errors=True)
@@ -556,7 +634,8 @@ def main():
         "updatedAt": stamp,
         "counts": counts,
         "regions": [{"id": r, "label": REGIONS[r][0]} for r in regions],
-        "interests": [{"id": i[0], "label": i[1], "group": i[2]} for i in interests],
+        "interests": [{"id": "copilot", "label": "Microsoft Copilot", "group": "tech"}] + [{"id": i[0], "label": i[1], "group": i[2]} for i in interests],
+        "weather": weather,
         "groups": [{"id": g, "label": l} for g, l in INTEREST_GROUPS],
         "fullSources": sorted(CC_SOURCES),
         "sections": list(sections),

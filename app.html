@@ -27,21 +27,21 @@
   --gut-r: max(16px, env(safe-area-inset-right, 0px));
   --read-size: 1.12rem;
   /* one colour per section, so you can tell them apart at a glance */
-  --c-local: #7a1d33; --c-headlines: #2b4c7e; --c-politics: #6a3fa0; --c-finance: #1f7a52; --c-tech: #0b6e8a; --c-ai: #b25a00; --c-topic: #7a1d33; --c-foryou: #7a1d33;
+  --c-local: #7a1d33; --c-headlines: #2b4c7e; --c-politics: #6a3fa0; --c-finance: #1f7a52; --c-tech: #0b6e8a; --c-ai: #b25a00; --c-copilot: #0f6cbd; --c-topic: #7a1d33; --c-foryou: #7a1d33;
   --c-g-news: #2b4c7e; --c-g-tech: #0b6e8a; --c-g-life: #1f7a52; --c-g-culture: #a3306f; --c-g-planet: #4d7a1f;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #0f0e11; --surface: #1a191d; --ink: #efecf1; --muted: #a8a4ae; --faint: #6c6872; --line: #2a282e;
     --accent: #ec8fa3; --accent-ink: #2a0b13; --accent-soft: #34191f; --ok: #4cc27d; --shade: rgba(0, 0, 0, 0.35); color-scheme: dark;
-    --c-local: #ec8fa3; --c-headlines: #8fb3ff; --c-politics: #c4a5ff; --c-finance: #6fd6a3; --c-tech: #6cd3ef; --c-ai: #ffb86b; --c-topic: #ec8fa3; --c-foryou: #ec8fa3;
+    --c-local: #ec8fa3; --c-headlines: #8fb3ff; --c-politics: #c4a5ff; --c-finance: #6fd6a3; --c-tech: #6cd3ef; --c-ai: #ffb86b; --c-copilot: #7cb8ff; --c-topic: #ec8fa3; --c-foryou: #ec8fa3;
     --c-g-news: #8fb3ff; --c-g-tech: #6cd3ef; --c-g-life: #6fd6a3; --c-g-culture: #f39acb; --c-g-planet: #a8d672;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0f0e11; --surface: #1a191d; --ink: #efecf1; --muted: #a8a4ae; --faint: #6c6872; --line: #2a282e;
   --accent: #ec8fa3; --accent-ink: #2a0b13; --accent-soft: #34191f; --ok: #4cc27d; --shade: rgba(0, 0, 0, 0.35); color-scheme: dark;
-    --c-local: #ec8fa3; --c-headlines: #8fb3ff; --c-politics: #c4a5ff; --c-finance: #6fd6a3; --c-tech: #6cd3ef; --c-ai: #ffb86b; --c-topic: #ec8fa3; --c-foryou: #ec8fa3;
+    --c-local: #ec8fa3; --c-headlines: #8fb3ff; --c-politics: #c4a5ff; --c-finance: #6fd6a3; --c-tech: #6cd3ef; --c-ai: #ffb86b; --c-copilot: #7cb8ff; --c-topic: #ec8fa3; --c-foryou: #ec8fa3;
     --c-g-news: #8fb3ff; --c-g-tech: #6cd3ef; --c-g-life: #6fd6a3; --c-g-culture: #f39acb; --c-g-planet: #a8d672;
 }
 
@@ -67,7 +67,40 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
 .brand { color: var(--ink); overflow: hidden; text-overflow: ellipsis; }
 .bsep { width: 3px; height: 3px; border-radius: 50%; background: var(--faint); flex: none; }
 .wx { margin-top: 12px; display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; max-width: 100%; padding: 6px 12px 6px 8px; border-radius: 18px; background: var(--surface); box-shadow: 0 0 0 1px var(--line); font-size: 0.8rem; color: var(--muted); }
+.wx { cursor: pointer; text-align: left; color: var(--muted); }
+.wx:active { transform: scale(0.98); }
+.wx .more { color: var(--faint); font-size: 1.1rem; line-height: 1; margin-left: 2px; }
 .wx svg { width: 20px; height: 20px; color: var(--c-ai); flex: none; }
+
+/* Weather detail */
+#weather { z-index: 43; }
+.wx-place { font-size: 0.74rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+.wx-now { display: flex; align-items: center; gap: 14px; margin-top: 6px; }
+.wx-now .big { font-family: var(--display); font-weight: 700; font-size: 4.4rem; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.wx-now svg { width: 74px; height: 74px; color: var(--c-ai); flex: none; }
+.wx-cond { font-family: var(--display); font-size: 1.45rem; font-weight: 600; margin-top: 8px; }
+.wx-sub { color: var(--muted); font-size: 0.92rem; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.wx-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 20px; }
+.wx-tile { background: var(--surface); border-radius: var(--r-md); box-shadow: 0 0 0 1px var(--line); padding: 12px; min-width: 0; }
+.wx-tile .k { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.wx-tile .v { font-size: 1.12rem; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.wx-tile .s { font-size: 0.74rem; color: var(--muted); margin-top: 1px; }
+.hours { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * var(--gut-r)) 0 calc(-1 * var(--gut-l)); padding: 2px var(--gut-r) 6px var(--gut-l); }
+.hours::-webkit-scrollbar { display: none; }
+.hour { flex: none; width: 60px; display: grid; justify-items: center; gap: 6px; padding: 11px 0; border-radius: 14px; background: var(--surface); box-shadow: 0 0 0 1px var(--line); font-size: 0.78rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.hour.now { background: var(--accent-soft); box-shadow: none; color: var(--ink); font-weight: 700; }
+.hour svg { width: 24px; height: 24px; color: var(--c-ai); }
+.hour b { font-size: 0.98rem; color: var(--ink); }
+.rainp { color: var(--c-headlines); font-size: 0.72rem; font-weight: 700; min-height: 1em; }
+.day { display: grid; grid-template-columns: 58px 26px 40px 30px minmax(0, 1fr) 30px; align-items: center; gap: 8px; padding: 11px 0; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.day:last-child { border-bottom: 0; }
+.day .dn { font-weight: 700; }
+.day svg { width: 24px; height: 24px; color: var(--c-ai); }
+.day .lo { color: var(--muted); text-align: right; }
+.day .hi { font-weight: 700; }
+.range { position: relative; height: 6px; border-radius: 6px; background: var(--line); }
+.range i { position: absolute; top: 0; bottom: 0; border-radius: 6px; background: linear-gradient(90deg, #4c9be8, #f2a93b); }
+.wx-foot { margin-top: 20px; font-size: 0.78rem; color: var(--muted); text-align: center; }
 .wx b { color: var(--ink); font-size: 0.95rem; font-variant-numeric: tabular-nums; }
 .wx .hl { font-variant-numeric: tabular-nums; }
 .newcount { color: var(--accent); font-weight: 700; }
@@ -408,7 +441,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
       <div class="topbar">
       <div class="brandline"><img class="brandmark" id="brandmark" alt=""><span class="brand">Awesome News</span></div>
       <div class="head-actions">
-        <button class="icon-btn" id="savedBtn" type="button" aria-pressed="false" aria-label="Saved stories" title="Saved stories">
+        <button class="icon-btn" id="savedBtn" type="button" aria-pressed="false" aria-label="Saved stories" title="Saved stories" hidden>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11a1 1 0 0 1 1 1V20l-6.5-4-6.5 4V4.5a1 1 0 0 1 1-1z"/></svg>
           <span class="badge" id="savedBadge" hidden></span>
         </button>
@@ -416,13 +449,13 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg>
         </button>
         <button class="icon-btn" id="settingsBtn" type="button" aria-label="Settings" title="Settings">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </button>
       </div>
       </div>
       <div class="dateline" id="eyebrow">Today</div>
       <h1 class="title" id="title">Awesome News</h1>
-      <div class="wx" id="wx" hidden></div>
+      <button class="wx" type="button" id="wx" data-open-weather aria-label="Open the full forecast" hidden></button>
       <div class="stamp"><span class="live stale" id="live"></span><span id="stamp">Loading the latest stories</span><span class="newcount" id="newCount" hidden></span></div>
     </header>
   </div>
@@ -471,6 +504,15 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   <div class="settings" id="iBody"></div>
 </section>
 
+<section class="sheet up" id="weather" role="dialog" aria-modal="true" aria-label="Weather" hidden>
+  <div class="bar"><div class="wrap">
+    <span></span>
+    <div class="bar-title" id="wBarTitle">Weather</div>
+    <button class="done" type="button" data-close="weather">Done</button>
+  </div></div>
+  <div class="settings" id="wBody"></div>
+</section>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="ptr" id="ptr" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></div>
 
@@ -492,6 +534,8 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     { id: "ai", label: "AI", tag: "AI", group: "tech" },
   ];
   const CORE_IDS = new Set(SECTIONS.map(s => s.id));
+  const DEFAULT_ON = [];                // set per build: interests switched on out of the box
+  const OWN_COLOUR = new Set([...CORE_IDS, "copilot"]);
   const PUBLISHERS = [
     { id: "ABC", label: "ABC News" }, { id: "SBS", label: "SBS News" }, { id: "BBC", label: "BBC" },
     { id: "The Conversation", label: "The Conversation" }, { id: "360info", label: "360info" }, { id: "Global Voices", label: "Global Voices" },
@@ -500,11 +544,13 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     { id: "Startup Daily", label: "Startup Daily" }, { id: "ScienceAlert", label: "ScienceAlert" }, { id: "New Atlas", label: "New Atlas" },
     { id: "Knowable", label: "Knowable Magazine" }, { id: "Space.com", label: "Space.com" }, { id: "PC Gamer", label: "PC Gamer" },
     { id: "Kotaku", label: "Kotaku" }, { id: "Good News Network", label: "Good News Network" }, { id: "Positive News", label: "Positive News" },
+    { id: "M365 Roadmap", label: "Microsoft 365 Roadmap" }, { id: "Microsoft", label: "Microsoft blogs" },
+    { id: "Office 365 for IT Pros", label: "Office 365 for IT Pros" }, { id: "Windows Central", label: "Windows Central" },
   ];
   const REGION_FALLBACK = [{ id: "qld", label: "Queensland" }];
   const FOR_YOU_PER_SECTION = 7;
   const FEATURE_EVERY = 6;
-  const MONO = { "ABC": "ABC", "SBS": "SBS", "BBC": "BBC", "Ars": "Ars", "360info": "360", "Global Voices": "GV", "NASA": "NASA", "EFF": "EFF", "TechCrunch": "TC", "iTnews": "iT", "The Conversation": "C" };
+  const MONO = { "ABC": "ABC", "SBS": "SBS", "BBC": "BBC", "M365": "365", "Microsoft": "MS", "Office 365": "IT", "Windows Central": "WC", "Ars": "Ars", "360info": "360", "Global Voices": "GV", "NASA": "NASA", "EFF": "EFF", "TechCrunch": "TC", "iTnews": "iT", "The Conversation": "C" };
   const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || "Australia/Brisbane";
   const SIZES = { s: "1rem", m: "1.12rem", l: "1.24rem", xl: "1.38rem" };
 
@@ -602,9 +648,9 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   // Core sections plus every interest the news data offers.
   const allSections = () => [...SECTIONS, ...((state.status?.interests) || [])
     .filter(x => !CORE_IDS.has(x.id)).map(x => ({ id: x.id, label: x.label, tag: x.label, group: x.group }))];
-  const isOn = s => S.tabs[s.id] !== undefined ? S.tabs[s.id] !== false : CORE_IDS.has(s.id);
+  const isOn = s => S.tabs[s.id] !== undefined ? S.tabs[s.id] !== false : CORE_IDS.has(s.id) || DEFAULT_ON.includes(s.id);
   const tagFor = id => allSections().find(s => s.id === id)?.tag;
-  const colourOf = id => !id || id === "topic" ? "var(--c-topic)" : CORE_IDS.has(id) ? `var(--c-${id})`
+  const colourOf = id => !id || id === "topic" ? "var(--c-topic)" : OWN_COLOUR.has(id) ? `var(--c-${id})`
     : `var(--c-g-${allSections().find(s => s.id === id)?.group || "news"})`;
   // Stories you can read right here get a 6-hour head start in the order.
   const rank = i => Date.parse(i.published) + (state.mode === "static" && i.text ? 6 * 3600e3 : 0);
@@ -621,6 +667,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
       list = list.filter(i => !local.has(i.id));
     }
     list = allowed(list);
+    if (state.mode === "claude") list = list.filter(i => i.text);  // the private copy shows only stories it can open in full
     if (state.mode === "static") {
       if (S.fullOnly) list = list.filter(i => i.text);
       list.sort((a, b) => rank(b) - rank(a));
@@ -786,6 +833,10 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     const s = state.status, live = $("live");
     live.className = "live";
     if (state.refreshing) { live.classList.add("busy"); $("stamp").textContent = state.mode === "claude" ? "Fetching fresh stories, about 2 to 4 minutes" : "Checking for new stories"; }
+    else if (!navigator.onLine && s?.updatedAt) {
+      live.classList.add("stale");
+      $("stamp").textContent = `Offline · saved copy from ${new Date(s.updatedAt).toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit", timeZone: TZ })}`;
+    }
     else if (!s?.updatedAt) { live.classList.add("stale"); $("stamp").textContent = state.loaded ? "Waiting for the first refresh" : "Loading the latest stories"; }
     else {
       if (Date.now() - Date.parse(s.updatedAt) > 8 * 3600e3) live.classList.add("stale");
@@ -795,6 +846,8 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     const fresh = state.loaded && state.prevVisit ? everything().filter(i => Date.parse(i.published) > state.prevVisit && !state.read.has(i.id)).length : 0;
     $("newCount").textContent = fresh ? ` · ${fresh} new since you last looked` : "";
     $("newCount").hidden = !fresh || state.refreshing;
+    if (!state.saved.length && state.showSaved) state.showSaved = false;
+    $("savedBtn").hidden = !state.saved.length;
     $("savedBtn").setAttribute("aria-pressed", String(state.showSaved));
     $("savedBadge").textContent = state.saved.length;
     $("savedBadge").hidden = !state.saved.length;
@@ -863,7 +916,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   }
   window.addEventListener("popstate", () => { if (openSheet) hideSheet(openSheet, true); });
   document.addEventListener("keydown", e => { if (e.key === "Escape" && openSheet) hideSheet(openSheet); });
-  ["reader", "settings", "interests"].forEach(id => $(id).addEventListener("scroll", e => e.currentTarget.classList.toggle("scrolled", e.currentTarget.scrollTop > 60), { passive: true }));
+  ["reader", "settings", "interests", "weather"].forEach(id => $(id).addEventListener("scroll", e => e.currentTarget.classList.toggle("scrolled", e.currentTarget.scrollTop > 60), { passive: true }));
   $("reader").addEventListener("scroll", e => {
     const el = e.currentTarget, max = el.scrollHeight - el.clientHeight;
     $("rProg").style.width = (max > 0 ? Math.min(100, (el.scrollTop / max) * 100) : 0) + "%";
@@ -920,19 +973,78 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   // Reader
   // ======================================================================
   const textCache = {};
+  const withTimeout = (p, ms) => Promise.race([p, new Promise((_, bad) => setTimeout(() => bad(new Error("timeout")), ms))]);
+  async function fetchChunk(ref) {
+    if (!navigator.onLine) throw new Error("offline");
+    if (state.mode === "claude") {
+      const snap = await withTimeout(state.db.doc("text/" + ref).get(), 15000);
+      return snap.exists ? (snap.data().articles || {}) : {};
+    }
+    const r = await withTimeout(fetch(`data/text/${ref}.json?v=${encodeURIComponent(state.status?.updatedAt || "")}`), 15000);
+    if (!r.ok) throw new Error("http " + r.status);
+    return (await r.json()).articles || {};
+  }
   async function loadText(ref) {
     if (!ref) return null;
     if (!textCache[ref]) {
       textCache[ref] = (async () => {
-        try {
-          if (state.mode === "claude") { const snap = await state.db.doc("text/" + ref).get(); return snap.exists ? snap.data().articles : {}; }
-          const r = await fetch(`data/text/${ref}.json?v=${encodeURIComponent(state.status?.updatedAt || "")}`);
-          return r.ok ? (await r.json()).articles : {};
-        } catch { delete textCache[ref]; return {}; }
+        try { return await fetchChunk(ref); }
+        catch { delete textCache[ref]; return getOffline(); }
       })();
     }
     return textCache[ref];
   }
+
+  // ======================================================================
+  // Offline copy: every story and its full text is kept on this device
+  // (IndexedDB), so the app still reads with no connection.
+  // ======================================================================
+  const idb = (() => {
+    let opening = null;
+    const open = () => opening || (opening = new Promise((ok, bad) => {
+      try {
+        const r = indexedDB.open("awesome-news", 1);
+        r.onupgradeneeded = () => r.result.createObjectStore("kv");
+        r.onsuccess = () => ok(r.result);
+        r.onerror = () => bad(r.error);
+      } catch (e) { bad(e); }
+    }));
+    const run = (mode, fn) => open().then(db => new Promise((ok, bad) => {
+      const t = db.transaction("kv", mode), req = fn(t.objectStore("kv"));
+      t.oncomplete = () => ok(req.result);
+      t.onerror = t.onabort = () => bad(t.error);
+    }));
+    return {
+      get: k => run("readonly", s => s.get(k)).catch(() => undefined),
+      set: (k, v) => run("readwrite", s => s.put(v, k)).catch(() => undefined),
+    };
+  })();
+  let offlineArticles = null;
+  const getOffline = async () => offlineArticles || (offlineArticles = (await idb.get("articles")) || {});
+  let syncing = null;
+  function saveOffline() {
+    const st = state.status;
+    if (syncing || !navigator.onLine || !st?.updatedAt || !Object.keys(state.feeds).length) return;
+    syncing = (async () => {
+      await idb.set("feeds", state.feeds);
+      await idb.set("status", st);
+      if (store.get("brief.offlineAt", "") === st.updatedAt) return;
+      const old = await getOffline(), next = {};
+      const keep = new Set([...Object.values(state.feeds).flatMap(d => (d?.items || []).map(i => i.id)), ...state.saved.map(s => s.id)]);
+      for (const id of keep) if (old[id]) next[id] = old[id];
+      let complete = true;
+      for (const ref of st.textChunks || []) {
+        try { const a = await fetchChunk(ref); textCache[ref] = Promise.resolve(a); Object.assign(next, a); }
+        catch { complete = false; }
+      }
+      offlineArticles = next;
+      await idb.set("articles", next);
+      if (complete) store.set("brief.offlineAt", st.updatedAt);
+      if (openSheet === "settings") renderSettings();
+    })().catch(() => {}).finally(() => { syncing = null; });
+  }
+  window.addEventListener("online", () => { renderHeader(); saveOffline(); });
+  window.addEventListener("offline", () => renderHeader());
   function prose(paras) {
     let html = "", inList = false;
     paras.forEach((p, n) => {
@@ -974,7 +1086,8 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     if (!$("reader").classList.contains("open")) showSheet("reader"); else $("reader").scrollTop = 0;
 
     let body;
-    const t = i.text ? (await loadText(i.text))?.[i.id] : null;
+    let t = i.text ? (await loadText(i.text))?.[i.id] : null;
+    if (!t) t = (await getOffline())[i.id] || null;
     if (state.readerId !== id) return;
     if (t && t.paras?.length) {
       const lic = t.licence || "a Creative Commons licence";
@@ -1140,10 +1253,9 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
 
       <div class="group"><h2>Reading</h2><div class="card">
         ${state.mode === "static" ? toggle("data-fullonly", "1", !!S.fullOnly, "Full stories only", "Hide previews that open the publisher's site") : ""}
-        <div class="field"><span class="lbl">Open stories</span>${seg("openIn", S.openIn, [["app", "In the app"], ["site", "On the website"]])}</div>
         <div class="field"><span class="lbl">Text size</span>${seg("textSize", S.textSize, [["s", "A", "Small"], ["m", "A", "Medium"], ["l", "A", "Large"], ["xl", "A", "Extra large"]])}</div>
         <div class="field"><span class="lbl">Appearance</span>${seg("theme", S.theme, [["system", "Auto"], ["light", "Light"], ["dark", "Dark"]])}</div>
-      </div></div>
+      </div><p class="hint">Offline reading: ${offlineArticles ? `${Object.keys(offlineArticles).length} full stories kept on this device.` : "stories are kept on this device as they load."} Open the app on wifi now and then, and it keeps working with no connection.</p></div>
 
       <div class="group"><h2>Your data</h2><div class="card">
         <button class="field danger" type="button" id="clearRead">Clear read history <span class="sub" style="color:var(--muted)">${state.read.size} stories</span></button>
@@ -1226,6 +1338,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     if (close) { hideSheet(close.dataset.close); return; }
     if (t.closest("[data-open-settings]") || t.closest("#settingsBtn")) { openSettings(); return; }
     if (t.closest("[data-open-interests]")) { openInterests(); return; }
+    if (t.closest("[data-open-weather]")) { openWeather(); return; }
     const pk = t.closest("[data-pick]");
     if (pk) {
       const sec = allSections().find(x => x.id === pk.dataset.pick);
@@ -1258,12 +1371,9 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     if (sv) { toggleSave(sv.dataset.save); if (!openSheet) render(true); else sv.setAttribute("aria-pressed", String(isSaved(sv.dataset.save))); return; }
     const open = t.closest("[data-open]");
     if (open) {
-      if (S.openIn === "app") {
-        e.preventDefault();
-        if (!openSheet) state.readerList = state.lastList || [];
-        openReader(open.dataset.open);
-      }
-      else { markRead(open.dataset.open); setTimeout(() => open.closest(".story")?.classList.add("read"), 400); }
+      e.preventDefault();
+      if (!openSheet) state.readerList = state.lastList || [];
+      openReader(open.dataset.open);
       return;
     }
     // ---- settings controls ----
@@ -1334,24 +1444,91 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
     storm: cloudTop + `<path d="M12.5 15l-2 3.5h3l-2 3.5"/>`,
     fog: `<path d="M4 9h16M6 13h12M4 17h16"/>`,
   }).map(([k, d]) => [k, `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`]));
+  // Live forecast where the app can reach Open-Meteo; otherwise the snapshot that came with the news.
   async function loadWeather() {
-    const box = $("wx"), c = CITY[S.region];
-    if (state.mode !== "static" || !c) { box.hidden = true; return; }
-    const key = "brief.wx." + S.region;
+    const c = CITY[S.region];
+    if (!c) { state.wx = null; renderWxChip(); return; }
+    const key = "brief.wx2." + S.region;
     let w = store.get(key, null);
     if (!w || Date.now() - w.at > 30 * 60000) {
       try {
-        const u = `https://api.open-meteo.com/v1/forecast?latitude=${c[1]}&longitude=${c[2]}&current=temperature_2m,weather_code,is_day&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=1`;
-        const d = await (await fetch(u)).json();
-        w = { at: Date.now(), t: Math.round(d.current.temperature_2m), code: d.current.weather_code, day: d.current.is_day,
-          hi: Math.round(d.daily.temperature_2m_max[0]), lo: Math.round(d.daily.temperature_2m_min[0]), rain: d.daily.precipitation_probability_max?.[0] ?? 0 };
+        const u = `https://api.open-meteo.com/v1/forecast?latitude=${c[1]}&longitude=${c[2]}&timezone=auto&forecast_days=7`
+          + "&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,weather_code,is_day,uv_index,precipitation"
+          + "&hourly=temperature_2m,weather_code,precipitation_probability,is_day"
+          + "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,uv_index_max,sunrise,sunset,wind_speed_10m_max";
+        const d = await withTimeout(fetch(u).then(r => r.json()), 10000);
+        if (!d.current) throw new Error("no forecast");
+        w = { at: Date.now(), d };
         store.set(key, w);
-      } catch { if (!w) { box.hidden = true; return; } }
+      } catch {
+        const snap = state.status?.weather?.[S.region];
+        if (snap?.current) w = { at: Date.parse(snap.fetchedAt) || Date.now(), d: snap, snapshot: true };
+      }
     }
-    const [label, icon] = WX(w.code);
-    const ic = icon === "sun" && !w.day ? "moon" : icon;
-    box.innerHTML = `${WXI[ic]}<b>${w.t}°</b><span>${c[0]} · ${icon === "sun" && !w.day ? "Clear" : label}</span><span class="hl">H ${w.hi}° L ${w.lo}°${w.rain >= 30 ? ` · ${w.rain}% rain` : ""}</span>`;
+    state.wx = w?.d?.current ? { city: c[0], ...w } : null;
+    renderWxChip();
+    if (openSheet === "weather") renderWeather();
+  }
+  const wxIcon = (code, day) => { const [, ic] = WX(code); return WXI[ic === "sun" && !day ? "moon" : ic]; };
+  const wxLabel = (code, day) => { const [label, ic] = WX(code); return ic === "sun" && !day ? "Clear" : label; };
+  function renderWxChip() {
+    const box = $("wx"), w = state.wx;
+    if (!w) { box.hidden = true; return; }
+    const cur = w.d.current, dy = w.d.daily, rain = dy.precipitation_probability_max?.[0] ?? 0;
+    box.innerHTML = `${wxIcon(cur.weather_code, cur.is_day)}<b>${Math.round(cur.temperature_2m)}°</b><span>${w.city} · ${wxLabel(cur.weather_code, cur.is_day)}</span>`
+      + `<span class="hl">H ${Math.round(dy.temperature_2m_max[0])}° L ${Math.round(dy.temperature_2m_min[0])}°${rain >= 30 ? ` · ${rain}% rain` : ""}</span><span class="more" aria-hidden="true">›</span>`;
     box.hidden = false;
+  }
+  const clock = t => { const [h, m] = t.slice(11, 16).split(":").map(Number); return `${h % 12 || 12}${m ? ":" + String(m).padStart(2, "0") : ""}${h < 12 ? "am" : "pm"}`; };
+  const compass = deg => ["N", "NE", "E", "SE", "S", "SW", "W", "NW"][Math.round(((deg % 360) + 360) % 360 / 45) % 8];
+  const uvLabel = u => u < 3 ? "Low" : u < 6 ? "Moderate" : u < 8 ? "High" : u < 11 ? "Very high" : "Extreme";
+  function renderWeather() {
+    const w = state.wx;
+    if (!w) { $("wBody").innerHTML = emptyHTML("No forecast right now", "The weather couldn't load. Check your connection and try again."); return; }
+    const cur = w.d.current, hr = w.d.hourly, dy = w.d.daily;
+    $("wBarTitle").textContent = `${w.city} weather`;
+    // Next 24 hours, starting from the current hour.
+    const nowKey = cur.time.slice(0, 13);
+    let start = hr.time.findIndex(t => t.slice(0, 13) >= nowKey);
+    if (start < 0) start = 0;
+    const hours = hr.time.slice(start, start + 24).map((t, k) => {
+      const n = start + k, p = hr.precipitation_probability?.[n] ?? 0;
+      return `<div class="hour${k === 0 ? " now" : ""}"><span>${k === 0 ? "Now" : clock(t)}</span>${wxIcon(hr.weather_code[n], hr.is_day?.[n])}<b>${Math.round(hr.temperature_2m[n])}°</b><span class="rainp">${p >= 10 ? p + "%" : ""}</span></div>`;
+    }).join("");
+    // Next 7 days, with each day's range drawn against the whole week.
+    const lo = Math.min(...dy.temperature_2m_min), hi = Math.max(...dy.temperature_2m_max), span = Math.max(1, hi - lo);
+    const days = dy.time.map((t, n) => {
+      const [y, m, d] = t.split("-").map(Number);
+      const name = n === 0 ? "Today" : new Date(y, m - 1, d).toLocaleDateString("en-AU", { weekday: "short" });
+      const a = dy.temperature_2m_min[n], b = dy.temperature_2m_max[n], p = dy.precipitation_probability_max?.[n] ?? 0;
+      return `<div class="day"><span class="dn">${name}</span>${wxIcon(dy.weather_code[n], 1)}<span class="rainp">${p >= 10 ? p + "%" : ""}</span>`
+        + `<span class="lo">${Math.round(a)}°</span><span class="range"><i style="left:${((a - lo) / span) * 100}%;right:${100 - ((b - lo) / span) * 100}%"></i></span><span class="hi">${Math.round(b)}°</span></div>`;
+    }).join("");
+    const tile = (k, v, sub) => `<div class="wx-tile"><div class="k">${k}</div><div class="v">${v}</div>${sub ? `<div class="s">${sub}</div>` : ""}</div>`;
+    const uv = dy.uv_index_max?.[0] ?? cur.uv_index ?? 0;
+    const updated = new Date(w.at).toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" });
+    $("wBody").innerHTML = `
+      <div class="wx-place">${esc(w.city)} · ${esc(regionLabel())}</div>
+      <div class="wx-now">${wxIcon(cur.weather_code, cur.is_day)}<span class="big">${Math.round(cur.temperature_2m)}°</span></div>
+      <div class="wx-cond">${wxLabel(cur.weather_code, cur.is_day)}</div>
+      <div class="wx-sub">Feels like ${Math.round(cur.apparent_temperature)}° · H ${Math.round(dy.temperature_2m_max[0])}° L ${Math.round(dy.temperature_2m_min[0])}°</div>
+      <div class="wx-grid">
+        ${tile("Rain", `${dy.precipitation_probability_max?.[0] ?? 0}%`, `${(dy.precipitation_sum?.[0] ?? 0).toFixed(1)} mm today`)}
+        ${tile("Wind", `${Math.round(cur.wind_speed_10m)} km/h`, `${compass(cur.wind_direction_10m)}, gusts ${Math.round(cur.wind_gusts_10m)}`)}
+        ${tile("Humidity", `${Math.round(cur.relative_humidity_2m)}%`, "")}
+        ${tile("UV", `${Math.round(uv)}`, uvLabel(uv))}
+        ${tile("Sunrise", clock(dy.sunrise[0]), "")}
+        ${tile("Sunset", clock(dy.sunset[0]), "")}
+      </div>
+      <div class="group"><h2>Next 24 hours</h2><div class="hours">${hours}</div></div>
+      <div class="group"><h2>Next 7 days</h2><div class="card" style="padding:0 14px">${days}</div></div>
+      <p class="wx-foot">${w.snapshot ? "Forecast saved with the news at" : "Updated"} ${updated} · Open-Meteo</p>`;
+  }
+  function openWeather() {
+    if (!state.wx) { toast("The weather isn't available right now"); return; }
+    renderWeather();
+    showSheet("weather");
+    loadWeather();
   }
 
   // ======================================================================
@@ -1392,11 +1569,13 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
       state.loaded = true;
       if (manual) { finishRefresh(changed); if (!changed) toast("You're up to date"); }
       if (!openSheet) render(true);
+      saveOffline();
+      if (!state.wx) loadWeather();
     } catch {
       state.loaded = true;
       if (manual) finishRefresh(false);
       render();
-      toast("Stories couldn't load. Check your connection and try again.", 5000);
+      toast(state.fromCache ? "You're offline. Showing the stories saved on this device." : "Stories couldn't load. Check your connection and try again.", 5000);
     }
   }
 
@@ -1404,22 +1583,24 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
   function loadClaude(db) {
     state.db = db;
     let first = 2;
-    const arrived = () => { if (--first <= 0) state.loaded = true; if (!openSheet) render(true); else renderHeader(); };
+    const arrived = () => {
+      if (--first <= 0) { state.loaded = true; saveOffline(); loadWeather(); }
+      if (!openSheet) render(true); else renderHeader();
+    };
     db.collection("feeds").onSnapshot(snap => {
       const next = {};
       snap.docs.forEach(d => { if (d.exists) next[d.id] = d.data(); });
-      state.feeds = next;
+      if (Object.keys(next).length || !state.fromCache) state.feeds = next;  // never swap the saved copy for an empty offline answer
       arrived();
-    }, () => { state.loaded = true; render(); toast("Stories couldn't load. Check your connection and reopen the page.", 6000); });
+    }, () => { state.loaded = true; render(); toast(state.fromCache ? "You're offline. Showing the stories saved on this device." : "Stories couldn't load. Check your connection and reopen the page.", 6000); });
     db.doc("meta/status").onSnapshot(snap => {
       const prev = state.status?.updatedAt;
+      if (!snap.exists && state.fromCache) { arrived(); return; }
       state.status = snap.exists ? snap.data() : null;
       if (state.status?.updatedAt !== prev) for (const k in textCache) delete textCache[k];
       if (state.refreshing && state.status?.updatedAt && state.status.updatedAt !== prev) finishRefresh(true);
-      if (state.status?.triggerId && state.mcp) $("refresh").hidden = false;
       arrived();
     }, () => arrived());
-    use("mcp").then(m => { state.mcp = m; if (m && state.status?.triggerId) $("refresh").hidden = false; });
   }
 
   $("refresh").addEventListener("click", async () => {
@@ -1440,6 +1621,13 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 28px); }
       else if (c === "server_not_connected" || c === "needs_reauth") toast("Refresh needs the Claude Code Remote connector. Stories still update on schedule.", 6000);
       else toast("Refresh couldn't start. Stories still update on schedule.", 5000);
     }
+  });
+
+  // Show the copy kept on this device straight away; live data replaces it when it arrives.
+  Promise.all([idb.get("feeds"), idb.get("status")]).then(([f, s]) => {
+    if (!f || !Object.keys(f).length || (state.loaded && Object.keys(state.feeds).length)) return;
+    state.feeds = f; state.status = state.status || s || null; state.fromCache = true; state.loaded = true;
+    if (!openSheet) render(true); else renderHeader();
   });
 
   use("db").then(db => {
