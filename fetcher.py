@@ -485,6 +485,87 @@ def make_inline(url, size, quality):
 
 
 # ---------------------------------------------------------------------------
+# TV: short news clips from the broadcasters' own YouTube channels, played back to back.
+# Only clips the channel allows to be played on other sites; no Shorts, live streams or sport.
+# ---------------------------------------------------------------------------
+TV_CHANNELS = [  # (name shown, YouTube channel id, days to look back)
+    ("7NEWS", "UC5T7D-Dh1eDGtsAFCuwv_Sw", 2),
+    ("ABC News", "UCVgO39Bk5sMo66-6o6Spn6Q", 2),
+    ("9News", "UCIYLOcEUX6TbBo7HQVF2PKA", 2),
+    ("10 News", "UC64A-bbH15b5kN5A32CErOA", 2),
+    ("SBS News", "UCuuTCooIMbBFHNbPcSS70uw", 2),
+    ("BBC News", "UC16niRr50-MSBwiO3YDb3RA", 2),
+    ("Guardian News", "UCIRYBXDze5krPDzAEOxFGVA", 3),
+]
+YT_NS = {"atom": "http://www.w3.org/2005/Atom", "yt": "http://www.youtube.com/xml/schemas/2015", "media": "http://search.yahoo.com/mrss/"}
+TV_SKIP = re.compile(r"\b(live ?stream|livestream|watch live|live coverage|full (?:episode|bulletin|show|program|interview)|podcast|trailer|"
+                     r"press conference|in full)\b|^\s*LIVE\b|[|:]\s*LIVE\b", re.I)
+TV_TAIL = re.compile(r"\s*[|│]\s*[^|│]*$")
+TV_STOP = set("the and for with that this from into over after says said will have has are was were been about their they them than then what when where "
+              "which while more most news just your you its his her our new how why who not can could would should may out off one two all now get got amid "
+              "set make made here there abc 7news 9news sbs bbc guardian australia australian".split())
+TV_MAX_SECS = 15 * 60
+
+
+def tv_words(title):
+    return {w for w in re.findall(r"[a-z0-9]+", title.lower().replace("’", "").replace("'", "")) if len(w) > 2 and w not in TV_STOP}
+
+
+def embeddable(vid):
+    """YouTube's own embed check: 200 when the channel lets the clip play on other sites."""
+    try:
+        get(f"https://www.youtube.com/oembed?format=json&url=https://www.youtube.com/watch?v={vid}", timeout=12)
+        return True
+    except urllib.error.HTTPError as e:
+        return e.code not in (401, 403, 404)
+    except Exception:
+        return True  # can't tell; the app skips anything that won't play
+
+
+def fetch_tv(now, errors):
+    lanes = []
+    for name, cid, days in TV_CHANNELS:
+        try:
+            root = parse_xml(get(f"https://www.youtube.com/feeds/videos.xml?channel_id={cid}", timeout=20))
+        except Exception as e:
+            errors.append(f"TV {name}: {e}"[:160])
+            continue
+        lane = []
+        for en in root.findall("atom:entry", YT_NS):
+            vid = (en.findtext("yt:videoId", namespaces=YT_NS) or "").strip()
+            link = next((l.get("href", "") for l in en.findall("atom:link", YT_NS)), "")
+            full = clean(en.findtext("atom:title", namespaces=YT_NS))
+            pub = parse_date(en.findtext("atom:published", namespaces=YT_NS))
+            if not vid or "/shorts/" in link or not pub or now - pub > timedelta(days=days):
+                continue
+            if TV_SKIP.search(full) or SPORT_TITLE.search(full) or full.count(";") >= 2:  # "A; B; C" is a bulletin of other clips
+                continue
+            title = TV_TAIL.sub("", full).strip() or full
+            desc = en.findtext("media:group/media:description", namespaces=YT_NS) or ""
+            if re.search(r"(?i)\bfull (episode|bulletin|program|show)\b|^FULL EPISODE", desc[:400]):
+                continue
+            desc = next((ln.strip() for ln in desc.splitlines() if ln.strip() and not re.match(r"(?i)(subscribe|read more|follow|#|http|note:)", ln.strip())), "")
+            lane.append({"id": vid, "title": title, "channel": name, "published": pub.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                         "thumb": f"https://i.ytimg.com/vi/{vid}/mqdefault.jpg", "summary": clean(desc, 220)})
+        lanes.append(lane[:8])
+    # Newest from each channel in turn, so no one channel takes over.
+    order = [it for r in range(8) for lane in lanes if r < len(lane) for it in [lane[r]]]
+    with cf.ThreadPoolExecutor(6) as ex:
+        ok = dict(zip([it["id"] for it in order], ex.map(lambda it: embeddable(it["id"]), order)))
+    out, seen = [], []
+    for it in order:
+        if not ok[it["id"]]:
+            continue
+        w = tv_words(it["title"])
+        # The same story from another channel (or twice from one) is only shown once.
+        if any(len(w & v) >= 3 and len(w & v) / max(1, min(len(w), len(v))) >= 0.5 for v in seen):
+            continue
+        seen.append(w)
+        out.append(it)
+    return out[:45]
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 VAULT_SALT = b"awesome-news-vault-v1"
@@ -732,6 +813,13 @@ def main():
         counts[name] = len(out_items)
         with open(os.path.join(a.out, "feeds", f"{name}.json"), "w") as f:
             json.dump(doc, f, ensure_ascii=False, separators=(",", ":"))
+    try:
+        tv = fetch_tv(now, errors)
+    except Exception as e:
+        tv = []
+        errors.append(f"TV: {e}"[:160])
+    with open(os.path.join(a.out, "tv.json"), "w") as f:
+        json.dump({"updatedAt": stamp, "items": tv}, f, ensure_ascii=False, separators=(",", ":"))
     for n, ch in enumerate(chunks, 1):
         with open(os.path.join(a.out, "text", f"t{n:02d}.json"), "w") as f:
             json.dump({"articles": ch}, f, ensure_ascii=False, separators=(",", ":"))
@@ -753,6 +841,7 @@ def main():
         "textChunks": [f"t{n:02d}" for n in range(1, len(chunks) + 1)],
         "articlesWithText": len(text_ref),
         "articlesWithFeedText": len(feed_ref),
+        "tv": len(tv),
         "sourceCounts": dict(sorted(source_counts.items())),
         "errors": errors[:10],
     }
