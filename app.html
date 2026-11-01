@@ -97,6 +97,17 @@ body.playing main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(
 .wx .rs { color: var(--c-headlines); font-weight: 700; }
 .wx .more { color: var(--faint); font-size: 1rem; line-height: 1; }
 .wx:active { transform: scale(0.97); }
+/* Seven-day snapshot under the masthead: one column per day, tap for the full forecast. */
+.week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); width: 100%; margin-top: 12px; padding: 10px 2px 9px; border-radius: var(--r-md); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); text-align: center; }
+.week:active { transform: scale(0.99); }
+.week .wd { display: grid; grid-template-rows: auto 30px auto auto auto; justify-items: center; align-items: center; gap: 2px; min-width: 0; font-variant-numeric: tabular-nums; }
+.week .wd + .wd { box-shadow: -1px 0 0 var(--line); }
+.week .dn { font-size: 0.66rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+.week .wd.today .dn { color: var(--accent); }
+.week svg { width: 22px; height: 22px; margin: 3px 0 2px; color: var(--sun); }
+.week .hi { font-weight: 750; font-size: 0.95rem; color: var(--ink); line-height: 1.1; }
+.week .lo { font-size: 0.78rem; color: var(--muted); line-height: 1.1; }
+.week .rp { font-size: 0.66rem; font-weight: 750; color: var(--c-headlines); min-height: 1.1em; margin-top: 2px; }
 .stamp { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .live { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); flex: none; }
 .live.stale { background: var(--faint); }
@@ -565,6 +576,7 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
         <button class="wx" type="button" id="wx" data-open-weather aria-label="Open the full forecast" hidden></button>
         <button type="button" class="stamp" id="refreshBtn" aria-label="Check for new stories"><span class="live stale" id="live"></span><span id="stamp">Loading the latest stories</span><span class="newcount" id="newCount" hidden></span><svg class="rf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
       </div>
+      <button class="week" type="button" id="wxWeek" data-open-weather aria-label="Open the full forecast" hidden></button>
     </header>
   </div>
   <div class="tabs-bar"><div class="wrap"><nav class="tabs" id="tabs" role="tablist" aria-label="Sections"></nav></div></div>
@@ -1512,7 +1524,7 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     const pub = publisherOf(i.source);
     const original = (label, ghost) => `<a class="cta${ghost ? " ghost" : ""}" href="${esc(i.url)}" target="_blank" rel="noopener">${label} ${I.out}</a>`;
     const skeleton = `${i.summary ? `<p class="lede">${esc(i.summary)}</p>` : ""}<div class="r-sk" aria-hidden="true"><div class="sk"></div><div class="sk"></div><div class="sk" style="width:70%"></div></div>`;
-    $("rBody").innerHTML = readerHTML(i, { html: i.text ? skeleton : "" });
+    $("rBody").innerHTML = readerHTML(i, { html: i.text || i.feed ? skeleton : "" });
     $("rBody").classList.remove("slide-l", "slide-r");
     if (dir) { void $("rBody").offsetWidth; $("rBody").classList.add(dir > 0 ? "slide-l" : "slide-r"); }
     if (!$("reader").classList.contains("open")) showSheet("reader"); else $("reader").scrollTop = 0;
@@ -1520,8 +1532,12 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     let body;
     let t = i.text ? (await loadText(i.text))?.[i.id] : null;
     if (!t) t = (await getOffline())[i.id] || null;
+    if ((!t || (t.feed && i.text)) && i.feed) t = (await loadText(i.feed))?.[i.id] || t;
     if (state.readerId !== id) return;
-    if (t && t.paras?.length) {
+    if (t?.feed && t.paras?.length) {
+      // What the publisher shares in its own news feed: shown in full, with the rest a tap away.
+      body = { html: prose(t.paras) + `<div class="partial"><strong>Keep reading on ${esc(pub)}</strong>This is what ${esc(pub)} shares in its news feed. Open the original for the complete story, pictures and comments, free.${original(`Open on ${esc(pub)}`)}</div>` };
+    } else if (t && t.paras?.length) {
       const lic = t.licence || "a Creative Commons licence";
       body = { author: t.author, html: prose(t.paras) + (t.cc
         ? `<p class="licence">Republished from <a href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.source)}</a>${/public domain/i.test(lic) ? ", public domain" : ` under ${t.licenceUrl ? `<a href="${esc(t.licenceUrl)}" target="_blank" rel="noopener">${esc(lic)}</a>` : esc(lic)}`}. Text reformatted for this app.${privateMode() ? "" : ` <a href="${esc(i.url)}" target="_blank" rel="noopener">Read the original article</a>.`}</p>`
@@ -1941,7 +1957,7 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     updatePlayer();
     speakNext(tk);  // starts at once with the headline, so phones treat it as part of the tap
     let t = null;
-    try { t = i.text ? (await loadText(i.text))?.[i.id] : null; if (!t) t = (await getOffline())[i.id] || null; } catch {}
+    try { t = i.text ? (await loadText(i.text))?.[i.id] : null; if (!t) t = (await getOffline())[i.id] || null; if (!t && i.feed) t = (await loadText(i.feed))?.[i.id] || null; } catch {}
     if (sid !== L.sid) return;
     const paras = t?.paras?.length ? t.paras : i.summary ? [clean(i.summary)] : [];
     paras.forEach((p, n) => L.parts.push(...chunks(p, n)));
@@ -2297,7 +2313,7 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
   }
   function renderWxChip() {
     const box = $("wx"), w = state.wx;
-    if (!w) { box.hidden = true; return; }
+    if (!w) { box.hidden = true; $("wxWeek").hidden = true; return; }
     const v = wxView(w), { cur, dy, di, hr, h } = v;
     let soon = -1;
     for (let k = h; k < Math.min(hr.time.length, h + 12); k++) if ((hr.precipitation_probability?.[k] ?? 0) >= 50) { soon = k; break; }
@@ -2305,6 +2321,15 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     box.innerHTML = `${wxIcon(cur.weather_code, cur.is_day)}<b>${Math.round(cur.temperature_2m)}°</b><span>${wxLabel(cur.weather_code, cur.is_day)}</span>${hiLo}`
       + `${soon >= 0 ? `<span class="rs">Rain ${soon === h ? "now" : clock(hr.time[soon])}</span>` : ""}<span class="more" aria-hidden="true">›</span>`;
     box.hidden = false;
+    const wk = $("wxWeek"), n = dy.temperature_2m_max ? Math.min(7, dy.time.length - di) : 0;
+    wk.hidden = n < 3;
+    wk.innerHTML = Array.from({ length: n }, (_, k) => {
+      const x = di + k, [yy, m, dd] = dy.time[x].split("-").map(Number);
+      const name = k === 0 ? "Today" : new Date(yy, m - 1, dd).toLocaleDateString("en-AU", { weekday: "short" });
+      const p = dy.precipitation_probability_max?.[x] ?? 0;
+      return `<span class="wd${k ? "" : " today"}" aria-label="${name}: ${wxLabel(dy.weather_code[x], 1)}, high ${Math.round(dy.temperature_2m_max[x])}, low ${Math.round(dy.temperature_2m_min[x])}${p >= 20 ? `, ${p}% chance of rain` : ""}">`
+        + `<span class="dn">${name}</span>${wxIcon(dy.weather_code[x], 1)}<span class="hi">${Math.round(dy.temperature_2m_max[x])}°</span><span class="lo">${Math.round(dy.temperature_2m_min[x])}°</span><span class="rp">${p >= 20 ? p + "%" : ""}</span></span>`;
+    }).join("");
   }
   // Next 24 hours as one strip: icon, temperature line and chance of rain, all on the same hourly scale.
   function wxChart(v) {
@@ -2349,6 +2374,7 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
       <div class="wx-cond">${wxLabel(cur.weather_code, cur.is_day)}</div>
       <div class="wx-sub">Feels like ${Math.round(cur.apparent_temperature)}° · H ${Math.round(dy.temperature_2m_max[di])}° L ${Math.round(dy.temperature_2m_min[di])}°</div>
       <p class="wx-sum">${esc(wxSummary(v))}</p>
+      <div class="group"><h2>Next ${dy.time.length - di} days</h2><div class="card" style="padding:0 14px">${days}</div></div>
       <div class="group"><h2>Next 24 hours</h2>${wxChart(v)}</div>
       <div class="wx-grid">
         ${tile("Rain today", `${dy.precipitation_probability_max?.[di] ?? 0}%`, `${(dy.precipitation_sum?.[di] ?? 0).toFixed(1)} mm${dy.precipitation_hours?.[di] ? ` over ${Math.round(dy.precipitation_hours[di])} h` : ""}`)}
@@ -2361,7 +2387,6 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
         ${tile("Sunrise", clock(dy.sunrise[di]), "")}
         ${tile("Sunset", clock(dy.sunset[di]), dl ? `${Math.floor(dl / 3600)} h ${Math.round((dl % 3600) / 60)} min of daylight` : "")}
       </div>
-      <div class="group"><h2>Next ${dy.time.length - di} days</h2><div class="card" style="padding:0 14px">${days}</div></div>
       <p class="wx-foot">${w.snapshot ? "Forecast saved with the news at" : "Updated"} ${updated} · Open-Meteo</p>`;
   }
   function openWeather() {

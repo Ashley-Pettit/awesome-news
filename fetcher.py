@@ -333,6 +333,7 @@ def parse_feed(url):
             "summary": it.findtext("description") or "",
             "published": parse_date(it.findtext("pubDate") or it.findtext("dc:date", namespaces=NS)),
             "image": feed_image(it) or html_image(it.findtext("content:encoded", namespaces=NS), it.findtext("description")),
+            "content": it.findtext("content:encoded", namespaces=NS) or "",
             "cats": [c.text for c in it.findall("category")],
         })
     for en in root.findall("atom:entry", NS):
@@ -347,6 +348,7 @@ def parse_feed(url):
             "summary": en.findtext("atom:summary", namespaces=NS) or content or "",
             "published": parse_date(en.findtext("atom:published", namespaces=NS) or en.findtext("atom:updated", namespaces=NS)),
             "image": feed_image(en) or html_image(content, en.findtext("atom:summary", namespaces=NS)),
+            "content": content or "",
             "cats": [c.get("term") or c.get("label") for c in en.findall("atom:category", NS)],
         })
     return out
@@ -387,6 +389,7 @@ def to_story(it, source, now, max_age=MAX_AGE):
         "published": pub.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "_img": it["image"] or "",
         "_raw": it["summary"],
+        "_feed": it.get("content") or it["summary"],
         "_cats": [c for c in it.get("cats", []) if c],
     }
 
@@ -444,6 +447,28 @@ def read_page(story, want_text):
         except Exception:
             text = None
     return img, text
+
+
+FEED_JUNK = re.compile(r"^(The post .* appeared first on .*|Continue reading.*|Read more.*|Read (the )?full (story|article).*|Comments( \(\d+\))?|Join us on .*|Follow (us|.* on) (on )?(X|Twitter|Facebook|Instagram|Threads|Bluesky|Google News).*|\[(…|\.\.\.)\]|"
+                       r"(This|The) (article|story) (was )?(originally )?(published|appeared) .*|Source:.*|Image( credit)?:.*|Photo:.*)$", re.I)
+
+
+def feed_paras(raw):
+    """What the publisher puts in its own RSS feed, split into paragraphs. Feed readers show this as is."""
+    if not raw:
+        return []
+    t = re.sub(r"(?is)<(script|style|figure|figcaption|iframe)\b.*?</\1>", " ", raw)
+    t = re.sub(r"(?i)<br\s*/?>|</p>|</li>|</h[1-6]>|</blockquote>|</div>", "\n", t)
+    t = re.sub(r"(?i)<li[^>]*>", "\n- ", t)
+    out = []
+    for p in t.split("\n"):
+        lead = "- " if p.lstrip().startswith("- ") else ""
+        p = html.unescape(re.sub(r"<[^>]+>", " ", p))
+        p = re.sub(r"\s+", " ", p).strip().lstrip("- ").strip()
+        if len(p) < 2 or JUNK_PARA.match(p) or FEED_JUNK.match(p):
+            continue
+        out.append(lead + p)
+    return out
 
 
 def make_inline(url, size, quality):
@@ -608,6 +633,19 @@ def main():
                 if key is not None and not lic:
                     texts[st["id"]]["_private"] = True
 
+    # 4b. For stories the public site can't show in full, keep everything the publisher shares in
+    # its own feed (often several paragraphs, sometimes the whole article). Shown as a feed excerpt
+    # with a link to the rest.
+    feed_texts = {}
+    if a.text != "none":
+        for st in unique.values():
+            t = texts.get(st["id"])
+            if t and not t.get("_private"):
+                continue
+            paras = feed_paras(st.get("_feed"))
+            if sum(len(p) for p in paras) >= len(st["summary"]) + 150:
+                feed_texts[st["id"]] = {"paras": paras, "feed": True}
+
     # 5. Pictures.
     if a.images == "url":
         for st in unique.values():
@@ -642,9 +680,10 @@ def main():
         return out
 
     private = {sid for sid, t in texts.items() if t.pop("_private", False)}
-    chunks = chunked((sid, t) for sid, t in texts.items() if sid not in private)
+    chunks = chunked([(sid, t) for sid, t in texts.items() if sid not in private] + list(feed_texts.items()))
     pchunks = chunked((sid, t) for sid, t in texts.items() if sid in private)
-    text_ref = {sid: f"t{n:02d}" for n, ch in enumerate(chunks, 1) for sid in ch}
+    text_ref = {sid: f"t{n:02d}" for n, ch in enumerate(chunks, 1) for sid in ch if sid not in feed_texts}
+    feed_ref = {sid: f"t{n:02d}" for n, ch in enumerate(chunks, 1) for sid in ch if sid in feed_texts}
     ptext_ref = {sid: f"p{n:02d}" for n, ch in enumerate(pchunks, 1) for sid in ch}
 
     # 6b. Weather for each local area: a snapshot for copies of the app that can't fetch it live.
@@ -682,6 +721,8 @@ def main():
                     d["ptext"] = ptext_ref[st["id"]]  # locked: only devices with the passphrase can open it
                 words = sum(len(p.split()) for p in texts[st["id"]]["paras"])
                 d["mins"] = max(1, round(words / 230))
+            if st["id"] in feed_ref:
+                d["feed"] = feed_ref[st["id"]]  # the publisher's own feed text: open to everyone
             out_items.append(d)
         doc = {"section": name, "updatedAt": stamp, "items": out_items}
         for it in reversed(out_items):  # stay under the database document limit
@@ -711,6 +752,7 @@ def main():
         "sections": list(sections),
         "textChunks": [f"t{n:02d}" for n in range(1, len(chunks) + 1)],
         "articlesWithText": len(text_ref),
+        "articlesWithFeedText": len(feed_ref),
         "sourceCounts": dict(sorted(source_counts.items())),
         "errors": errors[:10],
     }
