@@ -652,9 +652,9 @@ def main():
     def get_weather(r):
         city, lat, lon = CITIES[r]
         u = (f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&timezone=auto&forecast_days=7"
-             "&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,weather_code,is_day,uv_index,precipitation"
-             "&hourly=temperature_2m,weather_code,precipitation_probability,is_day"
-             "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,uv_index_max,sunrise,sunset,wind_speed_10m_max")
+             "&current=temperature_2m,apparent_temperature,relative_humidity_2m,dew_point_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,weather_code,is_day,uv_index,precipitation,cloud_cover,pressure_msl,visibility"
+             "&hourly=temperature_2m,apparent_temperature,weather_code,precipitation_probability,precipitation,is_day,uv_index,wind_speed_10m,wind_direction_10m,wind_gusts_10m,relative_humidity_2m,cloud_cover"
+             "&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,precipitation_probability_max,precipitation_sum,precipitation_hours,uv_index_max,sunrise,sunset,daylight_duration,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant")
         return r, json.loads(get(u, timeout=15))
     with cf.ThreadPoolExecutor(2) as ex:
         for fut in [ex.submit(get_weather, r) for r in regions if r in CITIES]:  # gentle on the free service

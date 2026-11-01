@@ -24,6 +24,7 @@ site_url = os.environ.get("SITE_URL", f"https://{owner.lower()}.github.io/{name}
 desc = "Local, politics, finance, tech and AI news from free, full-article sources. No paywalls, no sport."
 body = re.sub(r"<title>.*?</title>\s*", "", app, count=1)
 body = re.sub(r'<meta name="claude:[^"]+"[^>]*>\s*', "", body)
+body = re.sub(r'<meta name="theme-color"[^>]*>\s*', "", body)  # the head sets light and dark colours
 
 head = f"""<!doctype html>
 <html lang="en-AU">
@@ -46,9 +47,9 @@ head = f"""<!doctype html>
 <meta name="twitter:title" content="{title}">
 <meta name="twitter:description" content="{desc}">
 <meta name="twitter:image" content="{site_url}icons/share-card.png?v=2">
-<meta name="theme-color" content="#f4f3f1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#f6f5fa" media="(prefers-color-scheme: light)">
 <meta name="format-detection" content="telephone=no">
-<meta name="theme-color" content="#0f0e11" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#0e0d16" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="{title}">
