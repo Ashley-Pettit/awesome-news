@@ -192,7 +192,16 @@ body.playing main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(
 .tvs-top { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 8px; padding: 10px max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px)); background: #0b0a12; }
 .tvs-frame { position: relative; aspect-ratio: 16 / 9; background: #000000; max-width: 960px; margin: 0 auto; }
 .tvs-frame iframe, #tvsPlayer { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-.tvs-end { position: absolute; inset: 0; z-index: 2; display: grid; place-content: center; gap: 12px; text-align: center; background: rgba(11, 10, 18, 0.92); padding: 16px; }
+/* The app's own layer over the video: taps never reach YouTube's links, so TV stays in the app. */
+.tvs-shield { position: absolute; inset: 0; z-index: 1; background: transparent; cursor: pointer; }
+.tvs-shield.off { pointer-events: none; }
+.tvs-sound { position: absolute; z-index: 2; left: 50%; bottom: 18px; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 8px; padding: 12px 18px; border-radius: 999px; background: #ffffff; color: #1b1830; font-weight: 800; font-size: 0.95rem; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); white-space: nowrap; }
+.tvs-sound svg { width: 20px; height: 20px; }
+.tvs-big { position: absolute; z-index: 1; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 72px; height: 72px; border-radius: 50%; display: grid; place-items: center; background: rgba(11, 10, 18, 0.7); color: #ffffff; pointer-events: none; }
+.tvs-big svg { width: 32px; height: 32px; margin-left: 4px; }
+.tvs-prog { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; height: 3px; background: rgba(255, 255, 255, 0.18); pointer-events: none; }
+.tvs-prog i { display: block; height: 100%; width: 0; background: #b6a3ff; transition: width 1s linear; }
+.tvs-end { position: absolute; inset: 0; z-index: 3; display: grid; place-content: center; gap: 12px; text-align: center; background: rgba(11, 10, 18, 0.92); padding: 16px; }
 .tvs-end p { margin: 0; color: rgba(255, 255, 255, 0.8); }
 .tvs-end b { display: block; color: #ffffff; font-family: var(--display); font-size: 1.2rem; }
 .tvs-end .pill-btn { justify-self: center; background: #ffffff; color: #1b1830; }
@@ -696,7 +705,12 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     <button type="button" class="np-btn" id="tvsNext" aria-label="Next clip"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 5.5v13l9-6.5zM16 5h3v14h-3z"/></svg></button>
     <button type="button" class="np-btn" id="tvsClose" aria-label="Close TV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </div>
-  <div class="tvs-frame"><div id="tvsPlayer"></div><div class="tvs-end" id="tvsEnd" hidden><p><b>That's about 30 minutes of news.</b>Want to keep going?</p><button type="button" class="pill-btn" id="tvsMore">Keep watching</button></div></div>
+  <div class="tvs-frame"><div id="tvsPlayer"></div>
+    <button type="button" class="tvs-shield" id="tvsShield" aria-label="Pause or play"></button>
+    <button type="button" class="tvs-sound" id="tvsSound" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>Tap for sound</button>
+    <div class="tvs-big" id="tvsBig" hidden><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.8v14.4a1 1 0 0 0 1.5.86l11.2-7.2a1 1 0 0 0 0-1.72L8.5 3.94A1 1 0 0 0 7 4.8z"/></svg></div>
+    <div class="tvs-prog"><i id="tvsProg"></i></div>
+    <div class="tvs-end" id="tvsEnd" hidden><p><b>That's about 30 minutes of news.</b>Want to keep going?</p><button type="button" class="pill-btn" id="tvsMore">Keep watching</button></div></div>
   <div class="tvs-now"><div class="tvs-ch" id="tvsCh"></div><h2 class="tvs-t" id="tvsTitle"></h2><p class="tvs-s" id="tvsSum"></p></div>
   <div class="tvs-h2">Up next</div>
   <ol class="tvs-list" id="tvsList"></ol>
@@ -2563,6 +2577,8 @@ const handle = async (m, post) => {
     if (t.closest("[data-cmd]")) { CMD.on ? cmdStop() : cmdStart(); return; }
     if (t.closest("#tvsClose")) { closeTV(); return; }
     if (t.closest("#tvsNext")) { tvNext(); return; }
+    if (t.closest("#tvsSound")) { tvSoundOn(); return; }
+    if (t.closest("#tvsShield")) { tvToggle(); return; }
     if (t.closest("#tvsMore")) { TV.cap += 30 * 60; $("tvsEnd").hidden = true; try { TV.player?.playVideo(); } catch {} return; }
     const tvb = t.closest("[data-tv]");
     if (tvb) { const n = Number(tvb.dataset.tv); $("tvsEnd").hidden = true; TV.cap = Infinity; try { TV.player?.playVideoAt(n); } catch {} TV.idx = n; tvNow(n); return; }
@@ -2860,10 +2876,12 @@ const handle = async (m, post) => {
       $("tvsPlayer").replaceWith(Object.assign(document.createElement("div"), { id: "tvsPlayer" }));
       TV.player = new YT.Player("tvsPlayer", {
         host: "https://www.youtube-nocookie.com", videoId: ids[0],
-        playerVars: { playlist: ids.slice(1).join(","), playsinline: 1, rel: 0, autoplay: 1, modestbranding: 1, cc_load_policy: 0 },
+        // Starts muted so phones let it play straight away; YouTube's own controls and links are off.
+        playerVars: { playlist: ids.slice(1).join(","), playsinline: 1, rel: 0, autoplay: 1, mute: TV.sound ? 0 : 1, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1, cc_load_policy: 0 },
         events: {
-          onReady: e => { try { e.target.playVideo(); } catch {} },
+          onReady: e => { try { if (!TV.sound) e.target.mute(); e.target.playVideo(); } catch {} tvTick(); },
           onStateChange: e => {
+            $("tvsBig").hidden = e.data !== 2;  // paused
             if (e.data !== 1) return;  // playing
             const p = TV.player, k = p.getPlaylistIndex?.() ?? 0, d = p.getDuration?.() || 0;
             if (d) TV.durs[k] = d;
@@ -2875,12 +2893,14 @@ const handle = async (m, post) => {
           onError: () => { try { TV.player.nextVideo(); } catch {} },
         },
       });
+      $("tvsSound").hidden = !!TV.sound; $("tvsShield").classList.remove("off");
     } catch {
       // No player API: a plain embedded playlist still plays the clips in order.
       const f = document.createElement("iframe");
       f.id = "tvsPlayer"; f.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen"; f.allowFullscreen = true;
       f.src = `https://www.youtube-nocookie.com/embed/${ids[0]}?playlist=${ids.slice(1).join(",")}&playsinline=1&rel=0&autoplay=1`;
       $("tvsPlayer").replaceWith(f);
+      $("tvsShield").classList.add("off"); $("tvsSound").hidden = true;
     }
   }
   function tvNow(k) {
@@ -2896,9 +2916,35 @@ const handle = async (m, post) => {
     $("tvsList").innerHTML = TV.items.map((i, n) => `<li><button type="button" data-tv="${n}"><img src="${esc(i.thumb)}" alt="" loading="lazy"><span><span class="lc">${esc(i.channel)} · ${esc(ago(i.published))}</span><span class="lt">${esc(i.title)}</span></span></button></li>`).join("");
   }
   function tvNext() { try { TV.player?.nextVideo?.(); } catch {} }
+  // Sound: phones only allow it after a tap. Try from our button; if the phone still keeps it muted,
+  // let the next tap reach the video itself for that one time.
+  function tvSoundOn() {
+    const p = TV.player; if (!p) return;
+    try { p.unMute(); p.setVolume(100); p.playVideo(); } catch {}
+    TV.sound = true; $("tvsSound").hidden = true;
+    setTimeout(() => {
+      try { if (p.isMuted()) { $("tvsShield").classList.add("off"); toast("Tap the video once more to turn the sound on"); TV.sound = false; } } catch {}
+    }, 700);
+  }
+  function tvToggle() {
+    const p = TV.player; if (!p?.getPlayerState) return;
+    if (!TV.sound) { tvSoundOn(); return; }
+    try { p.getPlayerState() === 1 ? p.pauseVideo() : p.playVideo(); } catch {}
+  }
+  // Progress line, and the shield goes back over the video once sound is on.
+  function tvTick() {
+    clearInterval(TV.tick);
+    TV.tick = setInterval(() => {
+      const p = TV.player; if (!p?.getCurrentTime || $("tvs").hidden) return;
+      try {
+        const d = p.getDuration() || 0; $("tvsProg").style.width = d ? (p.getCurrentTime() / d) * 100 + "%" : "0";
+        if ($("tvsShield").classList.contains("off") && !p.isMuted()) { TV.sound = true; $("tvsShield").classList.remove("off"); $("tvsSound").hidden = true; }
+      } catch {}
+    }, 1000);
+  }
   function closeTV() {
     if ($("tvs").hidden) return;
-    try { TV.player?.destroy?.(); } catch {} TV.player = null;
+    try { TV.player?.destroy?.(); } catch {} TV.player = null; clearInterval(TV.tick);
     $("tvsPlayer").replaceWith(Object.assign(document.createElement("div"), { id: "tvsPlayer" }));
     $("tvs").hidden = true; document.body.classList.remove("tvson");
     cmdStop();
