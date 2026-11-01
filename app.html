@@ -1265,11 +1265,13 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     return `<section class="brief" aria-label="${name}">
       <header class="brief-top"><div><h2 class="brief-h">${name}</h2>
         <div class="brief-sub">${left ? `${picks.length} stories · about ${mins} min` : "All read"}</div></div>
-        ${canSpeak ? `<button class="brief-play" type="button" data-listen="brief">${I.play}Listen</button>` : ""}</header>
+        ${canSpeak || aiOK ? `<button class="brief-play" type="button" data-listen="drive" aria-label="Listen to 30 minutes of news">${I.play}Listen · 30 min</button>` : ""}</header>
       <ol>${picks.map((i, n) => `<li class="story${readCls(i)}"><span class="num">${n + 1}</span>
         <div><h3 class="h">${link(i, esc(i.title)).replace("data-open=", 'data-list="brief" data-open=')}</h3>
         <div class="bm">${esc(i.source)} · ${esc(ago(i.published))}</div></div>${i.image ? pic(i, "bpic") : ""}</li>`).join("")}</ol>
-      ${canSpeak || aiOK ? `<button class="drive" type="button" data-listen="drive">${I.phones}<span><b>Listen to the news · 30 min</b>Weather, then the day's stories read aloud, each one once. Good for the car.</span></button>` : ""}
+      ${state.mode === "claude"
+        ? `<a class="drive" href="${esc(PUBLIC_URL)}#tv" target="_blank" rel="noopener">${I.tv}<span><b>Watch TV · 30 min</b>News clips from 7NEWS, ABC, 9News, SBS and more. Opens the website.</span></a>`
+        : `<button class="drive" type="button" data-open-tv>${I.tv}<span><b>Watch TV · 30 min</b>News clips from 7NEWS, ABC, 9News, SBS and more, back to back. Each story once.</span></button>`}
     </section>`;
   }
 
