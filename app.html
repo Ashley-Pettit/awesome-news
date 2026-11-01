@@ -2821,7 +2821,7 @@ const handle = async (m, post) => {
   const TV = { items: [], player: null, idx: 0, durs: {}, cap: 30 * 60, api: null };
   async function loadTV() {
     try {
-      if (state.mode === "claude") { const snap = await state.db.doc("tv").get(); TV.items = snap.exists ? (snap.data().items || []) : []; }
+      if (state.mode === "claude") { const snap = await state.db.doc("meta/tv").get(); TV.items = snap.exists ? (snap.data().items || []) : []; }
       else { const r = await fetch(`data/tv.json?v=${encodeURIComponent(state.status?.updatedAt || "")}`); TV.items = r.ok ? ((await r.json()).items || []) : []; }
     } catch { TV.items = TV.items || []; }
     return TV.items;
