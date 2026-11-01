@@ -186,6 +186,44 @@ body.playing main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(
 .brief .bpic { width: 58px; height: 58px; border-radius: 8px; max-width: 100%; }
 .brief .bpic .mono { font-size: 0.75rem; }
 .brief li.read .h, .brief li.read .num { color: var(--faint); }
+/* News video: full screen, story picture slowly zooming, headline and live captions over it. */
+.tv { position: fixed; inset: 0; z-index: 55; background: #0b0a12; color: #ffffff; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;
+  padding: calc(env(safe-area-inset-top, 0px) + 10px) max(16px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 14px) max(16px, env(safe-area-inset-left, 0px)); }
+body.tvon { overflow: hidden; }
+body.tvon .player { display: none; }
+.tv-pic { position: absolute; inset: 0; z-index: 0; }
+.tv-pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; max-width: 100%; opacity: 0; transition: opacity 0.8s ease; }
+.tv-pic img.on { opacity: 1; animation: kb 22s ease-in-out infinite alternate; }
+@keyframes kb { from { transform: scale(1.04); } to { transform: scale(1.2) translate(-2%, -1.5%); } }
+@media (prefers-reduced-motion: reduce) { .tv-pic img.on { animation: none; } }
+.tv-pic::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(8, 6, 16, 0.65) 0%, rgba(8, 6, 16, 0) 22%, rgba(8, 6, 16, 0.2) 45%, rgba(8, 6, 16, 0.92) 72%, rgba(8, 6, 16, 0.98) 100%); }
+.tv-mono { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--display); font-weight: 800; font-size: 5rem; color: rgba(255, 255, 255, 0.14); background: linear-gradient(135deg, #4b33a8, #1b1830); }
+.tv-mono:empty { display: none; }
+.tv-top, .tv-low, .tv-wx, .tv-cue { position: relative; z-index: 1; }
+.tv-top { display: flex; align-items: center; gap: 10px; }
+.tv-brand { display: flex; align-items: center; gap: 8px; font-family: var(--display); font-weight: 800; font-size: 1.05rem; flex: 1; min-width: 0; }
+.tv-brand img { width: 30px; height: 30px; border-radius: 8px; max-width: 100%; }
+.tv-pos { font-size: 0.78rem; font-weight: 700; font-variant-numeric: tabular-nums; opacity: 0.8; }
+.tv-btn { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, 0.14); color: #ffffff; flex: none; }
+.tv-btn svg { width: 22px; height: 22px; }
+.tv-btn.big { width: 64px; height: 64px; background: #ffffff; color: #1b1830; }
+.tv-btn.big svg { width: 28px; height: 28px; }
+.tv-low { display: grid; gap: 10px; max-width: 760px; width: 100%; margin: 0 auto; }
+.tv-meta { display: flex; gap: 8px; align-items: center; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.9; flex-wrap: wrap; }
+.tv-sec { background: #ffffff; color: #1b1830; border-radius: 4px; padding: 3px 8px; font-weight: 800; }
+.tv-sec:empty { display: none; }
+.tv-h { font-family: var(--display); font-weight: 800; font-size: clamp(1.5rem, 6vw, 2.4rem); line-height: 1.08; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+.tv-cap { margin: 0; min-height: 4.6em; font-family: var(--read); font-size: clamp(1rem, 3.8vw, 1.3rem); line-height: 1.5; color: rgba(255, 255, 255, 0.92); display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.tv-ctl { display: flex; align-items: center; justify-content: center; gap: 28px; margin-top: 4px; }
+.tv-bar { height: 4px; border-radius: 4px; background: rgba(255, 255, 255, 0.2); overflow: hidden; }
+.tv-bar i { display: block; height: 100%; width: 0; background: #b6a3ff; transition: width 0.6s linear; }
+.tv-wx, .tv-cue { align-self: center; text-align: center; margin: auto 0; }
+.tv-wx .now { font-family: var(--display); font-weight: 800; font-size: 4.5rem; line-height: 1; }
+.tv-wx .cond { font-size: 1.2rem; font-weight: 700; margin-top: 4px; }
+.tv-wx .week { margin-top: 16px; background: rgba(255, 255, 255, 0.95); max-width: 520px; }
+.tv-cue { font-family: var(--display); font-weight: 800; font-size: clamp(2.2rem, 10vw, 4rem); letter-spacing: -0.03em; }
+.tv-cue small { display: block; font-family: var(--ui); font-size: 0.85rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.7; margin-bottom: 6px; }
+@media (orientation: landscape) and (max-height: 500px) { .tv-h { font-size: 1.5rem; } .tv-cap { -webkit-line-clamp: 2; min-height: 3em; } .tv-btn.big { width: 52px; height: 52px; } .tv-wx .now { font-size: 3rem; } }
 .drive { display: flex; align-items: center; gap: 12px; width: 100%; margin: 2px 0 14px; padding: 12px 14px; border-radius: 12px; background: var(--accent); color: var(--accent-ink); text-align: left; font-size: 0.88rem; line-height: 1.3; }
 .drive svg { width: 24px; height: 24px; flex: none; }
 .drive b { display: block; font-size: 0.98rem; }
@@ -617,6 +655,27 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
   </div>
 </nav>
 
+<div class="tv" id="tv" role="dialog" aria-label="News video" hidden>
+  <div class="tv-pic"><img id="tvImg" alt=""><div class="tv-mono" id="tvMono"></div></div>
+  <div class="tv-top">
+    <div class="tv-brand"><img id="tvLogo" alt=""><span>Awesome News</span></div>
+    <span class="tv-pos" id="tvPos"></span>
+    <button type="button" class="tv-btn" id="tvMin" aria-label="Minimise"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+  </div>
+  <div class="tv-wx" id="tvWx" hidden></div>
+  <div class="tv-cue" id="tvCue" hidden></div>
+  <div class="tv-low">
+    <div class="tv-meta"><span class="tv-sec" id="tvSec"></span><span id="tvSrc"></span></div>
+    <h2 class="tv-h" id="tvTitle"></h2>
+    <p class="tv-cap" id="tvCap" aria-live="off"></p>
+    <div class="tv-ctl">
+      <button type="button" class="tv-btn" id="tvStop" aria-label="Stop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      <button type="button" class="tv-btn big" id="tvPlay" aria-label="Pause"></button>
+      <button type="button" class="tv-btn" id="tvNext" aria-label="Next story"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 5.5v13l9-6.5zM16 5h3v14h-3z"/></svg></button>
+    </div>
+    <div class="tv-bar"><i id="tvBar"></i></div>
+  </div>
+</div>
 <div class="player" id="player" role="region" aria-label="Now playing" hidden>
   <button type="button" class="pt" id="pOpen" aria-label="Open the story being read"><div class="pk" id="pKick">Listening</div><div class="ph" id="pTitle"></div></button>
   <div class="pc">
@@ -908,6 +967,7 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     search: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>`,
     play: `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.8v14.4a1 1 0 0 0 1.5.86l11.2-7.2a1 1 0 0 0 0-1.72L8.5 3.94A1 1 0 0 0 7 4.8z"/></svg>`,
     pause: `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4.5" width="4" height="15" rx="1.2"/><rect x="14" y="4.5" width="4" height="15" rx="1.2"/></svg>`,
+    tv: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/><path d="m10 9 4 2-4 2z" fill="currentColor"/></svg>`,
     car: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17h14M5 17v2M19 17v2M4 17v-4l2-5a2 2 0 0 1 1.9-1.4h8.2A2 2 0 0 1 18 8l2 5v4"/><path d="M4 13h16"/><circle cx="7.5" cy="15" r=".6" fill="currentColor"/><circle cx="16.5" cy="15" r=".6" fill="currentColor"/></svg>`,
     phones: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><path d="M4 15.5A1.5 1.5 0 0 1 5.5 14H7v6H5.5A1.5 1.5 0 0 1 4 18.5zM20 15.5a1.5 1.5 0 0 0-1.5-1.5H17v6h1.5a1.5 1.5 0 0 0 1.5-1.5z"/></svg>`,
     layers: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" aria-hidden="true"><path d="m12 4 8 4-8 4-8-4z"/><path d="m4 12 8 4 8-4M4 16l8 4 8-4"/></svg>`,
@@ -1094,6 +1154,49 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     for (let r = 0; secs < target && r < 40; r++) for (const { sc, list } of lanes) { if (secs >= target) break; add(list[r], sc.id === "local" ? "local news" : sc.id === "headlines" ? "more headlines" : sc.label); }
     return { ids: out, secOf, secs };
   }
+  // ---- News video screen ----
+  let wake = null;
+  async function keepAwake() { try { if (!$("tv").hidden && navigator.wakeLock && !wake) { wake = await navigator.wakeLock.request("screen"); wake.addEventListener("release", () => { wake = null; }); } } catch {} }
+  function tvOpen() {
+    $("tvLogo").src = APP_ICON;
+    $("tv").hidden = false; document.body.classList.add("tvon");
+    keepAwake();
+  }
+  function tvClose() {
+    if ($("tv").hidden) return;
+    $("tv").hidden = true; document.body.classList.remove("tvon");
+    try { wake?.release(); } catch {} wake = null;
+  }
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) keepAwake(); });
+  const monoOf = i => MONO[publisherOf(i.source)] || MONO[i.source] || publisherOf(i.source).slice(0, 3);
+  function tvStory(i) {
+    if (!i) return;
+    const img = $("tvImg"), mono = $("tvMono");
+    img.classList.remove("on");
+    if (i.image) { mono.textContent = ""; img.onload = () => img.classList.add("on"); img.onerror = () => { img.removeAttribute("src"); mono.textContent = monoOf(i); }; img.src = i.image; if (img.complete && img.naturalWidth) img.classList.add("on"); }
+    else { img.removeAttribute("src"); mono.textContent = monoOf(i); }
+    const sec = L.secOf?.get(i.id);
+    $("tvSec").textContent = sec === "top" ? "Top story" : sec === "local news" ? "Local" : sec === "more headlines" ? "Headlines" : sec || "";
+    $("tvSrc").textContent = publisherOf(i.source);
+    $("tvTitle").textContent = i.title;
+    $("tvCap").textContent = "";
+    $("tvPos").textContent = `${L.at + 1} of ${L.queue.length}`;
+    updateBar();
+  }
+  function tvPart(k) {
+    if (L.kind !== "drive" || $("tv").hidden) return;
+    const p = L.parts[k]; if (!p) return;
+    const wx = $("tvWx"), cue = $("tvCue"), low = document.querySelector(".tv-low");
+    wx.hidden = p.kind !== "open"; cue.hidden = p.kind !== "cue";
+    low.style.visibility = p.kind === "open" || p.kind === "cue" ? "hidden" : "";
+    if (p.kind === "open") {
+      const v = state.wx && wxView(state.wx);
+      wx.innerHTML = v ? `<div class="now">${Math.round(v.cur.temperature_2m)}°</div><div class="cond">${esc(state.wx.city)} · ${esc(wxLabel(v.cur.weather_code, v.cur.is_day))}</div><div class="week">${$("wxWeek").innerHTML}</div>`
+        : `<div class="cond">${esc(greeting())}</div>`;
+    }
+    if (p.kind === "cue") cue.innerHTML = `<small>Now</small>${esc(p.sec === "local news" ? "Local news" : p.sec === "more headlines" ? "More headlines" : p.sec)}`;
+    $("tvCap").textContent = p.kind === "title" ? "" : p.text;
+  }
   function driveOpening() {
     let wx = "";
     try {
@@ -1102,7 +1205,7 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
         wx = ` First, the weather in ${state.wx.city}. It's ${Math.round(v.cur.temperature_2m)} degrees and ${wxLabel(v.cur.weather_code, v.cur.is_day).toLowerCase()}. ${wxSummary(v).replace(/°/g, " degrees").replace(/\((\d+)%\)/g, ", $1 percent").replace(/\((\d+)\)/g, "$1")}`;
       }
     } catch {}
-    return `${greeting()}. This is your Awesome News drive, about ${Math.max(5, Math.round(L.driveSecs / 300) * 5)} minutes of news.${wx}`;
+    return `${greeting()}. This is Awesome News, about ${Math.max(5, Math.round(L.driveSecs / 300) * 5)} minutes of news.${wx}`;
   }
   function briefingHTML(picks) {
     if (picks.length < 3) { state.briefIds = []; return ""; }
@@ -1117,7 +1220,7 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
       <ol>${picks.map((i, n) => `<li class="story${readCls(i)}"><span class="num">${n + 1}</span>
         <div><h3 class="h">${link(i, esc(i.title)).replace("data-open=", 'data-list="brief" data-open=')}</h3>
         <div class="bm">${esc(i.source)} · ${esc(ago(i.published))}</div></div>${i.image ? pic(i, "bpic") : ""}</li>`).join("")}</ol>
-      ${canSpeak || aiOK ? `<button class="drive" type="button" data-listen="drive">${I.car}<span><b>Driving? Play a 30-minute bulletin</b>Weather, then the news. Each story once, read hands-free.</span></button>` : ""}
+      ${canSpeak || aiOK ? `<button class="drive" type="button" data-listen="drive">${I.tv}<span><b>Watch the news · 30 min</b>A news video: weather, then the day's stories with pictures, read aloud. Each story once.</span></button>` : ""}
     </section>`;
   }
 
@@ -1250,8 +1353,8 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
   window.addEventListener("resize", () => { inkAt = null; placeInk(); });
   document.fonts?.ready.then(() => { inkAt = null; placeInk(); });
   function renderHeader() {
-    $("eyebrow").textContent = new Intl.DateTimeFormat("en-AU", { weekday: "short", day: "numeric", month: "short", timeZone: TZ }).format(new Date());
-    $("title").textContent = state.showSaved ? "Saved" : greeting();
+    $("eyebrow").textContent = state.showSaved ? "Saved" : greeting();
+    $("title").textContent = APP_NAME;
     const s = state.status, live = $("live");
     live.className = "live";
     if (state.refreshing) { live.classList.add("busy"); $("stamp").textContent = state.mode === "claude" ? "Fetching fresh stories, about 2 to 4 minutes" : "Checking for new stories"; }
@@ -1987,9 +2090,21 @@ const handle = async (m, post) => {
     post({ id: m.id, audio: a.audio, sr: a.sampling_rate }, [a.audio.buffer]);
   } catch (e) { post({ id: m.id, error: String((e && e.message) || e) }); }
 };`;
-    let send = null, seq = 0, loaded = false;
+    let send = null, seq = 0, loaded = false, lastAct = 0, dog = null;
     const pending = new Map();
+    const failAll = why => { for (const [, p] of pending) p.bad(new Error(why)); pending.clear(); };
+    // If nothing comes back for a while (download stuck, phone ran out of memory), give up so the
+    // device voice can take over instead of leaving silence.
+    const watch = () => {
+      if (dog) return;
+      dog = setInterval(() => {
+        if (!pending.size) { clearInterval(dog); dog = null; return; }
+        if (document.hidden) { lastAct = Date.now(); return; }
+        if (Date.now() - lastAct > (loaded ? 60000 : 75000)) failAll(loaded ? "it took too long to make the audio" : "the voice download stalled");
+      }, 5000);
+    };
     const onMsg = d => {
+      lastAct = Date.now();
       if (d.progress != null) { L.aiProg = d.progress; if (L.on) updatePlayer(); return; }
       const p = pending.get(d.id); if (!p) return;
       pending.delete(d.id);
@@ -2010,7 +2125,7 @@ const handle = async (m, post) => {
         send = m => w.postMessage(m);
       } catch { inPage(); }
     }
-    const ask = msg => new Promise((ok, bad) => { start(); msg.id = ++seq; pending.set(msg.id, { ok, bad, msg }); send(msg); });
+    const ask = msg => new Promise((ok, bad) => { start(); msg.id = ++seq; if (!pending.size) lastAct = Date.now(); pending.set(msg.id, { ok, bad, msg }); watch(); send(msg); });
     return {
       get loaded() { return loaded; },
       say: (text, sid) => ask({ text, voice: aiVoice(), sid }).then(d => wavURL(d.audio, d.sr)),
@@ -2028,44 +2143,64 @@ const handle = async (m, post) => {
   // One audio player for the whole session. It's started inside the tap so phones allow it to keep playing.
   const aud = new Audio();
   aud.preload = "auto";
-  const SILENT = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=";
-  function unlockAudio() { if (L.unlocked) return; try { aud.src = SILENT; const p = aud.play(); if (p) p.then(() => { L.unlocked = true; }).catch(() => {}); } catch {} }
-  const clips = new Map();
+  // Phones only allow sound that starts from a tap. Playing a short silent clip during the tap
+  // unlocks this player, so the voice can start once it's ready.
+  let SILENT = "";
+  function unlockAudio() {
+    if (L.unlocked || !aud.paused) return;
+    try {
+      SILENT = SILENT || wavURL(new Float32Array(4800), 24000);
+      aud.onended = aud.onerror = null; aud.src = SILENT;
+      const p = aud.play(); if (p) p.then(() => { L.unlocked = true; }).catch(() => {});
+    } catch {}
+  }
+  const isSilent = () => !aud.src || aud.src === SILENT || aud.src.startsWith("data:");
+  const clips = new Map(), ready = new Map();
   function clip(k) {
     const p = L.parts[k]; if (!p) return null;
     const key = L.sid + ":" + k;
-    if (!clips.has(key)) { const pr = AI.say(p.text, L.sid); pr.catch(() => {}); clips.set(key, pr); }
+    if (!clips.has(key)) { const pr = AI.say(p.text, L.sid); pr.then(u => ready.set(key, u)).catch(() => {}); clips.set(key, pr); }
     return clips.get(key);
   }
   function dropClips(keepSid) {
-    for (const [key, pr] of clips) if (!key.startsWith(keepSid + ":")) { clips.delete(key); pr.then(u => URL.revokeObjectURL(u)).catch(() => {}); }
+    for (const [key, pr] of clips) if (!key.startsWith(keepSid + ":")) { clips.delete(key); ready.delete(key); pr.then(u => URL.revokeObjectURL(u)).catch(() => {}); }
   }
-  function aiFail() {
+  let aiWhy = "";
+  function aiFail(err) {
     if (aiBroken) return;
-    aiBroken = true; L.aiWait = false;
-    toast("The natural voice couldn't load here, so your phone's voice is reading instead.", 5000);
+    aiBroken = true; L.aiWait = false; aiWhy = String(err?.message || err || "");
+    toast("The natural voice couldn't load. Tap play to hear your phone's voice instead. Settings, Reading shows why.", 7000);
   }
   function hush() { try { tts?.cancel(); } catch {} try { aud.pause(); } catch {} }
   function bindClip(tk, k) {
     aud.onended = () => { if (tk !== L.token) return; L.part++; updateBar(); speakNext(tk); };
-    aud.onerror = () => { if (tk !== L.token || aud.src.startsWith("data:")) return; L.part++; speakNext(tk); };
+    aud.onerror = () => { if (tk !== L.token || isSilent()) return; L.part++; speakNext(tk); };
   }
   function speakAI(tk) {
     const k = L.part, p = L.parts[k], sid = L.sid;
     if (p.para !== L.curPara) highlightPara(p.para);
     updateBar();
-    const pr = clip(k);
-    if (!AI.loaded) { L.aiWait = true; updatePlayer(); }
-    pr.then(url => {
+    const play = url => {
       if (tk !== L.token || !L.on || L.paused || sid !== L.sid || L.part !== k) return;
       if (L.aiWait) { L.aiWait = false; updatePlayer(); }
       clip(k + 1); clip(k + 2);  // the next bits get made while this one plays
       bindClip(tk, k);
       L.aiAt = k;
+      tvPart(k);
       aud.src = url; aud.defaultPlaybackRate = L.rate; aud.playbackRate = L.rate;
       const go = aud.play();
-      if (go) go.catch(e => { if (tk !== L.token) return; if (e && e.name === "NotAllowedError") { pauseListen(); toast("Tap play to start listening"); } });
-    }).catch(() => { if (tk !== L.token || sid !== L.sid) return; aiFail(); if (canSpeak) speakNext(tk); else stopListen(); });
+      if (go) go.then(() => { L.unlocked = true; }).catch(e => { if (tk !== L.token) return; if (e && e.name === "NotAllowedError") { L.unlocked = false; pauseListen(); toast("Tap play to start listening"); } });
+    };
+    const done = ready.get(sid + ":" + k);
+    if (done) { play(done); return; }
+    const pr = clip(k);
+    L.aiWait = true; updatePlayer();
+    pr.then(play).catch(err => {
+      if (tk !== L.token || sid !== L.sid) return;
+      aiFail(err);
+      // The phone's own voice also needs a tap, so wait for one rather than failing silently.
+      if (canSpeak) pauseListen(); else stopListen();
+    });
   }
   function pickVoice() {
     const want = store.get("brief.voice", "");
@@ -2096,6 +2231,7 @@ const handle = async (m, post) => {
       if (L.on && L.kind === "drive") { L.paused ? resumeListen() : pauseListen(); return; }
       const d = driveList();
       L.secOf = d.secOf; L.driveSecs = d.secs;
+      tvOpen();
       return startListen(d.ids, "drive");
     }
     if (L.on && kind === "dock") { L.paused ? resumeListen() : pauseListen(); return; }
@@ -2119,10 +2255,11 @@ const handle = async (m, post) => {
     const pre = [];
     if (L.kind === "drive") {
       const sec = L.secOf?.get(id), prev = L.at ? L.secOf?.get(L.queue[L.at - 1]) : null;
-      if (L.at === 0) pre.push(driveOpening());
-      if (sec && sec !== prev) pre.push(sec === "top" ? "Here are the top stories." : `Now, ${sec}.`);
+      if (L.at === 0) pre.push({ text: driveOpening(), para: -1, kind: "open" });
+      if (sec && sec !== prev) pre.push({ text: sec === "top" ? "Here are the top stories." : `Now, ${sec}.`, para: -1, kind: "cue", sec });
     }
-    L.parts = [...pre.map(text => ({ text, para: -1 })), { text: `${intro}${clean(i.title)}.`, para: -1 }, { text: `From ${publisherOf(i.source)}.`, para: -1 }];
+    L.parts = [...pre, { text: `${intro}${clean(i.title)}.`, para: -1, kind: "title" }, { text: `From ${publisherOf(i.source)}.`, para: -1, kind: "title" }];
+    if (L.kind === "drive") tvStory(i);
     L.part = 0; L.loading = true; L.waiting = false; L.curPara = -1; L.aiAt = -1;
     if (useAI()) { AI.skip(sid); dropClips(sid); }
     updatePlayer();
@@ -2154,12 +2291,13 @@ const handle = async (m, post) => {
       L.part++; speakNext(tk);
     };
     if (p.para !== L.curPara) highlightPara(p.para);
+    tvPart(L.part);
     tts.speak(u);
     updateBar();
   }
   function nextStory() {
     L.at++;
-    if (L.at >= L.queue.length) { const k = L.kind; stopListen(); toast(k === "brief" ? "That's your briefing. You're across it." : k === "drive" ? "That's your drive. Safe travels." : "That's the end of the list."); if (!openSheet) render(true); return; }
+    if (L.at >= L.queue.length) { const k = L.kind; stopListen(); toast(k === "brief" ? "That's your briefing. You're across it." : k === "drive" ? "That's the news. See you next time." : "That's the end of the list."); if (!openSheet) render(true); return; }
     playStory();
     if (openSheet === "reader") { state.readerList = L.queue.slice(); openReader(L.queue[L.at], 1); }
   }
@@ -2168,7 +2306,7 @@ const handle = async (m, post) => {
     L.paused = false; const tk = ++L.token; updatePlayer();
     if (useAI()) unlockAudio();
     // Carry on mid-sentence when the natural voice was paused part way through a clip.
-    if (useAI() && L.aiAt === L.part && aud.src && !aud.src.startsWith("data:") && !aud.ended && aud.currentTime > 0) {
+    if (useAI() && L.aiAt === L.part && !isSilent() && !aud.ended && aud.currentTime > 0) {
       bindClip(tk, L.part); aud.playbackRate = L.rate; aud.play().catch(() => speakNext(tk)); return;
     }
     speakNext(tk);
@@ -2176,7 +2314,7 @@ const handle = async (m, post) => {
   function skipListen() { L.token++; L.sid++; hush(); L.paused = false; nextStory(); }
   function stopListen() {
     L.on = false; L.paused = false; L.token++; L.sid++; L.aiWait = false;
-    hush();
+    hush(); tvClose();
     highlightPara(-1);
     $("player").hidden = true;
     document.body.classList.remove("playing");
@@ -2203,18 +2341,24 @@ const handle = async (m, post) => {
     const on = L.on && !L.paused && L.queue[L.at] === state.readerId;
     b.innerHTML = on ? I.pause + "Pause" : I.phones + "Listen";
   }
-  function updateBar() { $("pBar").style.width = (L.parts.length ? Math.min(100, (L.part / L.parts.length) * 100) : 0) + "%"; }
+  function updateBar() {
+    const f = L.parts.length ? Math.min(1, L.part / L.parts.length) : 0;
+    $("pBar").style.width = f * 100 + "%";
+    if (L.queue.length) $("tvBar").style.width = ((L.at + f) / L.queue.length) * 100 + "%";
+  }
   function updatePlayer() {
     const i = findItem(L.queue[L.at]);
     $("player").hidden = !L.on;
     $("pTitle").textContent = i ? i.title : "";
-    $("pKick").textContent = `${L.kind === "brief" ? "Briefing" : L.kind === "drive" ? "Drive" : "Listening"} · ${L.at + 1} of ${L.queue.length}${L.paused ? " · Paused" : L.aiWait ? (L.aiProg > 0 && L.aiProg < 100 && !AI.loaded ? ` · Downloading voice ${L.aiProg}%` : " · Getting the voice ready") : ""}`;
+    $("pKick").textContent = `${L.kind === "brief" ? "Briefing" : L.kind === "drive" ? "News video" : "Listening"} · ${L.at + 1} of ${L.queue.length}${L.paused ? " · Paused" : L.aiWait ? (L.aiProg > 0 && L.aiProg < 100 && !AI.loaded ? ` · Downloading voice ${L.aiProg}%` : " · Getting the voice ready") : ""}`;
     $("pPlay").innerHTML = L.paused ? I.play : I.pause;
+    $("tvPlay").innerHTML = L.paused ? I.play : I.pause;
+    $("tvPlay").setAttribute("aria-label", L.paused ? "Play" : "Pause");
     $("pPlay").setAttribute("aria-label", L.paused ? "Play" : "Pause");
     $("pRate").textContent = L.rate + "×";
     if ("mediaSession" in navigator) {
       try {
-        if (i && L.on) navigator.mediaSession.metadata = new MediaMetadata({ title: i.title, artist: publisherOf(i.source), album: L.kind === "drive" ? "Awesome News drive" : "Awesome News",
+        if (i && L.on) navigator.mediaSession.metadata = new MediaMetadata({ title: i.title, artist: publisherOf(i.source), album: L.kind === "drive" ? "Awesome News video" : "Awesome News",
           artwork: [{ src: new URL("icons/icon-512.png", location.href).href, sizes: "512x512", type: "image/png" }] });
         navigator.mediaSession.playbackState = !L.on ? "none" : L.paused ? "paused" : "playing";
       } catch {}
@@ -2248,7 +2392,7 @@ const handle = async (m, post) => {
     const want = voicePref(), auto = pickVoice();
     const ai = aiOK ? `<optgroup label="Natural voices">${AI_VOICES.map(([id, nm, acc]) => `<option value="ai:${id}"${want === "ai:" + id ? " selected" : ""}>${nm} · ${acc}</option>`).join("")}</optgroup>` : "";
     const dev = `<optgroup label="This device's voices"><option value="device"${want === "device" ? " selected" : ""}>Automatic${auto ? ` (${esc(auto.name)})` : ""}</option>${voices.map(v => `<option value="${esc(v.name)}"${v.name === want ? " selected" : ""}>${esc(v.name)} · ${esc(v.lang)}</option>`).join("")}</optgroup>`;
-    const note = !aiOK ? "" : aiBroken ? `<p class="keepnote" style="margin:10px 0 0">The natural voice couldn't load here, so this device's voice is reading for now. It tries again next time the app opens.</p>`
+    const note = !aiOK ? "" : aiBroken ? `<p class="keepnote" style="margin:10px 0 0">The natural voice couldn't load here${aiWhy ? ` (${esc(aiWhy)})` : ""}, so this device's voice is reading for now. Pick a natural voice again to retry.</p>`
       : useAI() ? `<p class="hint">Natural voices run on this device, so nothing you listen to is sent anywhere. The voice downloads once (about 90 MB) the first time you listen, then works offline.</p>` : "";
     return `<div class="group"><h2>Listening</h2><div class="card">
       <div class="field"><label for="setVoice">Voice</label><select id="setVoice">${ai}${dev}</select></div>
@@ -2359,7 +2503,11 @@ const handle = async (m, post) => {
       try { const u = new SpeechSynthesisUtterance(line), v = pickVoice(); u.rate = L.rate; if (v) { u.voice = v; u.lang = v.lang; } tts.speak(u); } catch {}
       return;
     }
-    if (t.closest("#pOpen")) { const id = L.queue[L.at]; if (id) { state.readerList = L.queue.slice(); openReader(id); } return; }
+    if (t.closest("#pOpen")) { if (L.kind === "drive") { tvOpen(); tvStory(findItem(L.queue[L.at])); tvPart(L.part); return; } const id = L.queue[L.at]; if (id) { state.readerList = L.queue.slice(); openReader(id); } return; }
+    if (t.closest("#tvPlay")) { L.paused ? resumeListen() : pauseListen(); return; }
+    if (t.closest("#tvNext")) { skipListen(); return; }
+    if (t.closest("#tvStop")) { stopListen(); return; }
+    if (t.closest("#tvMin")) { tvClose(); return; }
     if (t.closest("[data-open-search]")) { openSearch(); return; }
     if (t.closest("#sClear")) { $("sInput").value = ""; state.sq = ""; renderSearch(); $("sInput").focus(); return; }
     const sf = t.closest("[data-sfilter]");
