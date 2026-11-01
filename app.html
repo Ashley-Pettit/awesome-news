@@ -78,36 +78,44 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
 body.playing main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 112px); }
 
 /* ---------- Masthead ---------- */
-.head { padding-block: 14px 6px; }
-.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.head { padding-block: 10px 2px; }
+.topbar { display: flex; align-items: center; gap: 10px; }
+.hgroup { flex: 1; min-width: 0; }
+.hsub { display: flex; align-items: center; gap: 6px; margin-top: 3px; font-size: 0.74rem; color: var(--muted); white-space: nowrap; min-width: 0; }
+.hsub #eyebrow { font-weight: 700; flex: none; }
+.hsub .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--faint); flex: none; }
+.hsub .stamp { font-size: inherit; min-width: 0; overflow: hidden; }
+.hsub #stamp { overflow: hidden; text-overflow: ellipsis; }
 .brandline { display: flex; align-items: center; gap: 8px; min-width: 0; font-family: var(--display); font-size: 0.98rem; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; }
-.brandmark { width: 26px; height: 26px; border-radius: 7px; flex: none; max-width: 100%; }
+.brandmark { width: 38px; height: 38px; border-radius: 10px; flex: none; max-width: 100%; }
 .brand { overflow: hidden; text-overflow: ellipsis; }
 .head-actions { display: flex; gap: 8px; flex: none; }
 .dateline { margin-top: 16px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
-.title { font-family: var(--display); font-weight: 800; font-size: clamp(1.75rem, 6.6vw, 2.5rem); line-height: 1; letter-spacing: -0.03em; margin: 6px 0 0; text-wrap: balance; font-variation-settings: "opsz" 96; }
+.title { font-family: var(--display); font-weight: 800; font-size: clamp(1.3rem, 5.4vw, 1.75rem); line-height: 1.1; letter-spacing: -0.025em; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variation-settings: "opsz" 72; }
 .hstat { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 12px; }
 .stamp { cursor: pointer; }
 .stamp .rf { width: 13px; height: 13px; color: var(--faint); }
 #refreshBtn.spin .rf { animation: spin 0.9s linear infinite; color: var(--accent); }
-.wx { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px 5px 7px; border-radius: 999px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); font-size: 0.8rem; color: var(--muted); cursor: pointer; text-align: left; }
+.wx { flex: none; display: inline-flex; align-items: center; gap: 5px; padding: 6px 10px 6px 7px; border-radius: 999px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); font-size: 0.8rem; color: var(--muted); cursor: pointer; text-align: left; }
 .wx svg { width: 18px; height: 18px; color: var(--sun); flex: none; }
 .wx b { color: var(--ink); font-size: 0.92rem; font-variant-numeric: tabular-nums; }
 .wx .hl { font-variant-numeric: tabular-nums; }
 .wx .rs { color: var(--c-headlines); font-weight: 700; }
 .wx .more { color: var(--faint); font-size: 1rem; line-height: 1; }
+@media (max-width: 380px) { .wx .wl { display: none; } }
 .wx:active { transform: scale(0.97); }
 /* Seven-day snapshot under the masthead: one column per day, tap for the full forecast. */
-.week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); width: 100%; margin-top: 12px; padding: 10px 2px 9px; border-radius: var(--r-md); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); text-align: center; }
+.week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); width: 100%; margin-top: 10px; padding: 7px 2px 6px; border-radius: var(--r-md); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); text-align: center; }
 .week:active { transform: scale(0.99); }
-.week .wd { display: grid; grid-template-rows: auto 30px auto auto auto; justify-items: center; align-items: center; gap: 2px; min-width: 0; font-variant-numeric: tabular-nums; }
+.week .wd { display: grid; grid-template-rows: auto 24px auto auto; justify-items: center; align-items: center; gap: 1px; min-width: 0; font-variant-numeric: tabular-nums; }
 .week .wd + .wd { box-shadow: -1px 0 0 var(--line); }
-.week .dn { font-size: 0.66rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+.week .dn { font-size: 0.62rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
 .week .wd.today .dn { color: var(--accent); }
-.week svg { width: 22px; height: 22px; margin: 3px 0 2px; color: var(--sun); }
-.week .hi { font-weight: 750; font-size: 0.95rem; color: var(--ink); line-height: 1.1; }
-.week .lo { font-size: 0.78rem; color: var(--muted); line-height: 1.1; }
-.week .rp { font-size: 0.66rem; font-weight: 750; color: var(--c-headlines); min-height: 1.1em; margin-top: 2px; }
+.week svg { width: 19px; height: 19px; color: var(--sun); }
+.week .t { font-size: 0.8rem; line-height: 1.15; white-space: nowrap; }
+.week .hi { font-weight: 750; color: var(--ink); }
+.week .lo { color: var(--muted); font-size: 0.92em; margin-left: 2px; }
+.week .rp { font-size: 0.6rem; font-weight: 750; color: var(--c-headlines); min-height: 1.1em; }
 .stamp { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .live { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); flex: none; }
 .live.stale { background: var(--faint); }
@@ -121,7 +129,7 @@ body.playing main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ---------- Section pills ---------- */
-.tabs-bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); margin-top: 14px; }
+.tabs-bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); margin-top: 8px; }
 .tabs-bar::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--line); }
 .tabs { position: relative; display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; padding-block: 8px; margin-inline: -4px; }
 .tabs::-webkit-scrollbar { display: none; }
@@ -178,6 +186,10 @@ body.playing main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(
 .brief .bpic { width: 58px; height: 58px; border-radius: 8px; max-width: 100%; }
 .brief .bpic .mono { font-size: 0.75rem; }
 .brief li.read .h, .brief li.read .num { color: var(--faint); }
+.drive { display: flex; align-items: center; gap: 12px; width: 100%; margin: 2px 0 14px; padding: 12px 14px; border-radius: 12px; background: var(--accent); color: var(--accent-ink); text-align: left; font-size: 0.88rem; line-height: 1.3; }
+.drive svg { width: 24px; height: 24px; flex: none; }
+.drive b { display: block; font-size: 0.98rem; }
+.drive:active { transform: scale(0.99); }
 
 /* ---------- Hero rail ---------- */
 .hero-rail { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain;
@@ -568,13 +580,12 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
   <div class="wrap">
     <header class="head">
       <div class="topbar">
-        <div class="brandline"><img class="brandmark" id="brandmark" alt=""><span class="brand">Awesome News</span></div>
-      </div>
-      <div class="dateline" id="eyebrow">Today</div>
-      <h1 class="title" id="title">Awesome News</h1>
-      <div class="hstat">
+        <img class="brandmark" id="brandmark" alt="Awesome News">
+        <div class="hgroup">
+          <h1 class="title" id="title">Awesome News</h1>
+          <div class="hsub"><span id="eyebrow">Today</span><span class="dot" aria-hidden="true"></span><button type="button" class="stamp" id="refreshBtn" aria-label="Check for new stories"><span class="live stale" id="live"></span><span id="stamp">Loading the latest stories</span><span class="newcount" id="newCount" hidden></span><svg class="rf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button></div>
+        </div>
         <button class="wx" type="button" id="wx" data-open-weather aria-label="Open the full forecast" hidden></button>
-        <button type="button" class="stamp" id="refreshBtn" aria-label="Check for new stories"><span class="live stale" id="live"></span><span id="stamp">Loading the latest stories</span><span class="newcount" id="newCount" hidden></span><svg class="rf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
       </div>
       <button class="week" type="button" id="wxWeek" data-open-weather aria-label="Open the full forecast" hidden></button>
     </header>
@@ -897,6 +908,7 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     search: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>`,
     play: `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.8v14.4a1 1 0 0 0 1.5.86l11.2-7.2a1 1 0 0 0 0-1.72L8.5 3.94A1 1 0 0 0 7 4.8z"/></svg>`,
     pause: `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4.5" width="4" height="15" rx="1.2"/><rect x="14" y="4.5" width="4" height="15" rx="1.2"/></svg>`,
+    car: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17h14M5 17v2M19 17v2M4 17v-4l2-5a2 2 0 0 1 1.9-1.4h8.2A2 2 0 0 1 18 8l2 5v4"/><path d="M4 13h16"/><circle cx="7.5" cy="15" r=".6" fill="currentColor"/><circle cx="16.5" cy="15" r=".6" fill="currentColor"/></svg>`,
     phones: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><path d="M4 15.5A1.5 1.5 0 0 1 5.5 14H7v6H5.5A1.5 1.5 0 0 1 4 18.5zM20 15.5a1.5 1.5 0 0 0-1.5-1.5H17v6h1.5a1.5 1.5 0 0 0 1.5-1.5z"/></svg>`,
     layers: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" aria-hidden="true"><path d="m12 4 8 4-8 4-8-4z"/><path d="m4 12 8 4 8-4M4 16l8 4 8-4"/></svg>`,
     sliders: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg>`,
@@ -1060,6 +1072,38 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     }
     return picks;
   }
+  // Drive: about 30 minutes of audio. Weather, the top stories, then each of your sections in turn.
+  // A story covered by several outlets is read once, from whichever version has the most text.
+  const DRIVE_WORDS = 420;  // longer stories are trimmed for the car, with the rest left in the app
+  function driveList() {
+    const target = 30 * 60, out = [], seen = new Set(), secOf = new Map();
+    const depth = i => i.text ? 2 : i.feed ? 1 : 0;
+    const words = i => Math.min(DRIVE_WORDS, i.text ? (i.mins || 2) * 230 : i.feed ? 260 : 45);
+    const best = i => [i, ...siblings(i.id).map(findItem).filter(Boolean)].sort((a, b) => depth(b) - depth(a))[0];
+    let secs = 45;
+    const add = (i, sec) => {
+      if (!i || seen.has(i.id)) return;
+      const b = best(i);
+      [i.id, b.id, ...siblings(i.id), ...siblings(b.id)].forEach(x => seen.add(x));
+      out.push(b.id); secOf.set(b.id, sec); secs += words(b) / 2.6 + 7;
+    };
+    briefing().forEach(i => add(i, "top"));
+    // Stories with text to read move up a few places, so the drive isn't just headlines.
+    const lanes = enabledSections().map(sc => ({ sc, list: items(sc.id).filter(i => !(Number(S.negCut) && isNegative(i))).slice(0, 30)
+      .map((i, n) => ({ i, k: n - depth(i) * 5 })).sort((a, b) => a.k - b.k).map(x => x.i) }));
+    for (let r = 0; secs < target && r < 40; r++) for (const { sc, list } of lanes) { if (secs >= target) break; add(list[r], sc.id === "local" ? "local news" : sc.id === "headlines" ? "more headlines" : sc.label); }
+    return { ids: out, secOf, secs };
+  }
+  function driveOpening() {
+    let wx = "";
+    try {
+      if (state.wx) {
+        const v = wxView(state.wx);
+        wx = ` First, the weather in ${state.wx.city}. It's ${Math.round(v.cur.temperature_2m)} degrees and ${wxLabel(v.cur.weather_code, v.cur.is_day).toLowerCase()}. ${wxSummary(v).replace(/°/g, " degrees").replace(/\((\d+)%\)/g, ", $1 percent").replace(/\((\d+)\)/g, "$1")}`;
+      }
+    } catch {}
+    return `${greeting()}. This is your Awesome News drive, about ${Math.max(5, Math.round(L.driveSecs / 300) * 5)} minutes of news.${wx}`;
+  }
   function briefingHTML(picks) {
     if (picks.length < 3) { state.briefIds = []; return ""; }
     state.briefIds = picks.map(i => i.id);
@@ -1073,6 +1117,7 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
       <ol>${picks.map((i, n) => `<li class="story${readCls(i)}"><span class="num">${n + 1}</span>
         <div><h3 class="h">${link(i, esc(i.title)).replace("data-open=", 'data-list="brief" data-open=')}</h3>
         <div class="bm">${esc(i.source)} · ${esc(ago(i.published))}</div></div>${i.image ? pic(i, "bpic") : ""}</li>`).join("")}</ol>
+      ${canSpeak || aiOK ? `<button class="drive" type="button" data-listen="drive">${I.car}<span><b>Driving? Play a 30-minute bulletin</b>Weather, then the news. Each story once, read hands-free.</span></button>` : ""}
     </section>`;
   }
 
@@ -1205,7 +1250,7 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
   window.addEventListener("resize", () => { inkAt = null; placeInk(); });
   document.fonts?.ready.then(() => { inkAt = null; placeInk(); });
   function renderHeader() {
-    $("eyebrow").textContent = today();
+    $("eyebrow").textContent = new Intl.DateTimeFormat("en-AU", { weekday: "short", day: "numeric", month: "short", timeZone: TZ }).format(new Date());
     $("title").textContent = state.showSaved ? "Saved" : greeting();
     const s = state.status, live = $("live");
     live.className = "live";
@@ -1218,7 +1263,8 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     else {
       if (Date.now() - Date.parse(s.updatedAt) > 8 * 3600e3) live.classList.add("stale");
       const at = new Date(s.updatedAt).toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit", timeZone: TZ });
-      $("stamp").textContent = `Updated ${at}`;
+      $("stamp").textContent = at;
+      $("refreshBtn").setAttribute("aria-label", `Updated ${at}. Check for new stories`);
     }
     const fresh = state.loaded && state.prevVisit ? everything().filter(i => Date.parse(i.published) > state.prevVisit && !state.read.has(i.id)).length : 0;
     $("newCount").textContent = fresh ? `· ${fresh} new` : "";
@@ -2046,6 +2092,12 @@ const handle = async (m, post) => {
       const list = state.readerList.includes(id) ? state.readerList.slice(state.readerList.indexOf(id)) : [id];
       return startListen(list, "story");
     }
+    if (kind === "drive") {
+      if (L.on && L.kind === "drive") { L.paused ? resumeListen() : pauseListen(); return; }
+      const d = driveList();
+      L.secOf = d.secOf; L.driveSecs = d.secs;
+      return startListen(d.ids, "drive");
+    }
     if (L.on && kind === "dock") { L.paused ? resumeListen() : pauseListen(); return; }
     let ids = state.briefIds?.length ? state.briefIds : briefing().map(i => i.id);
     if (!ids.length) ids = forYou().slice(0, 8).map(i => i.id);
@@ -2064,7 +2116,13 @@ const handle = async (m, post) => {
     if (!i) { nextStory(); return; }
     markRead(id);
     const intro = L.kind === "brief" ? `Story ${L.at + 1}. ` : "";
-    L.parts = [{ text: `${intro}${clean(i.title)}.`, para: -1 }, { text: `From ${publisherOf(i.source)}.`, para: -1 }];
+    const pre = [];
+    if (L.kind === "drive") {
+      const sec = L.secOf?.get(id), prev = L.at ? L.secOf?.get(L.queue[L.at - 1]) : null;
+      if (L.at === 0) pre.push(driveOpening());
+      if (sec && sec !== prev) pre.push(sec === "top" ? "Here are the top stories." : `Now, ${sec}.`);
+    }
+    L.parts = [...pre.map(text => ({ text, para: -1 })), { text: `${intro}${clean(i.title)}.`, para: -1 }, { text: `From ${publisherOf(i.source)}.`, para: -1 }];
     L.part = 0; L.loading = true; L.waiting = false; L.curPara = -1; L.aiAt = -1;
     if (useAI()) { AI.skip(sid); dropClips(sid); }
     updatePlayer();
@@ -2072,7 +2130,12 @@ const handle = async (m, post) => {
     let t = null;
     try { t = i.text ? (await loadText(i.text))?.[i.id] : null; if (!t) t = (await getOffline())[i.id] || null; if (!t && i.feed) t = (await loadText(i.feed))?.[i.id] || null; } catch {}
     if (sid !== L.sid) return;
-    const paras = t?.paras?.length ? t.paras : i.summary ? [clean(i.summary)] : [];
+    let paras = t?.paras?.length ? t.paras : i.summary ? [clean(i.summary)] : [];
+    if (L.kind === "drive") {
+      const keep = []; let w = 0;
+      for (const p of paras) { if (w >= DRIVE_WORDS) { keep.push("There's more on that one in the app."); break; } keep.push(p); w += p.split(/\s+/).length; }
+      paras = keep;
+    }
     paras.forEach((p, n) => L.parts.push(...chunks(p, n)));
     L.loading = false;
     if (L.waiting && !L.paused) { L.waiting = false; speakNext(L.token); }
@@ -2096,7 +2159,7 @@ const handle = async (m, post) => {
   }
   function nextStory() {
     L.at++;
-    if (L.at >= L.queue.length) { const brief = L.kind === "brief"; stopListen(); toast(brief ? "That's your briefing. You're across it." : "That's the end of the list."); if (!openSheet) render(true); return; }
+    if (L.at >= L.queue.length) { const k = L.kind; stopListen(); toast(k === "brief" ? "That's your briefing. You're across it." : k === "drive" ? "That's your drive. Safe travels." : "That's the end of the list."); if (!openSheet) render(true); return; }
     playStory();
     if (openSheet === "reader") { state.readerList = L.queue.slice(); openReader(L.queue[L.at], 1); }
   }
@@ -2145,16 +2208,30 @@ const handle = async (m, post) => {
     const i = findItem(L.queue[L.at]);
     $("player").hidden = !L.on;
     $("pTitle").textContent = i ? i.title : "";
-    $("pKick").textContent = `${L.kind === "brief" ? "Briefing" : "Listening"} · ${L.at + 1} of ${L.queue.length}${L.paused ? " · Paused" : L.aiWait ? (L.aiProg > 0 && L.aiProg < 100 && !AI.loaded ? ` · Downloading voice ${L.aiProg}%` : " · Getting the voice ready") : ""}`;
+    $("pKick").textContent = `${L.kind === "brief" ? "Briefing" : L.kind === "drive" ? "Drive" : "Listening"} · ${L.at + 1} of ${L.queue.length}${L.paused ? " · Paused" : L.aiWait ? (L.aiProg > 0 && L.aiProg < 100 && !AI.loaded ? ` · Downloading voice ${L.aiProg}%` : " · Getting the voice ready") : ""}`;
     $("pPlay").innerHTML = L.paused ? I.play : I.pause;
     $("pPlay").setAttribute("aria-label", L.paused ? "Play" : "Pause");
     $("pRate").textContent = L.rate + "×";
+    if ("mediaSession" in navigator) {
+      try {
+        if (i && L.on) navigator.mediaSession.metadata = new MediaMetadata({ title: i.title, artist: publisherOf(i.source), album: L.kind === "drive" ? "Awesome News drive" : "Awesome News",
+          artwork: [{ src: new URL("icons/icon-512.png", location.href).href, sizes: "512x512", type: "image/png" }] });
+        navigator.mediaSession.playbackState = !L.on ? "none" : L.paused ? "paused" : "playing";
+      } catch {}
+    }
     $("dockListen").setAttribute("aria-pressed", String(L.on && !L.paused));
     document.body.classList.toggle("playing", L.on);
     refreshListenBtn();
     updateBar();
   }
   window.addEventListener("pagehide", () => hush());
+  if ("mediaSession" in navigator) {
+    const h = (a, fn) => { try { navigator.mediaSession.setActionHandler(a, fn); } catch {} };
+    h("play", () => { if (L.on && L.paused) resumeListen(); });
+    h("pause", () => { if (L.on && !L.paused) pauseListen(); });
+    h("nexttrack", () => { if (L.on) skipListen(); });
+    h("stop", () => { if (L.on) stopListen(); });
+  }
   function voiceTip() {
     if (useAI()) return "";
     const best = voices.some(v => /natural|neural|online|premium|enhanced/i.test(v.name));
@@ -2455,8 +2532,8 @@ const handle = async (m, post) => {
     let soon = -1;
     for (let k = h; k < Math.min(hr.time.length, h + 12); k++) if ((hr.precipitation_probability?.[k] ?? 0) >= 50) { soon = k; break; }
     const hiLo = dy.temperature_2m_max ? `<span class="hl">${Math.round(dy.temperature_2m_max[di])}° / ${Math.round(dy.temperature_2m_min[di])}°</span>` : "";
-    box.innerHTML = `${wxIcon(cur.weather_code, cur.is_day)}<b>${Math.round(cur.temperature_2m)}°</b><span>${wxLabel(cur.weather_code, cur.is_day)}</span>${hiLo}`
-      + `${soon >= 0 ? `<span class="rs">Rain ${soon === h ? "now" : clock(hr.time[soon])}</span>` : ""}<span class="more" aria-hidden="true">›</span>`;
+    box.innerHTML = `${wxIcon(cur.weather_code, cur.is_day)}<b>${Math.round(cur.temperature_2m)}°</b><span class="wl">${soon >= 0 ? `<span class="rs">Rain ${soon === h ? "now" : clock(hr.time[soon])}</span>` : wxLabel(cur.weather_code, cur.is_day)}</span>`;
+    void hiLo;
     box.hidden = false;
     const wk = $("wxWeek"), n = dy.temperature_2m_max ? Math.min(7, dy.time.length - di) : 0;
     wk.hidden = n < 3;
@@ -2465,7 +2542,7 @@ const handle = async (m, post) => {
       const name = k === 0 ? "Today" : new Date(yy, m - 1, dd).toLocaleDateString("en-AU", { weekday: "short" });
       const p = dy.precipitation_probability_max?.[x] ?? 0;
       return `<span class="wd${k ? "" : " today"}" aria-label="${name}: ${wxLabel(dy.weather_code[x], 1)}, high ${Math.round(dy.temperature_2m_max[x])}, low ${Math.round(dy.temperature_2m_min[x])}${p >= 20 ? `, ${p}% chance of rain` : ""}">`
-        + `<span class="dn">${name}</span>${wxIcon(dy.weather_code[x], 1)}<span class="hi">${Math.round(dy.temperature_2m_max[x])}°</span><span class="lo">${Math.round(dy.temperature_2m_min[x])}°</span><span class="rp">${p >= 20 ? p + "%" : ""}</span></span>`;
+        + `<span class="dn">${name}</span>${wxIcon(dy.weather_code[x], 1)}<span class="t"><span class="hi">${Math.round(dy.temperature_2m_max[x])}°</span><span class="lo">${Math.round(dy.temperature_2m_min[x])}°</span></span><span class="rp">${p >= 20 ? p + "%" : ""}</span></span>`;
     }).join("");
   }
   // Next 24 hours as one strip: icon, temperature line and chance of rain, all on the same hourly scale.
