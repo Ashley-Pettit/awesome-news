@@ -271,8 +271,9 @@ body.npon .player { display: none; }
 .np-brand img { width: 30px; height: 30px; border-radius: 8px; max-width: 100%; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35); }
 .np-pos { padding: 5px 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12); font-size: 0.74rem; font-weight: 700; font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, 0.86); white-space: nowrap; }
 .np-pos:empty { display: none; }
-button.np-pos { cursor: pointer; }
-button.np-pos::after { content: ""; display: inline-block; width: 10px; height: 8px; margin-left: 6px; vertical-align: 1px;
+button.np-pos { cursor: default; pointer-events: none; }
+body.beta-heads button.np-pos { cursor: pointer; pointer-events: auto; }
+body.beta-heads button.np-pos::after { content: ""; display: inline-block; width: 10px; height: 8px; margin-left: 6px; vertical-align: 1px;
   background: linear-gradient(currentColor 0 0) 0 0 / 100% 2px no-repeat, linear-gradient(currentColor 0 0) 0 3px / 100% 2px no-repeat, linear-gradient(currentColor 0 0) 0 6px / 70% 2px no-repeat; opacity: 0.8; }
 /* The headlines, over the player: tap one to hear it next, then the rest carry on */
 .np-list { position: absolute; z-index: 4; left: 12px; right: 12px; top: calc(env(safe-area-inset-top, 0px) + 62px); bottom: calc(env(safe-area-inset-bottom, 0px) + 112px); max-width: 760px; margin: 0 auto;
@@ -1555,6 +1556,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   // ---- News video screen ----
   let wake = null;
   async function keepAwake() { try { if (!$("np").hidden && navigator.wakeLock && !wake) { wake = await navigator.wakeLock.request("screen"); wake.addEventListener("release", () => { wake = null; }); } } catch {} }
+  document.body.classList.toggle("beta-heads", !!store.get("brief.betaHeads", false));
   function npOpen() {
     $("npLogo").src = APP_ICON;
     $("np").hidden = false; document.body.classList.add("npon");
@@ -1567,8 +1569,10 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   }
   document.addEventListener("visibilitychange", () => { if (!document.hidden) keepAwake(); });
   // ---- The headlines in the player: shown after the weather, or any time from the "1 of 28" button ----
+  // Beta (Settings, Listen): off unless switched on.
+  const betaHeads = () => !!store.get("brief.betaHeads", false);
   function npListShow(auto) {
-    if (L.kind !== "drive") return;
+    if (L.kind !== "drive" || !betaHeads()) return;
     npListRender();
     const box = $("npList"); box.hidden = false; $("npPos").setAttribute("aria-expanded", "true");
     if (!box.dataset.w) { box.dataset.w = "1"; ["pointerdown", "scroll", "wheel"].forEach(e => box.addEventListener(e, () => { L.listTouched = true; }, { passive: true, capture: true })); }
@@ -2451,7 +2455,10 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
         <button class="field danger" type="button" id="clearRead">Clear read history <span class="sub" style="color:var(--muted)">${state.read.size} stories</span></button>
         <button class="field danger" type="button" id="clearSaved">Clear saved stories <span class="sub" style="color:var(--muted)">${state.saved.length} saved</span></button>
       </div></div>`,
-      listen: `${listenHTML() || `<p class="hint" style="margin-top:20px">This browser can't read stories out loud.</p>`}${tvAdsHTML()}`,
+      listen: `${listenHTML() || `<p class="hint" style="margin-top:20px">This browser can't read stories out loud.</p>`}${tvAdsHTML()}
+      <div class="group"><h2>Beta</h2><div class="card">
+        ${toggle("data-betaheads", "1", !!store.get("brief.betaHeads", false), "Headlines list while listening", "After the weather, see the stories and tap one to hear it next")}
+      </div><p class="hint">Still being tried out, so it may change.</p></div>`,
       app: `${getAppHTML()}
       ${shareHTML()}
       <p class="about">Awesome News pulls from free sources only: ABC, SBS, BBC, The Guardian, 7NEWS, The Conversation, 360info, Global Voices, NASA, EFF, Ars Technica, TechCrunch, iTnews and more. ${privateMode() ? "Stories open in full right here." : "Stories marked Full are free to republish, so they open in full right here."} No paywalls, no sport.${state.status?.updatedAt ? `<br>Stories last updated ${esc(longDate(state.status.updatedAt))}.` : ""}</p>
@@ -3233,6 +3240,8 @@ const handle = async (m, post) => {
       try { history.replaceState(history.state, "", "#" + (state.showSaved ? "saved" : currentTab())); } catch {}
       render(); window.scrollTo(0, 0); return;
     }
+    const bh = t.closest("[data-betaheads]");
+    if (bh) { const on = !store.get("brief.betaHeads", false); store.set("brief.betaHeads", on); bh.setAttribute("aria-checked", String(on)); document.body.classList.toggle("beta-heads", on); return; }
     const hr = t.closest("[data-hideread]");
     if (hr) { state.hideRead = !state.hideRead; store.set("brief.hideRead", state.hideRead); hr.setAttribute("aria-checked", String(state.hideRead)); return; }
     if (t.closest("#hideRead")) { state.hideRead = !state.hideRead; store.set("brief.hideRead", state.hideRead); render(true); return; }
