@@ -208,6 +208,26 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
   background: rgba(255, 255, 255, 0.12); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14); white-space: nowrap; }
 .np-wkbtn svg { width: 14px; height: 14px; }
 .np-wkbtn[hidden] { display: none; }
+/* Sleep and Weather: round icon buttons, so the top bar stays tidy (the sleep one shows its time when on) */
+@media (max-width: 430px) { #np .np-brand span { display: none; } }  /* phone: the logo alone, so the buttons fit */
+#npSleep, #npWk { width: 34px; height: 34px; padding: 0; justify-content: center; font-size: 0; gap: 0; flex: none; }
+#npSleep svg, #npWk svg { width: 16px; height: 16px; }
+#npSleep[data-on] { width: auto; padding: 0 11px; gap: 6px; font-size: 0.74rem; background: rgba(124, 92, 255, 0.4); }
+/* Beta: while listening, steer things: more like this, read along, save; and what's up next */
+.np-acts { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+.np-acts[hidden] { display: none; }
+.np-act { display: inline-flex; align-items: center; gap: 6px; padding: 8px 13px; border-radius: 999px; font: inherit; font-size: 0.8rem; font-weight: 700; color: #ffffff;
+  background: rgba(255, 255, 255, 0.12); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14); transition: background-color 0.2s ease, transform 0.15s ease; }
+.np-act:active { transform: scale(0.95); }
+.np-act svg { width: 16px; height: 16px; }
+.np-act[aria-pressed="true"] { background: rgba(124, 92, 255, 0.55); }
+.np-act[aria-pressed="true"] svg { fill: currentColor; }
+.np-next { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 10px; width: 100%; padding: 9px 12px; border-radius: 14px; text-align: left; font: inherit; color: #ffffff;
+  background: rgba(255, 255, 255, 0.07); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1); }
+.np-next[hidden] { display: none; }
+.np-next small { font-size: 0.64rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255, 255, 255, 0.55); }
+.np-next span { font-size: 0.86rem; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body.calm-acts .np-acts, .np.calm .np-acts, .np.calm .np-next { display: none; }
 .lb-ic { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, 0.22); }
 .lb-ic svg { width: 20px; height: 20px; margin-left: 2px; }
 .lb-listen b { display: block; font-family: var(--display); font-size: 1.08rem; letter-spacing: -0.01em; line-height: 1.15; }
@@ -1054,6 +1074,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   <div class="np-pic"><img class="np-bg" id="npBg" alt=""><img id="npImg" alt=""><div class="np-mono" id="npMono"></div></div>
   <div class="np-top">
     <div class="np-brand"><img id="npLogo" alt=""><span>Awesome News</span></div>
+    <button type="button" class="np-wkbtn" id="npSleep" aria-label="Sleep timer: off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg><span id="npSleepT">Sleep</span></button>
     <button type="button" class="np-wkbtn" id="npWk" aria-label="Hear the week's weather" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Weather</button>
     <button type="button" class="np-cust" id="npCust" aria-label="Personalise your stories in Settings" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg>Personalise</button>
     <button type="button" class="np-pos" id="npPos" aria-label="Show the headlines" aria-expanded="false"></button>
@@ -1071,6 +1092,11 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     <div class="np-meta"><span class="np-sec" id="npSec"></span><span id="npSrc"></span></div>
     <h2 class="np-h" id="npTitle"></h2>
     <p class="np-cap" id="npCap" aria-live="off"></p>
+    <div class="np-acts" id="npActs" hidden>
+      <button type="button" class="np-act" id="npLike" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span>More like this</span></button>
+      <button type="button" class="np-act" id="npRead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 11h16M4 16h10"/></svg><span>Read along</span></button>
+      <button type="button" class="np-act" id="npSave" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11a1 1 0 0 1 1 1V20l-6.5-4-6.5 4V4.5a1 1 0 0 1 1-1z"/></svg><span>Save</span></button>
+    </div>
     <div class="np-ctl">
       <button type="button" class="np-btn sm" id="npPrev" aria-label="Previous story"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 5.5v13l-9-6.5zM5 5h3v14H5z"/></svg></button>
       <button type="button" class="np-btn" id="npStop" aria-label="Stop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
@@ -1078,6 +1104,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
       <button type="button" class="np-btn" id="npNext" aria-label="Next story"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 5.5v13l9-6.5zM16 5h3v14h-3z"/></svg></button>
     </div>
     <div class="np-bar"><i id="npBar"></i></div>
+    <button type="button" class="np-next" id="npUpNext" hidden><small>Up next</small><span id="npUpNextT"></span></button>
   </div>
 </div>
 <div class="player" id="player" role="region" aria-label="Now playing" hidden>
@@ -1595,7 +1622,9 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     };
     briefing().filter(listenable).forEach(i => add(i, "top"));
     // Stories with text to read move up a few places, so the drive isn't just headlines.
-    const lanes = enabledSections().map(sc => ({ sc, list: items(sc.id).filter(i => listenable(i) && !(Number(S.negCut) && isNegative(i))).slice(0, 30)
+    // Beta: kinds of stories you've said "more like this" to come round first.
+    const likes = store.get("beta.likes", {}) || {}, likeOf = sc => likes[sc.id === "local" ? "local news" : sc.id === "headlines" ? "more headlines" : sc.label] || 0;
+    const lanes = enabledSections().slice().sort((a, b) => likeOf(b) - likeOf(a)).map(sc => ({ sc, list: items(sc.id).filter(i => listenable(i) && !(Number(S.negCut) && isNegative(i))).slice(0, 30)
       .map((i, n) => ({ i, k: n - depth(i) * 5 })).sort((a, b) => a.k - b.k).map(x => x.i) }));
     for (let r = 0; secs < target && r < 40; r++) for (const { sc, list } of lanes) { if (secs >= target) break; add(list[r], sc.id === "local" ? "local news" : sc.id === "headlines" ? "more headlines" : sc.label); }
     return { ids: out, secOf, secs };
@@ -1604,6 +1633,16 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   let wake = null;
   async function keepAwake() { try { if (!$("np").hidden && navigator.wakeLock && !wake) { wake = await navigator.wakeLock.request("screen"); wake.addEventListener("release", () => { wake = null; }); } } catch {} }
   document.body.classList.add("beta-heads");
+  // Beta: swipe the player left for the next story, right for the one before.
+  (() => {
+    let sx = 0, sy = 0, st = 0;
+    document.addEventListener("touchstart", e => { if (!e.target.closest?.("#np") || e.target.closest(".np-list")) return; const t = e.touches[0]; sx = t.clientX; sy = t.clientY; st = Date.now(); }, { passive: true });
+    document.addEventListener("touchend", e => {
+      if (!st || !L.on || L.kind !== "drive" || $("np").hidden || document.body.classList.contains("wxlisten")) { st = 0; return; }
+      const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy, quick = Date.now() - st < 600; st = 0;
+      if (quick && Math.abs(dx) > 70 && Math.abs(dy) < 50) { if (dx < 0) skipListen(); else prevStory(); }
+    }, { passive: true });
+  })();
   // The "Awesome News" title, shown the moment Listen is tapped so nothing else flashes up while it loads.
   function npHello() {
     const cue = $("npCue"), np = $("np");
@@ -2040,8 +2079,14 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     $("savedBadge").hidden = !state.saved.length;
   }
   // The Listen card's photo: the first story the news will read.
+  // Beta: within the hour of stopping, the card offers to pick up where you left off.
+  function lbIdle() {
+    let r = null; try { r = state.loaded ? getResume() : null; } catch {}
+    return r ? `<b>Carry on listening</b><small>Pick up where you left off, ${r.queue.length} stories to go</small>` : `<b>Listen to the news</b><small>About 30 minutes, top stories first</small>`;
+  }
   function listenArt() {
     const img = $("lbBg"); if (!img || !state.loaded) return;
+    if (!L.on) { const sp = $("lbListen")?.querySelector("span:last-child"); if (sp) sp.innerHTML = lbIdle(); }
     try {
       const i = driveList().ids.map(findItem).find(x => x?.image);
       const src = i ? feedPic(i.image, false) : "";
@@ -3178,7 +3223,7 @@ const handle = async (m, post) => {
     }
     // The headline, then straight into the story (the publisher is already on screen, so it isn't read out).
     L.parts = [...pre, ...intro, { text: `${clean(i.title)}.`, para: -1, kind: "title" }];
-    if (L.kind !== "story") npStory(i);
+    if (L.kind !== "story") { npStory(i); npActs(); }
     // Listen to the news: the full weather page shows straight away while the opening reads the weather, then steps aside.
     if (L.kind === "drive" && !L.opened) { L.opened = true; wxListenIntro(); wxListenSoon(); } else wxListenOff();
     if (!$("npList").hidden) npListRender();
@@ -3307,6 +3352,7 @@ const handle = async (m, post) => {
     updateBar();
   }
   function nextStory() {
+    if (L.sleepEnd) { L.sleepEnd = false; L.sleepI = 0; stopListen(); toast("Sleep timer: the news has stopped. Goodnight."); return; }
     L.done?.add(L.queue[L.at]);
     // After a story picked from the headlines, go back to where you were; stories already heard are skipped.
     if (L.back != null) { L.at = L.back; L.back = null; } else L.at++;
@@ -3328,6 +3374,53 @@ const handle = async (m, post) => {
     speakNext(tk);
   }
   const CUE_WAYS = ["Now, {}.", "Next, {}.", "On to {}.", "Moving on to {}.", "Over to {}."];  // CUE_WAYS in voice.py
+  // ---- Beta: the listen guides the app ----
+  // "More like this": the next couple of stories closest to this one move up, and that kind of story ranks
+  // higher next time. "Read along": the article opens with the spoken paragraph lit up, still playing.
+  const LIKES = (() => { const v = store.get("beta.likes", {}); return v && typeof v === "object" ? v : {}; })();
+  const likeWords = i => new Set(clean(`${i?.title || ""} ${i?.summary || ""}`).toLowerCase().match(/[a-z]{4,}/g) || []);
+  function likeThis() {
+    const id = L.queue[L.at], i = findItem(id); if (!i) return;
+    const sec = L.secOf?.get(id) || "";
+    if (sec) { LIKES[sec] = (LIKES[sec] || 0) + 1; store.set("beta.likes", LIKES); }
+    const w = likeWords(i), rest = L.queue.slice(L.at + 1);
+    const score = x => { const j = findItem(x), o = likeWords(j); let n = 0; for (const t of o) if (w.has(t)) n++; return n * 2 + ((L.secOf?.get(x) || "") === sec ? 1 : 0); };
+    const pick = rest.map(x => [x, score(x)]).filter(x => x[1] >= 2).sort((a, b) => b[1] - a[1]).slice(0, 2).map(x => x[0]);
+    if (pick.length) {
+      L.queue = [...L.queue.slice(0, L.at + 1), ...pick, ...rest.filter(x => !pick.includes(x))];
+      saveResume(); npUpNext();
+    }
+    $("npLike").setAttribute("aria-pressed", "true");
+    toast(pick.length ? `${pick.length === 1 ? "One more" : "Two more"} like this coming up next` : "Got it. More stories like this next time.");
+  }
+  function readAlong() {
+    const id = L.queue[L.at]; if (!id) return;
+    npClose(); state.readerList = L.queue.slice(); openReader(id);
+    setTimeout(() => highlightPara(L.curPara), 600);
+  }
+  function npActs() {
+    const id = L.queue[L.at], on = L.kind === "drive" && !!id;
+    $("npActs").hidden = !on;
+    if (!on) return;
+    $("npLike").setAttribute("aria-pressed", "false");
+    $("npSave").setAttribute("aria-pressed", String(isSaved(id)));
+    npUpNext();
+  }
+  function npUpNext() {
+    const nx = findItem(L.queue[L.at + 1]), b = $("npUpNext");
+    b.hidden = !nx || L.kind !== "drive"; if (nx) $("npUpNextT").textContent = nx.title;
+  }
+  // Sleep timer: off, 15 minutes, 30 minutes, end of this story.
+  const SLEEP = [0, 15, 30, -1];
+  function sleepCycle() {
+    L.sleepI = ((L.sleepI || 0) + 1) % SLEEP.length; clearTimeout(L.sleepT); L.sleepEnd = false;
+    const m = SLEEP[L.sleepI], b = $("npSleep");
+    if (m > 0) { L.sleepT = setTimeout(() => { if (L.on) { stopListen(); toast("Sleep timer: the news has stopped. Goodnight."); } }, m * 60000); }
+    if (m < 0) L.sleepEnd = true;
+    $("npSleepT").textContent = m > 0 ? `${m} min` : m < 0 ? "End of story" : "Sleep";
+    b.toggleAttribute("data-on", m !== 0); b.setAttribute("aria-label", `Sleep timer: ${m > 0 ? m + " minutes" : m < 0 ? "end of this story" : "off"}`);
+    toast(m > 0 ? `The news will stop in ${m} minutes` : m < 0 ? "The news will stop after this story" : "Sleep timer off");
+  }
   function prevStory() {
     if (!L.on || L.at <= 0) { if (L.on) { L.token++; L.sid++; hush(); L.paused = false; playStory(); } return; }  // first story: from its start
     L.token++; L.sid++; hush(); L.paused = false; L.back = null; L.skipped = true;
@@ -3336,6 +3429,7 @@ const handle = async (m, post) => {
   function skipListen() { L.token++; L.sid++; hush(); L.paused = false; L.skipped = true; nextStory(); }
   function stopListen() {
     saveResume();  // beta: come back within the hour to pick up here
+    clearTimeout(L.sleepT); L.sleepI = 0; L.sleepEnd = false; $("npSleep").removeAttribute("data-on"); $("npSleepT").textContent = "Sleep";
     wxListenOff(); $("npCust").hidden = true; $("npWk").hidden = true;
     L.on = false; L.paused = false; L.token++; L.sid++; L.aiWait = false;
     hush(); npClose();
@@ -3377,7 +3471,7 @@ const handle = async (m, post) => {
     const lb = $("lbListen");
     if (lb) lb.querySelector("span:last-child").innerHTML = L.on && L.kind === "drive"
       ? `<b>${L.paused ? "Carry on listening" : "Back to the news"}</b><small>Story ${L.at + 1} of ${L.queue.length}${L.paused ? ", paused" : ", playing now"}</small>`
-      : `<b>Listen to the news</b><small>About 30 minutes, top stories first</small>`;
+      : lbIdle();
     $("pTitle").textContent = i ? i.title : "";
     $("pKick").textContent = `${L.kind === "brief" ? "Briefing" : L.kind === "drive" ? "The news" : "Listening"} · ${L.at + 1} of ${L.queue.length}${L.paused ? " · Paused" : L.aiWait ? (L.aiProg > 0 && L.aiProg < 100 && !AI.loaded ? ` · Downloading voice ${L.aiProg}%` : " · Getting the voice ready") : ""}`;
     $("pPlay").innerHTML = L.paused ? I.play : I.pause;
@@ -3570,6 +3664,11 @@ const handle = async (m, post) => {
       return;
     }
     if (t.closest("#npPrev")) { prevStory(); return; }
+    if (t.closest("#npLike")) { likeThis(); return; }
+    if (t.closest("#npRead")) { readAlong(); return; }
+    if (t.closest("#npSave")) { const id = L.queue[L.at]; if (id) { toggleSave(id); $("npSave").setAttribute("aria-pressed", String(isSaved(id))); toast(isSaved(id) ? "Saved for later" : "Removed from saved"); } return; }
+    if (t.closest("#npUpNext")) { skipListen(); return; }
+    if (t.closest("#npSleep")) { sleepCycle(); return; }
     if (t.closest("#npWk")) { weekBrief(); return; }
     // Customise: the news keeps playing; Settings opens over it, and the Listen card brings the player back.
     if (t.closest("#npCust")) { npClose(); state.sTab = "news"; openSettings(); return; }  // the News tab: your interests and local area
