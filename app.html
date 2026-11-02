@@ -400,7 +400,7 @@ body.npon .player { display: none; }
 /* ---------- Dock ---------- */
 .dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--surface); box-shadow: 0 -1px 0 var(--line);
   padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
-.dock-in { max-width: 600px; margin: 0 auto; height: var(--dock-h); display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.dock-in { max-width: 600px; margin: 0 auto; height: var(--dock-h); display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .dock a { position: relative; display: grid; justify-items: center; align-content: center; gap: 3px; font-size: 0.66rem; font-weight: 700; color: var(--muted); letter-spacing: 0.02em; }
 .dock a svg { width: 22px; height: 22px; }
 .dock button { position: relative; display: grid; justify-items: center; align-content: center; gap: 3px; font-size: 0.66rem; font-weight: 700; color: var(--muted); letter-spacing: 0.02em; }
@@ -640,12 +640,68 @@ body.playing .sheet { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 11
 .pchip[aria-pressed="true"] .ck { background: var(--pc); color: var(--bg); }
 .pchip .n { font-size: 0.72rem; color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
 #weather { z-index: 43; }
-.wx-place { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
-.wx-now { display: flex; align-items: center; gap: 14px; margin-top: 6px; }
-.wx-now .big { font-family: var(--display); font-weight: 800; font-size: 4.6rem; line-height: 1; letter-spacing: -0.05em; font-variant-numeric: tabular-nums; }
-.wx-now svg { width: 70px; height: 70px; color: var(--sun); flex: none; }
-.wx-cond { font-family: var(--display); font-size: 1.45rem; font-weight: 700; margin-top: 8px; letter-spacing: -0.02em; }
-.wx-sub { color: var(--muted); font-size: 0.92rem; margin-top: 2px; font-variant-numeric: tabular-nums; }
+/* ---------- Weather: a live sky that matches the forecast ---------- */
+.wx-hero { position: relative; overflow: hidden; isolation: isolate; margin-top: 6px; min-height: 300px; border-radius: 24px; padding: 20px 20px 22px; color: #ffffff;
+  display: flex; flex-direction: column; justify-content: flex-end; box-shadow: 0 18px 40px rgba(20, 16, 50, 0.22); background: var(--sky); }
+.wx-hero[data-sky="clear-day"] { --sky: linear-gradient(165deg, #1f6fc9 0%, #4f9de6 52%, #f7c76b 135%); }
+.wx-hero[data-sky="partly-day"] { --sky: linear-gradient(165deg, #2f6eb5 0%, #6ea6dc 58%, #e2c99a 135%); }
+.wx-hero[data-sky="cloud-day"] { --sky: linear-gradient(165deg, #4d5d76 0%, #7f8ea4 70%, #a9b2bf 130%); }
+.wx-hero[data-sky="fog-day"] { --sky: linear-gradient(165deg, #69717f 0%, #9aa2ad 70%, #c3c8ce 130%); }
+.wx-hero[data-sky="rain-day"] { --sky: linear-gradient(165deg, #273750 0%, #4b5d78 70%, #6c7d95 130%); }
+.wx-hero[data-sky="storm-day"], .wx-hero[data-sky="storm-night"] { --sky: linear-gradient(165deg, #18142f 0%, #352a58 62%, #4e4472 130%); }
+.wx-hero[data-sky="clear-night"], .wx-hero[data-sky="partly-night"] { --sky: linear-gradient(165deg, #070c26 0%, #18245a 64%, #3b3a78 130%); }
+.wx-hero[data-sky="cloud-night"], .wx-hero[data-sky="fog-night"] { --sky: linear-gradient(165deg, #121a2e 0%, #2b3550 70%, #444e68 130%); }
+.wx-hero[data-sky="rain-night"] { --sky: linear-gradient(165deg, #0d1424 0%, #22304a 70%, #3a4862 130%); }
+.wx-hero::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(to top, rgba(6, 8, 24, 0.55), rgba(6, 8, 24, 0) 62%); }
+.wx-hero > *:not(.sky) { position: relative; z-index: 2; text-shadow: 0 1px 12px rgba(0, 0, 0, 0.25); }
+.sky { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.sky .sun { position: absolute; top: 26px; right: 30px; width: 74px; height: 74px; border-radius: 50%; background: radial-gradient(circle at 38% 36%, #fff6c9, #ffd257 48%, #ffad2f);
+  box-shadow: 0 0 40px 12px rgba(255, 196, 66, 0.55), 0 0 110px 40px rgba(255, 186, 64, 0.25); animation: sunGlow 4s ease-in-out infinite alternate; }
+.sky .rays { position: absolute; top: -34px; right: -30px; width: 194px; height: 194px; border-radius: 50%; opacity: 0.55;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 236, 170, 0.55) 0deg 5deg, rgba(255, 236, 170, 0) 5deg 30deg);
+  -webkit-mask: radial-gradient(circle, transparent 46px, #000 48px, transparent 97px); mask: radial-gradient(circle, transparent 46px, #000 48px, transparent 97px); animation: spin 40s linear infinite; }
+.sky .moon { position: absolute; top: 30px; right: 36px; width: 58px; height: 58px; border-radius: 50%; box-shadow: inset -14px 8px 0 0 #f4edd2; transform: rotate(-20deg);
+  filter: drop-shadow(0 0 18px rgba(244, 237, 210, 0.55)); }
+.sky .star { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #ffffff; animation: twinkle var(--t, 3s) ease-in-out infinite; animation-delay: var(--dl, 0s); }
+.sky .cloud { position: absolute; left: 0; width: var(--w, 180px); color: rgba(255, 255, 255, var(--o, 0.85)); filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.12));
+  animation: drift var(--s, 60s) linear infinite; animation-delay: var(--dl, 0s); }
+.sky .cloud svg { display: block; width: 100%; height: auto; }
+.sky .drop { position: absolute; top: -24px; width: 1.6px; height: 16px; border-radius: 2px; background: linear-gradient(transparent, rgba(220, 235, 255, 0.85));
+  animation: fall var(--s, 0.8s) linear infinite; animation-delay: var(--dl, 0s); }
+.sky .flash { position: absolute; inset: 0; background: rgba(230, 225, 255, 0.9); opacity: 0; animation: flash 7s infinite; }
+.sky .bolt { position: absolute; top: 18px; right: 58px; width: 46px; color: #fff4b0; opacity: 0; filter: drop-shadow(0 0 12px rgba(255, 240, 160, 0.9)); animation: bolt 7s infinite; }
+.sky .fogband { position: absolute; left: -20%; width: 140%; height: 34px; border-radius: 40px; background: rgba(255, 255, 255, 0.22); filter: blur(10px); animation: fogmove var(--s, 18s) ease-in-out infinite alternate; }
+@keyframes sunGlow { to { box-shadow: 0 0 52px 18px rgba(255, 196, 66, 0.7), 0 0 140px 56px rgba(255, 186, 64, 0.3); } }
+@keyframes twinkle { 0%, 100% { opacity: 0.2; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.3); } }
+@keyframes drift { from { transform: translateX(-110%); } to { transform: translateX(560px); } }
+@keyframes fall { from { transform: translate(0, 0) rotate(14deg); } to { transform: translate(-70px, 360px) rotate(14deg); } }
+@keyframes flash { 0%, 88%, 100% { opacity: 0; } 89% { opacity: 0.75; } 90% { opacity: 0.1; } 91.5% { opacity: 0.6; } 93% { opacity: 0; } }
+@keyframes bolt { 0%, 88%, 100% { opacity: 0; } 89%, 92% { opacity: 1; } 93% { opacity: 0; } }
+@keyframes fogmove { from { transform: translateX(-8%); } to { transform: translateX(8%); } }
+.wx-place { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.85; }
+.wx-now { display: flex; align-items: flex-end; gap: 14px; margin-top: 4px; }
+.wx-now .big { font-family: var(--display); font-weight: 800; font-size: 5.6rem; line-height: 0.9; letter-spacing: -0.06em; font-variant-numeric: tabular-nums; }
+.wx-cond { font-family: var(--display); font-size: 1.45rem; font-weight: 750; margin-top: 8px; letter-spacing: -0.02em; }
+.wx-sub { font-size: 0.92rem; margin-top: 2px; opacity: 0.88; font-variant-numeric: tabular-nums; }
+/* Entrance: things rise into place one after another when the forecast opens. */
+.wx-in { animation: wxUp 0.6s cubic-bezier(.2, .8, .2, 1) both; animation-delay: var(--d, 0ms); }
+@keyframes wxUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+#wBody.still .wx-in, #wBody.still .range i, #wBody.still .wx-chart .ln, #wBody.still .wx-chart .rb, #wBody.still .g-arrow, #wBody.still .g-ring, #wBody.still .g-mark, #wBody.still .g-sun { animation: none; }
+.wx-gauge { display: block; margin: 8px auto 2px; }
+.g-arrow { transform-box: view-box; transform-origin: 50% 50%; transform: rotate(var(--rot)); animation: spinTo 1.4s cubic-bezier(.2, .9, .25, 1.15) both 0.3s; }
+@keyframes spinTo { from { transform: rotate(calc(var(--rot) - 270deg)); } to { transform: rotate(var(--rot)); } }
+.g-ring { transform: rotate(-90deg); transform-origin: 50% 50%; transform-box: view-box; stroke-dasharray: var(--v) 100; animation: ringIn 1.3s cubic-bezier(.2, .8, .2, 1) both 0.3s; }
+@keyframes ringIn { from { stroke-dasharray: 0 100; } }
+.g-uv { position: relative; height: 8px; border-radius: 8px; margin: 14px 2px 8px; background: linear-gradient(90deg, #3fb950, #e3c43b 30%, #f08a24 55%, #e5484d 78%, #9b59d0); }
+.g-mark { position: absolute; top: 50%; left: var(--x); width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #ffffff; box-shadow: 0 0 0 2px var(--ink), 0 2px 6px rgba(0, 0, 0, 0.3); animation: markIn 1.2s cubic-bezier(.2, .8, .2, 1) both 0.3s; }
+@keyframes markIn { from { left: 0; } }
+.wx-tile.wide { grid-column: 1 / -1; }
+.g-sunarc .arc { fill: none; stroke: var(--line); stroke-width: 2; stroke-dasharray: 4 5; }
+.g-sunarc .done { fill: none; stroke: var(--sun); stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: var(--f) 100; animation: ringIn 1.6s cubic-bezier(.2, .8, .2, 1) both 0.3s; }
+.g-sun { fill: var(--sun); filter: drop-shadow(0 0 6px rgba(255, 190, 60, 0.8)); offset-path: var(--arc); offset-distance: var(--fp); animation: sunMove 1.6s cubic-bezier(.2, .8, .2, 1) both 0.3s; }
+@keyframes sunMove { from { offset-distance: 0%; } }
+.g-sunarc .lbl { fill: var(--muted); font: 600 11px var(--ui); }
+.g-sunarc .hz { stroke: var(--line); stroke-width: 1; }
 .wx-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 20px; }
 .wx-tile { background: var(--surface); border-radius: var(--r-md); box-shadow: inset 0 0 0 1px var(--line); padding: 12px; min-width: 0; }
 .wx-tile .k { font-size: 0.64rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
@@ -665,7 +721,9 @@ body.playing .sheet { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 11
 .day .lo { color: var(--muted); text-align: right; }
 .day .hi { font-weight: 750; }
 .range { position: relative; height: 6px; border-radius: 6px; background: var(--line); }
-.range i { position: absolute; top: 0; bottom: 0; border-radius: 6px; background: linear-gradient(90deg, #4c9be8, #f2a93b); }
+.range i { position: absolute; top: 0; bottom: 0; border-radius: 6px; background: linear-gradient(90deg, #4c9be8, #f2a93b); transform-origin: left center; animation: grow 0.9s cubic-bezier(.2, .8, .2, 1) both; animation-delay: var(--d, 0ms); }
+@keyframes grow { from { transform: scaleX(0); } }
+.range b { position: absolute; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: #ffffff; box-shadow: 0 0 0 2.5px var(--ink); }
 .wx-sum { margin-top: 14px; padding: 12px 14px; border-radius: var(--r-md); background: var(--accent-soft); font-size: 0.92rem; line-height: 1.45; }
 .wx-chart { overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * var(--gut-r)) 0 calc(-1 * var(--gut-l)); padding: 0 var(--gut-r) 0 var(--gut-l); }
 .wx-chart::-webkit-scrollbar { display: none; }
@@ -674,10 +732,16 @@ body.playing .sheet { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 11
 .wx-chart .t-h.now { fill: var(--ink); font-weight: 800; }
 .wx-chart .t-t { fill: var(--ink); font: 700 13px var(--ui); }
 .wx-chart .t-r { fill: var(--c-headlines); font: 700 11px var(--ui); }
-.wx-chart .ln { fill: none; stroke: var(--c-ai); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.wx-chart .ln { fill: none; stroke: var(--c-ai); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: 1; animation: draw 1.6s cubic-bezier(.4, 0, .2, 1) both 0.35s; }
+@keyframes draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 .wx-chart .ar { fill: var(--c-ai); opacity: 0.1; }
 .wx-chart .pt { fill: var(--surface); stroke: var(--c-ai); stroke-width: 2; }
-.wx-chart .rb { fill: var(--c-headlines); opacity: 0.3; }
+.wx-chart .rb { fill: var(--c-headlines); opacity: 0.35; transform-box: fill-box; transform-origin: bottom; animation: rise 0.8s cubic-bezier(.2, .8, .2, 1) both; animation-delay: var(--d, 0ms); }
+@keyframes rise { from { transform: scaleY(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .sky *, .wx-in, .range i, .wx-chart .ln, .wx-chart .rb, .g-arrow, .g-ring, .g-mark, .g-sun, .g-sunarc .done { animation: none !important; }
+  .sky .cloud { transform: translateX(var(--x0, 40px)); }
+}
 .wx-chart .ic { color: var(--sun); }
 .wx-chart .grid { stroke: var(--line); stroke-width: 1; }
 .day .rn { display: grid; line-height: 1.15; }
@@ -754,8 +818,6 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path class="f" d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5z"/><path class="ln" d="M8 9h8M8 13h8M8 17h5" stroke-linecap="round"/></svg>Today</button>
     <button type="button" id="dockTV" data-open-tv>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect class="f" x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/></svg>TV</button>
-    <button type="button" data-open-search>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>Search</button>
     <button type="button" id="dockListen" aria-pressed="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><path class="f" d="M4 15.5A1.5 1.5 0 0 1 5.5 14H7v6H5.5A1.5 1.5 0 0 1 4 18.5zM20 15.5a1.5 1.5 0 0 0-1.5-1.5H17v6h1.5a1.5 1.5 0 0 0 1.5-1.5z"/></svg><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>Listen</button>
     <button type="button" id="savedBtn" aria-pressed="false">
@@ -3097,16 +3159,51 @@ const handle = async (m, post) => {
     const x = k => col / 2 + k * col, y = t => bot - ((t - lo) / span) * (bot - top);
     const pts = temps.map((t, k) => `${x(k).toFixed(1)},${y(t).toFixed(1)}`);
     let g = `<line class="grid" x1="0" x2="${W}" y1="176" y2="176"/>`;
-    g += `<polygon class="ar" points="${x(0)},${bot + 8} ${pts.join(" ")} ${x(n - 1)},${bot + 8}"/><polyline class="ln" points="${pts.join(" ")}"/>`;
+    g += `<polygon class="ar" points="${x(0)},${bot + 8} ${pts.join(" ")} ${x(n - 1)},${bot + 8}"/><polyline class="ln" pathLength="1" points="${pts.join(" ")}"/>`;
     for (let k = 0; k < n; k++) {
       const i = h + k, t = hr.time[i], p = hr.precipitation_probability?.[i] ?? 0, cx = x(k);
       const icon = wxIcon(hr.weather_code[i], hr.is_day?.[i]).replace("<svg ", `<svg class="ic" x="${cx - 11}" y="26" width="22" height="22" `);
       g += `<text class="t-h${k ? "" : " now"}" x="${cx}" y="16" text-anchor="middle">${k ? clock(t) : "Now"}</text>${icon}`;
       g += `<circle class="pt" cx="${cx}" cy="${y(temps[k]).toFixed(1)}" r="3"/><text class="t-t" x="${cx}" y="${(y(temps[k]) - 10).toFixed(1)}" text-anchor="middle">${Math.round(temps[k])}°</text>`;
-      if (p > 0) g += `<rect class="rb" x="${cx - 9}" y="${176 - p * 0.3}" width="18" height="${p * 0.3}" rx="2"/>`;
+      if (p > 0) g += `<rect class="rb" style="--d:${500 + k * 35}ms" x="${cx - 9}" y="${176 - p * 0.3}" width="18" height="${p * 0.3}" rx="2"/>`;
       if (p >= 10) g += `<text class="t-r" x="${cx}" y="193" text-anchor="middle">${p}%</text>`;
     }
     return `<div class="wx-chart"><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Temperature and chance of rain for the next ${n} hours">${g}</svg></div>`;
+  }
+  // The sky behind the temperature: sun with turning rays, moon and stars, drifting clouds, rain,
+  // lightning or fog, to match the weather right now. Made of plain shapes, so it costs almost nothing.
+  function wxScene(code, day) {
+    const [, ic] = WX(code), kind = ic === "sun" ? "clear" : ic, sky = `${kind}-${day ? "day" : "night"}`;
+    let seed = 7; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+    const cloudSvg = `<svg viewBox="0 0 120 56" aria-hidden="true"><path fill="currentColor" d="M26 54h70a22 22 0 0 0 2-44 30 30 0 0 0-56 6A20 20 0 0 0 26 54z"/></svg>`;
+    const clouds = (n, o) => Array.from({ length: n }, (_, k) => `<div class="cloud" style="top:${6 + rnd() * 70}px;--w:${130 + rnd() * 120}px;--o:${o};--s:${45 + rnd() * 50}s;--dl:-${(rnd() * 60).toFixed(1)}s;--x0:${Math.round(rnd() * 200)}px">${cloudSvg}</div>`).join("");
+    let h = "";
+    if (!day && (kind === "clear" || kind === "partly")) h += Array.from({ length: 34 }, () => `<i class="star" style="left:${(rnd() * 100).toFixed(1)}%;top:${(rnd() * 70).toFixed(1)}%;--t:${(2 + rnd() * 3).toFixed(1)}s;--dl:-${(rnd() * 4).toFixed(1)}s"></i>`).join("");
+    if (kind === "clear" || kind === "partly") h += day ? `<div class="rays"></div><div class="sun"></div>` : `<div class="moon"></div>`;
+    if (kind === "partly") h += clouds(3, 0.8);
+    if (kind === "cloud") h += clouds(5, day ? 0.75 : 0.35);
+    if (kind === "rain" || kind === "storm") h += clouds(4, day ? 0.55 : 0.3) + Array.from({ length: 46 }, () => `<i class="drop" style="left:${(rnd() * 120).toFixed(1)}%;--s:${(0.55 + rnd() * 0.45).toFixed(2)}s;--dl:-${(rnd() * 1.2).toFixed(2)}s"></i>`).join("");
+    if (kind === "storm") h += `<div class="flash"></div><svg class="bolt" viewBox="0 0 24 40" aria-hidden="true"><path fill="currentColor" d="M14 0 2 22h8l-4 18L22 14h-9z"/></svg>`;
+    if (kind === "fog") h += [40, 110, 180].map((t, k) => `<div class="fogband" style="top:${t}px;--s:${14 + k * 5}s"></div>`).join("") + clouds(2, 0.4);
+    return { sky, html: `<div class="sky" aria-hidden="true">${h}</div>` };
+  }
+  // Little gauges for the detail tiles.
+  const gWind = deg => `<svg class="wx-gauge" width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="var(--line)" stroke-width="2"/>`
+    + ["N", "E", "S", "W"].map((c, k) => `<text x="${32 + 21 * Math.sin(k * Math.PI / 2)}" y="${32 - 21 * Math.cos(k * Math.PI / 2) + 3.5}" text-anchor="middle" style="font:700 9px var(--ui);fill:var(--muted)">${c}</text>`).join("")
+    + `<g class="g-arrow" style="--rot:${Math.round((deg + 180) % 360)}deg"><path d="M32 12l6 16h-12z" fill="var(--accent)"/><path d="M32 52V26" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/></g></svg>`;
+  const gRing = (v, colour) => `<svg class="wx-gauge" width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="26" fill="none" stroke="var(--line)" stroke-width="6"/>`
+    + `<circle class="g-ring" cx="32" cy="32" r="26" fill="none" stroke="${colour}" stroke-width="6" stroke-linecap="round" pathLength="100" style="--v:${Math.max(0, Math.min(100, v))}"/></svg>`;
+  function gSun(rise, set, now) {
+    const a = Date.parse(rise), b = Date.parse(set), f = Math.max(0, Math.min(1, (now - a) / (b - a))) || 0;
+    const arc = "M20 92 A 160 160 0 0 1 300 92";
+    return `<svg class="g-sunarc" width="100%" viewBox="0 0 320 112" aria-hidden="true" style="--arc:path('${arc}');--f:${(f * 100).toFixed(1)};--fp:${(f * 100).toFixed(1)}%">`
+      + `<line class="hz" x1="8" x2="312" y1="92" y2="92"/><path class="arc" d="${arc}"/><path class="done" d="${arc}" pathLength="100"/>`
+      + `${f > 0 && f < 1 ? `<circle class="g-sun" r="8"/>` : ""}<text class="lbl" x="20" y="108" text-anchor="middle">${clock(rise)}</text><text class="lbl" x="300" y="108" text-anchor="middle">${clock(set)}</text></svg>`;
+  }
+  function countUp(el, to) {
+    const from = to - 8, t0 = performance.now(), dur = 900;
+    const step = t => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = Math.round(from + (to - from) * e) + "°"; if (k < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
   }
   function renderWeather() {
     const w = state.wx;
@@ -3118,36 +3215,48 @@ const handle = async (m, post) => {
       const n = di + k, [yy, m, dd] = t.split("-").map(Number);
       const name = k === 0 ? "Today" : new Date(yy, m - 1, dd).toLocaleDateString("en-AU", { weekday: "short" });
       const a = dy.temperature_2m_min[n], b = dy.temperature_2m_max[n], p = dy.precipitation_probability_max?.[n] ?? 0, mm = dy.precipitation_sum?.[n] ?? 0;
-      return `<div class="day"><span class="dn">${name}</span>${wxIcon(dy.weather_code[n], 1)}<span class="rainp rn">${p >= 10 ? p + "%" : ""}${mm >= 1 ? `<small>${Math.round(mm)} mm</small>` : ""}</span>`
-        + `<span class="lo">${Math.round(a)}°</span><span class="range"><i style="left:${((a - lo) / span) * 100}%;right:${100 - ((b - lo) / span) * 100}%"></i></span><span class="hi">${Math.round(b)}°</span></div>`;
+      const nowDot = k === 0 && cur.temperature_2m >= a && cur.temperature_2m <= b ? `<b style="left:${((cur.temperature_2m - a) / Math.max(1, b - a)) * 100}%"></b>` : "";
+      return `<div class="day wx-in" style="--d:${260 + k * 60}ms"><span class="dn">${name}</span>${wxIcon(dy.weather_code[n], 1)}<span class="rainp rn">${p >= 10 ? p + "%" : ""}${mm >= 1 ? `<small>${Math.round(mm)} mm</small>` : ""}</span>`
+        + `<span class="lo">${Math.round(a)}°</span><span class="range"><i style="left:${((a - lo) / span) * 100}%;right:${100 - ((b - lo) / span) * 100}%;--d:${380 + k * 60}ms">${nowDot}</i></span><span class="hi">${Math.round(b)}°</span></div>`;
     }).join("");
-    const tile = (k, val, sub) => val == null || val === "" || /NaN|undefined/.test(String(val)) ? "" : `<div class="wx-tile"><div class="k">${k}</div><div class="v">${val}</div>${sub ? `<div class="s">${sub}</div>` : ""}</div>`;
+    let tn = 0;
+    const tile = (k, val, sub, extra = "", cls = "") => val == null || val === "" || /NaN|undefined/.test(String(val)) ? "" : `<div class="wx-tile wx-in ${cls}" style="--d:${500 + (tn++) * 50}ms"><div class="k">${k}</div>${extra}<div class="v">${val}</div>${sub ? `<div class="s">${sub}</div>` : ""}</div>`;
     const uvNow = cur.uv_index ?? 0, uvMax = dy.uv_index_max?.[di];
     const dl = dy.daylight_duration?.[di];
     const updated = new Date(w.at).toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" });
+    // Entrance animations only when the forecast first opens, not when it refreshes underneath you.
+    const fresh = Date.now() - (state.wxOpenedAt || 0) < 800;
+    $("wBody").classList.toggle("still", !fresh);
+    const scene = wxScene(cur.weather_code, cur.is_day);
+    const rainP = dy.precipitation_probability_max?.[di] ?? 0;
+    const nowLocal = Date.now() + ((v.d.utc_offset_seconds ?? 36000) - 0) * 1000;  // the forecast's times are local, so compare in local time
+    const sunNow = Date.parse(new Date(nowLocal).toISOString().slice(0, 16));
     $("wBody").innerHTML = `
-      <div class="wx-place">${esc(w.city)} · ${esc(regionLabel())}</div>
-      <div class="wx-now">${wxIcon(cur.weather_code, cur.is_day)}<span class="big">${Math.round(cur.temperature_2m)}°</span></div>
-      <div class="wx-cond">${wxLabel(cur.weather_code, cur.is_day)}</div>
-      <div class="wx-sub">Feels like ${Math.round(cur.apparent_temperature)}° · H ${Math.round(dy.temperature_2m_max[di])}° L ${Math.round(dy.temperature_2m_min[di])}°</div>
-      <p class="wx-sum">${esc(wxSummary(v))}</p>
-      <div class="group"><h2>Next ${dy.time.length - di} days</h2><div class="card" style="padding:0 14px">${days}</div></div>
-      <div class="group"><h2>Next 24 hours</h2>${wxChart(v)}</div>
+      <div class="wx-hero wx-in" data-sky="${scene.sky}">${scene.html}
+        <div class="wx-place">${esc(w.city)} · ${esc(regionLabel())}</div>
+        <div class="wx-now"><span class="big" id="wxBig">${Math.round(cur.temperature_2m)}°</span></div>
+        <div class="wx-cond">${wxLabel(cur.weather_code, cur.is_day)}</div>
+        <div class="wx-sub">Feels like ${Math.round(cur.apparent_temperature)}° · H ${Math.round(dy.temperature_2m_max[di])}° L ${Math.round(dy.temperature_2m_min[di])}°</div>
+      </div>
+      <p class="wx-sum wx-in" style="--d:160ms">${esc(wxSummary(v))}</p>
+      <div class="group wx-in" style="--d:220ms"><h2>Next ${dy.time.length - di} days</h2><div class="card" style="padding:0 14px">${days}</div></div>
+      <div class="group wx-in" style="--d:420ms"><h2>Next 24 hours</h2>${wxChart(v)}</div>
       <div class="wx-grid">
-        ${tile("Rain today", `${dy.precipitation_probability_max?.[di] ?? 0}%`, `${(dy.precipitation_sum?.[di] ?? 0).toFixed(1)} mm${dy.precipitation_hours?.[di] ? ` over ${Math.round(dy.precipitation_hours[di])} h` : ""}`)}
-        ${tile("Wind", `${Math.round(cur.wind_speed_10m)} km/h`, `${compass(cur.wind_direction_10m)}, gusts ${Math.round(cur.wind_gusts_10m)}${dy.wind_gusts_10m_max ? ` (max ${Math.round(dy.wind_gusts_10m_max[di])})` : ""}`)}
-        ${tile("UV index", Math.round(uvNow), uvMax != null ? `${uvLabel(uvNow)} now · peak ${Math.round(uvMax)}` : uvLabel(uvNow))}
-        ${tile("Humidity", `${Math.round(cur.relative_humidity_2m)}%`, cur.dew_point_2m != null ? `Dew point ${Math.round(cur.dew_point_2m)}°` : "")}
+        ${tile("Rain today", `${rainP}%`, `${(dy.precipitation_sum?.[di] ?? 0).toFixed(1)} mm${dy.precipitation_hours?.[di] ? ` over ${Math.round(dy.precipitation_hours[di])} h` : ""}`, gRing(rainP, "#4c9be8"))}
+        ${tile("Wind", `${Math.round(cur.wind_speed_10m)} km/h`, `${compass(cur.wind_direction_10m)}, gusts ${Math.round(cur.wind_gusts_10m)}${dy.wind_gusts_10m_max ? ` (max ${Math.round(dy.wind_gusts_10m_max[di])})` : ""}`, cur.wind_direction_10m != null ? gWind(cur.wind_direction_10m) : "")}
+        ${tile("Humidity", `${Math.round(cur.relative_humidity_2m)}%`, cur.dew_point_2m != null ? `Dew point ${Math.round(cur.dew_point_2m)}°` : "", gRing(cur.relative_humidity_2m, "#2bb3a3"))}
+        ${tile("UV index", `${Math.round(uvNow)} · ${uvLabel(uvNow)}`, uvMax != null ? `Peak ${Math.round(uvMax)} today` : "", `<div class="g-uv"><i class="g-mark" style="--x:${Math.min(100, (uvNow / 11) * 100)}%"></i></div>`, "wide")}
+        ${dy.sunrise?.[di] ? tile("Sun", dl ? `${Math.floor(dl / 3600)} h ${Math.round((dl % 3600) / 60)} min of daylight` : clock(dy.sunset[di]), "", gSun(dy.sunrise[di], dy.sunset[di], sunNow), "wide") : ""}
         ${tile("Cloud", cur.cloud_cover != null ? `${Math.round(cur.cloud_cover)}%` : null, "")}
         ${tile("Pressure", cur.pressure_msl != null ? `${Math.round(cur.pressure_msl)}` : null, "hPa")}
         ${tile("Visibility", cur.visibility != null ? `${cur.visibility >= 10000 ? "10+" : (cur.visibility / 1000).toFixed(1)} km` : null, "")}
-        ${tile("Sunrise", clock(dy.sunrise[di]), "")}
-        ${tile("Sunset", clock(dy.sunset[di]), dl ? `${Math.floor(dl / 3600)} h ${Math.round((dl % 3600) / 60)} min of daylight` : "")}
       </div>
       <p class="wx-foot">${w.snapshot ? "Forecast saved with the news at" : "Updated"} ${updated} · Open-Meteo</p>`;
+    if (fresh && !matchMedia("(prefers-reduced-motion: reduce)").matches) countUp($("wxBig"), Math.round(cur.temperature_2m));
   }
   function openWeather() {
     if (!state.wx) { toast("The weather isn't available right now"); return; }
+    state.wxOpenedAt = Date.now();
     renderWeather();
     showSheet("weather");
     loadWeather();
