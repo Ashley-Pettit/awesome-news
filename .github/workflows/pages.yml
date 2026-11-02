@@ -38,6 +38,7 @@ jobs:
         # devices that enter it in Settings > Reading can read it. Without the secret, that part is skipped.
         env:
           NEWS_KEY: ${{ secrets.NEWS_KEY }}
+          YT_API_KEY: ${{ secrets.YT_API_KEY }}  # optional: TV keeps working when YouTube's free feed is down
         run: python fetcher.py _site/data --regions all --images url --text cc --interests all --private-text NEWS_KEY --archive-from https://ashley-pettit.github.io/awesome-news/
 
       - name: Build the page

@@ -2922,7 +2922,7 @@ const handle = async (m, post) => {
     if (L.on) stopListen();
     const all = TV.items.length ? TV.items : await loadTV();
     TV.items = all.filter(i => !tvBad.has(i.id));
-    if (!TV.items.length) { toast("No TV clips yet. They arrive with the next news update."); return; }
+    if (!TV.items.length) { toast("TV is off for now. YouTube's news feed is down, and clips come back with the next update."); return; }
     $("tvsLogo").src = APP_ICON;
     $("tvs").hidden = false; document.body.classList.add("tvson");
     TV.idx = 0; TV.durs = {}; TV.cap = 30 * 60; TV.played = 0; $("tvsEnd").hidden = true;

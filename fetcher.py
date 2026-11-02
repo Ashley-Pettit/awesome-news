@@ -29,6 +29,8 @@ import json
 import os
 import re
 import shutil
+import time
+import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
@@ -526,24 +528,44 @@ def embeddable(vid):
 
 def fetch_tv(now, errors):
     lanes = []
+    key = os.environ.get("YT_API_KEY", "").strip()
     for name, cid, days in TV_CHANNELS:
-        try:
-            root = parse_xml(get(f"https://www.youtube.com/feeds/videos.xml?channel_id={cid}", timeout=20))
-        except Exception as e:
-            errors.append(f"TV {name}: {e}"[:160])
+        entries = None
+        for attempt in range(2):  # YouTube's free feed is patchy, so try twice
+            try:
+                root = parse_xml(get(f"https://www.youtube.com/feeds/videos.xml?channel_id={cid}", timeout=20))
+                entries = [(
+                    (en.findtext("yt:videoId", namespaces=YT_NS) or "").strip(),
+                    next((l.get("href", "") for l in en.findall("atom:link", YT_NS)), ""),
+                    en.findtext("atom:title", namespaces=YT_NS),
+                    en.findtext("atom:published", namespaces=YT_NS),
+                    en.findtext("media:group/media:description", namespaces=YT_NS) or "",
+                ) for en in root.findall("atom:entry", YT_NS)]
+                break
+            except Exception as e:
+                err = e
+                time.sleep(2)
+        if entries is None and key:
+            # YouTube's official API (a free key) when the feed is down: the channel's uploads list.
+            try:
+                q = urllib.parse.urlencode({"part": "snippet", "playlistId": "UU" + cid[2:], "maxResults": 15, "key": key})
+                data = json.loads(get(f"https://www.googleapis.com/youtube/v3/playlistItems?{q}", timeout=20))
+                entries = [((sn.get("resourceId") or {}).get("videoId", ""), "", sn.get("title", ""), sn.get("publishedAt", ""), sn.get("description", ""))
+                           for sn in (x.get("snippet") or {} for x in data.get("items", []))]
+            except Exception as e:
+                err = e
+        if entries is None:
+            errors.append(f"TV {name}: {err}"[:160])
             continue
         lane = []
-        for en in root.findall("atom:entry", YT_NS):
-            vid = (en.findtext("yt:videoId", namespaces=YT_NS) or "").strip()
-            link = next((l.get("href", "") for l in en.findall("atom:link", YT_NS)), "")
-            full = clean(en.findtext("atom:title", namespaces=YT_NS))
-            pub = parse_date(en.findtext("atom:published", namespaces=YT_NS))
+        for vid, link, full, pub, desc in entries:
+            full = clean(full)
+            pub = parse_date(pub)
             if not vid or "/shorts/" in link or not pub or now - pub > timedelta(days=days):
                 continue
             if TV_SKIP.search(full) or SPORT_TITLE.search(full) or full.count(";") >= 2:  # "A; B; C" is a bulletin of other clips
                 continue
             title = TV_TAIL.sub("", full).strip() or full
-            desc = en.findtext("media:group/media:description", namespaces=YT_NS) or ""
             if re.search(r"(?i)\bfull (episode|bulletin|program|show)\b|^FULL EPISODE", desc[:400]):
                 continue
             desc = next((ln.strip() for ln in desc.splitlines() if ln.strip() and not re.match(r"(?i)(subscribe|read more|follow|#|http|note:)", ln.strip())), "")
@@ -878,6 +900,15 @@ def main():
     except Exception as e:
         tv = []
         errors.append(f"TV: {e}"[:160])
+    if len(tv) < 6 and a.archive_from:
+        # YouTube's feed was down: keep the last good clips (up to four days old) so TV still works.
+        try:
+            prev = json.loads(get(a.archive_from.rstrip("/") + f"/data/tv.json?v={int(now.timestamp())}", timeout=20)).get("items", [])
+            have = {it["id"] for it in tv}
+            keep = (now - timedelta(days=4)).strftime("%Y-%m-%dT%H:%M:%SZ")
+            tv += [it for it in prev if it.get("id") not in have and it.get("published", "") >= keep]
+        except Exception as e:
+            errors.append(f"TV carry-over: {e}"[:160])
     with open(os.path.join(a.out, "tv.json"), "w") as f:
         json.dump({"updatedAt": stamp, "items": tv}, f, ensure_ascii=False, separators=(",", ":"))
     for n, ch in enumerate(chunks, 1):
