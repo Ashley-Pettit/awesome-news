@@ -664,6 +664,7 @@ body.playing .sheet { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 11
 .srcpick .pchip[aria-pressed="false"] { color: var(--muted); }
 .pchip .n { font-size: 0.72rem; color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
 #weather { z-index: 43; }
+body.wxlisten #weather { z-index: 60; }
 /* ---------- Weather: Brisbane Sky (Ash's design). A full-screen 3D sky with the readout floating over it. ---------- */
 #weather { --bs-ink: #f3f6fb; --bs-dim: rgba(243, 246, 251, .72); --bs-faint: rgba(243, 246, 251, .46); --bs-scrim: rgba(8, 14, 30, .42); --bs-line: rgba(243, 246, 251, .18);
   --bs-jac: #b79cf0; --bs-jac-deep: #7d5fd1; --bs-storm: #ffd166; --bs-display: "Big Shoulders Display", "Arial Narrow", "Helvetica Neue", Impact, sans-serif; --bs-body: "Atkinson Hyperlegible", "Trebuchet MS", Verdana, sans-serif;
@@ -684,6 +685,8 @@ body.playing .sheet { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 11
 .bs-tempwrap { display: flex; align-items: flex-end; gap: 14px; }
 .bs-hilo { display: grid; gap: 4px; padding-bottom: 12px; font-family: var(--ui); font-size: 1rem; color: var(--bs-dim); }
 .bs-hilo b { color: var(--bs-ink); font-weight: 750; }
+.bs-hilo span { white-space: nowrap; }
+.bs-hilo small { display: block; font-size: .82em; }
 .bs-when { font-family: var(--ui); font-weight: 650; font-size: 0.9rem; color: var(--bs-dim); }
 .bs-temp { font-family: var(--display); font-weight: 800; font-size: clamp(5.6rem, 30vw, 9rem); line-height: 0.92; letter-spacing: -0.06em; font-variant-numeric: tabular-nums; font-variation-settings: "opsz" 96; }
 .bs-temp sup { font-size: 0.45em; font-weight: 600; vertical-align: top; position: relative; top: 0.12em; margin-left: 0.04em; letter-spacing: 0; }
@@ -1580,11 +1583,27 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     wx.hidden = p.kind !== "open"; cue.hidden = p.kind !== "cue";
     np.classList.toggle("calm", p.kind === "open" || p.kind === "cue");
     if (p.kind === "open" && was !== "open") { wx.innerHTML = npWeatherHTML(); npCount(wx.querySelector("[data-count]")); }
+    // While the weather is read out, the 3D Brisbane sky plays over the player, then steps aside for the stories.
+    if (p.kind === "open") wxListenOn(); else wxListenOff();
     if (p.kind === "cue") {
       const label = p.sec === "top" ? "Top stories" : p.sec === "local news" ? "Local news" : p.sec === "more headlines" ? "More headlines" : p.sec;
       if (was !== "cue:" + label) { cue.dataset.k = label; cue.innerHTML = `<small class="np-in">Up next</small><span class="t np-in" style="--i:1">${esc(label.charAt(0).toUpperCase() + label.slice(1))}</span>`; }
     }
     $("npCap").textContent = p.kind === "title" ? "" : p.text;
+  }
+  function wxListenOn() {
+    if (!state.wx || document.body.classList.contains("wxlisten") || !$("weather").hidden) return;
+    document.body.classList.add("wxlisten");
+    BS.view = { mode: "live", ms: Date.now(), play: true, day: null };
+    renderWeather();
+    const el = $("weather"); el.hidden = false; el.scrollTop = 0;
+    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("open")));
+  }
+  function wxListenOff() {
+    if (!document.body.classList.contains("wxlisten")) return;
+    document.body.classList.remove("wxlisten");
+    const el = $("weather"); el.classList.remove("open");
+    setTimeout(() => { if (!el.classList.contains("open")) el.hidden = true; }, 320);
   }
   function driveOpening() {
     let wx = "";
@@ -1817,6 +1836,7 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
   }
   function hideSheet(id, fromPop) {
     const el = $(id);
+    if (id === "weather" && document.body.classList.contains("wxlisten")) { wxListenOff(); return; }
     if (!el.classList.contains("open")) return;
     el.classList.remove("open");
     setTimeout(() => { if (!el.classList.contains("open")) el.hidden = true; }, 320);
@@ -2877,6 +2897,7 @@ const handle = async (m, post) => {
   }
   function skipListen() { L.token++; L.sid++; hush(); L.paused = false; nextStory(); }
   function stopListen() {
+    wxListenOff();
     L.on = false; L.paused = false; L.token++; L.sid++; L.aiWait = false;
     hush(); npClose();
     if ($("tvs").hidden) cmdStop();
@@ -3392,7 +3413,8 @@ const handle = async (m, post) => {
       const n = di + k, code = dy.weather_code[n], p = dy.precipitation_probability_max?.[n] ?? 0, mm = dy.precipitation_sum?.[n] ?? 0, g = dy.wind_gusts_10m_max?.[n] ?? 0;
       const [yy, mo, dd] = date.split("-").map(Number), hi = dy.temperature_2m_max[n];
       const note = k === 0 ? wxSummary(v) : `${wxLabel(code, 1)}, top of ${Math.round(hi)}°. ${p}% chance of rain${mm >= 1 ? `, around ${Math.round(mm)} mm` : ""}${g >= 50 ? `. Gusts to ${Math.round(g)} km/h` : ""}.`;
-      return { date, name: new Date(yy, mo - 1, dd).toLocaleDateString("en-AU", { weekday: "short" }), hi: Math.round(hi), lo: Math.round(dy.temperature_2m_min[n]), rain: p,
+      const hs = hr.time.flatMap((t, j) => t.startsWith(date) ? [j] : []), top = a => hs.length && a ? Math.round(Math.max(...hs.map(j => a[j] ?? -99))) : null;
+      return { date, feels: top(hr.apparent_temperature) ?? Math.round(dy.apparent_temperature_max?.[n] ?? hi), wind: top(hr.wind_speed_10m) ?? Math.round(dy.wind_speed_10m_max?.[n] ?? 0), name: new Date(yy, mo - 1, dd).toLocaleDateString("en-AU", { weekday: "short" }), hi: Math.round(hi), lo: Math.round(dy.temperature_2m_min[n]), rain: p,
         mm: mm >= 0.5 ? `${mm < 10 ? mm.toFixed(1) : Math.round(mm)} mm` : "0 mm", kind: bsKindOf(code), uv: Math.round(dy.uv_index_max?.[n] ?? 0), severe: code >= 95 && (mm >= 10 || g >= 60), note };
     });
     const hours = new Map(hr.time.map((t, i) => [t.slice(0, 13), i]));
@@ -3459,16 +3481,15 @@ const handle = async (m, post) => {
     if (now && v.mode === "live") {
       const c = D.cur;
       temp = Math.round(c.temperature_2m); what = wxLabel(c.weather_code, c.is_day); when = "Now";
-      chips = [["Feels like", Math.round(c.apparent_temperature) + "°"], ["Humidity", Math.round(c.relative_humidity_2m) + "%"], ["Wind", Math.round(c.wind_speed_10m) + " km/h"], ["UV today", `${d.uv} ${bsUv(d.uv)}`, "uv"], ["Rain", d.rain + "%"]];
     } else if (i != null) {
       temp = Math.round(hr.temperature_2m[i]); what = wxLabel(hr.weather_code[i], hr.is_day?.[i]); when = `${di ? new Intl.DateTimeFormat("en-AU", { timeZone: D.tz, weekday: "long" }).format(new Date(v.ms)) : "Today"}, ${bsTime(v.ms)}`;
-      chips = [["Feels like", Math.round(hr.apparent_temperature?.[i] ?? hr.temperature_2m[i]) + "°"], ["Rain", (hr.precipitation_probability?.[i] ?? 0) + "%"], ["Wind", Math.round(hr.wind_speed_10m?.[i] ?? 0) + " km/h"], ["UV", `${Math.round(hr.uv_index?.[i] ?? 0)} ${bsUv(hr.uv_index?.[i] ?? 0)}`, "uv"]];
     } else {
       temp = d.hi; what = BS_KIND[d.kind]; when = `Forecast high for ${bsDate(bsMidnight(d.date) + 432e5)}`;
-      chips = [["Low", d.lo + "°"], ["Rain", d.rain + "%"], ["Rainfall", d.mm], ["UV", `${d.uv} ${bsUv(d.uv)}`, "uv"]];
     }
+    // The chips are for the whole day, so they don't jump around as the timeline plays.
+    chips = [["Feels like up to", d.feels + "°"], ["Rain chance", d.rain + "%"], ["Rainfall", d.mm], ["Wind up to", d.wind + " km/h"], ["UV", `${d.uv} ${bsUv(d.uv)}`, "uv"]];
     $("bsTemp").textContent = d.hi; $("bsWhat").textContent = what; $("bsWhen").textContent = `${di ? new Intl.DateTimeFormat("en-AU", { timeZone: D.tz, weekday: "long" }).format(new Date(v.ms)) : "Today"}'s high`;
-    $("bsHiLo").innerHTML = `<span>Low <b>${d.lo}°</b></span><span>${now && v.mode === "live" ? "Now" : bsTime(bsStep(v.ms))} <b>${temp}°</b></span>`;
+    $("bsHiLo").innerHTML = `<span>Low <b>${d.lo}°</b></span><span><b>${temp}°</b> <small>at ${bsTime(bsStep(now && v.mode === "live" ? Date.now() : v.ms)).replace(" ", "")}</small></span>`;
     if (BS.rainDay !== d.date) { BS.rainDay = d.date; bsRain(d); }
     $("bsChips").innerHTML = chips.map(c => `<span class="bs-chip${c[2] ? " " + c[2] : ""}">${c[0]} <b>${c[1]}</b></span>`).join("");
     $("bsNote").textContent = `${d.note}${d.severe ? " Severe weather warnings may apply." : ""}`;
