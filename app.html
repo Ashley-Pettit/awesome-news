@@ -1718,8 +1718,9 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     const wx = $("npWx"), cue = $("npCue"), np = $("np");
     const was = wx.hidden ? (cue.hidden ? "" : "cue:" + cue.dataset.k) : "open";
     // The opening starts on a quick "Awesome News" title; once it gets to the weather, the full 3D weather page takes over.
-    wx.hidden = true; cue.hidden = p.kind !== "cue" && p.kind !== "open";
-    np.classList.toggle("calm", p.kind === "open" || p.kind === "cue");
+    // Section cues ("Next, AI.") are just said, over the story's own picture and headline: no big header screen.
+    wx.hidden = true; cue.hidden = p.kind !== "open";
+    np.classList.toggle("calm", p.kind === "open");
     if (p.kind === "open") npHello();
     if (p.kind === "wk") wxShowDay(p.date);  // the week ahead: the weather steps through each day as it's read
     else if (p.kind !== "open") wxListenOff();
@@ -3108,12 +3109,11 @@ const handle = async (m, post) => {
         // quietly for a few seconds rather than switching to the phone's voice.
         pre.push(t ? { text: t, para: -1, kind: "open" } : { text: driveOpening(), para: -1, kind: "open", silent: usePre() });
       }
-      // After the next button, just the section's name ("Finance."), not "Now, Finance."
       if (sec && sec !== L.lastSec) {
-        // After the next button: just the name ("AI."). Otherwise the way in takes turns: "Now, AI.", "Next, AI.", "On to AI."...
+        // The way in takes turns: "Now, AI.", "Next, AI.", "On to AI."...
         const way = CUE_WAYS[(L.cueN = (L.cueN || 0) + 1) % CUE_WAYS.length];
-        pre.push(L.skipped ? { text: sec === "top" ? "Top stories." : `${sec.charAt(0).toUpperCase()}${sec.slice(1)}.`, para: -1, kind: "cue", sec, opt: true }
-          : sec === "top" ? { text: "Here are the top stories.", para: -1, kind: "cue", sec }
+        // After the next button: straight to the headline, nothing said first.
+        if (!L.skipped) pre.push(sec === "top" ? { text: "Here are the top stories.", para: -1, kind: "cue", sec }
           : { text: way.replace("{}", sec), alt: `Now, ${sec}.`, para: -1, kind: "cue", sec });  // alt: if that way isn't recorded yet
       }
       L.skipped = false;

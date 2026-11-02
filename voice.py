@@ -255,12 +255,9 @@ def plan(data, vkey):
             pass
     for t in ["Here are the top stories.", SAMPLE, MORE] + [w.format(x) for x in ("local news", "more headlines") for w in CUE_WAYS]:
         want(t)
-    for t in ["Top stories.", "Local news.", "More headlines."]:
-        want(t)  # the short cue after the next button is pressed
     for lbl in CORE_LABELS + [x["label"] for x in status.get("interests", [])]:
         for w in CUE_WAYS:
             want(w.format(lbl))
-        want(f"{lbl[:1].upper()}{lbl[1:]}.")
     for n in range(1, 9):
         want(f"Story {n}.")
 
