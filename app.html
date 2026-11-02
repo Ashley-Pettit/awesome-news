@@ -3765,7 +3765,9 @@ const handle = async (m, post) => {
     else Object.assign(BS.target, { cover: s.cover, rain: s.rain, storm: s.storm });
     BS.target.wind = s.wind ?? D.cur.wind_speed_10m ?? 15;
     // Listen: the sky moves every step, the words every 2 seconds (every 10 steps, 50 minutes), so the text doesn't flicker.
-    const key = v.jump ? `j|${v.day}|${v.play}|${Math.floor((v.n || 0) / 10)}` : `${bsHourKey(v.ms)}|${v.mode}|${v.play}|${Math.floor(bsMins(v.ms) / 15)}`;
+    // Playing: the sky moves smoothly, the words only change every 2 seconds (30 minutes; 50 while listening).
+    const key = v.jump ? `j|${v.day}|${v.play}|${Math.floor((v.n || 0) / 10)}` : v.play ? `p|${v.mode}|${Math.floor(v.ms / 18e5)}` : `${bsHourKey(v.ms)}|${v.mode}|${v.play}|${Math.floor(bsMins(v.ms) / 15)}`;
+    const shownMs = v.jump ? bsMidnight(v.day) + v.dawn * 60000 + Math.floor((v.n || 0) / 10) * 10 * v.jump * 1000 : v.play && v.mode !== "live" ? Math.floor(v.ms / 18e5) * 18e5 : bsStep(v.ms);
     if (!force && key === BS.shown) return;
     BS.shown = key;
     const di = bsDayIndex(), d = D.days[di], i = bsHour(v.ms), hr = D.hr, now = Math.abs(v.ms - Date.now()) < 15 * 60000;
@@ -3782,12 +3784,12 @@ const handle = async (m, post) => {
     // The chips are for the whole day, so they don't jump around as the timeline plays.
     chips = [["Feels like", d.feels + "°"], ["Wind", d.wind + " km/h"], ["UV", `${d.uv} ${bsUv(d.uv)}`, "uv"]];
     $("bsTemp").textContent = d.hi; $("bsWhat").textContent = what; $("bsWhen").textContent = `${di ? new Intl.DateTimeFormat("en-AU", { timeZone: D.tz, weekday: "long" }).format(new Date(v.ms)) : "Today"}'s high`;
-    $("bsHiLo").innerHTML = `<span>Low <b>${d.lo}°</b></span><span><b>${temp}°</b> <small>${bsTime(v.jump ? bsMidnight(v.day) + v.dawn * 60000 + Math.floor((v.n || 0) / 10) * 10 * v.jump * 1000 : bsStep(v.ms)).replace(" ", "")}</small></span>`;
+    $("bsHiLo").innerHTML = `<span>Low <b>${d.lo}°</b></span><span><b>${temp}°</b> <small>${bsTime(shownMs).replace(" ", "")}</small></span>`;
     if (BS.rainDay !== d.date) { BS.rainDay = d.date; bsRain(d); }
     $("bsChips").innerHTML = chips.map(c => `<span class="bs-chip${c[2] ? " " + c[2] : ""}">${c[0]} <b>${c[1]}</b></span>`).join("");
     $("bsNote").textContent = `${d.note}${d.severe ? " Severe weather warnings may apply." : ""}`;
     const inp = $("bsHourIn"); if (document.activeElement !== inp) inp.value = bsMins(v.ms);
-    $("bsHourOut").textContent = now && v.mode === "live" && !v.play ? "Now" : bsTime(bsStep(v.ms));
+    $("bsHourOut").textContent = now && v.mode === "live" && !v.play ? "Now" : bsTime(shownMs);
   }
   // When in the day it's likely to rain: a strip over the timeline, and a line saying when.
   // When in the day it's likely to rain, on the right of the readout.
@@ -3996,6 +3998,7 @@ const handle = async (m, post) => {
     }
     else if (v.mode === "live") v.ms = Date.now();
     bsApply(false);
+    if (v.play && !v.jump) { const inp = $("bsHourIn"); if (inp && document.activeElement !== inp) inp.value = bsMins(v.ms); }  // the slider glides with the sky
     if (BS.sunKey !== bsKey(v.ms)) bsTick();
     if (!BS.B) return;
     const B = BS.B, W = BS.W, r = B.renderer, cam = B.camera, U = B.skyU, st = BS.state, tg = BS.target;
