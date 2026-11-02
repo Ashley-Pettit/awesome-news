@@ -38,7 +38,7 @@ jobs:
         # devices that enter it in Settings > Reading can read it. Without the secret, that part is skipped.
         env:
           NEWS_KEY: ${{ secrets.NEWS_KEY }}
-        run: python fetcher.py _site/data --regions all --images url --text cc --interests all --private-text NEWS_KEY
+        run: python fetcher.py _site/data --regions all --images url --text cc --interests all --private-text NEWS_KEY --archive-from https://ashley-pettit.github.io/awesome-news/
 
       - name: Build the page
         run: python build.py _site

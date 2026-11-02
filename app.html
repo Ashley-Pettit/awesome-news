@@ -458,6 +458,17 @@ body.playing .sheet { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 11
 @keyframes slideR { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: none; } }
 
 /* ---------- Search ---------- */
+.topsearch { display: flex; align-items: center; gap: 10px; width: 100%; height: 46px; margin-top: 12px; padding: 0 14px; border-radius: 14px;
+  background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--line); color: var(--muted); font-size: 0.98rem; text-align: left; }
+.topsearch:active { transform: scale(0.99); }
+.topsearch svg { width: 20px; height: 20px; flex: none; }
+.topsearch span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topsearch kbd { font-size: 0.72rem; padding: 2px 7px; border-radius: 6px; box-shadow: inset 0 0 0 1px var(--line); color: var(--faint); }
+@media (hover: none) { .topsearch kbd { display: none; } }
+.swhen { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.swhen button { padding: 5px 10px; border-radius: 999px; font-size: 0.76rem; font-weight: 650; color: var(--muted); }
+.swhen button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+.olddate { white-space: nowrap; }
 .sbox { position: sticky; top: 54px; z-index: 1; background: var(--bg); padding-block: 4px 10px; }
 .sfield { display: flex; align-items: center; gap: 10px; padding: 0 8px 0 14px; height: 50px; border-radius: 14px; background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--line); }
 .sfield:focus-within { box-shadow: inset 0 0 0 2px var(--accent); }
@@ -666,6 +677,9 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
         <button class="wx" type="button" id="wx" data-open-weather aria-label="Open the full forecast" hidden></button>
       </div>
       <button class="week" type="button" id="wxWeek" data-open-weather aria-label="Open the full forecast" hidden></button>
+      <button class="topsearch" type="button" data-open-search aria-label="Search all news">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+        <span id="topSearchHint">Search all news</span><kbd>/</kbd></button>
     </header>
   </div>
   <div class="tabs-bar"><div class="wrap"><nav class="tabs" id="tabs" role="tablist" aria-label="Sections"></nav></div></div>
@@ -771,10 +785,11 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     <div class="sbox">
       <form class="sfield" id="sForm" role="search">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
-        <input type="search" id="sInput" placeholder="Search every story" autocomplete="off" enterkeyhint="search" aria-label="Search every story">
+        <input type="search" id="sInput" placeholder="Search all news, not just today" autocomplete="off" enterkeyhint="search" aria-label="Search all news">
         <button type="button" class="sclear" id="sClear" aria-label="Clear search" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
       </form>
       <div class="sfilters" id="sFilters"></div>
+      <div class="swhen" id="sWhen" hidden></div>
     </div>
     <div id="sBodyRes"></div>
   </div>
@@ -1155,7 +1170,8 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     const re = new RegExp(`\\b${topic.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "i");
     return everything().filter(i => re.test(`${i.title} ${i.summary || ""}`)).sort((a, b) => b.published.localeCompare(a.published));
   }
-  const findItem = id => everything().find(i => i.id === id) || state.saved.find(i => i.id === id);
+  const ARCH = { items: [], byId: new Map(), at: "", loading: null };
+  const findItem = id => everything().find(i => i.id === id) || ARCH.byId.get(id) || state.saved.find(i => i.id === id);
 
   // For you: the freshest few from each tab you've switched on, taken in turns
   // so no single topic floods the top. Stories matching your topics go first.
@@ -2007,7 +2023,30 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
   // ======================================================================
   // Search: every headline, summary and full article
   // ======================================================================
-  state.sq = ""; state.sFilter = "all"; state.searchIds = [];
+  state.sq = ""; state.sFilter = "all"; state.sWhen = "any"; state.searchIds = [];
+  // Archive: headlines from the last six months, so search reaches past today's stories.
+  function archItem(x) {
+    const sid = String(x.sec || "").startsWith("local-") ? "local" : (x.sec || "");
+    return { id: x.id, title: x.t, summary: x.s, url: x.u, source: x.src, published: x.p, image: x.img || undefined, _sid: sid, _sec: tagFor(sid) || "", _arch: true };
+  }
+  function loadArchive() {
+    const st = state.status, refs = st?.archive?.chunks || [];
+    if (!refs.length || ARCH.at === st.updatedAt) return Promise.resolve(ARCH.items);
+    if (ARCH.loading) return ARCH.loading;
+    ARCH.loading = (async () => {
+      const v = encodeURIComponent(st.updatedAt);
+      const docs = await Promise.all(refs.map(ref => (state.mode === "claude"
+        ? state.db.doc("archive/" + ref).get().then(sn => sn.exists ? sn.data() : null)
+        : fetch(`data/archive/${ref}.json?v=${v}`).then(r => r.ok ? r.json() : null)).catch(() => null)));
+      const list = [];
+      for (const d of docs) for (const x of d?.items || []) list.push(archItem(x));
+      ARCH.items = list; ARCH.byId = new Map(list.map(i => [i.id, i])); ARCH.at = st.updatedAt;
+      return list;
+    })().finally(() => { ARCH.loading = null; });
+    return ARCH.loading;
+  }
+  const WHEN = { any: ["Any time", Infinity], week: ["Past week", 7], month: ["Past month", 31], today: ["Today", 1.2] };
+  const shortDate = iso => new Intl.DateTimeFormat("en-AU", { day: "numeric", month: "short", year: new Date(iso).getFullYear() === new Date().getFullYear() ? undefined : "numeric", timeZone: TZ }).format(new Date(iso));
   const fullText = new Map();
   let indexing = null, indexedAt = "";
   function buildIndex() {
@@ -2033,7 +2072,11 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     const terms = q.toLowerCase().split(/\s+/).filter(w => w.length > 1);
     if (!terms.length) return { terms, res: [] };
     const res = [];
-    for (const i of everything()) {
+    const today = everything(), have = new Set(today.map(i => i.id));
+    const days = WHEN[state.sWhen]?.[1] ?? Infinity;
+    const pool = [...today, ...ARCH.items.filter(i => !have.has(i.id) && !(S.hiddenSources || []).some(h => i.source.startsWith(h)))];
+    for (const i of pool) {
+      if (days !== Infinity && Date.now() - Date.parse(i.published) > days * 86400e3) continue;
       const title = i.title.toLowerCase(), head = `${title} ${String(i.summary || "").toLowerCase()} ${i.source.toLowerCase()} ${(i._sec || "").toLowerCase()}`;
       const body = fullText.get(i.id) || "";
       let score = 0, inBody = false, ok = true;
@@ -2043,7 +2086,7 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
         else if (body.includes(t)) { score += 1 + Math.min(3, body.split(t).length - 2) * 0.5; inBody = true; }
         else { ok = false; break; }
       }
-      if (ok) res.push({ i, inBody, score: score + Math.max(0, 3 - (Date.now() - Date.parse(i.published)) / 86400e3) });
+      if (ok) res.push({ i, inBody, score: score + Math.max(0, 3 - (Date.now() - Date.parse(i.published)) / 86400e3) - Math.min(2, (Date.now() - Date.parse(i.published)) / (60 * 86400e3)) });
     }
     res.sort((a, b) => b.score - a.score);
     return { terms, res };
@@ -2067,16 +2110,18 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     $("sClear").hidden = !q;
     const box = $("sBodyRes"), fbox = $("sFilters");
     if (!q) {
-      fbox.innerHTML = "";
+      fbox.innerHTML = ""; $("sWhen").hidden = true;
       const recent = store.get("brief.recentQ", []), hot = state.loaded ? trending() : [];
       const chips = list => `<div class="pick">${list.map(w => `<button type="button" data-q="${esc(w)}">${esc(w)}</button>`).join("")}</div>`;
       box.innerHTML = (recent.length ? `<div class="suggest"><h2>Recent</h2>${chips(recent)}</div>` : "")
         + (S.topics.length ? `<div class="suggest"><h2>Your topics</h2>${chips(S.topics)}</div>` : "")
         + (hot.length ? `<div class="suggest"><h2>In the news today</h2>${chips(hot)}</div>` : "")
-        + `<p class="hint" style="margin-top:22px">Searches every headline${state.status?.textChunks?.length || fullOn() ? " and the full text of every article" : ""}. Press <kbd>/</kbd> to search from anywhere.</p>`;
+        + `<p class="hint" style="margin-top:22px">${archHint()} Press <kbd>/</kbd> to search from anywhere.</p>`;
       return;
     }
     const { terms, res } = runSearch(q);
+    $("sWhen").hidden = false;
+    $("sWhen").innerHTML = Object.entries(WHEN).map(([k, [label]]) => `<button type="button" data-swhen="${k}" aria-pressed="${state.sWhen === k}">${label}</button>`).join("");
     const bySec = new Map();
     res.forEach(r => bySec.set(r.i._sid, (bySec.get(r.i._sid) || 0) + 1));
     if (state.sFilter !== "all" && !bySec.has(state.sFilter)) state.sFilter = "all";
@@ -2084,13 +2129,13 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
       ...[...bySec.entries()].sort((a, b) => b[1] - a[1]).map(([sid, n]) => `<button type="button" data-sfilter="${esc(sid)}" aria-pressed="${state.sFilter === sid}">${esc(tagFor(sid) || sid)}<span class="n">${n}</span></button>`)].join("") : "";
     const shown = (state.sFilter === "all" ? res : res.filter(r => r.i._sid === state.sFilter)).slice(0, 80);
     state.searchIds = shown.map(r => r.i.id);
-    const busy = indexing ? `<span class="live busy"></span>Searching inside full articles…` : "";
+    const busy = ARCH.loading ? `<span class="live busy"></span>Searching older stories…` : indexing ? `<span class="live busy"></span>Searching inside full articles…` : "";
     box.innerHTML = `<div class="sstat">${busy || `${res.length} ${res.length === 1 ? "story" : "stories"} match`}</div>`
       + (shown.length ? `<div class="rows sres">${shown.map(r => `<article class="story item${readCls(r.i)}"><div class="body">
           <h3 class="h">${link(r.i, marked(r.i.title, terms)).replace("data-open=", 'data-list="search" data-open=')}</h3>
           <p class="snip">${snippet(r, terms)}</p>
-          <div class="row">${meta(r.i, true)}${saveBtn(r.i)}</div></div>${pic(r.i)}</article>`).join("")}</div>`
-        : indexing ? "" : emptyHTML("No stories match", `Nothing today mentions “${esc(q)}”. Try fewer or different words.`, I.search));
+          <div class="row">${meta(r.i, true).replace(/<time[^>]*>[^<]*<\/time>/, m => r.i._arch && Date.now() - Date.parse(r.i.published) > 6 * 86400e3 ? `<time class="olddate" datetime="${esc(r.i.published)}">${esc(shortDate(r.i.published))}</time>` : m)}${saveBtn(r.i)}</div></div>${pic(r.i)}</article>`).join("")}</div>`
+        : indexing || ARCH.loading ? "" : emptyHTML("No stories match", `Nothing ${state.sWhen === "any" ? "in the last six months" : WHEN[state.sWhen][0].toLowerCase()} mentions “${esc(q)}”. Try fewer or different words${state.sWhen !== "any" ? ", or search any time" : ""}.`, I.search));
   }
   let sTimer;
   document.addEventListener("input", e => {
@@ -2105,7 +2150,13 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     state.sq = q; renderSearch(); $("sInput").blur();
     if (q) store.set("brief.recentQ", [q, ...store.get("brief.recentQ", []).filter(x => x.toLowerCase() !== q.toLowerCase())].slice(0, 6));
   });
+  function archHint() {
+    const a = state.status?.archive;
+    const base = `Searches every headline${state.status?.textChunks?.length || fullOn() ? " and the full text of today's articles" : ""}`;
+    return a?.count ? `${base}, plus ${a.count.toLocaleString("en-AU")} older stories back to ${shortDate(a.since)}.` : `${base}.`;
+  }
   function openSearch() {
+    loadArchive().then(() => { if (openSheet === "search") renderSearch(); });
     showSheet("search");
     $("sInput").value = state.sq;
     renderSearch();
@@ -2579,9 +2630,9 @@ const handle = async (m, post) => {
     if (t.closest("#tvsNext")) { tvNext(); return; }
     if (t.closest("#tvsSound")) { tvSoundOn(); return; }
     if (t.closest("#tvsShield")) { tvToggle(); return; }
-    if (t.closest("#tvsMore")) { TV.cap += 30 * 60; $("tvsEnd").hidden = true; try { TV.player?.playVideo(); } catch {} return; }
+    if (t.closest("#tvsMore")) { TV.cap += 30 * 60; $("tvsEnd").hidden = true; tvGo(TV.idx + 1); return; }
     const tvb = t.closest("[data-tv]");
-    if (tvb) { const n = Number(tvb.dataset.tv); $("tvsEnd").hidden = true; TV.cap = Infinity; try { TV.player?.playVideoAt(n); } catch {} TV.idx = n; tvNow(n); return; }
+    if (tvb) { const n = Number(tvb.dataset.tv); $("tvsEnd").hidden = true; TV.cap = Infinity; tvGo(n); return; }
     if (t.closest("#npPlay")) { L.paused ? resumeListen() : pauseListen(); return; }
     if (t.closest("#npNext")) { skipListen(); return; }
     if (t.closest("#npStop")) { stopListen(); return; }
@@ -2590,6 +2641,8 @@ const handle = async (m, post) => {
     if (t.closest("#sClear")) { $("sInput").value = ""; state.sq = ""; renderSearch(); $("sInput").focus(); return; }
     const sf = t.closest("[data-sfilter]");
     if (sf) { state.sFilter = sf.dataset.sfilter; renderSearch(); return; }
+    const sw = t.closest("[data-swhen]");
+    if (sw) { state.sWhen = sw.dataset.swhen; renderSearch(); return; }
     const sq = t.closest("[data-q]");
     if (sq) { $("sInput").value = sq.dataset.q; state.sq = sq.dataset.q; state.sFilter = "all"; renderSearch(); return; }
     if (t.closest("#refreshBtn")) { buzz(); refreshNow(); return; }
@@ -2859,49 +2912,71 @@ const handle = async (m, post) => {
     TV.api.catch(() => { TV.api = null; });
     return TV.api;
   }
+  // Clips play one at a time (a YouTube playlist goes blank if any one clip in it is blocked).
+  // A clip the broadcaster won't let play on other sites is skipped and remembered on this device.
+  const tvBad = new Set(store.get("brief.tvBad", []));
+  function markTVBad(id) { tvBad.add(id); store.set("brief.tvBad", [...tvBad].slice(-300)); }
   async function openTV() {
     if (L.on) stopListen();
-    const list = TV.items.length ? TV.items : await loadTV();
-    if (!list.length) { toast("No TV clips yet. They arrive with the next news update."); return; }
+    const all = TV.items.length ? TV.items : await loadTV();
+    TV.items = all.filter(i => !tvBad.has(i.id));
+    if (!TV.items.length) { toast("No TV clips yet. They arrive with the next news update."); return; }
     $("tvsLogo").src = APP_ICON;
     $("tvs").hidden = false; document.body.classList.add("tvson");
-    TV.idx = 0; TV.durs = {}; TV.cap = 30 * 60; $("tvsEnd").hidden = true;
+    TV.idx = 0; TV.durs = {}; TV.cap = 30 * 60; TV.played = 0; $("tvsEnd").hidden = true;
     renderTVList(); tvNow(0);
     keepAwakeTV();
-    const ids = list.map(i => i.id);
     try {
       const YT = await ytAPI();
       if ($("tvs").hidden) return;
       TV.player?.destroy?.();
       $("tvsPlayer").replaceWith(Object.assign(document.createElement("div"), { id: "tvsPlayer" }));
       TV.player = new YT.Player("tvsPlayer", {
-        host: "https://www.youtube-nocookie.com", videoId: ids[0],
+        host: "https://www.youtube-nocookie.com", videoId: TV.items[0].id,
         // Starts muted so phones let it play straight away; YouTube's own controls and links are off.
-        playerVars: { playlist: ids.slice(1).join(","), playsinline: 1, rel: 0, autoplay: 1, mute: TV.sound ? 0 : 1, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1, cc_load_policy: 0 },
+        playerVars: { playsinline: 1, rel: 0, autoplay: 1, mute: TV.sound ? 0 : 1, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1, cc_load_policy: 0, origin: location.origin },
         events: {
-          onReady: e => { try { if (!TV.sound) e.target.mute(); e.target.playVideo(); } catch {} tvTick(); },
+          onReady: e => { try { if (!TV.sound) e.target.mute(); e.target.playVideo(); } catch {} tvTick(); tvWatch(); },
           onStateChange: e => {
-            $("tvsBig").hidden = e.data !== 2;  // paused
+            $("tvsBig").hidden = !(e.data === 2 || e.data === 5);  // paused, or waiting for a tap
+            if (e.data === 0) { TV.played += TV.durs[TV.idx] || 0; tvGo(TV.idx + 1); return; }  // ended
             if (e.data !== 1) return;  // playing
-            const p = TV.player, k = p.getPlaylistIndex?.() ?? 0, d = p.getDuration?.() || 0;
-            if (d) TV.durs[k] = d;
-            if (d > 15 * 60) { p.nextVideo(); return; }  // long programs aren't news clips
-            const before = Object.entries(TV.durs).filter(([n]) => Number(n) < k).reduce((t, [, v]) => t + v, 0);
-            if (before >= TV.cap) { p.pauseVideo(); $("tvsEnd").hidden = false; return; }
-            if (k !== TV.idx) { TV.idx = k; tvNow(k); }
+            clearTimeout(TV.stall);
+            const d = TV.player.getDuration?.() || 0;
+            if (d) TV.durs[TV.idx] = d;
+            if (d > 15 * 60) { tvGo(TV.idx + 1); return; }  // long programs aren't news clips
           },
-          onError: () => { try { TV.player.nextVideo(); } catch {} },
+          onError: () => { const i = TV.items[TV.idx]; if (i) markTVBad(i.id); tvGo(TV.idx + 1); },
         },
       });
       $("tvsSound").hidden = !!TV.sound; $("tvsShield").classList.remove("off");
     } catch {
-      // No player API: a plain embedded playlist still plays the clips in order.
+      // No player API: a plain embed of the first clip still plays.
       const f = document.createElement("iframe");
       f.id = "tvsPlayer"; f.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen"; f.allowFullscreen = true;
-      f.src = `https://www.youtube-nocookie.com/embed/${ids[0]}?playlist=${ids.slice(1).join(",")}&playsinline=1&rel=0&autoplay=1`;
+      f.src = `https://www.youtube-nocookie.com/embed/${TV.items[0].id}?playsinline=1&rel=0&autoplay=1`;
       $("tvsPlayer").replaceWith(f);
       $("tvsShield").classList.add("off"); $("tvsSound").hidden = true;
     }
+  }
+  // Move to clip n (wrapping round to the start), stopping after about 30 minutes until asked for more.
+  function tvGo(n) {
+    const p = TV.player; if (!p?.loadVideoById || $("tvs").hidden) return;
+    if (!TV.items.length) return;
+    if (n >= TV.items.length) n = 0;
+    if (TV.played >= TV.cap) { try { p.pauseVideo(); } catch {} $("tvsEnd").hidden = false; return; }
+    TV.idx = n; tvNow(n);
+    try { p.loadVideoById(TV.items[n].id); if (!TV.sound) p.mute(); } catch {}
+    tvWatch();
+  }
+  // If a clip hasn't started after a while, show the play button (some phones need a tap).
+  function tvWatch() {
+    clearTimeout(TV.stall);
+    TV.stall = setTimeout(() => {
+      const p = TV.player; if (!p?.getPlayerState || $("tvs").hidden) return;
+      const st = p.getPlayerState();
+      if (st !== 1 && st !== 3) $("tvsBig").hidden = false;
+    }, 8000);
   }
   function tvNow(k) {
     const i = TV.items[k]; if (!i) return;
@@ -2915,7 +2990,7 @@ const handle = async (m, post) => {
   function renderTVList() {
     $("tvsList").innerHTML = TV.items.map((i, n) => `<li><button type="button" data-tv="${n}"><img src="${esc(i.thumb)}" alt="" loading="lazy"><span><span class="lc">${esc(i.channel)} · ${esc(ago(i.published))}</span><span class="lt">${esc(i.title)}</span></span></button></li>`).join("");
   }
-  function tvNext() { try { TV.player?.nextVideo?.(); } catch {} }
+  function tvNext() { TV.played += TV.durs[TV.idx] || 0; tvGo(TV.idx + 1); }
   // Sound: phones only allow it after a tap. Try from our button; if the phone still keeps it muted,
   // let the next tap reach the video itself for that one time.
   function tvSoundOn() {
@@ -2930,6 +3005,7 @@ const handle = async (m, post) => {
     const p = TV.player; if (!p?.getPlayerState) return;
     if (!TV.sound) { tvSoundOn(); return; }
     try { p.getPlayerState() === 1 ? p.pauseVideo() : p.playVideo(); } catch {}
+    tvWatch();
   }
   // Progress line, and the shield goes back over the video once sound is on.
   function tvTick() {
@@ -2944,7 +3020,7 @@ const handle = async (m, post) => {
   }
   function closeTV() {
     if ($("tvs").hidden) return;
-    try { TV.player?.destroy?.(); } catch {} TV.player = null; clearInterval(TV.tick);
+    try { TV.player?.destroy?.(); } catch {} TV.player = null; clearInterval(TV.tick); clearTimeout(TV.stall);
     $("tvsPlayer").replaceWith(Object.assign(document.createElement("div"), { id: "tvsPlayer" }));
     $("tvs").hidden = true; document.body.classList.remove("tvson");
     cmdStop();

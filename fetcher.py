@@ -505,6 +505,8 @@ TV_STOP = set("the and for with that this from into over after says said will ha
               "which while more most news just your you its his her our new how why who not can could would should may out off one two all now get got amid "
               "set make made here there abc 7news 9news sbs bbc guardian australia australian".split())
 TV_MAX_SECS = 15 * 60
+ARCHIVE_DAYS = timedelta(days=180)  # how far back search reaches
+ARCHIVE_MAX = 20000
 
 
 def tv_words(title):
@@ -591,6 +593,8 @@ def main():
     ap.add_argument("--images", choices=["url", "inline"], default="url")
     ap.add_argument("--text", choices=["cc", "all", "none"], default="cc")
     ap.add_argument("--interests", choices=["all", "none"], default="none")
+    ap.add_argument("--archive-from", metavar="URL", default="",
+                    help="published site to carry the story archive on from, e.g. https://ashley-pettit.github.io/awesome-news/")
     ap.add_argument("--private-text", metavar="ENV", default="",
                     help="also save every story's full text, encrypted with the passphrase in this environment variable")
     a = ap.parse_args()
@@ -785,7 +789,63 @@ def main():
             except Exception:
                 pass  # no weather is fine; the app hides it
 
+    # 6c. Archive: every story seen in the last ARCHIVE_DAYS, so search reaches past today.
+    # Carried on from the previously published copy and topped up with today's stories.
+    archive = {}
+    if a.archive_from:
+        base = a.archive_from.rstrip("/") + "/data/"
+        try:
+            prev = json.loads(get(base + f"status.json?v={int(now.timestamp())}", timeout=20))
+            for ref in (prev.get("archive") or {}).get("chunks", []):
+                try:
+                    for it in json.loads(get(base + f"archive/{ref}.json", timeout=30)).get("items", []):
+                        archive[it["id"]] = it
+                except Exception as e:
+                    errors.append(f"archive {ref}: {e}"[:160])
+        except Exception as e:
+            errors.append(f"archive: {e}"[:160])
+    first_sec = {}
+    for name, items in sections.items():
+        for st in items:
+            first_sec.setdefault(st["id"], name)
+    # Older items still sitting in the feeds go in too, so search reaches back from day one.
+    feed_home = [(sec, src, u) for sec, src, u, keep in SECTION_FEEDS]
+    for r in regions:
+        feed_home += [(f"local-{r}", src, u) for src, u in REGIONS[r][1]]
+    for iid, _, _, ifeeds, _ in interests:
+        feed_home += [(iid, src, u) for src, u in ifeeds]
+    for sec, src, u in feed_home:
+        for it in raw.get(u, []):
+            st = to_story(it, src, now, ARCHIVE_DAYS)
+            if not st or st["id"] in archive or st["id"] in unique:
+                continue
+            img = st.get("_img") or ""
+            archive[st["id"]] = {"id": st["id"], "t": st["title"], "s": clean(st.get("summary", ""), 200), "u": st["url"],
+                                 "src": src, "p": st["published"], "sec": sec, "img": img if img.startswith("http") else ""}
+    for st in unique.values():
+        img = st.get("_img") or ""
+        archive[st["id"]] = {"id": st["id"], "t": st["title"], "s": clean(st.get("summary", ""), 200), "u": st["url"],
+                             "src": st["source"], "p": st["published"], "sec": first_sec.get(st["id"], ""),
+                             "img": img if img.startswith("http") else ""}
+    cutoff = (now - ARCHIVE_DAYS).strftime("%Y-%m-%dT%H:%M:%SZ")
+    arch = sorted((x for x in archive.values() if x.get("p", "") >= cutoff), key=lambda x: x["p"], reverse=True)[:ARCHIVE_MAX]
+    achunks, cur, size = [], [], 0
+    for x in arch:
+        n = len(json.dumps(x, ensure_ascii=False).encode()) + 1
+        if cur and size + n > 190_000:
+            achunks.append(cur)
+            cur, size = [], 0
+        cur.append(x)
+        size += n
+    if cur:
+        achunks.append(cur)
+
     # 7. Write.
+    shutil.rmtree(os.path.join(a.out, "archive"), ignore_errors=True)
+    os.makedirs(os.path.join(a.out, "archive"), exist_ok=True)
+    for n, ch in enumerate(achunks, 1):
+        with open(os.path.join(a.out, "archive", f"a{n:02d}.json"), "w") as f:
+            json.dump({"items": ch}, f, ensure_ascii=False, separators=(",", ":"))
     for sub in ("feeds", "text"):
         shutil.rmtree(os.path.join(a.out, sub), ignore_errors=True)
         os.makedirs(os.path.join(a.out, sub), exist_ok=True)
@@ -842,6 +902,8 @@ def main():
         "articlesWithText": len(text_ref),
         "articlesWithFeedText": len(feed_ref),
         "tv": len(tv),
+        "archive": {"chunks": [f"a{n:02d}" for n in range(1, len(achunks) + 1)], "count": len(arch),
+                    "since": arch[-1]["p"] if arch else stamp},
         "sourceCounts": dict(sorted(source_counts.items())),
         "errors": errors[:10],
     }
