@@ -1785,13 +1785,14 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
       : c <= 53 ? "some drizzle" : c <= 55 ? "heavy drizzle" : c <= 57 ? "freezing drizzle" : c <= 61 ? "light rain" : c <= 63 ? "rain" : c <= 67 ? "heavy rain" : c <= 77 ? "snow"
       : c <= 80 ? "a few showers" : c <= 81 ? "showers" : c <= 82 ? "heavy showers" : c <= 86 ? "snow showers" : c === 95 ? "storms" : "storms with hail";
   }
+  const rainLine = (p, when) => p >= 90 ? ` It's going to rain ${when}.` : p >= 70 ? ` Rain is likely ${when}.` : ` There's a ${p} percent chance of rain.`;  // rain_line() in voice.py
   function driveOpening() {
     let wx = "";
     try {
       const v0 = state.wx && wxView(state.wx), n = v0 ? v0.di + 1 : -1;
       if (v0 && isNight() && v0.dy.time[n]) {
         const dy = v0.dy, p = dy.precipitation_probability_max?.[n] ?? 0;
-        wx = ` First, tomorrow's weather in ${state.wx.city}. Expect ${wxExpect(dy.weather_code[n])} tomorrow, with a top of ${Math.round(dy.temperature_2m_max[n])} degrees and a low of ${Math.round(dy.temperature_2m_min[n])}.${p >= 20 ? ` There's a ${p} percent chance of rain.` : ""}`;
+        wx = ` First, tomorrow's weather in ${state.wx.city}. Expect ${wxExpect(dy.weather_code[n])} tomorrow, with a top of ${Math.round(dy.temperature_2m_max[n])} degrees and a low of ${Math.round(dy.temperature_2m_min[n])}.${p >= 20 ? rainLine(p, "tomorrow") : ""}`;
       } else if (state.wx) {
         const v = wxView(state.wx);
         wx = ` First, the weather in ${state.wx.city}. It's ${Math.round(v.cur.temperature_2m)} degrees ${wxSay(v.cur.weather_code, v.cur.is_day)}. ${wxSummary(v).replace(/°/g, " degrees").replace(/\((\d+)%\)/g, ", $1 percent").replace(/\((\d+)\)/g, "$1")}`;
@@ -2937,6 +2938,7 @@ const handle = async (m, post) => {
       if (tk !== L.token || sid !== L.sid) return;
       if (usePre()) {  // this bit wasn't made ahead: the phone's own voice reads just this bit
         L.aiWait = false; updatePlayer();
+        if (p.alt && p.text !== p.alt) { p.text = p.alt; clips.delete(sid + ":" + k); ready.delete(sid + ":" + k); speakAI(tk); return; }  // the usual wording instead
         if (p.opt) { L.part++; speakNext(tk); return; }  // a nice-to-have line (who's reporting): just skip it
         if (canSpeak) speakDevice(tk); else { L.part++; speakNext(tk); }
         return;
@@ -3052,7 +3054,7 @@ const handle = async (m, post) => {
       L.queue = fresh;
     }
     if (!L.queue.length) { toast("There's nothing to read out yet"); return; }
-    Object.assign(L, { on: true, paused: false, at: 0, kind, opened: false, lastSec: null, back: null, done: new Set(), listShown: false });
+    Object.assign(L, { on: true, paused: false, at: 0, kind, opened: false, lastSec: null, back: null, done: new Set(), listShown: false, cueN: 0 });
     $("npCust").hidden = true;
     npListHide();
     document.body.classList.add("playing");
@@ -3073,7 +3075,13 @@ const handle = async (m, post) => {
         pre.push(t ? { text: t, para: -1, kind: "open" } : { text: driveOpening(), para: -1, kind: "open", silent: usePre() });
       }
       // After the next button, just the section's name ("Finance."), not "Now, Finance."
-      if (sec && sec !== L.lastSec) pre.push({ text: L.skipped ? (sec === "top" ? "Top stories." : `${sec.charAt(0).toUpperCase()}${sec.slice(1)}.`) : sec === "top" ? "Here are the top stories." : `Now, ${sec}.`, para: -1, kind: "cue", sec, opt: !!L.skipped });  // not recorded yet: just skip it
+      if (sec && sec !== L.lastSec) {
+        // After the next button: just the name ("AI."). Otherwise the way in takes turns: "Now, AI.", "Next, AI.", "On to AI."...
+        const way = CUE_WAYS[(L.cueN = (L.cueN || 0) + 1) % CUE_WAYS.length];
+        pre.push(L.skipped ? { text: sec === "top" ? "Top stories." : `${sec.charAt(0).toUpperCase()}${sec.slice(1)}.`, para: -1, kind: "cue", sec, opt: true }
+          : sec === "top" ? { text: "Here are the top stories.", para: -1, kind: "cue", sec }
+          : { text: way.replace("{}", sec), alt: `Now, ${sec}.`, para: -1, kind: "cue", sec });  // alt: if that way isn't recorded yet
+      }
       L.skipped = false;
       L.lastSec = sec;
     }
@@ -3159,6 +3167,7 @@ const handle = async (m, post) => {
     }
     speakNext(tk);
   }
+  const CUE_WAYS = ["Now, {}.", "Next, {}.", "On to {}.", "Moving on to {}.", "Over to {}."];  // CUE_WAYS in voice.py
   function skipListen() { L.token++; L.sid++; hush(); L.paused = false; L.skipped = true; nextStory(); }
   function stopListen() {
     wxListenOff(); $("npCust").hidden = true;

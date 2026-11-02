@@ -35,7 +35,9 @@ MORE = "There's more on that one in the app."
 SAMPLE = "This is Awesome News. Here's your briefing, read in a natural voice."
 CORE_LABELS = ["Politics", "Finance", "Tech", "AI"]  # SECTIONS in app.html, after Local and Headlines
 LEAD = ["local-qld", "headlines", "politics", "finance", "tech", "ai", "copilot"]
-CUE = re.compile(r"^(Now, .*|Here are the top stories\.|Story \d+\.)$")
+# How a new section is introduced, taking turns so it doesn't always start "Now, ..." (CUE_WAYS in app.html).
+CUE_WAYS = ["Now, {}.", "Next, {}.", "On to {}.", "Moving on to {}.", "Over to {}."]
+CUE = re.compile(r"^(Now, .*|Next, .*|On to .*|Moving on to .*|Over to .*|Here are the top stories\.|Story \d+\.)$")
 
 # Said differently from how it's written. Only the sound changes; the key stays on the app's text.
 SAY = [(r"\b7NEWS\b", "Seven News"), (r"\b9News\b", "Nine News"), (r"\b10 News\b", "Ten News"), (r"\biTnews\b", "IT News"),
@@ -132,6 +134,12 @@ def ordinal(n):
     return f"{n}{'th' if 11 <= n % 100 <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')}"
 
 
+def rain_line(p, when):
+    """Rain said like a person would: "It's going to rain today", not "a 100 percent chance". rainLine() in app.html."""
+    return (f" It's going to rain {when}." if p >= 90 else f" Rain is likely {when}." if p >= 70
+            else f" There's a {p} percent chance of rain.")
+
+
 def opening(region, w):
     """The start of the 30-minute listen, from the forecast saved with the news."""
     d = w["daily"]
@@ -147,7 +155,7 @@ def opening(region, w):
             f"Expect {sky} today, with a top of {round(d['temperature_2m_max'][k])} degrees and a low of {round(d['temperature_2m_min'][k])}.")
     rain = d.get("precipitation_probability_max", [None] * (k + 1))[k]
     if rain is not None and rain >= 20:
-        text += f" There's a {rain} percent chance of rain."
+        text += rain_line(rain, "today")
     # Listening at night (6pm on), the opening gives tomorrow's weather instead.
     night = None
     if k + 1 < len(d["time"]):
@@ -157,14 +165,14 @@ def opening(region, w):
                  f"and a low of {round(d['temperature_2m_min'][n])}.")
         rain = d.get("precipitation_probability_max", [None] * (n + 1))[n]
         if rain is not None and rain >= 20:
-            night += f" There's a {rain} percent chance of rain."
+            night += rain_line(rain, "tomorrow")
         # Listening just after midnight, before the morning update: tomorrow's own opening.
         nd = day + timedelta(days=1)
         nxt = (f"This is Awesome News for {nd:%A} the {ordinal(nd.day)} of {nd:%B}. First, the weather in {city}. "
                f"Expect {WMO.get(d['weather_code'][n], 'mixed weather')} today, with a top of {round(d['temperature_2m_max'][n])} degrees "
                f"and a low of {round(d['temperature_2m_min'][n])}.")
         if rain is not None and rain >= 20:
-            nxt += f" There's a {rain} percent chance of rain."
+            nxt += rain_line(rain, "today")
         night = (night, {"day": nd.strftime("%Y-%m-%d"), "text": nxt})
     return today, text, night
 
@@ -214,12 +222,13 @@ def plan(data, vkey):
                     want(nxt["text"])
         except Exception:
             pass
-    for t in ["Here are the top stories.", "Now, local news.", "Now, more headlines.", SAMPLE, MORE]:
+    for t in ["Here are the top stories.", SAMPLE, MORE] + [w.format(x) for x in ("local news", "more headlines") for w in CUE_WAYS]:
         want(t)
     for t in ["Top stories.", "Local news.", "More headlines."]:
         want(t)  # the short cue after the next button is pressed
     for lbl in CORE_LABELS + [x["label"] for x in status.get("interests", [])]:
-        want(f"Now, {lbl}.")
+        for w in CUE_WAYS:
+            want(w.format(lbl))
         want(f"{lbl[:1].upper()}{lbl[1:]}.")
     for n in range(1, 9):
         want(f"Story {n}.")
