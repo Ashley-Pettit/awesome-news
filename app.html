@@ -1616,11 +1616,11 @@ body.wxlisten #weather .bs-scrubrow { display: none; }  /* while the news reads 
   function wxListenOn() {
     if (!state.wx || document.body.classList.contains("wxlisten") || !$("weather").hidden) return;
     document.body.classList.add("wxlisten");
-    // While the news reads the weather: the day from 4:45am in 10-minute steps, one every 0.2 seconds (smooth, about 50 minutes a second).
+    // While the news reads the weather: the day from 4:45am in 20-minute steps, one every 0.2 seconds.
     // In the morning and afternoon it's today; from 6pm it's tomorrow.
     BS.D = bsData();
     const t = Date.now(), day = bsMins(t) >= 18 * 60 ? (BS.D.days[1] || BS.D.days[0]).date : bsKey(t);
-    BS.view = { mode: "day", ms: bsMidnight(day) + 285 * 60000, play: true, day, jump: 10 * 60, every: 0.2, dawn: 285 };
+    BS.view = { mode: "day", ms: bsMidnight(day) + 285 * 60000, play: true, day, jump: 20 * 60, every: 0.2, dawn: 285 };
     if (!BS.tick) BS.tick = setInterval(() => { if (!$("weather").hidden) bsTick(); }, 1000);
     const el = $("weather"); el.hidden = false; el.scrollTop = 0;  // shown first, so the 3D sky sizes itself to the screen
     renderWeather();
