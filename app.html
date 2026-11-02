@@ -1192,6 +1192,9 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     return c >= 4 && c / Math.min(x.size, y.size) >= 0.4;
   }
   // Keeps the first of each story, so listening never reads the same news twice from different outlets.
+  // Things that make no sense read out: cartoons, quizzes, photo galleries and call-outs for readers' stories.
+  const NOT_FOR_EARS = /first dog on the moon|\bcartoon\b|\bquiz\b|crossword|\bin pictures\b|\bphotos? of the (day|week)\b|^share your (experience|story|stories)|^have your say|^tell us\b|^borrowed reading/i;
+  const listenable = i => !!i && !NOT_FOR_EARS.test(i.title || "");
   const oneEach = ids => ids.reduce((keep, id) => { if (!keep.some(k => sameStory(k, id))) keep.push(id); return keep; }, []);
   function sourceCount(id) {
     const c = clusters(), ids = c.of.get(id);
@@ -1249,17 +1252,19 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     const target = 30 * 60, out = [], seen = new Set(), secOf = new Map();
     const depth = i => i.text ? 2 : i.feed ? 1 : 0;
     const words = i => Math.min(DRIVE_WORDS, i.text ? (i.mins || 2) * 230 : i.feed ? 260 : 45);
-    const best = i => [i, ...siblings(i.id).map(findItem).filter(Boolean)].sort((a, b) => depth(b) - depth(a))[0];
+    // With the ready-made voice, only versions it has recorded in full.
+    const best = i => [i, ...siblings(i.id).map(findItem).filter(Boolean)].filter(x => !usePre() || preReady(x)).sort((a, b) => depth(b) - depth(a))[0];
     let secs = 45;
     const add = (i, sec) => {
       if (!i || seen.has(i.id) || out.some(x => sameStory(x, i.id))) return;
       const b = best(i);
+      if (!b) return;
       [i.id, b.id, ...siblings(i.id), ...siblings(b.id)].forEach(x => seen.add(x));
       out.push(b.id); secOf.set(b.id, sec); secs += words(b) / 2.6 + 7;
     };
-    briefing().forEach(i => add(i, "top"));
+    briefing().filter(listenable).forEach(i => add(i, "top"));
     // Stories with text to read move up a few places, so the drive isn't just headlines.
-    const lanes = enabledSections().map(sc => ({ sc, list: items(sc.id).filter(i => !(Number(S.negCut) && isNegative(i))).slice(0, 30)
+    const lanes = enabledSections().map(sc => ({ sc, list: items(sc.id).filter(i => listenable(i) && !(Number(S.negCut) && isNegative(i))).slice(0, 30)
       .map((i, n) => ({ i, k: n - depth(i) * 5 })).sort((a, b) => a.k - b.k).map(x => x.i) }));
     for (let r = 0; secs < target && r < 40; r++) for (const { sc, list } of lanes) { if (secs >= target) break; add(list[r], sc.id === "local" ? "local news" : sc.id === "headlines" ? "more headlines" : sc.label); }
     return { ids: out, secOf, secs };
@@ -1332,7 +1337,7 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
         <div class="bm">${esc(i.source)} · ${esc(ago(i.published))}</div></div>${i.image ? pic(i, "bpic") : ""}</li>`).join("")}</ol>
       ${state.mode === "claude"
         ? `<a class="drive" href="${esc(PUBLIC_URL)}#tv" target="_blank" rel="noopener">${I.tv}<span><b>Watch TV · 30 min</b>News clips from 7NEWS, ABC, 9News, SBS and more. Opens the website.</span></a>`
-        : `<button class="drive" type="button" data-open-tv>${I.tv}<span><b>Watch TV · 30 min</b>News clips from 7NEWS, ABC, 9News, SBS and more, back to back. Each story once.</span></button>`}
+        : `<button class="drive" type="button" data-open-tv>${I.tv}<span><b>Watch TV · 30 min</b>News clips from 7NEWS, ABC, 9News, SBS and more, or today's stories read out with pictures when there are no clips. Each story once.</span></button>`}
     </section>`;
   }
 
@@ -2336,20 +2341,46 @@ const handle = async (m, post) => {
   }
   // A piece of the ready-made audio (locked pieces need this device's passphrase). Anything not made
   // yet, like a story that only just arrived, falls back to the same voice run here where that works.
-  async function preSay(text) {
-    const h = await sha16(`${PRE.v}|${text}`), t = PRE.c[h];
-    if (t === 1 || (t === 2 && vaultKey)) {
-      try {
-        const r = await withTimeout(fetch(`data/voice/${h}.${t === 1 ? "mp3" : "bin"}`), 20000);
-        if (r.ok) {
+  const preCache = new Map();
+  function preBlob(text) {
+    if (!PRE || !text) return Promise.resolve(null);
+    if (preCache.has(text)) return preCache.get(text);
+    const pr = (async () => {
+      const h = await sha16(`${PRE.v}|${text}`), t = PRE.c[h];
+      if (!(t === 1 || (t === 2 && vaultKey))) return null;
+      for (let go = 0; go < 2; go++) {
+        try {
+          const r = await withTimeout(fetch(`data/voice/${h}.${t === 1 ? "mp3" : "bin"}`), 20000);
+          if (!r.ok) continue;
           let buf = await r.arrayBuffer();
           if (t === 2) buf = await crypto.subtle.decrypt({ name: "AES-GCM", iv: new Uint8Array(buf, 0, 12) }, vaultKey, new Uint8Array(buf, 12));
-          return URL.createObjectURL(new Blob([buf], { type: "audio/mpeg" }));
-        }
-      } catch {}
-    }
+          return new Blob([buf], { type: "audio/mpeg" });
+        } catch {}
+      }
+      return null;
+    })();
+    pr.then(b => { if (!b) preCache.delete(text); });
+    preCache.set(text, pr);
+    while (preCache.size > 80) preCache.delete(preCache.keys().next().value);
+    return pr;
+  }
+  async function preSay(text) {
+    const b = await preBlob(text);
+    if (b) return URL.createObjectURL(b);
     if (aiOK && !aiBroken && !isIOS) return AI.say(text, L.sid);
     throw Object.assign(new Error("not made yet"), { pre: true });
+  }
+  // While one story plays, get the start of the next one ready so there's no pause between them.
+  async function preNext() {
+    if (!usePre()) return;
+    const i = findItem(L.queue[L.at + 1]);
+    if (!i || !preReady(i)) return;
+    const sec = L.secOf?.get(i.id), cur = L.secOf?.get(L.queue[L.at]);
+    if (L.kind === "drive" && sec && sec !== cur) preBlob(sec === "top" ? "Here are the top stories." : `Now, ${sec}.`);
+    if (L.kind === "brief") preBlob(`Story ${L.at + 2}.`);
+    preBlob(`${clean(i.title)}.`); preBlob(`From ${publisherOf(i.source)}.`);
+    const ps = await storyParas(i, true);
+    if (ps[0]) chunks(ps[0][0], 0).slice(0, 2).forEach(c => preBlob(c.text));
   }
   const preOpening = () => {
     const o = PRE?.open?.[S.region];
@@ -2406,6 +2437,32 @@ const handle = async (m, post) => {
     return [...voices].sort((a, b) => rank(b) - rank(a))[0] || null;
   }
   const clean = t => String(t || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  // A paragraph worth reading out: no links, sign-up blurbs, menu lines or bits of web page.
+  // (voice.py has the same rules, so the ready-made audio lines up with what's read here.)
+  const PROMO = /\b(sign up|subscribe)\b.{0,60}\b(newsletter|here|now|inbox|updates|today)\b|don't miss a story|podcast platforms|learn where to watch|submit a response|in your inbox|fact-checked, and edited|^advertisement$|^(read|watch|listen) (more|now)\b|^related\b/i;
+  function speakable(p) {
+    const t = clean(clean(p).replace(/\bhttps?:\/\/\S+|\bwww\.\S+/g, " "));
+    if (!t || PROMO.test(t) || t.includes(" : ") || /\b(min-resolution|webkit|dppx|\d+vw)\b/i.test(t)) return "";
+    if (t.split(" ").length < 4 && !/[.!?]["”’)]*$/.test(t)) return "";
+    return t;
+  }
+  const MORE_LINE = "There's more on that one in the app.";
+  // The paragraphs to read out, each with its place in the article (for highlighting). Trimmed for the
+  // 30-minute listen, and always with the ready-made voice, since that's as far as its audio goes.
+  async function storyParas(i, trim) {
+    let t = null;
+    try { t = i.text ? (await loadText(i.text))?.[i.id] : null; if (!t) t = (await getOffline())[i.id] || null; if (!t && i.feed) t = (await loadText(i.feed))?.[i.id] || null; } catch {}
+    let ps = (t?.paras || []).map((p, n) => [speakable(p), n]).filter(x => x[0]);
+    if (!ps.length && i.summary) { const x = speakable(i.summary); if (x) ps = [[x, 0]]; }
+    if (trim) {
+      const keep = []; let w = 0;
+      for (const x of ps) { if (w >= DRIVE_WORDS) { keep.push([MORE_LINE, -1]); break; } keep.push(x); w += x[0].split(" ").length; }
+      ps = keep;
+    }
+    return ps;
+  }
+  // Ready-made audio covers this whole story (on this phone: with or without the full-article passphrase).
+  const preReady = i => !!(PRE?.s && i && (PRE.s[i.id] & (fullOn() && i.ptext ? 2 : 1)));
   function chunks(text, para) {
     const out = [], sentences = clean(text).match(/[^.!?]+[.!?]+["”’)]*\s*|[^.!?]+$/g) || [];
     let cur = "";
@@ -2440,7 +2497,14 @@ const handle = async (m, post) => {
   }
   function startListen(ids, kind) {
     hush();
-    L.queue = oneEach(ids.filter(id => findItem(id)));
+    L.queue = oneEach(ids.filter((id, n) => (kind === "story" && n === 0) || listenable(findItem(id))));
+    if (usePre()) {
+      if (kind === "story") L.queue = L.queue.filter((id, n) => n === 0 || preReady(findItem(id)));
+      else if (kind === "brief") {
+        L.queue = L.queue.filter(id => preReady(findItem(id)));
+        for (const i of forYou()) { if (L.queue.length >= 5) break; if (preReady(i) && !L.queue.some(k => sameStory(k, i.id))) L.queue.push(i.id); }
+      }
+    }
     if (!L.queue.length) { toast("There's nothing to read out yet"); return; }
     Object.assign(L, { on: true, paused: false, at: 0, kind });
     document.body.classList.add("playing");
@@ -2460,26 +2524,22 @@ const handle = async (m, post) => {
     L.parts = [...pre, ...intro, { text: `${clean(i.title)}.`, para: -1, kind: "title" }, { text: `From ${publisherOf(i.source)}.`, para: -1, kind: "title" }];
     if (L.kind !== "story") npStory(i);
     L.part = 0; L.loading = true; L.waiting = false; L.curPara = -1; L.aiAt = -1;
+    L.dev = usePre() && !preReady(i);
+    if (L.dev && L.kind === "story" && L.at === 0) toast("Emma hasn't recorded this story yet, so your phone's voice is reading it. It'll be ready after the next update.", 6000);
     if (useAI() || usePre()) { if (useAI()) AI.skip(sid); dropClips(sid); }
     updatePlayer();
     speakNext(tk);  // starts at once with the headline, so phones treat it as part of the tap
-    let t = null;
-    try { t = i.text ? (await loadText(i.text))?.[i.id] : null; if (!t) t = (await getOffline())[i.id] || null; if (!t && i.feed) t = (await loadText(i.feed))?.[i.id] || null; } catch {}
+    const paras = await storyParas(i, L.kind === "drive" || (usePre() && !L.dev));
     if (sid !== L.sid) return;
-    let paras = t?.paras?.length ? t.paras : i.summary ? [clean(i.summary)] : [];
-    if (L.kind === "drive") {
-      const keep = []; let w = 0;
-      for (const p of paras) { if (w >= DRIVE_WORDS) { keep.push("There's more on that one in the app."); break; } keep.push(p); w += p.split(/\s+/).length; }
-      paras = keep;
-    }
-    paras.forEach((p, n) => L.parts.push(...chunks(p, n)));
+    paras.forEach(([p, n]) => L.parts.push(...chunks(p, n)));
     L.loading = false;
+    preNext();
     if (L.waiting && !L.paused) { L.waiting = false; speakNext(L.token); }
   }
   function speakNext(tk) {
     if (tk !== L.token || !L.on || L.paused) return;
     if (L.part >= L.parts.length) { if (L.loading) { L.waiting = true; return; } nextStory(); return; }
-    if (useAI() || usePre()) { speakAI(tk); return; }
+    if (useAI() || (usePre() && !L.dev)) { speakAI(tk); return; }
     speakDevice(tk);
   }
   function speakDevice(tk) {
@@ -3009,9 +3069,14 @@ const handle = async (m, post) => {
   function markTVBad(id) { tvBad.add(id); store.set("brief.tvBad", [...tvBad].slice(-300)); }
   async function openTV() {
     if (L.on) stopListen();
+    // Unlock sound inside the tap, in case this turns into News TV (phones only allow it from a tap).
+    if (useAI() || usePre()) unlockAudio();
+    if (usePre() && canSpeak && !L.ttsPrimed) { try { tts.speak(new SpeechSynthesisUtterance(" ")); L.ttsPrimed = true; } catch {} }
     const all = TV.items.length ? TV.items : await loadTV();
     TV.items = all.filter(i => !tvBad.has(i.id));
-    if (!TV.items.length) { toast("TV is off for now. YouTube's news feed is down, and clips come back with the next update."); return; }
+    // No clips (YouTube's feed is down): News TV instead. Today's stories full screen, with their
+    // pictures and captions, read out in the ready-made voice.
+    if (!TV.items.length) { listenToggle("drive"); return; }
     $("tvsLogo").src = APP_ICON;
     $("tvs").hidden = false; document.body.classList.add("tvson");
     TV.idx = 0; TV.durs = {}; TV.cap = 30 * 60; TV.played = 0; $("tvsEnd").hidden = true;

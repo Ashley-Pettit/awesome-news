@@ -17,9 +17,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
+  news:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -41,8 +41,42 @@ jobs:
           YT_API_KEY: ${{ secrets.YT_API_KEY }}  # optional: TV keeps working when YouTube's free feed is down
         run: python fetcher.py _site/data --regions all --images url --text cc --interests all --private-text NEWS_KEY --archive-from https://ashley-pettit.github.io/awesome-news/
 
-      # Ready-made voice: the news read aloud in a natural voice (Kokoro), made here so phones just
-      # play it. Audio made on earlier runs is reused; new audio is made until the time budget runs out.
+      - name: Build the page
+        run: python build.py _site
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: _site
+          retention-days: 1
+
+  # Ready-made voice: the news read aloud in a natural voice (Kokoro), made here so phones just play it.
+  # Eight machines side by side each make their share. Audio made on earlier runs is reused.
+  voice:
+    needs: news
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    continue-on-error: true   # the news still goes out if this fails
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: pip install -r requirements.txt "kokoro-onnx==0.6.1" "lameenc==1.9.0"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: _site
+
       - name: Voice model
         id: kokoro
         uses: actions/cache@v4
@@ -59,25 +93,59 @@ jobs:
           done
 
       - name: Make the audio
-        continue-on-error: true   # the news still goes out if this fails
         env:
           NEWS_KEY: ${{ secrets.NEWS_KEY }}
           KOKORO_DIR: kokoro
           # Most time on the daily run; a quick top-up when an update is started from the app.
-          BUDGET: ${{ github.event_name == 'schedule' && '2400' || github.event_name == 'push' && '600' || '240' }}
-        run: |
-          pip install -q "kokoro-onnx==0.6.1" "lameenc==1.9.0"
-          python voice.py _site/data --reuse-from https://ashley-pettit.github.io/awesome-news/ --budget "$BUDGET"
+          BUDGET: ${{ github.event_name == 'schedule' && '2400' || github.event_name == 'push' && '900' || '240' }}
+        run: python voice.py _site/data --shard ${{ matrix.shard }}/8 --reuse-from https://ashley-pettit.github.io/awesome-news/ --budget "$BUDGET"
 
-      - name: Build the page
-        run: python build.py _site
+      - uses: actions/upload-artifact@v4
+        with:
+          name: voice-${{ matrix.shard }}
+          path: _site/data/voice
+          retention-days: 1
+
+  publish:
+    needs: [news, voice]
+    if: ${{ always() && needs.news.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: pip install -r requirements.txt
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: _site
+
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: voice-*
+          path: _site/data/voice
+          merge-multiple: true
+
+      - name: Join the audio lists
+        continue-on-error: true
+        env:
+          NEWS_KEY: ${{ secrets.NEWS_KEY }}
+        run: python voice.py _site/data --merge
 
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
 
   deploy:
-    needs: build
+    needs: publish
     runs-on: ubuntu-latest
     environment:
       name: github-pages
