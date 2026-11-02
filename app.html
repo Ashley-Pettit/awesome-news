@@ -3944,7 +3944,7 @@ const handle = async (m, post) => {
     let last = null;
     canvas.addEventListener("pointermove", e => { if (e.pointerType === "mouse") { BS.ptr.tx = (e.clientX / innerWidth - 0.5) * 2; BS.ptr.ty = (e.clientY / innerHeight - 0.5) * 2; } });
     canvas.addEventListener("touchstart", e => { last = e.touches[0]; }, { passive: true });
-    canvas.addEventListener("touchmove", e => { const t = e.touches[0]; if (last) { BS.ptr.tx = bsClamp(BS.ptr.tx + (t.clientX - last.clientX) / 160, -1.2, 1.2); BS.ptr.ty = bsClamp(BS.ptr.ty + (t.clientY - last.clientY) / 200, -1, 1); } last = t; }, { passive: true });
+    canvas.addEventListener("touchmove", e => { const t = e.touches[0]; if (last) { BS.ptr.tx = bsClamp(BS.ptr.tx - (t.clientX - last.clientX) / 160, -1.2, 1.2); BS.ptr.ty = bsClamp(BS.ptr.ty - (t.clientY - last.clientY) / 200, -1, 1); } last = t; }, { passive: true });
     return true;
   }
   function bsStrike() {
