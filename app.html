@@ -702,11 +702,16 @@ body.locked .player { z-index: 45; bottom: calc(env(safe-area-inset-bottom, 0px)
 body.wxlisten #weather { z-index: 60; transform: none; opacity: 0; transition: opacity 0.9s ease; }
 body.wxlisten #weather.open { opacity: 1; }  /* the hello fades into the weather */
 body.wxlisten #weather .bs-scrubrow { display: none; }
-body.wxlisten #weather .bs-done { display: none; }
-.bs-skip { display: none; flex: none; align-items: center; gap: 6px; font-family: var(--ui); font-weight: 700; font-size: 0.82rem; color: var(--bs-ink); background: var(--bs-scrim);
+/* Top right: an X to close. While the news reads it: Skip (on to the stories) and an X that stops listening. */
+.bs-btns { display: flex; align-items: center; gap: 8px; flex: none; }
+.bs-x { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; color: var(--bs-ink); background: var(--bs-scrim); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border: 1px solid var(--bs-line); }
+.bs-x svg { width: 16px; height: 16px; }
+.bs-stop, body.wxlisten #weather .bs-x[data-close] { display: none; }
+body.wxlisten #weather .bs-stop { display: grid; }
+.bs-skip { display: none; flex: none; align-items: center; height: 38px; box-sizing: border-box; gap: 6px; font-family: var(--ui); font-weight: 700; font-size: 0.82rem; color: var(--bs-ink); background: var(--bs-scrim);
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border: 1px solid var(--bs-line); border-radius: 999px; padding: 6px 12px; }
 .bs-skip svg { width: 14px; height: 14px; }
-body.wxlisten #weather .bs-skip { display: inline-flex; }  /* while the news reads it, it closes by itself */  /* while the news reads it, the timeline just plays */
+body.wxlisten #weather .bs-skip { display: inline-flex; }  /* while the news reads it, the timeline just plays */
 /* Listen intro: the weather blurred behind the title, then it sharpens and comes forward */
 #weather .bs-hud { transition: opacity 0.8s ease; }
 #bsGl { transition: filter 1s ease, transform 1s ease; }
@@ -716,7 +721,8 @@ body.wxintro #bsGl { filter: blur(14px) brightness(0.7) saturate(1.1); transform
 body.wxintro #weather .bs-hud { opacity: 0; }
 .np { transition: background-color 0.9s ease; }
 body.wxintro .np, body.wxreveal .np { background-color: rgba(11, 10, 18, 0); }
-body.wxintro .np-pic, body.wxreveal .np-pic { display: none; }
+body.wxintro .np-pic, body.wxreveal .np-pic, body.npstart .np-pic { display: none; }
+body.npstart .np-low .np-meta, body.npstart .np-low .np-h, body.npstart .np-low .np-cap { visibility: hidden; }
 body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
 #np .np-top .np-btn { display: none; }  /* no mic or minimise in the player: stop is at the bottom */
 /* ---------- Weather: Brisbane Sky (Ash's design). A full-screen 3D sky with the readout floating over it. ---------- */
@@ -1562,6 +1568,15 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   let wake = null;
   async function keepAwake() { try { if (!$("np").hidden && navigator.wakeLock && !wake) { wake = await navigator.wakeLock.request("screen"); wake.addEventListener("release", () => { wake = null; }); } } catch {} }
   document.body.classList.toggle("beta-heads", !!store.get("brief.betaHeads", false));
+  // The "Awesome News" title, shown the moment Listen is tapped so nothing else flashes up while it loads.
+  function npHello() {
+    const cue = $("npCue"), np = $("np");
+    $("npWx").hidden = true; cue.hidden = false; np.classList.add("calm");
+    if (cue.dataset.k === "open") return;
+    cue.dataset.k = "open";
+    const date = new Intl.DateTimeFormat("en-AU", { timeZone: TZ, weekday: "long", day: "numeric", month: "long" }).format(new Date());
+    cue.innerHTML = `<div class="np-hello"><img class="hl-logo" src="${APP_ICON}" alt=""><span class="hl-name">Awesome News</span><span class="hl-date np-in" style="--i:3">${esc(date)}</span><span class="hl-line" aria-hidden="true"></span></div>`;
+  }
   function npOpen() {
     $("npLogo").src = APP_ICON;
     $("np").hidden = false; document.body.classList.add("npon");
@@ -1686,8 +1701,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     // The opening starts on a quick "Awesome News" title; once it gets to the weather, the full 3D weather page takes over.
     wx.hidden = true; cue.hidden = p.kind !== "cue" && p.kind !== "open";
     np.classList.toggle("calm", p.kind === "open" || p.kind === "cue");
-    if (p.kind === "open" && cue.dataset.k !== "open") { cue.dataset.k = "open"; const date = new Intl.DateTimeFormat("en-AU", { timeZone: TZ, weekday: "long", day: "numeric", month: "long" }).format(new Date());
-      cue.innerHTML = `<div class="np-hello"><img class="hl-logo" src="${$("npLogo").src}" alt=""><span class="hl-name">Awesome News</span><span class="hl-date np-in" style="--i:3">${esc(date)}</span><span class="hl-line" aria-hidden="true"></span></div>`; }
+    if (p.kind === "open") npHello();
     if (p.kind !== "open") wxListenOff();
     // Once a story itself is being read (not just its headline), it counts as heard.
     if (L.kind === "drive" && !["open", "cue", "title"].includes(p.kind)) heardAdd(L.queue[L.at]);
@@ -2689,8 +2703,22 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   function loadPre(v) {
     if (state.mode !== "static") return;
     state.preP = fetch(`data/voice/index.json?v=${encodeURIComponent(v || "")}`).then(r => r.ok ? r.json() : null)
-      .then(d => { PRE = d && d.c && Object.keys(d.c).length ? d : null; if (openSheet === "settings") renderSettings(); }).catch(() => {})
+      .then(d => { PRE = d && d.c && Object.keys(d.c).length ? d : null; if (openSheet === "settings") renderSettings(); listenWarm(); }).catch(() => {})
       .finally(() => { state.preP = null; });
+  }
+  // Get Listen ready in the background once the app has opened: the opening, the first story's start,
+  // and the 3D weather, so tapping Listen starts straight away.
+  function listenWarm() {
+    if (!PRE || listenWarm.done) return; listenWarm.done = true;
+    const go = () => {
+      try {
+        preBlob(preOpening()); preBlob("Here are the top stories.");
+        const i = findItem(driveList().ids[0]);
+        if (i) { preBlob(`${clean(i.title)}.`); preBlob(reports(i)); }
+        if (state.wx) bsLoadThree();
+      } catch {}
+    };
+    ("requestIdleCallback" in window) ? requestIdleCallback(go, { timeout: 3000 }) : setTimeout(go, 1500);
   }
   const voicePref = () => {
     const v = store.get("brief.voice", "");
@@ -2854,7 +2882,9 @@ const handle = async (m, post) => {
   }
   const preOpening = () => {
     const o = PRE?.open?.[S.region];
-    if (!o || o.day !== new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new Date())) return "";
+    const today = new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new Date());
+    if (o?.next?.day === today && o.day !== today) return o.next.text;  // after midnight, before the morning update
+    if (!o || o.day !== today) return "";
     return isNight() ? (o.night || o.text) : o.text;  // at night: tomorrow's weather (today's if that isn't made yet)
   };
   let aiWhy = "";
@@ -2966,7 +2996,9 @@ const handle = async (m, post) => {
       if (L.on && L.kind === "drive") { npOpen(); npStory(findItem(L.queue[L.at])); npPart(L.part); if (L.paused) resumeListen(); return; }
       const d = driveList();
       L.secOf = d.secOf; L.driveSecs = d.secs;
+      document.body.classList.add("npstart"); $("npCue").dataset.k = ""; npHello();
       npOpen();
+      setTimeout(() => document.body.classList.remove("npstart"), 1500);
       return startListen(d.ids, "drive");
     }
     if (L.on && kind === "dock") { L.paused ? resumeListen() : pauseListen(); return; }
@@ -3004,7 +3036,7 @@ const handle = async (m, post) => {
     }
     if (kind === "drive") {
       const fresh = L.queue.filter(id => !HEARD.has(id) && !siblings(id).some(x => HEARD.has(x)));
-      if (!fresh.length && L.queue.length) { toast("You've heard all the news for now. New stories come with the next update."); wxListenOff(); npClose(); return; }
+      if (!fresh.length && L.queue.length) { toast("You've heard all the news for now. New stories come with the next update."); npClose(); return; }
       L.queue = fresh;
     }
     if (!L.queue.length) { toast("There's nothing to read out yet"); return; }
@@ -3021,7 +3053,12 @@ const handle = async (m, post) => {
     const pre = [];
     if (L.kind === "drive") {
       const sec = L.secOf?.get(id);
-      if (!L.opened) pre.push({ text: (usePre() && preOpening()) || driveOpening(), para: -1, kind: "open" });
+      if (!L.opened) {
+        const t = usePre() ? preOpening() : "";
+        // No Emma opening for this hour (e.g. just after midnight, before the morning update): show the weather
+        // quietly for a few seconds rather than switching to the phone's voice.
+        pre.push(t ? { text: t, para: -1, kind: "open" } : { text: driveOpening(), para: -1, kind: "open", silent: usePre() });
+      }
       if (sec && sec !== L.lastSec) pre.push({ text: sec === "top" ? "Here are the top stories." : `Now, ${sec}.`, para: -1, kind: "cue", sec });
       L.lastSec = sec;
     }
@@ -3054,10 +3091,17 @@ const handle = async (m, post) => {
   const HEARD = new Set(store.get("brief.heard", []));
   function heardAdd(id) {
     if (!id || HEARD.has(id)) return;
-    HEARD.add(id); const all = [...HEARD]; store.set("brief.heard", all.slice(-600));
+    HEARD.add(id); store.set("brief.heard", [...HEARD].slice(-600));
   }
   function speakNext(tk) {
     if (tk !== L.token || !L.on || L.paused) return;
+    const sp = L.parts[L.part];
+    if (sp?.silent) {
+      const k = L.part; npPart(k);
+      setTimeout(() => { if (tk === L.token && L.part === k) wxListenOn(); }, 1200);
+      setTimeout(() => { if (tk === L.token && L.on && !L.paused && L.part === k) { L.part++; updateBar(); speakNext(tk); } }, 7000);
+      return;
+    }
     if (L.part >= L.parts.length) { if (L.loading) { L.waiting = true; return; } nextStory(); return; }
     if (useAI() || (usePre() && !L.dev)) { speakAI(tk); return; }
     speakDevice(tk);
@@ -3330,6 +3374,7 @@ const handle = async (m, post) => {
     if (t.closest("#npNext")) { skipListen(); return; }
     if (t.closest("#npStop")) { stopListen(); return; }
     if (t.closest("#bsSkip")) { skipWeather(); return; }
+    if (t.closest("#bsStop")) { stopListen(); return; }
     if (t.closest("#npPos")) { $("npList").hidden ? npListShow(false) : npListHide(); return; }
     if (t.closest("#npListX")) { npListHide(); return; }
     const jump = t.closest("[data-np-jump]"); if (jump) { npJump(+jump.dataset.npJump); return; }
@@ -3441,7 +3486,9 @@ const handle = async (m, post) => {
     if (!c) { state.wx = null; renderWxChip(); return; }
     const key = "brief.wx3." + S.region;
     let w = store.get(key, null);
-    if (!w || Date.now() - w.at > 30 * 60000) {
+    // Fetch again after 30 minutes, or straight away once it's a new day (so the week starts from today).
+    const dayOf = t => new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new Date(t));
+    if (!w || Date.now() - w.at > 30 * 60000 || dayOf(w.at) !== dayOf(Date.now())) {
       try {
         const u = `https://api.open-meteo.com/v1/forecast?latitude=${c[1]}&longitude=${c[2]}&timezone=auto&forecast_days=7`
           + "&current=temperature_2m,apparent_temperature,relative_humidity_2m,dew_point_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,weather_code,is_day,uv_index,precipitation,cloud_cover,pressure_msl,visibility"
@@ -3516,6 +3563,7 @@ const handle = async (m, post) => {
     box.hidden = false;
     const wk = $("wxWeek"), n = dy.temperature_2m_max ? Math.min(7, dy.time.length - di) : 0;
     wk.hidden = n < 3;
+    wk.style.gridTemplateColumns = `repeat(${n}, minmax(0, 1fr))`;
     wk.innerHTML = Array.from({ length: n }, (_, k) => {
       const x = di + k, [yy, m, dd] = dy.time[x].split("-").map(Number);
       const name = k === 0 ? "Today" : new Date(yy, m - 1, dd).toLocaleDateString("en-AU", { weekday: "short" });
@@ -3652,8 +3700,11 @@ const handle = async (m, post) => {
     $("wBody").innerHTML = `
       <header class="bs-top">
         <div class="bs-place"><h1>${esc(D.city)}</h1></div>
-        <button class="bs-done" type="button" data-close="weather">Done</button>
-        <button class="bs-skip" type="button" id="bsSkip" aria-label="Skip the weather">Skip<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 5.5v13l9-6.5zM16 5h3v14h-3z"/></svg></button>
+        <div class="bs-btns">
+          <button class="bs-skip" type="button" id="bsSkip" aria-label="Skip the weather">Skip<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 5.5v13l9-6.5zM16 5h3v14h-3z"/></svg></button>
+          <button class="bs-x" type="button" data-close="weather" aria-label="Close the weather"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+          <button class="bs-x bs-stop" type="button" id="bsStop" aria-label="Stop listening"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        </div>
       </header>
       <section class="bs-now">
         <div class="bs-main">
@@ -3665,7 +3716,7 @@ const handle = async (m, post) => {
       </section>
       <aside class="bs-rain" id="bsRain" aria-live="polite"></aside>
       <section class="bs-panel">
-        <div class="bs-week" id="bsWeek" role="group" aria-label="Seven day forecast. Choose a day to see its sky.">${D.days.map((d, i) => `<button class="bs-day${d.severe ? " severe" : ""}" type="button" aria-pressed="false" data-bsday="${i}"><span class="d">${i ? d.name : "Today"}</span><svg class="i" aria-hidden="true"><use href="#${BS_ICON[d.kind]}"/></svg><span class="hi">${d.hi}°</span><span class="lo">${d.lo}°</span></button>`).join("")}</div>
+        <div class="bs-week" id="bsWeek" style="grid-template-columns:repeat(${D.days.length}, minmax(0, 1fr))" role="group" aria-label="Seven day forecast. Choose a day to see its sky.">${D.days.map((d, i) => `<button class="bs-day${d.severe ? " severe" : ""}" type="button" aria-pressed="false" data-bsday="${i}"><span class="d">${i ? d.name : "Today"}</span><svg class="i" aria-hidden="true"><use href="#${BS_ICON[d.kind]}"/></svg><span class="hi">${d.hi}°</span><span class="lo">${d.lo}°</span></button>`).join("")}</div>
         <p class="bs-note" id="bsNote" hidden></p>
         <div class="bs-scrubrow">
           <div class="bs-track">

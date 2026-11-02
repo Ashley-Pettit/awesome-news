@@ -152,6 +152,14 @@ def opening(region, w):
         rain = d.get("precipitation_probability_max", [None] * (n + 1))[n]
         if rain is not None and rain >= 20:
             night += f" There's a {rain} percent chance of rain."
+        # Listening just after midnight, before the morning update: tomorrow's own opening.
+        nd = day + timedelta(days=1)
+        nxt = (f"This is Awesome News for {nd:%A} the {ordinal(nd.day)} of {nd:%B}. First, the weather in {city}. "
+               f"Expect {WMO.get(d['weather_code'][n], 'mixed weather')} today, with a top of {round(d['temperature_2m_max'][n])} degrees "
+               f"and a low of {round(d['temperature_2m_min'][n])}.")
+        if rain is not None and rain >= 20:
+            nxt += f" There's a {rain} percent chance of rain."
+        night = (night, {"day": nd.strftime("%Y-%m-%d"), "text": nxt})
     return today, text, night
 
 
@@ -189,12 +197,15 @@ def plan(data, vkey):
     opens = {}
     for r, w in (status.get("weather") or {}).items():
         try:
-            day, text, night = opening(r, w)
+            day, text, both = opening(r, w)
+            night, nxt = both if both else (None, None)
             if text:
-                opens[r] = {"day": day, "text": text, "night": night}
+                opens[r] = {"day": day, "text": text, "night": night, "next": nxt}
                 want(text)
                 if night:
                     want(night)
+                if nxt:
+                    want(nxt["text"])
         except Exception:
             pass
     for t in ["Here are the top stories.", "Now, local news.", "Now, more headlines.", SAMPLE, MORE]:
@@ -390,7 +401,8 @@ def merge(data, vkey):
         if bits:
             done[sid] = bits
     index = {"v": TAG, "voice": VOICE, "at": status.get("updatedAt", ""), "lk": lock_fp(vkey) if vkey else None,
-             "open": {r: {**o, "night": o["night"] if o.get("night") and key_of(o["night"]) in have else None}
+             "open": {r: {**o, "night": o["night"] if o.get("night") and key_of(o["night"]) in have else None,
+                          "next": o["next"] if o.get("next") and key_of(o["next"]["text"]) in have else None}
                       for r, o in opens.items() if key_of(o["text"]) in have}, "sample": SAMPLE, "c": have, "s": done,
              "sayv": SAYV, "fx": sorted(h for h in fx if h in have)}
     with open(os.path.join(out_dir, "index.json"), "w") as f:
