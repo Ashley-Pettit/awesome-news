@@ -230,9 +230,9 @@ body.tvson { overflow: hidden; }
 body.npon { overflow: hidden; }
 body.npon .player { display: none; }
 .np-pic { position: absolute; inset: 0; z-index: 0; }
-.np-pic img { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; max-width: 100%; opacity: 0; transition: opacity 0.8s ease; }
-.np-pic img.on { opacity: 1; animation: kb 22s ease-in-out infinite alternate; }
-@keyframes kb { from { transform: scale(1.04); } to { transform: scale(1.2) translate(-2%, -1.5%); } }
+.np-pic img { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; max-width: 100%; opacity: 0; transition: opacity 0.8s ease; }
+.np-pic img.on { opacity: 1; animation: kb 30s ease-in-out infinite alternate; }
+@keyframes kb { from { transform: scale(1); } to { transform: scale(1.06); } }
 @media (prefers-reduced-motion: reduce) { .np-pic img.on { animation: none; } }
 /* Calm layer: blurs and dims the picture while the weather or a section cue is on screen. */
 .np-pic::before { content: ""; position: absolute; inset: 0; z-index: 1; background: rgba(10, 8, 20, 0.5); -webkit-backdrop-filter: blur(24px) saturate(1.15); backdrop-filter: blur(24px) saturate(1.15); opacity: 0; transition: opacity 0.7s ease; }
@@ -2496,6 +2496,7 @@ const handle = async (m, post) => {
       if (tk !== L.token || sid !== L.sid) return;
       if (usePre()) {  // this bit wasn't made ahead: the phone's own voice reads just this bit
         L.aiWait = false; updatePlayer();
+        if (p.opt) { L.part++; speakNext(tk); return; }  // a nice-to-have line (who's reporting): just skip it
         if (canSpeak) speakDevice(tk); else { L.part++; speakNext(tk); }
         return;
       }
@@ -2597,7 +2598,7 @@ const handle = async (m, post) => {
       if (L.at === 0) pre.push({ text: (usePre() && preOpening()) || driveOpening(), para: -1, kind: "open" });
       if (sec && sec !== prev) pre.push({ text: sec === "top" ? "Here are the top stories." : `Now, ${sec}.`, para: -1, kind: "cue", sec });
     }
-    L.parts = [...pre, ...intro, { text: `${publisherOf(i.source)} reports.`, para: -1, kind: "title" }, { text: `${clean(i.title)}.`, para: -1, kind: "title" }];
+    L.parts = [...pre, ...intro, { text: `${publisherOf(i.source)} reports.`, para: -1, kind: "title", opt: true }, { text: `${clean(i.title)}.`, para: -1, kind: "title" }];
     if (L.kind !== "story") npStory(i);
     L.part = 0; L.loading = true; L.waiting = false; L.curPara = -1; L.aiAt = -1;
     L.dev = usePre() && !preReady(i);
