@@ -1570,7 +1570,9 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   function forYou() {
     const secs = enabledSections();
     const lanes = secs.map(s => visible(items(s.id)).slice(0, FOR_YOU_PER_SECTION).sort((a, b) => rank(b) - rank(a)));
-    const order = secs.map((_, n) => n).sort((a, b) => (lanes[b][0] ? rank(lanes[b][0]) : 0) - (lanes[a][0] ? rank(lanes[a][0]) : 0));
+    // Beta: kinds of stories you've said "more like this" to while listening lead the mix.
+    const likes = store.get("beta.likes", {}) || {}, likeOf = sc => likes[sc.id === "local" ? "local news" : sc.id === "headlines" ? "more headlines" : sc.label] || 0;
+    const order = secs.map((_, n) => n).sort((a, b) => (likeOf(secs[b]) - likeOf(secs[a])) || ((lanes[b][0] ? rank(lanes[b][0]) : 0) - (lanes[a][0] ? rank(lanes[a][0]) : 0)));
     const out = [], seen = new Set();
     const take = id => { seen.add(id); siblings(id).forEach(x => seen.add(x)); };
     for (const t of S.topics) for (const i of visible(topicItems(t)).slice(0, 3)) if (!seen.has(i.id)) { take(i.id); out.push({ ...i, _sec: t, _sid: "topic" }); }
