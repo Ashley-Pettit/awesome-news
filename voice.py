@@ -253,7 +253,7 @@ def plan(data, vkey):
                     want(it["text"])
         except Exception:
             pass
-    for t in ["Here are the top stories.", SAMPLE, MORE] + [w.format(x) for x in ("local news", "more headlines") for w in CUE_WAYS]:
+    for t in ["Here are the top stories.", "Welcome back. Picking up where you left off.", SAMPLE, MORE] + [w.format(x) for x in ("local news", "more headlines") for w in CUE_WAYS]:
         want(t)
     for lbl in CORE_LABELS + [x["label"] for x in status.get("interests", [])]:
         for w in CUE_WAYS:

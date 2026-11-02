@@ -70,6 +70,21 @@ img{{max-width:100%}}
 os.makedirs(site, exist_ok=True)
 with open(os.path.join(site, "index.html"), "w", encoding="utf-8") as f:
     f.write(head + body.strip() + "\n</body>\n</html>\n")
+
+# The beta: beta/app.html, at /beta/, sharing the same news, voice and icons (everything resolves from the main folder).
+beta_src = os.path.join(here, "beta", "app.html")
+if os.path.exists(beta_src):
+    bapp = open(beta_src, encoding="utf-8").read()
+    bbody = re.sub(r"<title>.*?</title>\s*", "", bapp, count=1)
+    bbody = re.sub(r'<meta name="claude:[^"]+"[^>]*>\s*', "", bbody)
+    bbody = re.sub(r'<meta name="theme-color"[^>]*>\s*', "", bbody)
+    bhead = (head.replace("<head>\n", '<head>\n<base href="../">\n', 1)
+                 .replace(f"<title>{title}</title>", f"<title>{title} Beta</title>")
+                 .replace('<link rel="canonical"', '<meta name="robots" content="noindex">\n<link rel="canonical"'))
+    os.makedirs(os.path.join(site, "beta"), exist_ok=True)
+    with open(os.path.join(site, "beta", "index.html"), "w", encoding="utf-8") as f:
+        f.write(bhead + bbody.strip() + "\n</body>\n</html>\n")
+    print(f"Built {site}/beta/index.html")
 shutil.copytree(os.path.join(here, "icons"), os.path.join(site, "icons"), dirs_exist_ok=True)
 shutil.copy(os.path.join(here, "manifest.webmanifest"), site)
 shutil.copy(os.path.join(here, "sw.js"), site)
