@@ -4301,7 +4301,7 @@ const handle = async (m, post) => {
       // (news unchanged) used to skip it, so Listen fell back to the phone's voice, which iPhones won't start.
       if (changed || !PRE) loadPre(st.updatedAt);
       state.loaded = true;
-      if (manual) { finishRefresh(changed); if (!changed) toast("You're up to date"); }
+      if (manual) { finishRefresh(changed); }
       else if (state.refreshing && changed) finishRefresh(true);
       bgRefresh();
       if (!openSheet) render(true);
