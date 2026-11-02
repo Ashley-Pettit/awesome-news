@@ -424,6 +424,10 @@ JUNK_PARA = re.compile(r"^(-\s*)?(Read more|Related|Advertisement|Loading|Share 
                        r"For the latest from SBS|Get all the latest|Download our app|Subscribe to|Tomorrow's picture)", re.I)
 
 
+# Lines that aren't the story: "Download the 7NEWS app", "Watch the video above", sign-ups, follow us (JUNK in app.html).
+NOT_STORY = re.compile(r"""\b(download (the|our) [^.]{0,30}app|(stream|watch)[^.]{0,40}\b(7plus|9now|10 ?play|iview|sbs on demand)|watch the (video|full|latest|interview|moment|clip)|(the )?video (above|below)|click here|tap here|get (the )?(latest|breaking) news|news alerts|sign up|subscribe|newsletter|follow us|follow [^.]{0,25} on (facebook|instagram|x|twitter|tiktok|threads|youtube)|got a (news )?tip|send us (your|a) (tip|story)|contact the newsroom|all rights reserved|copyright)\b|©|^(watch|listen|video|more|related|recommended|trending|popular|read next)\b[:\s-]""", re.I)
+
+
 def read_page(story, want_text):
     try:
         raw = get(story["url"], timeout=20, limit=1_500_000).decode("utf-8", "ignore")
@@ -444,7 +448,7 @@ def read_page(story, want_text):
                 body = get_("text") or ""
                 author = get_("author") or ""
                 paras = [re.sub(r"\s+", " ", p).strip() for p in body.split("\n")]
-                paras = [p for p in paras if p and not JUNK_PARA.match(p)]
+                paras = [p for p in paras if p and not JUNK_PARA.match(p) and not (len(p) < 240 and NOT_STORY.search(p))]
                 if sum(len(p) for p in paras) >= 600:
                     text = {"paras": paras, "author": author}
         except Exception:
@@ -468,7 +472,7 @@ def feed_paras(raw):
         lead = "- " if p.lstrip().startswith("- ") else ""
         p = html.unescape(re.sub(r"<[^>]+>", " ", p))
         p = re.sub(r"\s+", " ", p).strip().lstrip("- ").strip()
-        if len(p) < 2 or JUNK_PARA.match(p) or FEED_JUNK.match(p):
+        if len(p) < 2 or JUNK_PARA.match(p) or FEED_JUNK.match(p) or (len(p) < 240 and NOT_STORY.search(p)):
             continue
         out.append(lead + p)
     return out

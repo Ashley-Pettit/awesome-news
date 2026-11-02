@@ -74,13 +74,15 @@ PROMO = re.compile(r"\b(sign up|subscribe)\b.{0,60}\b(newsletter|here|now|inbox|
                    r"learn where to watch|submit a response|in your inbox|fact-checked, and edited|^advertisement$|"
                    r"^(read|watch|listen) (more|now)\b|^related\b", re.I | re.A)
 WEBBITS = re.compile(r"\b(min-resolution|webkit|dppx|\d+vw)\b", re.I | re.A)
+# Bits of web page that aren't the story (JUNK in app.html, same pattern): app plugs, "Watch the video above", sign-ups.
+JUNK = re.compile(r"""\b(download (the|our) [^.]{0,30}app|(stream|watch)[^.]{0,40}\b(7plus|9now|10 ?play|iview|sbs on demand)|watch the (video|full|latest|interview|moment|clip)|(the )?video (above|below)|click here|tap here|get (the )?(latest|breaking) news|news alerts|sign up|subscribe|newsletter|follow us|follow [^.]{0,25} on (facebook|instagram|x|twitter|tiktok|threads|youtube)|got a (news )?tip|send us (your|a) (tip|story)|contact the newsroom|all rights reserved|copyright)\b|©|^(watch|listen|video|more|related|recommended|trending|popular|read next)\b[:\s-]""", re.I)
 ENDS = re.compile(r"[.!?][\"”’)]*$")
 
 
 def speakable(p):
     """A paragraph worth reading out: no links, sign-up blurbs, menu lines or bits of web page."""
     t = clean(URL.sub(" ", clean(p)))
-    if not t or PROMO.search(t) or " : " in t or WEBBITS.search(t):
+    if not t or (len(t) < 240 and JUNK.search(t)) or PROMO.search(t) or " : " in t or WEBBITS.search(t):
         return ""
     if len(t.split(" ")) < 4 and not ENDS.search(t):
         return ""
