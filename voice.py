@@ -46,10 +46,15 @@ SAY = [(r"\b7NEWS\b", "Seven News"), (r"\b9News\b", "Nine News"), (r"\b10 News\b
        (r"\bABC\b", "A.B.C."), (r"\bBBC\b", "B.B.C."), (r"\bNSW\b", "New South Wales"), (r"\bEFF\b", "E.F.F."),
        (r"\bM365\b", "M three six five"), (r"\bSEQ\b", "south-east Queensland"), (r"\bPM\b", "Prime Minister"),
        # Said the Aussie way, "Queens-lend" (kwˈiːnzlɛnd), not "Queens-land".
-       (r"\bQueensland(er|ers)?\b", r"Queenzlend\1")]
+       (r"\bQueensland(er|ers)?\b", r"Queenzlend\1"),
+       # Money read in plain order: "$400 million" is "400 million dollars" (the voice otherwise says "dollar 400 million").
+       (r"\b(?:A|AU|US|NZ)?\$\s?(\d[\d,]*(?:\.\d+)?)(\s(?:thousand|million|billion|trillion))?", r"\1\2 dollars"),
+       (r"(?<![\w])\$\s?(\d[\d,]*(?:\.\d+)?)(\s(?:thousand|million|billion|trillion))?", r"\1\2 dollars"),
+       (r"£\s?(\d[\d,]*(?:\.\d+)?)(\s(?:thousand|million|billion|trillion))?", r"\1\2 pounds"),
+       (r"€\s?(\d[\d,]*(?:\.\d+)?)(\s(?:thousand|million|billion|trillion))?", r"\1\2 euros")]
 # Pieces with these words were made before the pronunciation above was fixed: remake them once.
 # Bump SAYV (and add the words) whenever another pronunciation fix is added.
-SAYV, RESAY = 1, re.compile(r"Queensland|\bQld\b|\bSEQ\b")
+SAYV, RESAY = 2, re.compile(r"Queensland|\bQld\b|\bSEQ\b|[$£€]")
 # Read as "Expect ... today": "Expect light drizzle today", "Expect clear skies today".
 WMO = {0: "clear skies", 1: "mostly sunny skies", 2: "partly cloudy skies", 3: "cloudy skies", 45: "fog", 48: "fog", 51: "light drizzle", 53: "some drizzle",
        55: "heavy drizzle", 56: "freezing drizzle", 57: "freezing drizzle", 61: "light rain", 63: "rain", 65: "heavy rain", 80: "a few showers", 81: "showers",
