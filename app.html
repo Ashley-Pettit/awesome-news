@@ -2027,7 +2027,9 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
   // Archive: headlines from the last six months, so search reaches past today's stories.
   function archItem(x) {
     const sid = String(x.sec || "").startsWith("local-") ? "local" : (x.sec || "");
-    return { id: x.id, title: x.t, summary: x.s, url: x.u, source: x.src, published: x.p, image: x.img || undefined, _sid: sid, _sec: tagFor(sid) || "", _arch: true };
+    // The Claude copy can't load outside pictures, so older stories there show the source's initial instead.
+    const reg = sid === "local" ? String(x.sec).slice(6) : "";
+    return { id: x.id, title: x.t, summary: x.s, url: x.u, source: x.src, published: x.p, image: state.mode === "claude" ? undefined : x.img || undefined, _sid: sid, _sec: tagFor(sid) || "", _reg: reg, _arch: true };
   }
   function loadArchive() {
     const st = state.status, refs = st?.archive?.chunks || [];
@@ -2074,7 +2076,7 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     const res = [];
     const today = everything(), have = new Set(today.map(i => i.id));
     const days = WHEN[state.sWhen]?.[1] ?? Infinity;
-    const pool = [...today, ...ARCH.items.filter(i => !have.has(i.id) && !(S.hiddenSources || []).some(h => i.source.startsWith(h)))];
+    const pool = [...today, ...ARCH.items.filter(i => !have.has(i.id) && (!i._reg || i._reg === S.region) && !(S.hiddenSources || []).some(h => i.source.startsWith(h)))];
     for (const i of pool) {
       if (days !== Infinity && Date.now() - Date.parse(i.published) > days * 86400e3) continue;
       const title = i.title.toLowerCase(), head = `${title} ${String(i.summary || "").toLowerCase()} ${i.source.toLowerCase()} ${(i._sec || "").toLowerCase()}`;
