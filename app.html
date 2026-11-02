@@ -1594,7 +1594,7 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
   function wxListenOn() {
     if (!state.wx || document.body.classList.contains("wxlisten") || !$("weather").hidden) return;
     document.body.classList.add("wxlisten");
-    BS.view = { mode: "live", ms: Date.now(), play: true, day: null };
+    BS.view = { mode: "live", ms: Date.now(), play: true, day: null, speed: 30 * 60 };  // faster while the news reads the weather
     renderWeather();
     const el = $("weather"); el.hidden = false; el.scrollTop = 0;
     requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("open")));
@@ -3688,7 +3688,7 @@ const handle = async (m, post) => {
     // Play through the day; at the end of it, replay the same day from 6am.
     if (v.play) {
       const day0 = v.day || bsKey(v.ms);
-      v.ms += real * BS_SPEED * 1000;
+      v.ms += real * (v.speed || BS_SPEED) * 1000;
       if (bsKey(v.ms) !== day0 || v.ms > BS.D.end) v.ms = bsMidnight(day0) + BS_DAWN * 60000;
       v.day = day0;
       if (v.mode === "live" && Math.abs(v.ms - Date.now()) > 45 * 60000) v.mode = "day";
