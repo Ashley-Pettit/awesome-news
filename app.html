@@ -702,7 +702,11 @@ body.locked .player { z-index: 45; bottom: calc(env(safe-area-inset-bottom, 0px)
 body.wxlisten #weather { z-index: 60; transform: none; opacity: 0; transition: opacity 0.9s ease; }
 body.wxlisten #weather.open { opacity: 1; }  /* the hello fades into the weather */
 body.wxlisten #weather .bs-scrubrow { display: none; }
-body.wxlisten #weather .bs-done { display: none; }  /* while the news reads it, it closes by itself */  /* while the news reads it, the timeline just plays */
+body.wxlisten #weather .bs-done { display: none; }
+.bs-skip { display: none; flex: none; align-items: center; gap: 6px; font-family: var(--ui); font-weight: 700; font-size: 0.82rem; color: var(--bs-ink); background: var(--bs-scrim);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border: 1px solid var(--bs-line); border-radius: 999px; padding: 6px 12px; }
+.bs-skip svg { width: 14px; height: 14px; }
+body.wxlisten #weather .bs-skip { display: inline-flex; }  /* while the news reads it, it closes by itself */  /* while the news reads it, the timeline just plays */
 /* Listen intro: the weather blurred behind the title, then it sharpens and comes forward */
 #weather .bs-hud { transition: opacity 0.8s ease; }
 #bsGl { transition: filter 1s ease, transform 1s ease; }
@@ -1685,6 +1689,8 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     if (p.kind === "open" && cue.dataset.k !== "open") { cue.dataset.k = "open"; const date = new Intl.DateTimeFormat("en-AU", { timeZone: TZ, weekday: "long", day: "numeric", month: "long" }).format(new Date());
       cue.innerHTML = `<div class="np-hello"><img class="hl-logo" src="${$("npLogo").src}" alt=""><span class="hl-name">Awesome News</span><span class="hl-date np-in" style="--i:3">${esc(date)}</span><span class="hl-line" aria-hidden="true"></span></div>`; }
     if (p.kind !== "open") wxListenOff();
+    // Once a story itself is being read (not just its headline), it counts as heard.
+    if (L.kind === "drive" && !["open", "cue", "title"].includes(p.kind)) heardAdd(L.queue[L.at]);
     // Straight after the weather: the headlines, so you can jump to one (and a tip about Settings).
     if (p.kind !== "open" && L.kind === "drive" && L.opened && !L.listShown) { L.listShown = true; npListShow(true); }
     if (p.kind === "cue") {
@@ -2996,6 +3002,11 @@ const handle = async (m, post) => {
         for (const i of forYou()) { if (L.queue.length >= 5) break; if (preReady(i) && !L.queue.some(k => sameStory(k, i.id))) L.queue.push(i.id); }
       }
     }
+    if (kind === "drive") {
+      const fresh = L.queue.filter(id => !HEARD.has(id) && !siblings(id).some(x => HEARD.has(x)));
+      if (!fresh.length && L.queue.length) { toast("You've heard all the news for now. New stories come with the next update."); wxListenOff(); npClose(); return; }
+      L.queue = fresh;
+    }
     if (!L.queue.length) { toast("There's nothing to read out yet"); return; }
     Object.assign(L, { on: true, paused: false, at: 0, kind, opened: false, lastSec: null, back: null, done: new Set(), listShown: false });
     npListHide();
@@ -3031,6 +3042,19 @@ const handle = async (m, post) => {
     L.loading = false;
     preNext();
     if (L.waiting && !L.paused) { L.waiting = false; speakNext(L.token); }
+  }
+  // Skip button on the weather while listening: straight on to the stories.
+  function skipWeather() {
+    if (!L.on || L.parts[L.part]?.kind !== "open") { wxListenOff(); return; }
+    const tk = ++L.token; hush(); L.paused = false;
+    L.part = L.parts.findIndex(p => p.kind !== "open"); if (L.part < 0) L.part = L.parts.length;
+    wxListenOff(); updatePlayer(); armDog(); speakNext(tk);
+  }
+  // Stories already heard in Listen to the news are left out next time.
+  const HEARD = new Set(store.get("brief.heard", []));
+  function heardAdd(id) {
+    if (!id || HEARD.has(id)) return;
+    HEARD.add(id); const all = [...HEARD]; store.set("brief.heard", all.slice(-600));
   }
   function speakNext(tk) {
     if (tk !== L.token || !L.on || L.paused) return;
@@ -3305,6 +3329,7 @@ const handle = async (m, post) => {
     if (t.closest("#npPlay")) { L.paused ? resumeListen() : pauseListen(); return; }
     if (t.closest("#npNext")) { skipListen(); return; }
     if (t.closest("#npStop")) { stopListen(); return; }
+    if (t.closest("#bsSkip")) { skipWeather(); return; }
     if (t.closest("#npPos")) { $("npList").hidden ? npListShow(false) : npListHide(); return; }
     if (t.closest("#npListX")) { npListHide(); return; }
     const jump = t.closest("[data-np-jump]"); if (jump) { npJump(+jump.dataset.npJump); return; }
@@ -3628,6 +3653,7 @@ const handle = async (m, post) => {
       <header class="bs-top">
         <div class="bs-place"><h1>${esc(D.city)}</h1></div>
         <button class="bs-done" type="button" data-close="weather">Done</button>
+        <button class="bs-skip" type="button" id="bsSkip" aria-label="Skip the weather">Skip<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 5.5v13l9-6.5zM16 5h3v14h-3z"/></svg></button>
       </header>
       <section class="bs-now">
         <div class="bs-main">
