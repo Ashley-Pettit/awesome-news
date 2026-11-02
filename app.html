@@ -701,12 +701,13 @@ body.wxlisten #weather .bs-scrubrow { display: none; }  /* while the news reads 
 .bs-when { font-family: var(--ui); font-weight: 650; font-size: 0.9rem; color: var(--bs-dim); }
 .bs-temp { font-family: var(--display); font-weight: 800; font-size: clamp(5.6rem, 30vw, 9rem); line-height: 0.92; letter-spacing: -0.06em; font-variant-numeric: tabular-nums; font-variation-settings: "opsz" 96; }
 .bs-temp sup { font-size: 0.45em; font-weight: 600; vertical-align: top; position: relative; top: 0.12em; margin-left: 0.04em; letter-spacing: 0; }
-.bs-what { font-family: var(--display); font-weight: 700; font-size: 1.5rem; line-height: 1.1; letter-spacing: -0.02em; margin-top: 2px; padding: 2px 10px 3px; margin-left: -10px; border-radius: 10px; background: rgba(6, 10, 26, 0.32); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.bs-what { font-family: var(--display); font-weight: 700; font-size: 1.5rem; line-height: 1.1; letter-spacing: -0.02em; margin-top: 4px; padding: 3px 10px 4px; border-radius: 12px; background: rgba(6, 10, 26, 0.32); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
 .bs-main { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
 .bs-chips { grid-column: 1 / -1; display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
-.bs-rain { margin-top: auto; align-self: flex-end; width: min(276px, 72%); box-sizing: border-box; display: grid; gap: 5px; padding: 10px 13px 9px; border-radius: 18px; background: rgba(6, 10, 26, 0.5);
-  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1); font-family: var(--ui); font-size: 0.78rem; color: var(--bs-dim); line-height: 1.3; }
-.bs-rain + .bs-panel { margin-top: 40px; }  /* sits a little above the panel */
+.bs-chips .bs-chip { padding: 6px 9px; font-size: 0.78rem; }
+.bs-rain { margin-top: auto; align-self: flex-end; width: min(300px, 74%); box-sizing: border-box; display: grid; gap: 6px; padding: 12px 14px 11px; border-radius: 22px; background: rgba(8, 12, 28, 0.5);
+  -webkit-backdrop-filter: blur(18px) saturate(1.3); backdrop-filter: blur(18px) saturate(1.3); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1); font-family: var(--ui); font-size: 0.78rem; color: var(--bs-dim); line-height: 1.3; }
+.bs-rain + .bs-panel { margin-top: 16px; }  /* sits a little above the panel */
 .bs-rain.dry .br-top svg { color: #ffc94d; }
 .br-top { display: flex; align-items: center; gap: 8px; }
 .br-top svg { width: 20px; height: 20px; color: #8cc2ff; flex: none; }
@@ -716,7 +717,7 @@ body.wxlisten #weather .bs-scrubrow { display: none; }  /* while the news reads 
 .br-top .pc { margin-left: auto; font-size: 1.3rem; font-weight: 800; color: var(--bs-ink); font-variant-numeric: tabular-nums; }
 .br-top .pc small { font-size: 0.6rem; font-weight: 700; color: var(--bs-faint); margin-left: 3px; letter-spacing: 0.04em; }
 .br-when { color: var(--bs-ink); font-weight: 650; font-size: 0.84rem; }
-.br-chart { position: relative; display: flex; align-items: flex-end; gap: 2px; height: 30px; }
+.br-chart { position: relative; display: flex; align-items: flex-end; gap: 2px; height: 34px; border-bottom: 1px solid rgba(255, 255, 255, 0.12); }
 .br-chart i { flex: 1; height: max(2px, calc(var(--p) * 100%)); border-radius: 2px 2px 0 0; background: rgba(120, 180, 255, calc(0.3 + var(--m) * 0.7)); }
 .br-chart i.n { height: 2px; background: rgba(255, 255, 255, 0.1); }
 .br-axis { display: flex; justify-content: space-between; margin-top: -3px; font-size: 0.66rem; color: var(--bs-faint); font-variant-numeric: tabular-nums; }
@@ -3557,7 +3558,7 @@ const handle = async (m, post) => {
       temp = d.hi; what = BS_KIND[d.kind]; when = `Forecast high for ${bsDate(bsMidnight(d.date) + 432e5)}`;
     }
     // The chips are for the whole day, so they don't jump around as the timeline plays.
-    chips = [["Feels like up to", d.feels + "°"], ["Wind up to", d.wind + " km/h"], ["UV", `${d.uv} ${bsUv(d.uv)}`, "uv"]];
+    chips = [["Feels like", d.feels + "°"], ["Wind", d.wind + " km/h"], ["UV", `${d.uv} ${bsUv(d.uv)}`, "uv"]];
     $("bsTemp").textContent = d.hi; $("bsWhat").textContent = what; $("bsWhen").textContent = `${di ? new Intl.DateTimeFormat("en-AU", { timeZone: D.tz, weekday: "long" }).format(new Date(v.ms)) : "Today"}'s high`;
     $("bsHiLo").innerHTML = `<span>Low <b>${d.lo}°</b></span><span><b>${temp}°</b> <small>${bsTime(v.jump ? Math.floor(v.ms / 3e5) * 3e5 : bsStep(v.ms)).replace(" ", "")}</small></span>`;
     if (BS.rainDay !== d.date) { BS.rainDay = d.date; bsRain(d); }
