@@ -1532,7 +1532,7 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
         wx = ` First, the weather in ${state.wx.city}. It's ${Math.round(v.cur.temperature_2m)} degrees and ${wxLabel(v.cur.weather_code, v.cur.is_day).toLowerCase()}. ${wxSummary(v).replace(/°/g, " degrees").replace(/\((\d+)%\)/g, ", $1 percent").replace(/\((\d+)\)/g, "$1")}`;
       }
     } catch {}
-    return `${greeting()}. This is Awesome News, about ${Math.max(5, Math.round(L.driveSecs / 300) * 5)} minutes of news.${wx}`;
+    return `${greeting()}. This is Awesome News.${wx}`;
   }
   function briefingHTML(picks) {
     if (picks.length < 3) { state.briefIds = []; return ""; }
