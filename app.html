@@ -3375,7 +3375,7 @@ const handle = async (m, post) => {
   const BS_KIND = { sun: "Sunny", partly: "Partly cloudy", cloud: "Cloudy", rain: "Showers", storm: "Thunderstorms" };
   const BS_ICON = { sun: "i-sun", partly: "i-partly", cloud: "i-cloud", rain: "i-rain", storm: "i-storm" };
   const BS_SPEED = 15 * 60;  // seconds of forecast per second of real time (15 minutes a second)
-  const BS_DAWN = 6 * 60;    // a chosen day starts playing at 6am
+  const BS_DAWN = 4 * 60 + 30;    // a chosen day (and each replay) starts at 4:30am
   // ---- astronomy (the suncalc formulas) ----
   const bsRad = Math.PI / 180, bsDayMs = 864e5, J1970 = 2440588, J2000 = 2451545, bsEcl = bsRad * 23.4397;
   const bsToDays = ms => ms / bsDayMs - 0.5 + J1970 - J2000;
