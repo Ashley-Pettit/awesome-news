@@ -109,10 +109,9 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
 @media (max-width: 340px) { .wx .wl { display: none; } }
 .wx:active { transform: scale(0.97); }
 /* Seven-day snapshot under the masthead: one column per day, tap for the full forecast. */
-.week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); width: 100%; margin-top: 10px; padding: 7px 2px 6px; border-radius: var(--r-md); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); text-align: center; }
+.week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); width: 100%; margin-top: 10px; padding: 8px 2px 6px; border-radius: var(--r-md); background: var(--surface); text-align: center; }
 .week:active { transform: scale(0.99); }
 .week .wd { display: grid; grid-template-rows: auto 24px auto auto; justify-items: center; align-items: center; gap: 1px; min-width: 0; font-variant-numeric: tabular-nums; }
-.week .wd + .wd { box-shadow: -1px 0 0 var(--line); }
 .week .dn { font-size: 0.62rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
 .week .wd.today .dn { color: var(--accent); }
 .week svg { width: 19px; height: 19px; color: var(--sun); }
@@ -676,6 +675,17 @@ body.locked .player { z-index: 45; bottom: calc(env(safe-area-inset-bottom, 0px)
 body.wxlisten #weather { z-index: 60; transform: none; opacity: 0; transition: opacity 0.9s ease; }
 body.wxlisten #weather.open { opacity: 1; }  /* the hello fades into the weather */
 body.wxlisten #weather .bs-scrubrow { display: none; }  /* while the news reads it, the timeline just plays */
+/* Listen intro: the weather blurred behind the title, then it sharpens and comes forward */
+#weather .bs-hud { transition: opacity 0.8s ease; }
+#bsGl { transition: filter 1s ease, transform 1s ease; }
+body.wxintro #weather, body.wxreveal #weather { z-index: 54; }
+body.wxintro #weather { opacity: 1; transition: none; }
+body.wxintro #bsGl { filter: blur(14px) brightness(0.7) saturate(1.1); transform: scale(1.12); }
+body.wxintro #weather .bs-hud { opacity: 0; }
+.np { transition: background-color 0.9s ease; }
+body.wxintro .np, body.wxreveal .np { background-color: rgba(11, 10, 18, 0); }
+body.wxintro .np-pic, body.wxreveal .np-pic { display: none; }
+body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
 /* ---------- Weather: Brisbane Sky (Ash's design). A full-screen 3D sky with the readout floating over it. ---------- */
 #weather { --bs-ink: #f3f6fb; --bs-dim: rgba(243, 246, 251, .72); --bs-faint: rgba(243, 246, 251, .46); --bs-scrim: rgba(8, 14, 30, .42); --bs-line: rgba(243, 246, 251, .18);
   --bs-jac: #b79cf0; --bs-jac-deep: #7d5fd1; --bs-storm: #ffd166; --bs-display: "Big Shoulders Display", "Arial Narrow", "Helvetica Neue", Impact, sans-serif; --bs-body: "Atkinson Hyperlegible", "Trebuchet MS", Verdana, sans-serif;
@@ -1613,18 +1623,32 @@ body.wxlisten #weather .bs-scrubrow { display: none; }  /* while the news reads 
     }
     $("npCap").textContent = p.kind === "title" ? "" : p.text;
   }
-  function wxListenOn() {
+  // Listen to the news: the weather sits blurred behind the "Awesome News" title, then sharpens and takes over
+  // when the weather is read out. Its clock only starts once it's sharp.
+  function wxListenIntro() {
     if (!state.wx || document.body.classList.contains("wxlisten") || !$("weather").hidden) return;
-    document.body.classList.add("wxlisten");
-    // While the news reads the weather: the day from 4:45am in 15-minute steps, one every 0.2 seconds for the sky; the words update once a second (75 minutes).
+    document.body.classList.add("wxlisten", "wxintro");
+    // The day from 4:45am in 15-minute steps, one every 0.2 seconds for the sky; the words update once a second (75 minutes).
     // In the morning and afternoon it's today; from 6pm it's tomorrow.
     BS.D = bsData();
     const t = Date.now(), day = bsMins(t) >= 18 * 60 ? (BS.D.days[1] || BS.D.days[0]).date : bsKey(t);
-    BS.view = { mode: "day", ms: bsMidnight(day) + 285 * 60000, play: true, day, jump: 15 * 60, every: 0.2, dawn: 285 };
+    BS.view = { mode: "day", ms: bsMidnight(day) + 285 * 60000, play: false, day, jump: 15 * 60, every: 0.2, dawn: 285, acc: 0, n: 0 };
     if (!BS.tick) BS.tick = setInterval(() => { if (!$("weather").hidden) bsTick(); }, 1000);
     const el = $("weather"); el.hidden = false; el.scrollTop = 0;  // shown first, so the 3D sky sizes itself to the screen
     renderWeather();
     requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("open")));
+  }
+  function wxListenOn() {
+    const b = document.body;
+    if (!b.classList.contains("wxlisten")) wxListenIntro();
+    if (!b.classList.contains("wxintro")) return;
+    b.classList.remove("wxintro"); b.classList.add("wxreveal");  // sharpen, title fades away
+    clearTimeout(L.wxR);
+    L.wxR = setTimeout(() => {
+      if (!b.classList.contains("wxreveal")) return;
+      b.classList.remove("wxreveal");  // now on top, and the clock starts
+      Object.assign(BS.view, { play: true, acc: 0 });
+    }, 1000);
   }
   // Open the weather page when the opening reaches "First, the weather", going by how far through the audio it is.
   function wxListenSoon() {
@@ -1641,10 +1665,10 @@ body.wxlisten #weather .bs-scrubrow { display: none; }  /* while the news reads 
     }, 120);
   }
   function wxListenOff() {
-    clearInterval(L.wxT); L.wxT = 0;
+    clearInterval(L.wxT); L.wxT = 0; clearTimeout(L.wxR);
     if (!document.body.classList.contains("wxlisten")) return;
     const el = $("weather"); el.classList.remove("open");  // fades out
-    setTimeout(() => { if (!el.classList.contains("open")) { el.hidden = true; document.body.classList.remove("wxlisten"); } }, 700);
+    setTimeout(() => { if (!el.classList.contains("open")) { el.hidden = true; document.body.classList.remove("wxlisten", "wxintro", "wxreveal"); } }, 700);
   }
   // The sky as it reads in a sentence: "It's 21 degrees with light drizzle", not "21 degrees and drizzle".
   function wxSay(c, day) {
@@ -1762,8 +1786,8 @@ body.wxlisten #weather .bs-scrubrow { display: none; }  /* while the news reads 
     }
     const list = forYou();
     if (!list.length) return welcomeHTML() + toolsHTML("0 stories") + emptyHTML("All caught up", "You've opened everything in your mix. Turn off Hide read to see it again.", I.tick);
-    const brief = briefing(), side = briefingHTML(brief);
-    const skip = new Set(side ? brief.flatMap(i => [i.id, ...siblings(i.id)]) : []);
+    // No briefing card on the home page: Listen covers it, and the feed reads cleaner without it.
+    const side = "", skip = new Set();
     return welcomeHTML() + toolsHTML(`${list.length} stories in your mix`) + listHTML(list.filter(i => !skip.has(i.id)), true, true, side);
   }
   function renderSection(id) {
@@ -2909,7 +2933,7 @@ const handle = async (m, post) => {
     L.parts = [...pre, ...intro, { text: `${clean(i.title)}.`, para: -1, kind: "title" }, { text: reports(i), para: -1, kind: "title", opt: true }];
     if (L.kind !== "story") npStory(i);
     // Listen to the news: the full weather page shows straight away while the opening reads the weather, then steps aside.
-    if (L.kind === "drive" && L.at === 0) wxListenSoon(); else wxListenOff();
+    if (L.kind === "drive" && L.at === 0) { wxListenIntro(); wxListenSoon(); } else wxListenOff();
     L.part = 0; L.loading = true; L.waiting = false; L.curPara = -1; L.aiAt = -1;
     L.dev = usePre() && !preReady(i);
     if (L.dev && L.kind === "story" && L.at === 0) toast("Emma hasn't recorded this story yet, so your phone's voice is reading it. It'll be ready after the next update.", 6000);
@@ -3376,7 +3400,7 @@ const handle = async (m, post) => {
       const name = k === 0 ? "Today" : new Date(yy, m - 1, dd).toLocaleDateString("en-AU", { weekday: "short" });
       const p = dy.precipitation_probability_max?.[x] ?? 0;
       return `<span class="wd${k ? "" : " today"}" aria-label="${name}: ${wxLabel(dy.weather_code[x], 1)}, high ${Math.round(dy.temperature_2m_max[x])}, low ${Math.round(dy.temperature_2m_min[x])}${p >= 20 ? `, ${p}% chance of rain` : ""}">`
-        + `<span class="dn">${name}</span>${wxIcon(dy.weather_code[x], 1)}<span class="t"><span class="hi">${Math.round(dy.temperature_2m_max[x])}°</span></span><span class="rp">${p >= 20 ? p + "%" : ""}</span></span>`;
+        + `<span class="dn">${name}</span>${wxIcon(dy.weather_code[x], 1)}<span class="t"><span class="hi">${Math.round(dy.temperature_2m_max[x])}°</span></span><span class="rp">${p >= 40 ? p + "%" : ""}</span></span>`;
     }).join("");
   }
   // Next 24 hours as one strip: icon, temperature line and chance of rain, all on the same hourly scale.
