@@ -3445,7 +3445,7 @@ const handle = async (m, post) => {
     if (t.closest("#npNext")) { skipListen(); return; }
     if (t.closest("#npStop")) { stopListen(); return; }
     // Customise: the news keeps playing; Settings opens over it, and the Listen card brings the player back.
-    if (t.closest("#npCust")) { npClose(); openSettings(); return; }
+    if (t.closest("#npCust")) { npClose(); state.sTab = "news"; openSettings(); return; }  // the News tab: your interests and local area
     if (t.closest("#bsSkip")) { skipWeather(); return; }
     if (t.closest("#bsWeekBtn")) { weekBrief(); return; }
     if (t.closest("#bsStop")) { stopListen(); return; }
