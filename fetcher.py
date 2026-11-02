@@ -172,6 +172,7 @@ MAX_AGE_COPILOT = timedelta(days=21)  # product blogs post a few times a week
 # ---------------------------------------------------------------------------
 AI_RE = re.compile(r"\b(AI|A\.I\.|artificial intelligence|OpenAI|Anthropic|ChatGPT|Claude|Gemini|"
                    r"LLMs?|chatbots?|machine learning|deepfakes?|Copilot|generative)\b", re.I)
+AI_MORE = re.compile(r"\b(Nvidia|GPT-?\d*|Grok|Llama|Mistral|DeepSeek|neural|robots?|robotics|algorithms?|data cent(?:re|er)s?|xAI|Meta AI)\b", re.I)
 COPILOT_RE = re.compile(r"\bCopilot\b", re.I)
 GITHUB_RE = re.compile(r"\b(GitHub|VS ?Code|Visual Studio)\b", re.I)
 M365_CATS = {"Microsoft Copilot (Microsoft 365)", "Word", "Excel", "PowerPoint", "Outlook", "Microsoft Teams", "OneNote",
@@ -659,6 +660,9 @@ def main():
                     continue
                 roadmap_left -= 1
             elif keep != "all" and not KEYWORDS[keep].search(f"{st['title']} {st['summary']}"):
+                continue
+            # AI topic feeds also carry stories that only touch on AI (a US midterms piece, say): keep the ones about it.
+            if section == "ai" and not (AI_RE.search(f"{st['title']} {st['summary']}") or AI_MORE.search(f"{st['title']} {st['summary']}")):
                 continue
             target = section
             if is_m365_copilot(st["title"]):
