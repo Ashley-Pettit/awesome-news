@@ -3070,7 +3070,9 @@ const handle = async (m, post) => {
         // quietly for a few seconds rather than switching to the phone's voice.
         pre.push(t ? { text: t, para: -1, kind: "open" } : { text: driveOpening(), para: -1, kind: "open", silent: usePre() });
       }
-      if (sec && sec !== L.lastSec) pre.push({ text: sec === "top" ? "Here are the top stories." : `Now, ${sec}.`, para: -1, kind: "cue", sec });
+      // After the next button, just the section's name ("Finance."), not "Now, Finance."
+      if (sec && sec !== L.lastSec) pre.push({ text: L.skipped ? (sec === "top" ? "Top stories." : `${sec.charAt(0).toUpperCase()}${sec.slice(1)}.`) : sec === "top" ? "Here are the top stories." : `Now, ${sec}.`, para: -1, kind: "cue", sec, opt: !!L.skipped });  // not recorded yet: just skip it
+      L.skipped = false;
       L.lastSec = sec;
     }
     L.parts = [...pre, ...intro, { text: `${clean(i.title)}.`, para: -1, kind: "title" }, { text: reports(i), para: -1, kind: "title", opt: true }];
@@ -3155,7 +3157,7 @@ const handle = async (m, post) => {
     }
     speakNext(tk);
   }
-  function skipListen() { L.token++; L.sid++; hush(); L.paused = false; nextStory(); }
+  function skipListen() { L.token++; L.sid++; hush(); L.paused = false; L.skipped = true; nextStory(); }
   function stopListen() {
     wxListenOff(); $("npCust").hidden = true;
     L.on = false; L.paused = false; L.token++; L.sid++; L.aiWait = false;

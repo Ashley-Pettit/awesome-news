@@ -215,8 +215,11 @@ def plan(data, vkey):
             pass
     for t in ["Here are the top stories.", "Now, local news.", "Now, more headlines.", SAMPLE, MORE]:
         want(t)
+    for t in ["Top stories.", "Local news.", "More headlines."]:
+        want(t)  # the short cue after the next button is pressed
     for lbl in CORE_LABELS + [x["label"] for x in status.get("interests", [])]:
         want(f"Now, {lbl}.")
+        want(f"{lbl[:1].upper()}{lbl[1:]}.")
     for n in range(1, 9):
         want(f"Story {n}.")
 
