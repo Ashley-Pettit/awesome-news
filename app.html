@@ -268,6 +268,7 @@ body.npon .player { display: none; }
 .np-top, .np-low, .np-wx, .np-cue { position: relative; z-index: 3; }
 .np-top { display: flex; align-items: center; gap: 8px; }
 .np-brand { display: flex; align-items: center; gap: 9px; font-family: var(--display); font-weight: 800; font-size: 1.02rem; letter-spacing: -0.01em; flex: 1; min-width: 0; white-space: nowrap; }
+.np-brand span { overflow: hidden; text-overflow: ellipsis; }
 .np-brand img { width: 30px; height: 30px; border-radius: 8px; max-width: 100%; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35); }
 .np-pos { padding: 5px 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12); font-size: 0.74rem; font-weight: 700; font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, 0.86); white-space: nowrap; }
 .np-pos:empty { display: none; }
@@ -295,12 +296,10 @@ body.beta-heads button.np-pos::after { content: ""; display: inline-block; width
 .nl-items li.on button { background: rgba(124, 92, 255, 0.28); box-shadow: inset 0 0 0 1px rgba(170, 150, 255, 0.4); }
 .nl-items li.on .n { color: #cdbdff; }
 .nl-items li.done .t { color: rgba(255, 255, 255, 0.5); font-weight: 600; }
-.np-tipbar { position: absolute; z-index: 4; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 66px); transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px); box-sizing: border-box;
-  padding: 9px 14px; border-radius: 999px; font-size: 0.8rem; font-weight: 650; color: #efe9ff; text-align: center; background: rgba(124, 92, 255, 0.32);
-  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: inset 0 0 0 1px rgba(190, 170, 255, 0.35); animation: tipIn 0.5s ease both, tipFade 0.6s ease 4.4s forwards; }
-.np-tipbar[hidden] { display: none; }
-@keyframes tipIn { from { opacity: 0; transform: translate(-50%, -8px); } to { opacity: 1; transform: translate(-50%, 0); } }
-@keyframes tipFade { to { opacity: 0; } }
+.np-cust { display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px; border-radius: 999px; font: inherit; font-size: 0.74rem; font-weight: 700; color: #efe9ff;
+  background: rgba(124, 92, 255, 0.32); box-shadow: inset 0 0 0 1px rgba(190, 170, 255, 0.35); white-space: nowrap; animation: npPop 0.4s ease both; }
+.np-cust svg { width: 14px; height: 14px; }
+.np-cust[hidden] { display: none; }
 .nl-tip { margin: 0; padding: 10px 16px 12px; font-size: 0.78rem; color: #e3dbff; background: rgba(124, 92, 255, 0.2); border-top: 1px solid rgba(255, 255, 255, 0.08); animation: tipOut 0.6s ease 5s forwards; }
 @keyframes tipOut { to { opacity: 0; height: 0; padding-top: 0; padding-bottom: 0; border-top-width: 0; } }
 @media (prefers-reduced-motion: reduce) { .np-list { animation: none; } }
@@ -1027,13 +1026,13 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   <div class="np-pic"><img class="np-bg" id="npBg" alt=""><img id="npImg" alt=""><div class="np-mono" id="npMono"></div></div>
   <div class="np-top">
     <div class="np-brand"><img id="npLogo" alt=""><span>Awesome News</span></div>
+    <button type="button" class="np-cust" id="npCust" aria-label="Choose your kinds of stories in Settings" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg>Customise</button>
     <button type="button" class="np-pos" id="npPos" aria-label="Show the headlines" aria-expanded="false"></button>
     <button type="button" class="np-btn mic" data-cmd aria-pressed="false" aria-label="Voice commands: say skip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
     <button type="button" class="np-btn" id="npMin" aria-label="Minimise"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
   </div>
   <div class="np-wx" id="npWx" hidden></div>
   <div class="np-cue" id="npCue" hidden></div>
-  <div class="np-tipbar" id="npTipBar" role="status" hidden>Tip: choose your kinds of stories in Settings</div>
   <section class="np-list" id="npList" aria-label="Headlines" hidden>
     <div class="nl-head"><b>Today's headlines</b><span>Tap one to hear it next</span><button type="button" class="nl-x" id="npListX" aria-label="Close the headlines"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
     <ol class="nl-items" id="npListItems"></ol>
@@ -1715,11 +1714,8 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     // Straight after the weather: the headlines, so you can jump to one (and a tip about Settings).
     if (p.kind !== "open" && L.kind === "drive" && L.opened && !L.listShown) {
       L.listShown = true;
+      $("npCust").hidden = false;  // from here on: a small "Customise" pill that opens Settings (shown, not read out)
       if (betaHeads()) npListShow(true);
-      else {  // just shown, not read out: a tip about Settings for 5 seconds
-        const tb = $("npTipBar"); tb.hidden = false; tb.style.animation = "none"; void tb.offsetWidth; tb.style.animation = "";
-        clearTimeout(L.tipT); L.tipT = setTimeout(() => { tb.hidden = true; }, 5000);
-      }
     }
     if (p.kind === "cue") {
       const label = p.sec === "top" ? "Top stories" : p.sec === "local news" ? "Local news" : p.sec === "more headlines" ? "More headlines" : p.sec;
@@ -3055,6 +3051,7 @@ const handle = async (m, post) => {
     }
     if (!L.queue.length) { toast("There's nothing to read out yet"); return; }
     Object.assign(L, { on: true, paused: false, at: 0, kind, opened: false, lastSec: null, back: null, done: new Set(), listShown: false });
+    $("npCust").hidden = true;
     npListHide();
     document.body.classList.add("playing");
     playStory();
@@ -3160,7 +3157,7 @@ const handle = async (m, post) => {
   }
   function skipListen() { L.token++; L.sid++; hush(); L.paused = false; nextStory(); }
   function stopListen() {
-    wxListenOff(); clearTimeout(L.tipT); $("npTipBar").hidden = true;
+    wxListenOff(); $("npCust").hidden = true;
     L.on = false; L.paused = false; L.token++; L.sid++; L.aiWait = false;
     hush(); npClose();
     if ($("tvs").hidden) cmdStop();
@@ -3387,6 +3384,8 @@ const handle = async (m, post) => {
     if (t.closest("#npPlay")) { L.paused ? resumeListen() : pauseListen(); return; }
     if (t.closest("#npNext")) { skipListen(); return; }
     if (t.closest("#npStop")) { stopListen(); return; }
+    // Customise: the news keeps playing; Settings opens over it, and the Listen card brings the player back.
+    if (t.closest("#npCust")) { npClose(); openSettings(); return; }
     if (t.closest("#bsSkip")) { skipWeather(); return; }
     if (t.closest("#bsStop")) { stopListen(); return; }
     if (t.closest("#npPos")) { $("npList").hidden ? npListShow(false) : npListHide(); return; }
