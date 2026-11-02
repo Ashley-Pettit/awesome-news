@@ -3173,7 +3173,7 @@ const handle = async (m, post) => {
   }
   function wxShowDay(date) {
     if (!BS.D || !date || BS.view.day === date) return;
-    Object.assign(BS.view, { mode: "day", day: date, ms: bsMidnight(date) + 285 * 60000, play: true, acc: 0, n: 0, jump: 5 * 60, every: 0.2, dawn: 285 });
+    Object.assign(BS.view, { mode: "day", day: date, ms: bsMidnight(date) + 480 * 60000, play: true, acc: 0, n: 0, jump: 5 * 60, every: 0.2, dawn: 480 });  // week ahead: each day from 8am
     bsApply(true);
   }
   // Skip button on the weather while listening: straight on to the stories.
