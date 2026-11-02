@@ -177,6 +177,29 @@ def opening(region, w):
     return today, text, night
 
 
+WEEK_INTRO = "Here's the week ahead."
+
+
+def week(w):
+    """The longer weather briefing, a day at a time, for the "Week ahead" button while the weather plays (weekItems() in app.html)."""
+    d = w["daily"]
+    off = timedelta(seconds=w.get("utc_offset_seconds", 36000))
+    today = (datetime.now(timezone.utc) + off).strftime("%Y-%m-%d")
+    if today not in d["time"]:
+        return None
+    k, items = d["time"].index(today), []
+    for n in range(k, min(k + 7, len(d["time"]))):
+        date = d["time"][n]
+        name = "Today" if n == k else "Tomorrow" if n == k + 1 else datetime.strptime(date, "%Y-%m-%d").strftime("%A")
+        t = (f"{name}, {WMO.get(d['weather_code'][n], 'mixed weather')}, with a top of {round(d['temperature_2m_max'][n])} degrees "
+             f"and a low of {round(d['temperature_2m_min'][n])}.")
+        p = (d.get("precipitation_probability_max") or [None] * (n + 1))[n]
+        if p is not None:
+            t += " Rain is almost certain." if p >= 90 else " Rain is likely." if p >= 70 else f" A {p} percent chance of rain." if p >= 30 else ""
+        items.append({"date": date, "text": t})
+    return {"day": today, "items": items}
+
+
 # ---------------------------------------------------------------------------
 # What to say
 # ---------------------------------------------------------------------------
@@ -220,6 +243,12 @@ def plan(data, vkey):
                     want(night)
                 if nxt:
                     want(nxt["text"])
+            wk = week(w)
+            if wk and r in opens:
+                opens[r]["week"] = wk
+                want(WEEK_INTRO)
+                for it in wk["items"]:
+                    want(it["text"])
         except Exception:
             pass
     for t in ["Here are the top stories.", SAMPLE, MORE] + [w.format(x) for x in ("local news", "more headlines") for w in CUE_WAYS]:

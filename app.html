@@ -719,7 +719,8 @@ body.wxlisten #weather .bs-stop { display: grid; }
 .bs-skip { display: none; flex: none; align-items: center; height: 38px; box-sizing: border-box; gap: 6px; font-family: var(--ui); font-weight: 700; font-size: 0.82rem; color: var(--bs-ink); background: var(--bs-scrim);
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border: 1px solid var(--bs-line); border-radius: 999px; padding: 6px 12px; }
 .bs-skip svg { width: 14px; height: 14px; }
-body.wxlisten #weather .bs-skip { display: inline-flex; }  /* while the news reads it, the timeline just plays */
+body.wxlisten #weather .bs-skip { display: inline-flex; }
+body.wxweek #weather .bs-weekbtn { display: none; }  /* already hearing it */  /* while the news reads it, the timeline just plays */
 /* Listen intro: the weather blurred behind the title, then it sharpens and comes forward */
 #weather .bs-hud { transition: opacity 0.8s ease; }
 #bsGl { transition: filter 1s ease, transform 1s ease; }
@@ -1029,7 +1030,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   <div class="np-pic"><img class="np-bg" id="npBg" alt=""><img id="npImg" alt=""><div class="np-mono" id="npMono"></div></div>
   <div class="np-top">
     <div class="np-brand"><img id="npLogo" alt=""><span>Awesome News</span></div>
-    <button type="button" class="np-cust" id="npCust" aria-label="Choose your kinds of stories in Settings" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg>Customise</button>
+    <button type="button" class="np-cust" id="npCust" aria-label="Personalise your stories in Settings" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg>Personalise</button>
     <button type="button" class="np-pos" id="npPos" aria-label="Show the headlines" aria-expanded="false"></button>
     <button type="button" class="np-btn mic" data-cmd aria-pressed="false" aria-label="Voice commands: say skip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
     <button type="button" class="np-btn" id="npMin" aria-label="Minimise"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
@@ -1711,11 +1712,12 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     wx.hidden = true; cue.hidden = p.kind !== "cue" && p.kind !== "open";
     np.classList.toggle("calm", p.kind === "open" || p.kind === "cue");
     if (p.kind === "open") npHello();
-    if (p.kind !== "open") wxListenOff();
+    if (p.kind === "wk") wxShowDay(p.date);  // the week ahead: the weather steps through each day as it's read
+    else if (p.kind !== "open") wxListenOff();
     // Once a story itself is being read (not just its headline), it counts as heard.
-    if (L.kind === "drive" && !["open", "cue", "title"].includes(p.kind)) heardAdd(L.queue[L.at]);
+    if (L.kind === "drive" && !["open", "cue", "title", "wk"].includes(p.kind)) heardAdd(L.queue[L.at]);
     // Straight after the weather: the headlines, so you can jump to one (and a tip about Settings).
-    if (p.kind !== "open" && L.kind === "drive" && L.opened && !L.listShown) {
+    if (p.kind !== "open" && p.kind !== "wk" && L.kind === "drive" && L.opened && !L.listShown) {
       L.listShown = true;
       $("npCust").hidden = false;  // from here on: a small "Customise" pill that opens Settings (shown, not read out)
       if (betaHeads()) npListShow(true);
@@ -1771,7 +1773,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     clearInterval(L.wxT); L.wxT = 0; clearTimeout(L.wxR);
     if (!document.body.classList.contains("wxlisten")) return;
     const el = $("weather"); el.classList.remove("open");  // fades out
-    setTimeout(() => { if (!el.classList.contains("open")) { el.hidden = true; document.body.classList.remove("wxlisten", "wxintro", "wxreveal"); } }, 700);
+    setTimeout(() => { if (!el.classList.contains("open")) { el.hidden = true; document.body.classList.remove("wxlisten", "wxintro", "wxreveal", "wxweek"); } }, 700);
   }
   // The sky as it reads in a sentence: "It's 21 degrees with light drizzle", not "21 degrees and drizzle".
   function wxSay(c, day) {
@@ -3035,7 +3037,7 @@ const handle = async (m, post) => {
   // pause and offer the play button: a tap on it is allowed to start sound, on a fresh player.
   function armDog() {
     clearTimeout(L.dog); L.heard = false;
-    const sid0 = L.sid, quiet = () => L.on && !L.paused && !L.heard && !(tts && tts.speaking) && !(aud.src && !isSilent() && !aud.paused && aud.currentTime > 0.15);
+    const sid0 = L.sid, quiet = () => L.on && !L.paused && !L.heard && !L.parts[L.part]?.silent && !(tts && tts.speaking) && !(aud.src && !isSilent() && !aud.paused && aud.currentTime > 0.15);
     L.dog = setTimeout(() => {
       if (L.sid > sid0 + 2 || !quiet() || (L.aiWait && L.fails === 0 && !usePre())) return;
       setTimeout(() => { if (quiet()) { pauseListen(); toast("Tap play to start listening"); } }, 900);
@@ -3112,11 +3114,47 @@ const handle = async (m, post) => {
     preNext();
     if (L.waiting && !L.paused) { L.waiting = false; speakNext(L.token); }
   }
+  // "Week ahead" button on the weather while listening: a longer briefing, a day at a time, with the 3D weather
+  // stepping through each day as it's read. Then on to the stories.
+  function weekItems() {
+    const today = new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new Date());
+    const w = PRE?.open?.[S.region]?.week;
+    if (w && w.day === today && w.items?.length) return w.items;  // the same words Emma recorded
+    if (!state.wx) return [];
+    const { dy, di } = wxView(state.wx), out = [];
+    for (let n = di; n < Math.min(di + 7, dy.time.length); n++) {
+      const [yy, mo, dd] = dy.time[n].split("-").map(Number);
+      const name = n === di ? "Today" : n === di + 1 ? "Tomorrow" : new Date(yy, mo - 1, dd).toLocaleDateString("en-AU", { weekday: "long" });
+      const p = dy.precipitation_probability_max?.[n];
+      out.push({ date: dy.time[n], text: `${name}, ${wxExpect(dy.weather_code[n])}, with a top of ${Math.round(dy.temperature_2m_max[n])} degrees and a low of ${Math.round(dy.temperature_2m_min[n])}.`
+        + (p == null ? "" : p >= 90 ? " Rain is almost certain." : p >= 70 ? " Rain is likely." : p >= 30 ? ` A ${p} percent chance of rain.` : "") });
+    }
+    return out;
+  }
+  async function preHas(text) { if (!PRE) return false; const t = PRE.c[await sha16(`${PRE.v}|${text}`)]; return t === 1; }
+  async function weekBrief() {
+    const k = L.part, cur = L.parts[k];
+    if (!L.on || L.kind !== "drive" || !cur || cur.kind !== "open") return;
+    const items = weekItems(); if (!items.length) return;
+    document.body.classList.add("wxweek"); wxListenOn();
+    const parts = [{ text: "Here's the week ahead.", para: -1, kind: "wk", date: items[0].date }, ...items.map(x => ({ text: x.text, para: -1, kind: "wk", date: x.date }))];
+    // Any day Emma hasn't recorded yet just shows on screen for a few seconds.
+    if (usePre()) await Promise.all(parts.map(async q => { q.silent = !(await preHas(q.text)); }));
+    if (!L.on || L.part !== k) return;
+    const tk = ++L.token; hush(); L.paused = false; L.sid++;
+    L.parts = [...L.parts.slice(0, k), ...parts, ...L.parts.slice(k + 1)]; L.part = k;
+    updatePlayer(); armDog(); speakNext(tk);
+  }
+  function wxShowDay(date) {
+    if (!BS.D || !date || BS.view.day === date) return;
+    Object.assign(BS.view, { mode: "day", day: date, ms: bsMidnight(date) + 285 * 60000, play: true, acc: 0, n: 0, jump: 5 * 60, every: 0.2, dawn: 285 });
+    bsApply(true);
+  }
   // Skip button on the weather while listening: straight on to the stories.
   function skipWeather() {
-    if (!L.on || L.parts[L.part]?.kind !== "open") { wxListenOff(); return; }
+    if (!L.on || !["open", "wk"].includes(L.parts[L.part]?.kind)) { wxListenOff(); return; }
     const tk = ++L.token; hush(); L.paused = false;
-    L.part = L.parts.findIndex(p => p.kind !== "open"); if (L.part < 0) L.part = L.parts.length;
+    L.part = L.parts.findIndex(p => p.kind !== "open" && p.kind !== "wk"); if (L.part < 0) L.part = L.parts.length;
     wxListenOff(); updatePlayer(); armDog(); speakNext(tk);
   }
   // Stories already heard in Listen to the news are left out next time.
@@ -3131,7 +3169,7 @@ const handle = async (m, post) => {
     if (sp?.silent) {
       const k = L.part; npPart(k);
       setTimeout(() => { if (tk === L.token && L.part === k) wxListenOn(); }, 1200);
-      setTimeout(() => { if (tk === L.token && L.on && !L.paused && L.part === k) { L.part++; updateBar(); speakNext(tk); } }, 7000);
+      setTimeout(() => { if (tk === L.token && L.on && !L.paused && L.part === k) { L.part++; updateBar(); speakNext(tk); } }, sp.kind === "wk" ? 3500 : 7000);
       return;
     }
     if (L.part >= L.parts.length) { if (L.loading) { L.waiting = true; return; } nextStory(); return; }
@@ -3409,6 +3447,7 @@ const handle = async (m, post) => {
     // Customise: the news keeps playing; Settings opens over it, and the Listen card brings the player back.
     if (t.closest("#npCust")) { npClose(); openSettings(); return; }
     if (t.closest("#bsSkip")) { skipWeather(); return; }
+    if (t.closest("#bsWeekBtn")) { weekBrief(); return; }
     if (t.closest("#bsStop")) { stopListen(); return; }
     if (t.closest("#npPos")) { $("npList").hidden ? npListShow(false) : npListHide(); return; }
     if (t.closest("#npListX")) { npListHide(); return; }
@@ -3736,6 +3775,7 @@ const handle = async (m, post) => {
       <header class="bs-top">
         <div class="bs-place"><h1>${esc(D.city)}</h1></div>
         <div class="bs-btns">
+          <button class="bs-skip bs-weekbtn" type="button" id="bsWeekBtn" aria-label="Hear the week ahead">Week ahead</button>
           <button class="bs-skip" type="button" id="bsSkip" aria-label="Skip the weather">Skip<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 5.5v13l9-6.5zM16 5h3v14h-3z"/></svg></button>
           <button class="bs-x" type="button" data-close="weather" aria-label="Close the weather"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
           <button class="bs-x bs-stop" type="button" id="bsStop" aria-label="Stop listening"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
