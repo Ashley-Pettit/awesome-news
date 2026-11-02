@@ -38,13 +38,14 @@ LEAD = ["local-qld", "headlines", "politics", "finance", "tech", "ai", "copilot"
 CUE = re.compile(r"^(Now, .*|Here are the top stories\.|Story \d+\.)$")
 
 # Said differently from how it's written. Only the sound changes; the key stays on the app's text.
-SAY = [(r"\b7NEWS\b", "Seven News"), (r"\b9News\b", "Nine News"), (r"\b10 News\b", "Ten News"), (r"\biTnews\b", "I.T. News"),
+SAY = [(r"\b7NEWS\b", "Seven News"), (r"\b9News\b", "Nine News"), (r"\b10 News\b", "Ten News"), (r"\biTnews\b", "IT News"),
        (r"\$(\d[\d,.]*) ?bn\b", r"$\1 billion"), (r"\b(\d[\d,.]*) ?bn\b", r"\1 billion"), (r"\$(\d[\d,.]*) ?m\b", r"$\1 million"),
        (r"\$(\d[\d,.]*) ?k\b", r"$\1 thousand"), (r"\bkm/h\b", "kilometres an hour"), (r"\bkm\b", "kilometres"),
-       (r"\bAI\b", "A.I."), (r"\bEVs?\b", lambda m: "E.V." + ("s" if m.group(0).endswith("s") else "")), (r"\bQld\b", "Queensland"),
-       (r"\bASX\b", "A.S.X."), (r"\bRBA\b", "R.B.A."), (r"\bCEO\b", "C.E.O."), (r"\bLNP\b", "L.N.P."), (r"\bSBS\b", "S.B.S."),
-       (r"\bABC\b", "A.B.C."), (r"\bBBC\b", "B.B.C."), (r"\bNSW\b", "New South Wales"), (r"\bEFF\b", "E.F.F."),
+       (r"\bAI\b", "AI"), (r"\bEVs\b", "E-V's"), (r"\bEV\b", "E-V"), (r"\bQld\b", "Queensland"),
+       (r"\bASX\b", "A-S-X"),
+       (r"\bNSW\b", "New South Wales"),
        (r"\bM365\b", "M three six five"), (r"\bSEQ\b", "south-east Queensland"), (r"\bPM\b", "Prime Minister"),
+       # Letters read as letters without full stops ("A.I." made her pause: "A. I."); plain caps already read right.
        # Said the Aussie way, "Queens-lend" (kwˈiːnzlɛnd), not "Queens-land".
        (r"\bQueensland(er|ers)?\b", r"Queenzlend\1"),
        # Money read in plain order: "$400 million" is "400 million dollars" (the voice otherwise says "dollar 400 million").
@@ -54,7 +55,7 @@ SAY = [(r"\b7NEWS\b", "Seven News"), (r"\b9News\b", "Nine News"), (r"\b10 News\b
        (r"€\s?(\d[\d,]*(?:\.\d+)?)(\s(?:thousand|million|billion|trillion))?", r"\1\2 euros")]
 # Pieces with these words were made before the pronunciation above was fixed: remake them once.
 # Bump SAYV (and add the words) whenever another pronunciation fix is added.
-SAYV, RESAY = 2, re.compile(r"Queensland|\bQld\b|\bSEQ\b|[$£€]")
+SAYV, RESAY = 3, re.compile(r"Queensland|\bQld\b|\bSEQ\b|[$£€]|\b(?:AI|EVs?|ASX|RBA|CEO|LNP|SBS|ABC|BBC|EFF|iTnews)\b")
 # Read as "Expect ... today": "Expect light drizzle today", "Expect clear skies today".
 WMO = {0: "clear skies", 1: "mostly sunny skies", 2: "partly cloudy skies", 3: "cloudy skies", 45: "fog", 48: "fog", 51: "light drizzle", 53: "some drizzle",
        55: "heavy drizzle", 56: "freezing drizzle", 57: "freezing drizzle", 61: "light rain", 63: "rain", 65: "heavy rain", 80: "a few showers", 81: "showers",
