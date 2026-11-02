@@ -295,6 +295,12 @@ body.beta-heads button.np-pos::after { content: ""; display: inline-block; width
 .nl-items li.on button { background: rgba(124, 92, 255, 0.28); box-shadow: inset 0 0 0 1px rgba(170, 150, 255, 0.4); }
 .nl-items li.on .n { color: #cdbdff; }
 .nl-items li.done .t { color: rgba(255, 255, 255, 0.5); font-weight: 600; }
+.np-tipbar { position: absolute; z-index: 4; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 66px); transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px); box-sizing: border-box;
+  padding: 9px 14px; border-radius: 999px; font-size: 0.8rem; font-weight: 650; color: #efe9ff; text-align: center; background: rgba(124, 92, 255, 0.32);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: inset 0 0 0 1px rgba(190, 170, 255, 0.35); animation: tipIn 0.5s ease both, tipFade 0.6s ease 4.4s forwards; }
+.np-tipbar[hidden] { display: none; }
+@keyframes tipIn { from { opacity: 0; transform: translate(-50%, -8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@keyframes tipFade { to { opacity: 0; } }
 .nl-tip { margin: 0; padding: 10px 16px 12px; font-size: 0.78rem; color: #e3dbff; background: rgba(124, 92, 255, 0.2); border-top: 1px solid rgba(255, 255, 255, 0.08); animation: tipOut 0.6s ease 5s forwards; }
 @keyframes tipOut { to { opacity: 0; height: 0; padding-top: 0; padding-bottom: 0; border-top-width: 0; } }
 @media (prefers-reduced-motion: reduce) { .np-list { animation: none; } }
@@ -1027,6 +1033,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   </div>
   <div class="np-wx" id="npWx" hidden></div>
   <div class="np-cue" id="npCue" hidden></div>
+  <div class="np-tipbar" id="npTipBar" role="status" hidden>Tip: choose your kinds of stories in Settings</div>
   <section class="np-list" id="npList" aria-label="Headlines" hidden>
     <div class="nl-head"><b>Today's headlines</b><span>Tap one to hear it next</span><button type="button" class="nl-x" id="npListX" aria-label="Close the headlines"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
     <ol class="nl-items" id="npListItems"></ol>
@@ -1706,7 +1713,14 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     // Once a story itself is being read (not just its headline), it counts as heard.
     if (L.kind === "drive" && !["open", "cue", "title"].includes(p.kind)) heardAdd(L.queue[L.at]);
     // Straight after the weather: the headlines, so you can jump to one (and a tip about Settings).
-    if (p.kind !== "open" && L.kind === "drive" && L.opened && !L.listShown) { L.listShown = true; npListShow(true); }
+    if (p.kind !== "open" && L.kind === "drive" && L.opened && !L.listShown) {
+      L.listShown = true;
+      if (betaHeads()) npListShow(true);
+      else {  // just shown, not read out: a tip about Settings for 5 seconds
+        const tb = $("npTipBar"); tb.hidden = false; tb.style.animation = "none"; void tb.offsetWidth; tb.style.animation = "";
+        clearTimeout(L.tipT); L.tipT = setTimeout(() => { tb.hidden = true; }, 5000);
+      }
+    }
     if (p.kind === "cue") {
       const label = p.sec === "top" ? "Top stories" : p.sec === "local news" ? "Local news" : p.sec === "more headlines" ? "More headlines" : p.sec;
       if (was !== "cue:" + label) { cue.dataset.k = label; cue.innerHTML = `<small class="np-in">Up next</small><span class="t np-in" style="--i:1">${esc(label.charAt(0).toUpperCase() + label.slice(1))}</span>`; }
@@ -3146,7 +3160,7 @@ const handle = async (m, post) => {
   }
   function skipListen() { L.token++; L.sid++; hush(); L.paused = false; nextStory(); }
   function stopListen() {
-    wxListenOff();
+    wxListenOff(); clearTimeout(L.tipT); $("npTipBar").hidden = true;
     L.on = false; L.paused = false; L.token++; L.sid++; L.aiWait = false;
     hush(); npClose();
     if ($("tvs").hidden) cmdStop();
