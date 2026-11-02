@@ -706,7 +706,7 @@ body.wxlisten #weather .bs-scrubrow { display: none; }  /* while the news reads 
 .bs-chips { grid-column: 1 / -1; display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
 .bs-rain { margin-top: auto; align-self: flex-end; width: min(276px, 72%); box-sizing: border-box; display: grid; gap: 5px; padding: 10px 13px 9px; border-radius: 18px; background: rgba(6, 10, 26, 0.5);
   -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1); font-family: var(--ui); font-size: 0.78rem; color: var(--bs-dim); line-height: 1.3; }
-.bs-rain + .bs-panel { margin-top: 0; }
+.bs-rain + .bs-panel { margin-top: 26px; }  /* sits a little above the panel */
 .bs-rain.dry .br-top svg { color: #ffc94d; }
 .br-top { display: flex; align-items: center; gap: 8px; }
 .br-top svg { width: 20px; height: 20px; color: #8cc2ff; flex: none; }
@@ -719,7 +719,6 @@ body.wxlisten #weather .bs-scrubrow { display: none; }  /* while the news reads 
 .br-chart { position: relative; display: flex; align-items: flex-end; gap: 2px; height: 30px; }
 .br-chart i { flex: 1; height: max(2px, calc(var(--p) * 100%)); border-radius: 2px 2px 0 0; background: rgba(120, 180, 255, calc(0.3 + var(--m) * 0.7)); }
 .br-chart i.n { height: 2px; background: rgba(255, 255, 255, 0.1); }
-.br-chart .at { position: absolute; top: -3px; bottom: 0; left: calc(var(--at, 0) * 100%); width: 2px; margin-left: -1px; border-radius: 1px; background: #ffffff; box-shadow: 0 0 6px rgba(255, 255, 255, 0.8); transition: left 0.3s ease; }
 .br-axis { display: flex; justify-content: space-between; margin-top: -3px; font-size: 0.66rem; color: var(--bs-faint); font-variant-numeric: tabular-nums; }
 .br-foot { font-size: 0.76rem; }
 .bs-chip { display: inline-flex; align-items: baseline; gap: 5px; padding: 6px 10px; border-radius: 999px; background: var(--bs-scrim); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); font-family: var(--ui); font-size: 0.8rem; color: var(--bs-dim); font-variant-numeric: tabular-nums; white-space: nowrap; text-shadow: none; }
@@ -2674,7 +2673,7 @@ const handle = async (m, post) => {
     // Tell Safari this is media playback, like a podcast: it plays with the silent switch on and keeps
     // going with the screen locked (otherwise iPhones can mute it).
     try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch {}
-    if (!aud.paused) return;
+    if (!aud.paused && !isSilent()) return;  // a story is playing: leave it (a stuck unlock clip gets replaced)
     // A brand-new player for each listen, made inside the tap: iPhones can go off one that's been used.
     try { aud.onended = aud.onerror = null; aud.pause(); aud.removeAttribute("src"); aud.load(); } catch {}
     aud = new Audio(); aud.preload = "auto"; L.unlocked = false;
@@ -2683,7 +2682,8 @@ const handle = async (m, post) => {
       aud.onended = aud.onerror = null; aud.src = SILENT;
       const p = aud.play();
       // The first real clip waits for this, so it doesn't cut the unlock off part way (iPhones then refuse to play).
-      L.unlockP = p ? p.then(() => { L.unlocked = true; }).catch(() => {}).finally(() => { L.unlockP = null; }) : null;
+      // Never wait on it for long: on a second listen some iPhones leave this hanging, which used to stall everything.
+      L.unlockP = p ? Promise.race([p.then(() => { L.unlocked = true; }).catch(() => {}), new Promise(r => setTimeout(r, 800))]).finally(() => { L.unlockP = null; }) : null;
     } catch {}
   }
   const isSilent = () => !aud.src || aud.src === SILENT || aud.src.startsWith("data:");
@@ -2759,6 +2759,7 @@ const handle = async (m, post) => {
   // (The phone's own voice is only reset when it's talking: resetting it when it isn't can leave iPhones silent.)
   function hush() { try { if (tts && (tts.speaking || tts.pending)) tts.cancel(); } catch {} try { if (!L.unlockP) aud.pause(); } catch {} }
   function bindClip(tk, k) {
+    aud.ontimeupdate = () => { if (!isSilent() && aud.currentTime > 0.15) L.heard = true; };
     aud.onended = () => { if (tk !== L.token) return; L.part++; updateBar(); speakNext(tk); };
     aud.onerror = () => { if (tk !== L.token || isSilent()) return; L.part++; speakNext(tk); };
   }
@@ -2865,20 +2866,21 @@ const handle = async (m, post) => {
     npOpen();
     startListen(ids, "brief");
   }
+  // If nothing has actually been heard a few seconds after a tap (an iPhone that wouldn't start the sound),
+  // pause and offer the play button: a tap on it is allowed to start sound, on a fresh player.
+  function armDog() {
+    clearTimeout(L.dog); L.heard = false;
+    const sid0 = L.sid, quiet = () => L.on && !L.paused && !L.heard && !(tts && tts.speaking) && !(aud.src && !isSilent() && !aud.paused && aud.currentTime > 0.15);
+    L.dog = setTimeout(() => {
+      if (L.sid > sid0 + 2 || !quiet() || (L.aiWait && L.fails === 0 && !usePre())) return;
+      setTimeout(() => { if (quiet()) { pauseListen(); toast("Tap play to start listening"); } }, 900);
+    }, 6000);
+  }
   function startListen(ids, kind) {
     hush();
     // If nothing can be heard after a few seconds (a phone that refused to start the sound), offer the play button:
     // a tap on it is allowed to start sound.
-    clearTimeout(L.dog);
-    const sid0 = L.sid;
-    L.dog = setTimeout(() => {
-      if (!L.on || L.paused || L.sid > sid0 + 2) return;
-      const quiet = (!aud.src || aud.paused) && !(tts && tts.speaking);
-      if (!quiet || L.aiWait) return;
-      setTimeout(() => {  // look again a moment later, in case it was just between two bits
-        if (L.on && !L.paused && (!aud.src || aud.paused) && !(tts && tts.speaking) && !L.aiWait) { pauseListen(); toast("Tap play to start listening"); }
-      }, 900);
-    }, 5000);
+    armDog();
     L.queue = oneEach(ids.filter((id, n) => (kind === "story" && n === 0) || listenable(findItem(id))));
     if (usePre()) {
       if (kind === "story") L.queue = L.queue.filter((id, n) => n === 0 || preReady(findItem(id)));
@@ -2951,6 +2953,7 @@ const handle = async (m, post) => {
   function resumeListen() {
     L.paused = false; const tk = ++L.token; updatePlayer();
     if (useAI() || usePre()) unlockAudio();
+    armDog();
     // Carry on mid-sentence when the natural voice was paused part way through a clip.
     if ((useAI() || usePre()) && L.aiAt === L.part && !isSilent() && !aud.ended && aud.currentTime > 0) {
       bindClip(tk, L.part); aud.playbackRate = L.rate; aud.play().catch(() => speakNext(tk)); return;
@@ -3516,7 +3519,7 @@ const handle = async (m, post) => {
       <aside class="bs-rain" id="bsRain" aria-live="polite"></aside>
       <section class="bs-panel">
         <div class="bs-week" id="bsWeek" role="group" aria-label="Seven day forecast. Choose a day to see its sky.">${D.days.map((d, i) => `<button class="bs-day${d.severe ? " severe" : ""}" type="button" aria-pressed="false" data-bsday="${i}"><span class="d">${i ? d.name : "Today"}</span><svg class="i" aria-hidden="true"><use href="#${BS_ICON[d.kind]}"/></svg><span class="hi">${d.hi}°</span><span class="lo">${d.lo}°</span></button>`).join("")}</div>
-        <p class="bs-note" id="bsNote"></p>
+        <p class="bs-note" id="bsNote" hidden></p>
         <div class="bs-scrubrow">
           <div class="bs-track">
             <input type="range" id="bsHourIn" min="0" max="1439" step="5" value="0" aria-label="Time of day">
@@ -3557,7 +3560,6 @@ const handle = async (m, post) => {
     $("bsTemp").textContent = d.hi; $("bsWhat").textContent = what; $("bsWhen").textContent = `${di ? new Intl.DateTimeFormat("en-AU", { timeZone: D.tz, weekday: "long" }).format(new Date(v.ms)) : "Today"}'s high`;
     $("bsHiLo").innerHTML = `<span>Low <b>${d.lo}°</b></span><span><b>${temp}°</b> <small>${bsTime(v.jump ? Math.floor(v.ms / 3e5) * 3e5 : bsStep(v.ms)).replace(" ", "")}</small></span>`;
     if (BS.rainDay !== d.date) { BS.rainDay = d.date; bsRain(d); }
-    $("bsRain").style.setProperty("--at", (bsMins(v.ms) / 1440).toFixed(4));
     $("bsChips").innerHTML = chips.map(c => `<span class="bs-chip${c[2] ? " " + c[2] : ""}">${c[0]} <b>${c[1]}</b></span>`).join("");
     $("bsNote").textContent = `${d.note}${d.severe ? " Severe weather warnings may apply." : ""}`;
     const inp = $("bsHourIn"); if (document.activeElement !== inp) inp.value = bsMins(v.ms);
@@ -3565,7 +3567,7 @@ const handle = async (m, post) => {
   }
   // When in the day it's likely to rain: a strip over the timeline, and a line saying when.
   // When in the day it's likely to rain, on the right of the readout.
-  // The day's rain: when, how likely, how much, and an hour-by-hour chart with a marker that follows the timeline.
+  // The day's rain: when, how likely, how much, and and an hour-by-hour chart.
   function bsRain(d) {
     const hr = BS.D.hr, pp = [], mm = [];
     for (let h = 0; h < 24; h++) { const i = BS.D.hours.get(`${d.date}T${String(h).padStart(2, "0")}`); pp.push(i == null ? null : (hr.precipitation_probability?.[i] ?? 0)); mm.push(i == null ? 0 : (hr.precipitation?.[i] ?? 0)); }
@@ -3584,7 +3586,7 @@ const handle = async (m, post) => {
     box.setAttribute("aria-label", `${head}. ${when}. Up to ${top}% chance. ${amt}.`);
     box.innerHTML = `<div class="br-top">${wet ? umbrella : sun}<b>${head}</b><span class="pc">${top}%<small>CHANCE</small></span></div>
       <div class="br-when">${when.charAt(0).toUpperCase() + when.slice(1)}</div>
-      <div class="br-chart" aria-hidden="true">${pp.map((p, h) => p == null ? `<i class="n"></i>` : `<i style="--p:${(p / 100).toFixed(2)};--m:${Math.min(1, mm[h] / 3).toFixed(2)}"></i>`).join("")}<span class="at"></span></div>
+      <div class="br-chart" aria-hidden="true">${pp.map((p, h) => p == null ? `<i class="n"></i>` : `<i style="--p:${(p / 100).toFixed(2)};--m:${Math.min(1, mm[h] / 3).toFixed(2)}"></i>`).join("")}</div>
       <div class="br-axis" aria-hidden="true"><span>12am</span><span>6am</span><span>12pm</span><span>6pm</span><span>12am</span></div>
       <div class="br-foot">${amt}</div>`;
   }
