@@ -2,7 +2,7 @@
 """Make the news audio ahead of time, in a natural voice (Kokoro, run on the build server).
 
 Phones just play the files, so there's no 90 MB voice to download and nothing heavy to run on
-the phone. The audio is cut into exactly the same pieces the app speaks ("ABC News reports.", headline,
+the phone. The audio is cut into exactly the same pieces the app speaks (headline, "ABC News reports.",
 then the story a few sentences at a time), so captions, highlighting, pause and skip all work as
 before. Each piece is saved as data/voice/<key>.mp3, where key = sha1("<voice tag>|<text>")[:16].
 Pieces of locked full articles are saved encrypted (<key>.bin) with the NEWS_KEY passphrase.
@@ -29,7 +29,7 @@ from datetime import datetime, timedelta, timezone
 import fetcher  # CITIES, vault_key, the passphrase scheme
 
 VOICE, LANG = "bf_emma", "en-gb"
-TAG = VOICE + ".2"     # goes up when the audio changes, so older files aren't reused
+TAG = VOICE + ".3"     # goes up when the audio changes, so older files aren't reused
 DRIVE_WORDS = 420      # stories are read to about here (keep in step with DRIVE_WORDS in app.html)
 MORE = "There's more on that one in the app."
 SAMPLE = "This is Awesome News. Here's your briefing, read in a natural voice."
@@ -71,6 +71,14 @@ def speakable(p):
     if len(t.split(" ")) < 4 and not ENDS.search(t):
         return ""
     return t
+
+
+SAY_PUB = {"Microsoft blogs": "Microsoft", "Microsoft 365 Roadmap": "The Microsoft 365 roadmap"}
+
+
+def reports(pub):
+    """Said after the headline, then straight into the story (reports() in app.html)."""
+    return f"{SAY_PUB.get(pub, pub)} reports."
 
 
 def jslen(s):
@@ -209,7 +217,7 @@ def plan(data, vkey):
         for i in row:
             if i["id"] in stories:
                 continue
-            head = [want(f"{publisher_of(i.get('source', ''))} reports."), want(f"{clean(i['title'])}.")]
+            head = [want(f"{clean(i['title'])}."), want(reports(publisher_of(i.get('source', ''))))]
             heads.add(head[0])
             st = stories[i["id"]] = {}
             has_lock = bool(vkey and i.get("ptext") and i["id"] in locked)
@@ -302,7 +310,11 @@ def make(a, data, vkey):
             except Exception as e:
                 print("skip:", text[:60], e)
                 continue
-            # A breath before section cues and headlines, so one story doesn't run into the next.
+            # Trim the voice's own silence so pieces flow straight on, then a breath before section cues
+            # and headlines so one story doesn't run into the next.
+            loud = np.flatnonzero(np.abs(audio) > 0.01)
+            if loud.size:
+                audio = audio[max(0, loud[0] - int(sr * 0.06)):loud[-1] + int(sr * (0.32 if k in heads else 0.12))]
             lead = 0.55 if CUE.match(text) else 0.3 if k in heads else 0
             if lead:
                 audio = np.concatenate([np.zeros(int(sr * lead), dtype=audio.dtype), audio])

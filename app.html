@@ -2454,7 +2454,7 @@ const handle = async (m, post) => {
     const sec = L.secOf?.get(i.id), cur = L.secOf?.get(L.queue[L.at]);
     if (L.kind === "drive" && sec && sec !== cur) preBlob(sec === "top" ? "Here are the top stories." : `Now, ${sec}.`);
     if (L.kind === "brief") preBlob(`Story ${L.at + 2}.`);
-    preBlob(`${publisherOf(i.source)} reports.`); preBlob(`${clean(i.title)}.`);
+    preBlob(`${clean(i.title)}.`); preBlob(reports(i));
     const ps = await storyParas(i, true);
     if (ps[0]) chunks(ps[0][0], 0).slice(0, 2).forEach(c => preBlob(c.text));
   }
@@ -2524,6 +2524,9 @@ const handle = async (m, post) => {
     return t;
   }
   const MORE_LINE = "There's more on that one in the app.";
+  // Said after the headline, then straight into the story: "ABC News reports." (voice.py says the same)
+  const SAY_PUB = { "Microsoft blogs": "Microsoft", "Microsoft 365 Roadmap": "The Microsoft 365 roadmap" };
+  const reports = i => { const p = publisherOf(i.source); return `${SAY_PUB[p] || p} reports.`; };
   // The paragraphs to read out, each with its place in the article (for highlighting). Trimmed for the
   // 30-minute listen, and always with the ready-made voice, since that's as far as its audio goes.
   async function storyParas(i, trim) {
@@ -2598,7 +2601,7 @@ const handle = async (m, post) => {
       if (L.at === 0) pre.push({ text: (usePre() && preOpening()) || driveOpening(), para: -1, kind: "open" });
       if (sec && sec !== prev) pre.push({ text: sec === "top" ? "Here are the top stories." : `Now, ${sec}.`, para: -1, kind: "cue", sec });
     }
-    L.parts = [...pre, ...intro, { text: `${publisherOf(i.source)} reports.`, para: -1, kind: "title", opt: true }, { text: `${clean(i.title)}.`, para: -1, kind: "title" }];
+    L.parts = [...pre, ...intro, { text: `${clean(i.title)}.`, para: -1, kind: "title" }, { text: reports(i), para: -1, kind: "title", opt: true }];
     if (L.kind !== "story") npStory(i);
     L.part = 0; L.loading = true; L.waiting = false; L.curPara = -1; L.aiAt = -1;
     L.dev = usePre() && !preReady(i);
