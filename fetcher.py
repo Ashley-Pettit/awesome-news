@@ -809,7 +809,13 @@ def main():
              "&current=temperature_2m,apparent_temperature,relative_humidity_2m,dew_point_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,weather_code,is_day,uv_index,precipitation,cloud_cover,pressure_msl,visibility"
              "&hourly=temperature_2m,apparent_temperature,weather_code,precipitation_probability,precipitation,is_day,uv_index,wind_speed_10m,wind_direction_10m,wind_gusts_10m,relative_humidity_2m,cloud_cover"
              "&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,precipitation_probability_max,precipitation_sum,precipitation_hours,uv_index_max,sunrise,sunset,daylight_duration,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant")
-        return r, json.loads(get(u, timeout=15))
+        for go in range(3):  # the free service turns busy callers away for a moment: wait and try again
+            try:
+                return r, json.loads(get(u, timeout=15))
+            except Exception:
+                if go == 2:
+                    raise
+                time.sleep(4 * (go + 1))
     with cf.ThreadPoolExecutor(2) as ex:
         for fut in [ex.submit(get_weather, r) for r in regions if r in CITIES]:  # gentle on the free service
             try:
@@ -818,6 +824,19 @@ def main():
                 weather[r] = w
             except Exception:
                 pass  # no weather is fine; the app hides it
+    # Any area still missing: keep the forecast from the last update (under a day old), so the weather and
+    # Emma's opening don't vanish when the weather service is busy.
+    missing = [r for r in regions if r in CITIES and r not in weather]
+    if missing and a.archive_from:
+        try:
+            old = json.loads(get(a.archive_from.rstrip("/") + f"/data/status.json?v={int(now.timestamp())}", timeout=20)).get("weather", {})
+            for r in missing:
+                w = old.get(r)
+                at = (w or {}).get("fetchedAt", "")
+                if w and at and (now - datetime.strptime(at, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)).total_seconds() < 86400:
+                    weather[r] = w
+        except Exception:
+            pass
 
     # 6c. Archive: every story seen in the last ARCHIVE_DAYS, so search reaches past today.
     # Carried on from the previously published copy and topped up with today's stories.
