@@ -3,7 +3,7 @@
 <meta name="theme-color" content="#f6f5fa">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400&family=Schibsted+Grotesk:wght@400..800&family=Big+Shoulders+Display:wght@500;700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400&family=Schibsted+Grotesk:wght@400..800&display=swap">
 <style>
 /* Layout: phone-first news app. Masthead with greeting and weather, a jacaranda "briefing" block as the one bold
    moment, a sticky row of section pills, then the feed. A dock at the bottom holds Today, Search, Listen, Saved and
@@ -105,8 +105,9 @@ body.playing main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(
 .wx b { color: var(--ink); font-size: 0.92rem; font-variant-numeric: tabular-nums; }
 .wx .hl { font-variant-numeric: tabular-nums; }
 .wx .rs { color: var(--c-headlines); font-weight: 700; }
-.wx .more { color: var(--faint); font-size: 1rem; line-height: 1; }
-@media (max-width: 380px) { .wx .wl { display: none; } }
+.wx .wl { color: var(--accent); font-weight: 700; }
+.wx .more { color: var(--accent); font-size: 1.1rem; line-height: 1; margin-left: -1px; }
+@media (max-width: 340px) { .wx .wl { display: none; } }
 .wx:active { transform: scale(0.97); }
 /* Seven-day snapshot under the masthead: one column per day, tap for the full forecast. */
 .week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); width: 100%; margin-top: 10px; padding: 7px 2px 6px; border-radius: var(--r-md); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); text-align: center; }
@@ -670,55 +671,43 @@ body.playing .sheet { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 11
 #bsGl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; touch-action: pan-y; }
 #bsNoGl { position: absolute; inset: 0; z-index: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--bs-dim); }
 #bsNoGl[hidden] { display: none; }
-.bs-hud { position: relative; z-index: 1; height: 100%; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box; gap: 8px; overflow-y: auto; pointer-events: none;
-  padding: max(14px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(14px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.bs-hud { position: relative; z-index: 1; height: 100%; display: flex; flex-direction: column; box-sizing: border-box; gap: 10px; overflow-y: auto; pointer-events: none;
+  padding: max(12px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(12px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
 .bs-hud > * { pointer-events: auto; }
+.bs-hud::before { content: ""; position: fixed; inset: 0 0 auto; height: 220px; z-index: -1; pointer-events: none; background: linear-gradient(to bottom, rgba(6, 10, 26, 0.45), rgba(6, 10, 26, 0)); }
 .bs-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-.bs-place h1 { font-family: var(--bs-display); font-weight: 700; font-size: clamp(28px, 4.5vw, 44px); line-height: .95; margin: 0; letter-spacing: .01em; }
-.bs-place .bs-alt { color: var(--bs-dim); margin: 4px 0 0; font-size: 13px; }
-.bs-clock { text-align: right; font-variant-numeric: tabular-nums; margin-left: auto; }
-.bs-time { font-family: var(--bs-display); font-weight: 700; font-size: clamp(24px, 4vw, 40px); line-height: 1; }
-.bs-date { color: var(--bs-dim); font-size: 13px; margin-top: 4px; }
-.bs-sun { color: var(--bs-faint); font-size: 12px; margin-top: 6px; }
-.bs-done { flex: none; align-self: flex-start; font: inherit; font-weight: 700; font-size: 14px; color: var(--bs-ink); background: var(--bs-scrim); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); border: 1px solid var(--bs-line); border-radius: 999px; padding: 8px 14px; }
-.bs-now { display: flex; align-items: flex-end; gap: 12px 26px; flex-wrap: wrap; margin: auto 0; max-width: 760px; }
-.bs-temp { font-family: var(--bs-display); font-weight: 800; font-size: clamp(72px, 22vw, 190px); line-height: .82; letter-spacing: -.01em; text-shadow: 0 2px 24px rgba(0, 0, 0, .35); font-variant-numeric: tabular-nums; }
-.bs-temp sup { font-size: .38em; font-weight: 500; vertical-align: top; margin-left: .04em; position: relative; top: .18em; }
-.bs-cond { display: flex; flex-direction: column; gap: 6px; min-width: 0; flex: 1 1 100%; }
-.bs-what { font-family: var(--bs-display); font-weight: 700; font-size: clamp(22px, 3.2vw, 32px); line-height: 1; text-shadow: 0 1px 12px rgba(0, 0, 0, .35); }
-.bs-when { color: var(--bs-dim); font-size: 14px; }
-.bs-preview { color: var(--bs-jac); margin-left: 8px; font-size: 12px; }
-.bs-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
-.bs-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 6px 10px; border: 1px solid var(--bs-line); border-radius: 999px; background: var(--bs-scrim); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.bs-chip b { font-weight: 700; }
+.bs-place h1 { font-family: var(--display); font-weight: 800; font-size: 1.7rem; line-height: 1; margin: 0; letter-spacing: -0.02em; text-shadow: 0 1px 12px rgba(0, 0, 0, .35); }
+.bs-place .bs-alt { color: var(--bs-dim); margin: 5px 0 0; font-size: 0.8rem; font-family: var(--ui); }
+.bs-done { flex: none; font-family: var(--ui); font-weight: 700; font-size: 0.9rem; color: var(--bs-ink); background: var(--bs-scrim); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border: 1px solid var(--bs-line); border-radius: 999px; padding: 8px 15px; }
+.bs-now { margin-top: 6px; display: flex; flex-direction: column; align-items: flex-start; text-shadow: 0 2px 18px rgba(0, 0, 0, .4); }
+.bs-when { font-family: var(--ui); font-weight: 650; font-size: 0.9rem; color: var(--bs-dim); }
+.bs-temp { font-family: var(--display); font-weight: 800; font-size: clamp(5.6rem, 30vw, 9rem); line-height: 0.92; letter-spacing: -0.06em; font-variant-numeric: tabular-nums; font-variation-settings: "opsz" 96; }
+.bs-temp sup { font-size: 0.45em; font-weight: 600; vertical-align: top; position: relative; top: 0.12em; margin-left: 0.04em; letter-spacing: 0; }
+.bs-what { font-family: var(--display); font-weight: 700; font-size: 1.5rem; line-height: 1.1; letter-spacing: -0.02em; margin-top: 2px; }
+.bs-chips { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+.bs-chip { display: inline-flex; align-items: baseline; gap: 5px; padding: 6px 10px; border-radius: 999px; background: var(--bs-scrim); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); font-family: var(--ui); font-size: 0.8rem; color: var(--bs-dim); font-variant-numeric: tabular-nums; white-space: nowrap; text-shadow: none; }
+.bs-chip b { font-weight: 700; color: var(--bs-ink); }
 .bs-chip.uv b { color: var(--bs-storm); }
-.bs-bottom { display: flex; flex-direction: column; gap: 10px; }
-.bs-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; max-width: 760px; }
-.bs-day { background: var(--bs-scrim); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); border: 1px solid transparent; border-radius: 10px; padding: 8px 4px 7px; text-align: center; color: var(--bs-ink); font: inherit; min-width: 0; transition: border-color .2s, background .2s; }
-.bs-day[aria-pressed="true"] { border-color: var(--bs-jac); }
-.bs-day .d { font-size: 12px; color: var(--bs-dim); display: block; }
-.bs-day .i { display: block; margin: 5px auto 3px; width: 24px; height: 24px; }
-.bs-day .hi { font-family: var(--bs-display); font-weight: 700; font-size: 19px; line-height: 1; display: block; font-variant-numeric: tabular-nums; }
-.bs-day .lo { font-size: 12px; color: var(--bs-dim); display: block; margin-top: 2px; font-variant-numeric: tabular-nums; }
-.bs-day .r { display: none; }
+.bs-panel { margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 22px; background: rgba(8, 12, 28, 0.55); -webkit-backdrop-filter: blur(18px) saturate(1.3); backdrop-filter: blur(18px) saturate(1.3); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1); font-family: var(--ui); }
+.bs-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
+.bs-day { border-radius: 12px; padding: 7px 0 6px; text-align: center; color: var(--bs-ink); font: inherit; min-width: 0; background: transparent; transition: background .2s; }
+.bs-day[aria-pressed="true"] { background: rgba(183, 156, 240, 0.22); box-shadow: inset 0 0 0 1px rgba(183, 156, 240, 0.6); }
+.bs-day .d { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.02em; color: var(--bs-dim); display: block; }
+.bs-day .i { display: block; margin: 5px auto 4px; width: 22px; height: 22px; color: #ffd27a; }
+.bs-day .hi { font-weight: 750; font-size: 0.98rem; line-height: 1; display: block; font-variant-numeric: tabular-nums; }
+.bs-day .lo { font-size: 0.74rem; color: var(--bs-faint); display: block; margin-top: 3px; font-variant-numeric: tabular-nums; }
 .bs-day.severe .hi { color: var(--bs-storm); }
-.bs-note { font-size: 12px; color: var(--bs-dim); max-width: 760px; min-height: 1.4em; margin: 0; }
-.bs-note b { color: var(--bs-ink); }
-.bs-controls { display: flex; flex-direction: column; gap: 10px; }
-.bs-scrub { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.bs-scrub label { font-size: 12px; color: var(--bs-dim); display: flex; justify-content: space-between; gap: 8px; }
-.bs-scrub output { color: var(--bs-ink); font-variant-numeric: tabular-nums; }
+.bs-note { font-size: 0.8rem; line-height: 1.4; color: var(--bs-dim); margin: 0 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.8em; }
 .bs-scrubrow { display: flex; align-items: center; gap: 10px; }
-.bs-scrubrow input { flex: 1; min-width: 0; margin: 0; accent-color: var(--bs-jac); cursor: pointer; height: 28px; }
-.bs-play { flex: none; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; color: #1a1236; background: var(--bs-jac); }
+.bs-scrubrow input { flex: 1; min-width: 0; margin: 0; accent-color: var(--bs-jac); height: 28px; }
+.bs-scrubrow output { flex: none; min-width: 64px; text-align: right; font-weight: 700; font-size: 0.85rem; }
+.bs-play { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: #1a1236; background: var(--bs-jac); }
 .bs-play svg { width: 18px; height: 18px; }
-.bs-modes { display: flex; gap: 6px; flex-wrap: wrap; }
-.bs-mode { font: inherit; font-size: 13px; color: var(--bs-ink); background: var(--bs-scrim); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); border: 1px solid var(--bs-line); border-radius: 999px; padding: 7px 12px; }
-.bs-mode[aria-pressed="true"] { background: var(--bs-jac-deep); border-color: var(--bs-jac); }
-.bs-foot { font-size: 11px; color: var(--bs-faint); }
+.bs-nowbtn { align-self: center; font-family: var(--ui); font-weight: 700; font-size: 0.8rem; color: var(--bs-jac); padding: 2px 10px; }
+.bs-nowbtn[hidden] { display: none; }
 #weather :focus-visible { outline: 2px solid var(--bs-jac); outline-offset: 2px; }
-@media (min-width: 700px) { .bs-day .r { display: block; font-size: 11px; color: var(--bs-faint); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .bs-controls { flex-direction: row; align-items: flex-end; justify-content: space-between; } .bs-scrub { flex: 1 1 260px; max-width: 460px; } }
-@media (prefers-reduced-motion: reduce) { .bs-day, .bs-mode { transition: none; } }
+@media (min-width: 700px) { .bs-panel { max-width: 640px; } }
+@media (prefers-reduced-motion: reduce) { .bs-day { transition: none; } }
 /* ---------- Weather: a live sky that matches the forecast ---------- */
 .wx-hero { position: relative; overflow: hidden; isolation: isolate; margin-top: 6px; min-height: 300px; transition: min-height 0.5s ease; border-radius: 24px; padding: 20px 20px 22px; color: #ffffff;
   display: flex; flex-direction: column; justify-content: flex-end; box-shadow: 0 18px 40px rgba(20, 16, 50, 0.22); background: var(--sky); }
@@ -2578,7 +2567,7 @@ const handle = async (m, post) => {
     return URL.createObjectURL(new Blob([buf], { type: "audio/wav" }));
   }
   // One audio player for the whole session. It's started inside the tap so phones allow it to keep playing.
-  const aud = new Audio();
+  let aud = new Audio();
   aud.preload = "auto";
   // Phones only allow sound that starts from a tap. Playing a short silent clip during the tap
   // unlocks this player, so the voice can start once it's ready.
@@ -2587,7 +2576,10 @@ const handle = async (m, post) => {
     // Tell Safari this is media playback, like a podcast: it plays with the silent switch on and keeps
     // going with the screen locked (otherwise iPhones can mute it).
     try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch {}
-    if (!aud.paused) return;  // every tap unlocks again: iPhones can forget between listens
+    if (!aud.paused) return;
+    // A brand-new player for each listen, made inside the tap: iPhones can go off one that's been used.
+    try { aud.onended = aud.onerror = null; aud.pause(); aud.removeAttribute("src"); aud.load(); } catch {}
+    aud = new Audio(); aud.preload = "auto"; L.unlocked = false;
     try {
       SILENT = SILENT || wavURL(new Float32Array(4800), 24000);
       aud.onended = aud.onerror = null; aud.src = SILENT;
@@ -2665,7 +2657,8 @@ const handle = async (m, post) => {
     toast("The natural voice couldn't load. Tap play to hear your phone's voice instead. Settings, Listen shows why.", 7000);
   }
   // Stop whatever's playing, but never the silent unlock clip from this tap, or iPhones refuse what comes next.
-  function hush() { try { tts?.cancel(); } catch {} try { if (!L.unlockP) aud.pause(); } catch {} }
+  // (The phone's own voice is only reset when it's talking: resetting it when it isn't can leave iPhones silent.)
+  function hush() { try { if (tts && (tts.speaking || tts.pending)) tts.cancel(); } catch {} try { if (!L.unlockP) aud.pause(); } catch {} }
   function bindClip(tk, k) {
     aud.onended = () => { if (tk !== L.token) return; L.part++; updateBar(); speakNext(tk); };
     aud.onerror = () => { if (tk !== L.token || isSilent()) return; L.part++; speakNext(tk); };
@@ -2775,6 +2768,18 @@ const handle = async (m, post) => {
   }
   function startListen(ids, kind) {
     hush();
+    // If nothing can be heard after a few seconds (a phone that refused to start the sound), offer the play button:
+    // a tap on it is allowed to start sound.
+    clearTimeout(L.dog);
+    const sid0 = L.sid;
+    L.dog = setTimeout(() => {
+      if (!L.on || L.paused || L.sid > sid0 + 2) return;
+      const quiet = (!aud.src || aud.paused) && !(tts && tts.speaking);
+      if (!quiet || L.aiWait) return;
+      setTimeout(() => {  // look again a moment later, in case it was just between two bits
+        if (L.on && !L.paused && (!aud.src || aud.paused) && !(tts && tts.speaking) && !L.aiWait) { pauseListen(); toast("Tap play to start listening"); }
+      }, 900);
+    }, 5000);
     L.queue = oneEach(ids.filter((id, n) => (kind === "story" && n === 0) || listenable(findItem(id))));
     if (usePre()) {
       if (kind === "story") L.queue = L.queue.filter((id, n) => n === 0 || preReady(findItem(id)));
@@ -3249,7 +3254,9 @@ const handle = async (m, post) => {
     let soon = -1;
     for (let k = h; k < Math.min(hr.time.length, h + 12); k++) if ((hr.precipitation_probability?.[k] ?? 0) >= 50) { soon = k; break; }
     const hiLo = dy.temperature_2m_max ? `<span class="hl">${Math.round(dy.temperature_2m_max[di])}° / ${Math.round(dy.temperature_2m_min[di])}°</span>` : "";
-    box.innerHTML = `${wxIcon(cur.weather_code, cur.is_day)}<b>${Math.round(cur.temperature_2m)}°</b><span class="wl">${soon >= 0 ? `<span class="rs">Rain ${soon === h ? "now" : clock(hr.time[soon])}</span>` : wxLabel(cur.weather_code, cur.is_day)}</span>`;
+    // Just the temperature, and a hint that it opens the full forecast.
+    box.innerHTML = `${wxIcon(cur.weather_code, cur.is_day)}<b>${Math.round(cur.temperature_2m)}°</b><span class="wl">Forecast</span><span class="more" aria-hidden="true">›</span>`;
+    box.setAttribute("aria-label", `${Math.round(cur.temperature_2m)} degrees, ${wxLabel(cur.weather_code, cur.is_day)}. Open the full forecast`);
     void hiLo;
     box.hidden = false;
     const wk = $("wxWeek"), n = dy.temperature_2m_max ? Math.min(7, dy.time.length - di) : 0;
@@ -3327,7 +3334,8 @@ const handle = async (m, post) => {
     ptr: { tx: 0, ty: 0, x: 0, y: 0 }, view: { mode: "live", ms: Date.now(), play: true }, D: null, lastT: 0, shown: "" };
   const BS_KIND = { sun: "Sunny", partly: "Partly cloudy", cloud: "Cloudy", rain: "Showers", storm: "Thunderstorms" };
   const BS_ICON = { sun: "i-sun", partly: "i-partly", cloud: "i-cloud", rain: "i-rain", storm: "i-storm" };
-  const BS_SPEED = 30 * 60;  // seconds of forecast per second of real time
+  const BS_SPEED = 10 * 60;  // seconds of forecast per second of real time (10 minutes a second)
+  const BS_DAWN = 6 * 60;    // a chosen day starts playing at 6am
   // ---- astronomy (the suncalc formulas) ----
   const bsRad = Math.PI / 180, bsDayMs = 864e5, J1970 = 2440588, J2000 = 2451545, bsEcl = bsRad * 23.4397;
   const bsToDays = ms => ms / bsDayMs - 0.5 + J1970 - J2000;
@@ -3387,25 +3395,26 @@ const handle = async (m, post) => {
     const D = BS.D;
     $("wBody").innerHTML = `
       <header class="bs-top">
-        <div class="bs-place"><h1>${esc(D.city)}</h1><p class="bs-alt">${esc(regionLabel())} · ${Math.abs(D.lat).toFixed(2)}°${D.lat < 0 ? "S" : "N"} ${D.lon.toFixed(2)}°E</p></div>
-        <div class="bs-clock"><div class="bs-time" id="bsTime">--:--</div><div class="bs-date" id="bsDate"></div><div class="bs-sun" id="bsSunLine"></div></div>
+        <div class="bs-place"><h1>${esc(D.city)}</h1><p class="bs-alt" id="bsSunLine"></p></div>
         <button class="bs-done" type="button" data-close="weather">Done</button>
       </header>
-      <section class="bs-now"><div class="bs-temp"><span id="bsTemp">--</span><sup>°C</sup></div>
-        <div class="bs-cond"><div class="bs-what" id="bsWhat"></div><div class="bs-when"><span id="bsWhen"></span><span class="bs-preview" id="bsPreview"></span></div><div class="bs-chips" id="bsChips"></div></div></section>
-      <section class="bs-bottom">
-        <div class="bs-week" id="bsWeek" role="group" aria-label="Seven day forecast. Choose a day to see its sky.">${D.days.map((d, i) => `<button class="bs-day${d.severe ? " severe" : ""}" type="button" aria-pressed="false" data-bsday="${i}"><span class="d">${i ? d.name : "Today"}</span><svg class="i" aria-hidden="true"><use href="#${BS_ICON[d.kind]}"/></svg><span class="hi">${d.hi}°</span><span class="lo">${d.lo}°</span><span class="r">${d.rain}% · ${d.mm}</span></button>`).join("")}</div>
+      <section class="bs-now">
+        <div class="bs-when" id="bsWhen"></div>
+        <div class="bs-temp"><span id="bsTemp">--</span><sup>°</sup></div>
+        <div class="bs-what" id="bsWhat"></div>
+        <div class="bs-chips" id="bsChips"></div>
+      </section>
+      <section class="bs-panel">
+        <div class="bs-week" id="bsWeek" role="group" aria-label="Seven day forecast. Choose a day to see its sky.">${D.days.map((d, i) => `<button class="bs-day${d.severe ? " severe" : ""}" type="button" aria-pressed="false" data-bsday="${i}"><span class="d">${i ? d.name : "Today"}</span><svg class="i" aria-hidden="true"><use href="#${BS_ICON[d.kind]}"/></svg><span class="hi">${d.hi}°</span><span class="lo">${d.lo}°</span></button>`).join("")}</div>
         <p class="bs-note" id="bsNote"></p>
-        <div class="bs-controls">
-          <div class="bs-scrub">
-            <label for="bsHourIn"><span>Time in the scene</span><output id="bsHourOut" for="bsHourIn">now</output></label>
-            <div class="bs-scrubrow"><button class="bs-play" type="button" id="bsPlay" aria-label="Pause"></button><input type="range" id="bsHourIn" min="0" max="1439" step="5" value="0" aria-label="Time of day in the scene"></div>
-          </div>
-          <div class="bs-modes" role="group" aria-label="Sky scene">${[["live", "Live"], ["clear", "Clear"], ["sunset", "Golden hour"], ["rain", "Rain"], ["storm", "Storm"]].map(([m, l]) => `<button class="bs-mode" type="button" data-bsmode="${m}" aria-pressed="false">${l}</button>`).join("")}</div>
+        <div class="bs-scrubrow">
+          <button class="bs-play" type="button" id="bsPlay" aria-label="Pause"></button>
+          <input type="range" id="bsHourIn" min="0" max="1439" step="5" value="0" aria-label="Time of day">
+          <output id="bsHourOut" for="bsHourIn"></output>
         </div>
-        <footer class="bs-foot"><span>${D.snapshot ? "Forecast saved with the news at" : "Forecast updated"} ${bsTime(D.at)} · Open-Meteo. Sun and moon worked out live for ${esc(D.city)}.</span></footer>
+        <button class="bs-nowbtn" type="button" id="bsNowBtn" hidden>Back to now</button>
       </section>`;
-    $("bsHourIn").addEventListener("input", e => { BS.view.play = false; BS.view.ms = bsMidnight(bsKey(BS.view.ms)) + (+e.target.value) * 60000; if (BS.view.mode === "live") BS.view.mode = "day"; bsApply(true); });
+    $("bsHourIn").addEventListener("input", e => { BS.view.play = false; BS.view.ms = bsMidnight(bsKey(BS.view.ms)) + (+e.target.value) * 60000; BS.view.day = bsKey(BS.view.ms); if (BS.view.mode === "live") BS.view.mode = "day"; bsApply(true); });
     bsApply(true); bsTick();
   }
   function bsDayIndex() { const k = bsKey(BS.view.ms); const i = BS.D.days.findIndex(d => d.date === k); return i < 0 ? 0 : i; }
@@ -3422,38 +3431,37 @@ const handle = async (m, post) => {
     BS.shown = key;
     const di = bsDayIndex(), d = D.days[di], i = bsHour(v.ms), hr = D.hr, now = Math.abs(v.ms - Date.now()) < 45 * 60000;
     document.querySelectorAll("#weather .bs-day").forEach((b, n) => b.setAttribute("aria-pressed", String(n === di)));
-    document.querySelectorAll("#weather .bs-mode").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.bsmode === (v.mode === "day" ? "" : v.mode === "live" && !now ? "" : v.mode))));
     let temp, what, when, chips;
     if (now && v.mode === "live") {
       const c = D.cur;
       temp = Math.round(c.temperature_2m); what = wxLabel(c.weather_code, c.is_day); when = "Now";
       chips = [["Feels like", Math.round(c.apparent_temperature) + "°"], ["Humidity", Math.round(c.relative_humidity_2m) + "%"], ["Wind", Math.round(c.wind_speed_10m) + " km/h"], ["UV today", `${d.uv} ${bsUv(d.uv)}`, "uv"], ["Rain", d.rain + "%"]];
     } else if (i != null) {
-      temp = Math.round(hr.temperature_2m[i]); what = wxLabel(hr.weather_code[i], hr.is_day?.[i]); when = `${bsDate(v.ms)}, ${bsTime(v.ms)}`;
+      temp = Math.round(hr.temperature_2m[i]); what = wxLabel(hr.weather_code[i], hr.is_day?.[i]); when = `${di ? new Intl.DateTimeFormat("en-AU", { timeZone: D.tz, weekday: "long" }).format(new Date(v.ms)) : "Today"}, ${bsTime(v.ms)}`;
       chips = [["Feels like", Math.round(hr.apparent_temperature?.[i] ?? hr.temperature_2m[i]) + "°"], ["Rain", (hr.precipitation_probability?.[i] ?? 0) + "%"], ["Wind", Math.round(hr.wind_speed_10m?.[i] ?? 0) + " km/h"], ["UV", `${Math.round(hr.uv_index?.[i] ?? 0)} ${bsUv(hr.uv_index?.[i] ?? 0)}`, "uv"]];
     } else {
       temp = d.hi; what = BS_KIND[d.kind]; when = `Forecast high for ${bsDate(bsMidnight(d.date) + 432e5)}`;
       chips = [["Low", d.lo + "°"], ["Rain", d.rain + "%"], ["Rainfall", d.mm], ["UV", `${d.uv} ${bsUv(d.uv)}`, "uv"]];
     }
     $("bsTemp").textContent = temp; $("bsWhat").textContent = what; $("bsWhen").textContent = when;
-    $("bsPreview").textContent = ["clear", "rain", "storm", "sunset"].includes(v.mode) ? "Preview scene" : "";
+    $("bsNowBtn").hidden = Math.abs(v.ms - Date.now()) < 90 * 60000;
     $("bsChips").innerHTML = chips.map(c => `<span class="bs-chip${c[2] ? " " + c[2] : ""}">${c[0]} <b>${c[1]}</b></span>`).join("");
-    $("bsNote").innerHTML = `<b>${bsDate(bsMidnight(d.date) + 432e5)}</b> · ${esc(d.note)}${d.severe ? " Severe weather warnings may apply." : ""}`;
+    $("bsNote").textContent = `${d.note}${d.severe ? " Severe weather warnings may apply." : ""}`;
     const inp = $("bsHourIn"); if (document.activeElement !== inp) inp.value = bsMins(v.ms);
-    $("bsHourOut").textContent = now && v.mode === "live" && !v.play ? "now" : `${di ? d.name : "Today"} ${bsTime(v.ms)}`;
+    $("bsHourOut").textContent = now && v.mode === "live" && !v.play ? "Now" : bsTime(v.ms);
     const pb = $("bsPlay"); pb.innerHTML = v.play ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"/></svg>` : `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z" fill="currentColor"/></svg>`;
     pb.setAttribute("aria-label", v.play ? "Pause" : "Play through the forecast");
   }
   function bsTick() {
-    if (!BS.D || !$("bsTime")) return;
-    const now = Date.now(), key = bsKey(now);
-    $("bsTime").textContent = bsTime(now); $("bsDate").textContent = bsDate(now);
+    if (!BS.D || !$("bsSunLine")) return;
+    const key = bsKey(BS.view.ms);
     if (BS.sunKey !== key) { BS.sunKey = key; BS.sunTimes = bsRiseSet(key); }
-    $("bsSunLine").textContent = `Sunrise ${BS.sunTimes.rise ? bsTime(BS.sunTimes.rise) : "–"} · Sunset ${BS.sunTimes.set ? bsTime(BS.sunTimes.set) : "–"} · Moon ${Math.round(bsMoonLit(now) * 100)}% lit`;
+    $("bsSunLine").textContent = `Sunrise ${BS.sunTimes.rise ? bsTime(BS.sunTimes.rise) : "–"} · Sunset ${BS.sunTimes.set ? bsTime(BS.sunTimes.set) : "–"}`;
   }
   function bsClick(t) {
     const day = t.closest("[data-bsday]");
-    if (day) { const d = BS.D.days[+day.dataset.bsday]; BS.view.ms = bsMidnight(d.date) + bsMins(BS.view.ms) * 60000; if (+day.dataset.bsday === 0 && Math.abs(BS.view.ms - Date.now()) < 45 * 60000) BS.view.mode = "live"; else BS.view.mode = "day"; bsApply(true); return true; }
+    // A chosen day plays from 6am.
+    if (day) { const d = BS.D.days[+day.dataset.bsday]; Object.assign(BS.view, { ms: bsMidnight(d.date) + BS_DAWN * 60000, day: d.date, mode: "day", play: true }); bsApply(true); return true; }
     const mode = t.closest("[data-bsmode]");
     if (mode) {
       const m = mode.dataset.bsmode; BS.view.mode = m;
@@ -3461,6 +3469,7 @@ const handle = async (m, post) => {
       else if (m === "sunset") { const rs = bsRiseSet(bsKey(BS.view.ms)); BS.view.ms = (rs.set || bsMidnight(bsKey(BS.view.ms)) + 1080 * 60000) - 14 * 60000; BS.view.play = false; }
       bsApply(true); return true;
     }
+    if (t.closest("#bsNowBtn")) { BS.view = { mode: "live", ms: Date.now(), play: true, day: null }; bsApply(true); bsTick(); return true; }
     if (t.closest("#bsPlay")) { BS.view.play = !BS.view.play; if (BS.view.play && BS.view.mode !== "live") BS.view.mode = "day"; bsApply(true); return true; }
     return false;
   }
@@ -3620,9 +3629,17 @@ const handle = async (m, post) => {
     const t = performance.now() / 1000, real = bsClamp(t - BS.lastT, 0, 1), dt = Math.min(real, 0.1); BS.lastT = t;
     // Play through the forecast, 30 minutes a second, then round again from now.
     const v = BS.view;
-    if (v.play) { v.ms += real * BS_SPEED * 1000; if (v.ms > BS.D.end) v.ms = Date.now(); }
+    // Play through the day; at the end of it, replay the same day from 6am.
+    if (v.play) {
+      const day0 = v.day || bsKey(v.ms);
+      v.ms += real * BS_SPEED * 1000;
+      if (bsKey(v.ms) !== day0 || v.ms > BS.D.end) v.ms = bsMidnight(day0) + BS_DAWN * 60000;
+      v.day = day0;
+      if (v.mode === "live" && Math.abs(v.ms - Date.now()) > 45 * 60000) v.mode = "day";
+    }
     else if (v.mode === "live") v.ms = Date.now();
     bsApply(false);
+    if (BS.sunKey !== bsKey(v.ms)) bsTick();
     if (!BS.B) return;
     const B = BS.B, W = BS.W, r = B.renderer, cam = B.camera, U = B.skyU, st = BS.state, tg = BS.target;
     const w = r.domElement.clientWidth, h = r.domElement.clientHeight;
@@ -3681,7 +3698,7 @@ const handle = async (m, post) => {
   }
   function openWeather() {
     if (!state.wx) { toast("The weather isn't available right now"); return; }
-    BS.view = { mode: "live", ms: Date.now(), play: true };  // plays forward from now each time it opens
+    BS.view = { mode: "live", ms: Date.now(), play: true, day: null };  // plays on from now each time it opens
     if (!BS.tick) BS.tick = setInterval(() => { if (!$("weather").hidden) bsTick(); }, 1000);
     renderWeather();
     showSheet("weather");
