@@ -1549,7 +1549,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   function bigPic(u) {
     return String(u || "")
       .replace(/(ichef\.bbci\.co\.uk\/(?:ace|news)\/(?:standard|ws))\/\d+\//, "$1/976/")
-      .replace(/(abc-cdn\.net\.au\/[^?]+\?.*\bwidth=)\d+/, "$11200")
+      .replace(/(abc-cdn\.net\.au\/[^?]+\?.*\bwidth=)\d+(&height=)\d+/, "$11200$2675").replace(/(abc-cdn\.net\.au\/[^?]+\?.*\bwidth=)\d+(?!\d)(?!&height)/, "$11200")
       .replace(/(\/wp-content\/uploads\/[^?]+)-(\d+)x(\d+)(\.(?:jpe?g|png|webp))/i, (m, a, w, h, ext) => Number(w) < 700 ? a + ext : m);
   }
   function npStory(i) {
@@ -1718,11 +1718,14 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   // ======================================================================
   // Story fragments
   // ======================================================================
-  const pic = (i, cls = "") => `<div class="pic ${cls}">${i.image ? `<img src="${esc(i.image)}" alt="" loading="${cls ? "eager" : "lazy"}" decoding="async" referrerpolicy="no-referrer">` : ""}<span class="mono" aria-hidden="true"${i.image ? " hidden" : ""}>${esc(mono(i.source))}</span></div>`;
+  // Feed pictures at a size that's sharp on a phone: BBC sends 240px thumbnails, so ask for a bigger copy
+  // (the original is the fallback if the bigger one won't load).
+  const feedPic = (u, big) => big ? bigPic(u) : String(u || "").replace(/(ichef\.bbci\.co\.uk\/(?:ace|news)\/(?:standard|ws))\/\d+\//, "$1/480/");
+  const pic = (i, cls = "", big = false) => `<div class="pic ${cls}">${i.image ? `<img src="${esc(feedPic(i.image, big))}" data-o="${esc(i.image)}" onerror="if(this.dataset.o&&this.src!==this.dataset.o)this.src=this.dataset.o" alt="" loading="${cls ? "eager" : "lazy"}" decoding="async" referrerpolicy="no-referrer">` : ""}<span class="mono" aria-hidden="true"${i.image ? " hidden" : ""}>${esc(mono(i.source))}</span></div>`;
   const secColour = i => colourOf(i._sid);
   const meta = (i, withSec) => `<div class="meta">${withSec && i._sec ? `<span class="sec" style="--sc:${secColour(i)}">${esc(i._sec)}</span><span class="sep"></span>` : ""}<span class="src">${esc(i.source)}</span><span class="sep"></span><time datetime="${esc(i.published)}">${esc(ago(i.published))}</time></div>`;
   const heroCard = (i, solo, withSec, eager) => `<article class="story hcard${solo ? " solo" : ""}${readCls(i)}" style="--hc:${secColour(i)}">
-      ${pic(i, eager ? "eager" : "")}
+      ${pic(i, eager ? "eager" : "", true)}
       <div class="body">
         ${withSec && i._sec ? `<span class="chip">${esc(i._sec)}</span>` : i._new && !state.read.has(i.id) ? `<span class="chip">New</span>` : ""}
         <h2 class="h">${link(i, esc(i.title))}</h2>${meta(i, false)}
@@ -1735,11 +1738,11 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     ? `<a class="link" role="link" tabindex="0" data-open="${esc(i.id)}">${inner}</a>`  // private copy: always opens in the app
     : `<a class="link" href="${esc(i.url)}" target="_blank" rel="noopener" data-open="${esc(i.id)}">${inner}</a>`;
   const readCls = i => state.read.has(i.id) ? " read" : "";
-  const leadHTML = (i, label, withSec) => `<article class="story lead${readCls(i)}">${pic(i)}<div class="body">
+  const leadHTML = (i, label, withSec) => `<article class="story lead${readCls(i)}">${pic(i, "", true)}<div class="body">
       ${label ? `<div><span class="tag">${esc(label)}</span></div>` : ""}
       <h2 class="h">${link(i, esc(i.title))}</h2>${i.summary ? `<p class="dek">${esc(i.summary)}</p>` : ""}
       <div class="row">${meta(i, withSec)}${saveBtn(i)}</div></div></article>`;
-  const featureHTML = (i, withSec) => `<article class="story feature${readCls(i)}">${pic(i)}<div class="body">
+  const featureHTML = (i, withSec) => `<article class="story feature${readCls(i)}">${pic(i, "", true)}<div class="body">
       <h3 class="h">${link(i, esc(i.title))}</h3>${i.summary ? `<p class="dek">${esc(i.summary)}</p>` : ""}
       <div class="row">${meta(i, withSec)}${saveBtn(i)}</div></div></article>`;
   const rowHTML = (i, withSec) => `<article class="story item${readCls(i)}"><div class="body">
@@ -2140,7 +2143,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
       <h1>${esc(i.title)}</h1>
       <div class="byline">${body.author ? `<span>By <b>${esc(body.author)}</b></span>` : ""}<span>${esc(longDate(i.published))}</span>${i.text && i.mins ? `<span>${i.mins} min read</span>` : ""}
         ${canSpeak ? `<button class="listen-btn" type="button" data-listen="story">${nowPlaying && !L.paused ? I.pause + "Pause" : I.phones + "Listen"}</button>` : ""}</div>
-      ${i.image ? pic(i, "hero") : ""}
+      ${i.image ? pic(i, "hero", true) : ""}
       <div class="prose">${body.html}</div>
       ${others.length ? `<div class="also"><div class="label">Also covered by</div>${others.map(o => `<button type="button" data-open="${esc(o.id)}"><span class="as">${esc(o.source)}</span><span class="at">${esc(o.title)}</span></button>`).join("")}</div>` : ""}
       ${p || n ? `<div class="pager">

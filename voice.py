@@ -44,7 +44,12 @@ SAY = [(r"\b7NEWS\b", "Seven News"), (r"\b9News\b", "Nine News"), (r"\b10 News\b
        (r"\bAI\b", "A.I."), (r"\bEVs?\b", lambda m: "E.V." + ("s" if m.group(0).endswith("s") else "")), (r"\bQld\b", "Queensland"),
        (r"\bASX\b", "A.S.X."), (r"\bRBA\b", "R.B.A."), (r"\bCEO\b", "C.E.O."), (r"\bLNP\b", "L.N.P."), (r"\bSBS\b", "S.B.S."),
        (r"\bABC\b", "A.B.C."), (r"\bBBC\b", "B.B.C."), (r"\bNSW\b", "New South Wales"), (r"\bEFF\b", "E.F.F."),
-       (r"\bM365\b", "M three six five"), (r"\bSEQ\b", "south-east Queensland"), (r"\bPM\b", "Prime Minister")]
+       (r"\bM365\b", "M three six five"), (r"\bSEQ\b", "south-east Queensland"), (r"\bPM\b", "Prime Minister"),
+       # Said the Aussie way, "Queens-lend" (kwˈiːnzlɛnd), not "Queens-land".
+       (r"\bQueensland(er|ers)?\b", r"Queenzlend\1")]
+# Pieces with these words were made before the pronunciation above was fixed: remake them once.
+# Bump SAYV (and add the words) whenever another pronunciation fix is added.
+SAYV, RESAY = 1, re.compile(r"Queensland|\bQld\b|\bSEQ\b")
 # Read as "Expect ... today": "Expect light drizzle today", "Expect clear skies today".
 WMO = {0: "clear skies", 1: "mostly sunny skies", 2: "partly cloudy skies", 3: "cloudy skies", 45: "fog", 48: "fog", 51: "light drizzle", 53: "some drizzle",
        55: "heavy drizzle", 56: "freezing drizzle", 57: "freezing drizzle", 61: "light rain", 63: "rain", 65: "heavy rain", 80: "a few showers", 81: "showers",
@@ -270,11 +275,12 @@ def make(a, data, vkey):
     # Reuse what earlier runs made.
     if a.reuse_from:
         base = a.reuse_from.rstrip("/") + "/data/voice/"
-        prev = {}
+        prev, fixed = {}, set()
         try:
             pidx = json.loads(urllib.request.urlopen(base + f"index.json?v={int(t0)}", timeout=20).read())
             if pidx.get("v") == TAG and pidx.get("lk") == (lock_fp(vkey) if vkey else None):
                 prev = pidx.get("c", {})
+                fixed = set(pidx.get("fx", [])) if pidx.get("sayv") == SAYV else set()
         except Exception as e:
             print("no earlier audio:", e)
 
@@ -284,6 +290,8 @@ def make(a, data, vkey):
             got_t = prev.get(h)
             if got_t is None or (got_t == 2 and not lock):
                 return None
+            if RESAY.search(text) and h not in fixed:
+                return None  # made with the old pronunciation
             try:
                 b = urllib.request.urlopen(f"{base}{h}.{'bin' if got_t == 2 else 'mp3'}", timeout=30).read()
                 with open(os.path.join(out_dir, f"{h}.{'bin' if got_t == 2 else 'mp3'}"), "wb") as f:
@@ -350,6 +358,9 @@ def make(a, data, vkey):
             secs += len(audio) / sr
     with open(os.path.join(out_dir, f"part-{n_of}.json"), "w") as f:
         json.dump(have, f)
+    # Which of this shard's pieces carry the current pronunciation fixes.
+    with open(os.path.join(out_dir, f"fx-{n_of}.json"), "w") as f:
+        json.dump([j[0][:16] for j in mine if j[0][:16] in have and RESAY.search(j[1])], f)
     print(json.dumps({"shard": a.shard, "pieces": len(mine), "reused": reused, "made": made, "madeMinutes": round(secs / 60, 1),
                       "missing": len(mine) - len(have), "seconds": round(time.time() - t0)}))
 
@@ -365,6 +376,10 @@ def merge(data, vkey):
             if have.get(h) != 1:
                 have[h] = t
         os.remove(p)
+    fx = set()
+    for p in glob.glob(os.path.join(out_dir, "fx-*.json")):
+        fx.update(json.load(open(p)))
+        os.remove(p)
     done = {}
     for sid, st in stories.items():
         bits = 0
@@ -376,7 +391,8 @@ def merge(data, vkey):
             done[sid] = bits
     index = {"v": TAG, "voice": VOICE, "at": status.get("updatedAt", ""), "lk": lock_fp(vkey) if vkey else None,
              "open": {r: {**o, "night": o["night"] if o.get("night") and key_of(o["night"]) in have else None}
-                      for r, o in opens.items() if key_of(o["text"]) in have}, "sample": SAMPLE, "c": have, "s": done}
+                      for r, o in opens.items() if key_of(o["text"]) in have}, "sample": SAMPLE, "c": have, "s": done,
+             "sayv": SAYV, "fx": sorted(h for h in fx if h in have)}
     with open(os.path.join(out_dir, "index.json"), "w") as f:
         json.dump(index, f, separators=(",", ":"))
     print(json.dumps({"pieces": len(jobs), "have": len(have), "stories": len(stories), "complete": len(done),
