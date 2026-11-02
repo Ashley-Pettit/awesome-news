@@ -638,6 +638,12 @@ body.playing .sheet { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 11
 .pchip .ck svg { width: 14px; height: 14px; }
 .pchip[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--pc); }
 .pchip[aria-pressed="true"] .ck { background: var(--pc); color: var(--bg); }
+.field.col > .seg { display: flex; flex-wrap: nowrap; }
+.field.col > .seg button { flex: 1 1 0; padding-inline: 4px; }
+.srcpick { display: flex; flex-wrap: wrap; gap: 8px; }
+.srcpick .pchip { font-size: 0.88rem; padding: 7px 12px 7px 7px; }
+.srcpick .pchip .ck { width: 22px; height: 22px; }
+.srcpick .pchip[aria-pressed="false"] { color: var(--muted); }
 .pchip .n { font-size: 0.72rem; color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
 #weather { z-index: 43; }
 /* ---------- Weather: a live sky that matches the forecast ---------- */
@@ -2107,7 +2113,7 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     catch { if (input) { input.focus(); input.select(); } toast("Link selected. Copy it from the box."); }
   }
 
-  const BASE_STABS = [["news", "News"], ["filters", "Filters"], ["reading", "Reading"], ["app", "App"]];
+  const BASE_STABS = [["news", "News"], ["filters", "Sources"], ["reading", "Reading"], ["listen", "Listen"], ["app", "App"]];
   let STABS = BASE_STABS;
   state.sTab = store.get("brief.sTab", "news");
   // Full articles: a passphrase plus a personal-use confirmation unlocks the locked text on this device.
@@ -2115,7 +2121,7 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
   // iPhone Safari wipes saved data for sites you haven't opened in 7 days, and a home screen app
   // keeps its own storage, separate from Safari. Unlocking inside the home screen app avoids both.
   const keepNote = () => isIOS && !standalone()
-    ? `<p class="keepnote"><b>On iPhone, unlock it in the home screen app.</b> Safari forgets saved passwords for websites you don't open for a week, and the home screen app keeps its own separate copy. Add ${APP_NAME} to your Home Screen (Settings, App), open it from there, and enter the passphrase once.</p>` : "";
+    ? `<p class="keepnote"><b>Unlock it in the home screen app.</b> Safari forgets it after a week without a visit. Add ${APP_NAME} to your Home Screen (see the App tab), open it from there and enter the passphrase once.</p>` : "";
   function fullHTML() {
     if (state.mode !== "static" || !state.status?.vault) return "";
     const n = state.status.vault.articles;
@@ -2154,11 +2160,11 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
       <div class="group"><h2>Your topics</h2><div class="card">
         ${tokens("topics", S.topics)}
         <form class="add" data-add="topics"><input type="text" id="addTopic" placeholder="Add a topic, e.g. Logan or Apple" maxlength="30" aria-label="Add a topic"><button type="submit">Add</button></form>
-      </div><p class="hint">Each topic gets its own tab, and matching stories go to the top of For you.</p></div>
-      <div class="group"><h2>Sources</h2><div class="card">
-        ${PUBLISHERS.map(p => toggle("data-source", p.id, !S.hiddenSources.includes(p.id), p.label)).join("")}
-      </div></div>`,
-      filters: `<div class="group"><h2>Mute words</h2><div class="card">
+      </div><p class="hint">Each topic gets its own tab, and matching stories go to the top of For you.</p></div>`,
+      filters: `<div class="group"><h2>Sources</h2><div class="pick srcpick">
+        ${PUBLISHERS.map(p => `<button class="pchip" type="button" data-source="${esc(p.id)}" aria-pressed="${!S.hiddenSources.includes(p.id)}" style="--pc:var(--accent)"><span class="ck">${tickSmall}</span>${esc(p.label)}</button>`).join("")}
+      </div><p class="hint">Tap a source to hide its stories. Ticked sources show in your feeds.</p></div>
+      <div class="group"><h2>Mute words</h2><div class="card">
         ${tokens("muted", S.muted)}
         <form class="add" data-add="muted"><input type="text" id="addMuted" placeholder="Hide stories that mention…" maxlength="30" aria-label="Add a word to mute"><button type="submit">Mute</button></form>
       </div></div>
@@ -2168,16 +2174,18 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
           <div class="negscale" aria-hidden="true"><span>All news</span><span>No negative news</span></div>
         </div>
       </div><p class="hint" id="negHint">${esc(negHint())}</p></div>`,
-      reading: `${fullHTML()}${listenHTML()}${tvAdsHTML()}<div class="group"><h2>Reading</h2><div class="card">
+      reading: `<div class="group"><h2>Reading</h2><div class="card">
         ${toggle("data-hideread", "1", state.hideRead, "Hide stories I've read", "Read stories drop out of your feeds")}
         ${state.mode === "static" && !fullOn() ? toggle("data-fullonly", "1", !!S.fullOnly, "Full stories only", "Hide previews that open the publisher's site") : ""}
         <div class="field"><span class="lbl">Text size</span>${seg("textSize", S.textSize, [["s", "A", "Small"], ["m", "A", "Medium"], ["l", "A", "Large"], ["xl", "A", "Extra large"]])}</div>
         <div class="field"><span class="lbl">Appearance</span>${seg("theme", S.theme, [["system", "Auto"], ["light", "Light"], ["dark", "Dark"]])}</div>
-      </div><p class="hint">Offline reading: ${offlineArticles ? `${Object.keys(offlineArticles).length} full stories kept on this device.` : "stories are kept on this device as they load."} Open the app on wifi now and then, and it keeps working with no connection.</p></div>
+      </div><p class="hint">${offlineArticles ? `${Object.keys(offlineArticles).length} full stories are kept on this device, so they still open with no signal.` : "Stories are kept on this device as they load, so they still open with no signal."}</p></div>
+      ${fullHTML()}
       <div class="group"><h2>Your data</h2><div class="card">
         <button class="field danger" type="button" id="clearRead">Clear read history <span class="sub" style="color:var(--muted)">${state.read.size} stories</span></button>
         <button class="field danger" type="button" id="clearSaved">Clear saved stories <span class="sub" style="color:var(--muted)">${state.saved.length} saved</span></button>
       </div></div>`,
+      listen: `${listenHTML() || `<p class="hint" style="margin-top:20px">This browser can't read stories out loud.</p>`}${tvAdsHTML()}`,
       app: `${getAppHTML()}
       ${shareHTML()}
       <p class="about">Awesome News pulls from free sources only: ABC, SBS, BBC, The Guardian, 7NEWS, The Conversation, 360info, Global Voices, NASA, EFF, Ars Technica, TechCrunch, iTnews and more. ${privateMode() ? "Stories open in full right here." : "Stories marked Full are free to republish, so they open in full right here."} No paywalls, no sport.${state.status?.updatedAt ? `<br>Stories last updated ${esc(longDate(state.status.updatedAt))}.` : ""}</p>
@@ -2560,7 +2568,7 @@ const handle = async (m, post) => {
   function aiFail(err) {
     if (aiBroken) return;
     aiBroken = true; L.aiWait = false; aiWhy = String(err?.message || err || "");
-    toast("The natural voice couldn't load. Tap play to hear your phone's voice instead. Settings, Reading shows why.", 7000);
+    toast("The natural voice couldn't load. Tap play to hear your phone's voice instead. Settings, Listen shows why.", 7000);
   }
   function hush() { try { tts?.cancel(); } catch {} try { aud.pause(); } catch {} }
   function bindClip(tk, k) {
@@ -2723,7 +2731,7 @@ const handle = async (m, post) => {
     u.onerror = ev => {
       if (tk !== L.token || ev.error === "interrupted" || ev.error === "canceled") return;
       if (ev.error === "not-allowed") { pauseListen(); toast("Tap play to start listening"); return; }
-      if (++L.fails >= 3) { stopListen(); toast("This device couldn't read the story aloud. Try another voice in Settings, Reading."); return; }
+      if (++L.fails >= 3) { stopListen(); toast("This device couldn't read the story aloud. Try another voice in Settings, Listen."); return; }
       L.part++; speakNext(tk);
     };
     if (p.para !== L.curPara) highlightPara(p.para);
@@ -2827,7 +2835,7 @@ const handle = async (m, post) => {
     if (state.mode === "claude") return "";  // TV here opens the website, which has its own copy of this setting
     return `<div class="group"><h2>Watch TV</h2><div class="card">
       ${toggle("data-skipads", "1", S.skipAds, "Skip ads", "Jump to the next clip when an ad starts")}
-    </div><p class="hint">Ads are shown by YouTube, so the app can't cut them out of a clip. When it sees one start, it moves straight to the next clip instead.</p></div>`;
+    </div><p class="hint">YouTube puts the ads in, so the app can't remove them. It skips to the next clip instead.</p></div>`;
   }
   function listenHTML() {
     if (!canSpeak && !aiOK) return "";
@@ -2836,14 +2844,14 @@ const handle = async (m, post) => {
     const pre = PRE ? `<optgroup label="Ready-made (starts instantly, any phone)"><option value="pre"${want === "pre" ? " selected" : ""}>Emma · British</option></optgroup>` : "";
     const ai = aiOK ? `<optgroup label="Natural voices${PRE ? ", run on this device" : ""}">${AI_VOICES.map(([id, nm, acc]) => `<option value="ai:${id}"${want === "ai:" + id ? " selected" : ""}>${nm} · ${acc}</option>`).join("")}</optgroup>` : "";
     const dev = `<optgroup label="This device's voices"><option value="device"${want === "device" ? " selected" : ""}>Automatic${auto ? ` (${esc(auto.name)})` : ""}</option>${voices.map(v => `<option value="${esc(v.name)}"${v.name === want ? " selected" : ""}>${esc(v.name)} · ${esc(v.lang)}</option>`).join("")}</optgroup>`;
-    const note = usePre() ? `<p class="hint">Emma's voice is made with each news update, so it starts straight away and works on any phone. A story that only just arrived is read by ${isIOS ? "your phone's own voice" : "the same voice, made on this device,"} until the next update.</p>`
+    const note = usePre() ? `<p class="hint">Emma's voice is made with each news update, so it starts straight away on any phone.</p>`
       : !aiOK ? "" : aiBroken ? `<p class="keepnote" style="margin:10px 0 0">The natural voice couldn't load here${aiWhy ? ` (${esc(aiWhy)})` : ""}, so this device's voice is reading for now. Pick a natural voice again to retry.</p>`
       : useAI() ? `<p class="hint">Natural voices run on this device, so nothing you listen to is sent anywhere. The voice downloads once (about 90 MB) the first time you listen, then works offline.</p>` : "";
     return `<div class="group"><h2>Listening</h2><div class="card">
       <div class="field"><label for="setVoice">Voice</label><select id="setVoice">${pre}${ai}${dev}</select></div>
-      <div class="field"><span class="lbl">Speed</span>${seg("rate", String(L.rate), RATES.map(r => [String(r), r + "×"]))}</div>
+      <div class="field col"><span class="lbl">Speed</span>${seg("rate", String(L.rate), RATES.map(r => [String(r), r + "×"]))}</div>
       <button class="field" type="button" id="voiceTry"><span class="lbl">Play a sample<span class="sub">Hear the voice and speed before you listen</span></span><span class="chev" aria-hidden="true">›</span></button>
-    </div>${note}${voiceTip()}<p class="hint">Tap Listen on the briefing or any story. The app reads each story in full, then moves to the next. Shortcuts on a keyboard: <kbd>/</kbd> search, <kbd>←</kbd> <kbd>→</kbd> previous and next story, <kbd>S</kbd> save, <kbd>L</kbd> listen.</p></div>`;
+    </div>${note}${voiceTip()}${matchMedia("(hover: hover) and (pointer: fine)").matches ? `<p class="hint">Keyboard shortcuts: <kbd>/</kbd> search, <kbd>←</kbd> <kbd>→</kbd> previous and next story, <kbd>S</kbd> save, <kbd>L</kbd> listen.</p>` : ""}</div>`;
   }
 
   // ======================================================================
@@ -3003,7 +3011,7 @@ const handle = async (m, post) => {
     if (src) {
       const id = src.dataset.source, hidden = S.hiddenSources.includes(id);
       S.hiddenSources = hidden ? S.hiddenSources.filter(x => x !== id) : [...S.hiddenSources, id];
-      saveSettings(); src.setAttribute("aria-checked", String(hidden)); return;
+      saveSettings(); src.setAttribute(src.hasAttribute("aria-pressed") ? "aria-pressed" : "aria-checked", String(hidden)); return;
     }
     const sg = t.closest("[data-seg]");
     if (sg && sg.dataset.seg === "rate") {
