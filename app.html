@@ -674,16 +674,20 @@ body.playing .sheet { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 11
 .bs-hud { position: relative; z-index: 1; height: 100%; display: flex; flex-direction: column; box-sizing: border-box; gap: 10px; overflow-y: auto; pointer-events: none;
   padding: max(12px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(12px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
 .bs-hud > * { pointer-events: auto; }
-.bs-hud::before { content: ""; position: fixed; inset: 0 0 auto; height: 220px; z-index: -1; pointer-events: none; background: linear-gradient(to bottom, rgba(6, 10, 26, 0.45), rgba(6, 10, 26, 0)); }
+.bs-hud::before { content: ""; position: fixed; inset: 0 0 auto; height: 62vh; z-index: -1; pointer-events: none;
+  background: radial-gradient(120% 70% at 0% 30%, rgba(6, 10, 26, 0.55), rgba(6, 10, 26, 0) 70%), linear-gradient(to bottom, rgba(6, 10, 26, 0.5), rgba(6, 10, 26, 0) 40%); }
 .bs-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .bs-place h1 { font-family: var(--display); font-weight: 800; font-size: 1.7rem; line-height: 1; margin: 0; letter-spacing: -0.02em; text-shadow: 0 1px 12px rgba(0, 0, 0, .35); }
 .bs-place .bs-alt { color: var(--bs-dim); margin: 5px 0 0; font-size: 0.8rem; font-family: var(--ui); }
 .bs-done { flex: none; font-family: var(--ui); font-weight: 700; font-size: 0.9rem; color: var(--bs-ink); background: var(--bs-scrim); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border: 1px solid var(--bs-line); border-radius: 999px; padding: 8px 15px; }
-.bs-now { margin-top: 6px; display: flex; flex-direction: column; align-items: flex-start; text-shadow: 0 2px 18px rgba(0, 0, 0, .4); }
+.bs-now { margin-top: 6px; display: flex; flex-direction: column; align-items: flex-start; text-shadow: 0 1px 2px rgba(0, 0, 0, .55), 0 2px 18px rgba(0, 0, 0, .45); }
+.bs-tempwrap { display: flex; align-items: flex-end; gap: 14px; }
+.bs-hilo { display: grid; gap: 2px; padding-bottom: 12px; font-family: var(--ui); font-size: 1rem; color: var(--bs-dim); font-variant-numeric: tabular-nums; }
+.bs-hilo b { color: var(--bs-ink); font-weight: 750; }
 .bs-when { font-family: var(--ui); font-weight: 650; font-size: 0.9rem; color: var(--bs-dim); }
 .bs-temp { font-family: var(--display); font-weight: 800; font-size: clamp(5.6rem, 30vw, 9rem); line-height: 0.92; letter-spacing: -0.06em; font-variant-numeric: tabular-nums; font-variation-settings: "opsz" 96; }
 .bs-temp sup { font-size: 0.45em; font-weight: 600; vertical-align: top; position: relative; top: 0.12em; margin-left: 0.04em; letter-spacing: 0; }
-.bs-what { font-family: var(--display); font-weight: 700; font-size: 1.5rem; line-height: 1.1; letter-spacing: -0.02em; margin-top: 2px; }
+.bs-what { font-family: var(--display); font-weight: 700; font-size: 1.5rem; line-height: 1.1; letter-spacing: -0.02em; margin-top: 2px; padding: 2px 10px 3px; margin-left: -10px; border-radius: 10px; background: rgba(6, 10, 26, 0.32); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
 .bs-chips { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
 .bs-chip { display: inline-flex; align-items: baseline; gap: 5px; padding: 6px 10px; border-radius: 999px; background: var(--bs-scrim); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); font-family: var(--ui); font-size: 0.8rem; color: var(--bs-dim); font-variant-numeric: tabular-nums; white-space: nowrap; text-shadow: none; }
 .bs-chip b { font-weight: 700; color: var(--bs-ink); }
@@ -699,7 +703,14 @@ body.playing .sheet { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 11
 .bs-day.severe .hi { color: var(--bs-storm); }
 .bs-note { font-size: 0.8rem; line-height: 1.4; color: var(--bs-dim); margin: 0 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.8em; }
 .bs-scrubrow { display: flex; align-items: center; gap: 10px; }
-.bs-scrubrow input { flex: 1; min-width: 0; margin: 0; accent-color: var(--bs-jac); height: 28px; }
+.bs-track { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.bs-track input { width: 100%; margin: 0; accent-color: var(--bs-jac); height: 24px; }
+.bs-rainbar { display: flex; gap: 1px; height: 8px; padding: 0 9px; }
+.bs-rainbar i { flex: 1; border-radius: 2px; background: rgba(120, 180, 255, calc(0.08 + var(--p) * 0.92)); }
+.bs-ticks { display: flex; justify-content: space-between; padding: 0 2px; font-size: 0.62rem; color: var(--bs-faint); }
+.bs-rainsum { margin: 0 2px; font-size: 0.82rem; font-weight: 650; color: var(--bs-dim); }
+.bs-rainsum.wet { color: #9cc8ff; }
+.bs-rainsum.wet::before { content: "☂ "; }
 .bs-scrubrow output { flex: none; min-width: 64px; text-align: right; font-weight: 700; font-size: 0.85rem; }
 .bs-play { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: #1a1236; background: var(--bs-jac); }
 .bs-play svg { width: 18px; height: 18px; }
@@ -3400,20 +3411,24 @@ const handle = async (m, post) => {
       </header>
       <section class="bs-now">
         <div class="bs-when" id="bsWhen"></div>
-        <div class="bs-temp"><span id="bsTemp">--</span><sup>°</sup></div>
+        <div class="bs-tempwrap"><div class="bs-temp"><span id="bsTemp">--</span><sup>°</sup></div><div class="bs-hilo" id="bsHiLo"></div></div>
         <div class="bs-what" id="bsWhat"></div>
         <div class="bs-chips" id="bsChips"></div>
       </section>
       <section class="bs-panel">
         <div class="bs-week" id="bsWeek" role="group" aria-label="Seven day forecast. Choose a day to see its sky.">${D.days.map((d, i) => `<button class="bs-day${d.severe ? " severe" : ""}" type="button" aria-pressed="false" data-bsday="${i}"><span class="d">${i ? d.name : "Today"}</span><svg class="i" aria-hidden="true"><use href="#${BS_ICON[d.kind]}"/></svg><span class="hi">${d.hi}°</span><span class="lo">${d.lo}°</span></button>`).join("")}</div>
         <p class="bs-note" id="bsNote"></p>
+        <p class="bs-rainsum" id="bsRainSum"></p>
         <div class="bs-scrubrow">
-          <button class="bs-play" type="button" id="bsPlay" aria-label="Pause"></button>
-          <input type="range" id="bsHourIn" min="0" max="1439" step="5" value="0" aria-label="Time of day">
+          <div class="bs-track">
+            <div class="bs-rainbar" id="bsRainBar" aria-hidden="true"></div>
+            <input type="range" id="bsHourIn" min="0" max="1439" step="5" value="0" aria-label="Time of day">
+            <div class="bs-ticks" aria-hidden="true"><span>12am</span><span>6am</span><span>12pm</span><span>6pm</span><span>12am</span></div>
+          </div>
           <output id="bsHourOut" for="bsHourIn"></output>
         </div>
-        <button class="bs-nowbtn" type="button" id="bsNowBtn" hidden>Back to now</button>
       </section>`;
+    $("bsHourIn").addEventListener("change", () => { BS.view.play = true; });
     $("bsHourIn").addEventListener("input", e => { BS.view.play = false; BS.view.ms = bsMidnight(bsKey(BS.view.ms)) + (+e.target.value) * 60000; BS.view.day = bsKey(BS.view.ms); if (BS.view.mode === "live") BS.view.mode = "day"; bsApply(true); });
     bsApply(true); bsTick();
   }
@@ -3444,13 +3459,25 @@ const handle = async (m, post) => {
       chips = [["Low", d.lo + "°"], ["Rain", d.rain + "%"], ["Rainfall", d.mm], ["UV", `${d.uv} ${bsUv(d.uv)}`, "uv"]];
     }
     $("bsTemp").textContent = temp; $("bsWhat").textContent = what; $("bsWhen").textContent = when;
-    $("bsNowBtn").hidden = Math.abs(v.ms - Date.now()) < 90 * 60000;
+    $("bsHiLo").innerHTML = `<span>H <b>${d.hi}°</b></span><span>L <b>${d.lo}°</b></span>`;
+    if (BS.rainDay !== d.date) { BS.rainDay = d.date; bsRain(d); }
     $("bsChips").innerHTML = chips.map(c => `<span class="bs-chip${c[2] ? " " + c[2] : ""}">${c[0]} <b>${c[1]}</b></span>`).join("");
     $("bsNote").textContent = `${d.note}${d.severe ? " Severe weather warnings may apply." : ""}`;
     const inp = $("bsHourIn"); if (document.activeElement !== inp) inp.value = bsMins(v.ms);
     $("bsHourOut").textContent = now && v.mode === "live" && !v.play ? "Now" : bsTime(v.ms);
-    const pb = $("bsPlay"); pb.innerHTML = v.play ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"/></svg>` : `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z" fill="currentColor"/></svg>`;
-    pb.setAttribute("aria-label", v.play ? "Pause" : "Play through the forecast");
+  }
+  // When in the day it's likely to rain: a strip over the timeline, and a line saying when.
+  function bsRain(d) {
+    const hr = BS.D.hr, pp = [];
+    for (let h = 0; h < 24; h++) { const i = BS.D.hours.get(`${d.date}T${String(h).padStart(2, "0")}`); pp.push(i == null ? null : (hr.precipitation_probability?.[i] ?? 0)); }
+    $("bsRainBar").innerHTML = pp.map(p => `<i style="--p:${p == null ? 0 : p / 100}"></i>`).join("");
+    const label = h => h === 0 || h === 24 ? "midnight" : h === 12 ? "midday" : `${h % 12}${h < 12 ? "am" : "pm"}`;
+    const spans = [];
+    pp.forEach((p, h) => { if (p != null && p >= 40) { const last = spans[spans.length - 1]; if (last && last[1] === h) { last[1] = h + 1; last[2] = Math.max(last[2], p); } else spans.push([h, h + 1, p]); } });
+    const sum = $("bsRainSum");
+    if (!spans.length) { const top = Math.max(0, ...pp.filter(p => p != null)); sum.textContent = top >= 20 ? `Mostly dry, a small chance of a shower (up to ${top}%)` : "No rain expected"; sum.classList.remove("wet"); return; }
+    sum.textContent = "Rain likely " + spans.slice(0, 3).map(([a, b, p]) => b - a <= 1 ? `around ${label(a)} (${p}%)` : `${label(a)} to ${label(b)} (up to ${p}%)`).join(", and ");
+    sum.classList.add("wet");
   }
   function bsTick() {
     if (!BS.D || !$("bsSunLine")) return;
@@ -3469,8 +3496,6 @@ const handle = async (m, post) => {
       else if (m === "sunset") { const rs = bsRiseSet(bsKey(BS.view.ms)); BS.view.ms = (rs.set || bsMidnight(bsKey(BS.view.ms)) + 1080 * 60000) - 14 * 60000; BS.view.play = false; }
       bsApply(true); return true;
     }
-    if (t.closest("#bsNowBtn")) { BS.view = { mode: "live", ms: Date.now(), play: true, day: null }; bsApply(true); bsTick(); return true; }
-    if (t.closest("#bsPlay")) { BS.view.play = !BS.view.play; if (BS.view.play && BS.view.mode !== "live") BS.view.mode = "day"; bsApply(true); return true; }
     return false;
   }
 
@@ -3690,6 +3715,7 @@ const handle = async (m, post) => {
   }
   function renderWeather() {
     const w = state.wx;
+    BS.rainDay = null;
     if (!w) { $("wBody").innerHTML = emptyHTML("No forecast right now", "The weather couldn't load. Check your connection and try again."); return; }
     BS.D = bsData();
     bsHUD();
