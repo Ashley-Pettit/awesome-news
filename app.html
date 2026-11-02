@@ -1594,7 +1594,7 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
   function wxListenOn() {
     if (!state.wx || document.body.classList.contains("wxlisten") || !$("weather").hidden) return;
     document.body.classList.add("wxlisten");
-    BS.view = { mode: "live", ms: Date.now(), play: true, day: null, speed: 30 * 60 };  // faster while the news reads the weather
+    BS.view = { mode: "live", ms: bsStep(Date.now()), play: true, day: null, jump: 45 * 60 };  // while the news reads the weather: 45 minutes a jump, a jump a second
     if (!BS.tick) BS.tick = setInterval(() => { if (!$("weather").hidden) bsTick(); }, 1000);
     const el = $("weather"); el.hidden = false; el.scrollTop = 0;  // shown first, so the 3D sky sizes itself to the screen
     renderWeather();
@@ -3478,7 +3478,7 @@ const handle = async (m, post) => {
     const key = `${bsHourKey(v.ms)}|${v.mode}|${v.play}|${Math.floor(bsMins(v.ms) / 15)}`;
     if (!force && key === BS.shown) return;
     BS.shown = key;
-    const di = bsDayIndex(), d = D.days[di], i = bsHour(v.ms), hr = D.hr, now = Math.abs(v.ms - Date.now()) < 45 * 60000;
+    const di = bsDayIndex(), d = D.days[di], i = bsHour(v.ms), hr = D.hr, now = Math.abs(v.ms - Date.now()) < 15 * 60000;
     document.querySelectorAll("#weather .bs-day").forEach((b, n) => b.setAttribute("aria-pressed", String(n === di)));
     let temp, what, when, chips;
     if (now && v.mode === "live") {
@@ -3490,9 +3490,9 @@ const handle = async (m, post) => {
       temp = d.hi; what = BS_KIND[d.kind]; when = `Forecast high for ${bsDate(bsMidnight(d.date) + 432e5)}`;
     }
     // The chips are for the whole day, so they don't jump around as the timeline plays.
-    chips = [["Feels like up to", d.feels + "°"], ["Rain chance", d.rain + "%"], ["Rainfall", d.mm], ["Wind up to", d.wind + " km/h"], ["UV", `${d.uv} ${bsUv(d.uv)}`, "uv"]];
+    chips = [["Feels like up to", d.feels + "°"], ["Rainfall", d.mm], ["Wind up to", d.wind + " km/h"], ["UV", `${d.uv} ${bsUv(d.uv)}`, "uv"]];
     $("bsTemp").textContent = d.hi; $("bsWhat").textContent = what; $("bsWhen").textContent = `${di ? new Intl.DateTimeFormat("en-AU", { timeZone: D.tz, weekday: "long" }).format(new Date(v.ms)) : "Today"}'s high`;
-    $("bsHiLo").innerHTML = `<span>Low <b>${d.lo}°</b></span><span><b>${temp}°</b> <small>${bsTime(bsStep(now && v.mode === "live" ? Date.now() : v.ms)).replace(" ", "")}</small></span>`;
+    $("bsHiLo").innerHTML = `<span>Low <b>${d.lo}°</b></span><span><b>${temp}°</b> <small>${bsTime(bsStep(v.ms)).replace(" ", "")}</small></span>`;
     if (BS.rainDay !== d.date) { BS.rainDay = d.date; bsRain(d); }
     $("bsChips").innerHTML = chips.map(c => `<span class="bs-chip${c[2] ? " " + c[2] : ""}">${c[0]} <b>${c[1]}</b></span>`).join("");
     $("bsNote").textContent = `${d.note}${d.severe ? " Severe weather warnings may apply." : ""}`;
@@ -3691,7 +3691,8 @@ const handle = async (m, post) => {
     // Play through the day; at the end of it, replay the same day from 6am.
     if (v.play) {
       const day0 = v.day || bsKey(v.ms);
-      v.ms += real * (v.speed || BS_SPEED) * 1000;
+      if (v.jump) { v.acc = (v.acc || 0) + real; while (v.acc >= 1) { v.acc -= 1; v.ms += v.jump * 1000; } }  // Listen: one jump a second
+      else v.ms += real * BS_SPEED * 1000;
       if (bsKey(v.ms) !== day0 || v.ms > BS.D.end) v.ms = bsMidnight(day0) + BS_DAWN * 60000;
       v.day = day0;
       if (v.mode === "live" && Math.abs(v.ms - Date.now()) > 45 * 60000) v.mode = "day";
