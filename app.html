@@ -686,6 +686,7 @@ body.wxintro #weather .bs-hud { opacity: 0; }
 body.wxintro .np, body.wxreveal .np { background-color: rgba(11, 10, 18, 0); }
 body.wxintro .np-pic, body.wxreveal .np-pic { display: none; }
 body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
+#np .np-top .np-btn { display: none; }  /* no mic or minimise in the player: stop is at the bottom */
 /* ---------- Weather: Brisbane Sky (Ash's design). A full-screen 3D sky with the readout floating over it. ---------- */
 #weather { --bs-ink: #f3f6fb; --bs-dim: rgba(243, 246, 251, .72); --bs-faint: rgba(243, 246, 251, .46); --bs-scrim: rgba(8, 14, 30, .42); --bs-line: rgba(243, 246, 251, .18);
   --bs-jac: #b79cf0; --bs-jac-deep: #7d5fd1; --bs-storm: #ffd166; --bs-display: "Big Shoulders Display", "Arial Narrow", "Helvetica Neue", Impact, sans-serif; --bs-body: "Atkinson Hyperlegible", "Trebuchet MS", Verdana, sans-serif;
