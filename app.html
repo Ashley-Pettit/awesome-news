@@ -701,7 +701,8 @@ body.locked .player { z-index: 45; bottom: calc(env(safe-area-inset-bottom, 0px)
 #weather { z-index: 43; }
 body.wxlisten #weather { z-index: 60; transform: none; opacity: 0; transition: opacity 0.9s ease; }
 body.wxlisten #weather.open { opacity: 1; }  /* the hello fades into the weather */
-body.wxlisten #weather .bs-scrubrow { display: none; }  /* while the news reads it, the timeline just plays */
+body.wxlisten #weather .bs-scrubrow { display: none; }
+body.wxlisten #weather .bs-done { display: none; }  /* while the news reads it, it closes by itself */  /* while the news reads it, the timeline just plays */
 /* Listen intro: the weather blurred behind the title, then it sharpens and comes forward */
 #weather .bs-hud { transition: opacity 0.8s ease; }
 #bsGl { transition: filter 1s ease, transform 1s ease; }
