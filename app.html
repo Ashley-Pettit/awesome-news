@@ -729,15 +729,7 @@ body.wxlisten #weather .bs-stop { display: grid; }
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border: 1px solid var(--bs-line); border-radius: 999px; padding: 6px 12px; }
 .bs-skip svg { width: 14px; height: 14px; }
 body.wxlisten #weather .bs-skip { display: inline-flex; }
-/* While the news reads the weather: a clear button to hear the whole week */
-.bs-weekbtn { display: none; grid-column: 1 / -1; justify-self: start; align-items: center; gap: 10px; margin-top: 12px; padding: 7px 16px 7px 7px; border-radius: 999px; font: inherit; text-align: left; color: var(--bs-ink); text-shadow: none;
-  background: rgba(8, 12, 28, 0.5); -webkit-backdrop-filter: blur(18px) saturate(1.3); backdrop-filter: blur(18px) saturate(1.3); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14); animation: npPop 0.4s ease both; }
-.bs-weekbtn .ic { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--bs-jac); color: #1b1240; }
-.bs-weekbtn .ic svg { width: 14px; height: 14px; margin-left: 2px; }
-.bs-weekbtn b { display: block; font-family: var(--ui); font-size: 0.9rem; font-weight: 700; }
-.bs-weekbtn small { display: block; font-family: var(--ui); font-size: 0.72rem; color: var(--bs-dim); }
-body.wxlisten #weather .bs-weekbtn { display: inline-flex; }
-body.wxweek #weather .bs-weekbtn { display: none; }  /* already hearing it */  /* while the news reads it, the timeline just plays */
+body.wxweek #weather .bs-weekbtn { display: none; }  /* already hearing it */
 /* Listen intro: the weather blurred behind the title, then it sharpens and comes forward */
 #weather .bs-hud { transition: opacity 0.8s ease; }
 #bsGl { transition: filter 1s ease, transform 1s ease; }
@@ -3801,6 +3793,7 @@ const handle = async (m, post) => {
       <header class="bs-top">
         <div class="bs-place"><h1>${esc(D.city)}</h1></div>
         <div class="bs-btns">
+          <button class="bs-skip bs-weekbtn" type="button" id="bsWeekBtn" aria-label="Hear the week's weather"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Week</button>
           <button class="bs-skip" type="button" id="bsSkip" aria-label="Skip the weather">Skip<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 5.5v13l9-6.5zM16 5h3v14h-3z"/></svg></button>
           <button class="bs-x" type="button" data-close="weather" aria-label="Close the weather"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
           <button class="bs-x bs-stop" type="button" id="bsStop" aria-label="Stop listening"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
@@ -3813,7 +3806,6 @@ const handle = async (m, post) => {
           <div class="bs-what" id="bsWhat"></div>
         </div>
         <div class="bs-chips" id="bsChips"></div>
-        <button class="bs-weekbtn" type="button" id="bsWeekBtn"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg></span><span><b>Hear the week's weather</b><small>A quick rundown of the next 7 days</small></span></button>
       </section>
       <aside class="bs-rain" id="bsRain" aria-live="polite"></aside>
       <section class="bs-panel">
