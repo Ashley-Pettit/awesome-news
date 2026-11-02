@@ -2,7 +2,7 @@
 """Make the news audio ahead of time, in a natural voice (Kokoro, run on the build server).
 
 Phones just play the files, so there's no 90 MB voice to download and nothing heavy to run on
-the phone. The audio is cut into exactly the same pieces the app speaks (headline, "From ...",
+the phone. The audio is cut into exactly the same pieces the app speaks ("ABC News reports.", headline,
 then the story a few sentences at a time), so captions, highlighting, pause and skip all work as
 before. Each piece is saved as data/voice/<key>.mp3, where key = sha1("<voice tag>|<text>")[:16].
 Pieces of locked full articles are saved encrypted (<key>.bin) with the NEWS_KEY passphrase.
@@ -209,7 +209,7 @@ def plan(data, vkey):
         for i in row:
             if i["id"] in stories:
                 continue
-            head = [want(f"{clean(i['title'])}."), want(f"From {publisher_of(i.get('source', ''))}.")]
+            head = [want(f"{publisher_of(i.get('source', ''))} reports."), want(f"{clean(i['title'])}.")]
             heads.add(head[0])
             st = stories[i["id"]] = {}
             has_lock = bool(vkey and i.get("ptext") and i["id"] in locked)
