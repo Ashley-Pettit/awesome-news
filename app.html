@@ -239,7 +239,7 @@ body.npon .player { display: none; }
 .np-pic .np-bg { position: absolute; inset: -40px; z-index: 0; width: calc(100% + 80px); height: calc(100% + 80px); max-width: none; object-fit: cover; filter: blur(28px) brightness(0.5) saturate(1.2); opacity: 0; transition: opacity 0.8s ease; }
 .np-pic .np-bg.on { opacity: 1; }
 .np-pic #npImg { position: absolute; z-index: 0; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 74px); transform: translateX(-50%); width: var(--pw, 100%); max-width: 100%; height: auto; max-height: 46%;
-  object-fit: contain; border-radius: 4px; box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45); opacity: 0; transition: opacity 0.8s ease; }
+  aspect-ratio: 4 / 3; object-fit: cover; object-position: center 30%; border-radius: 4px; box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45); opacity: 0; transition: opacity 0.8s ease; }
 .np-pic #npImg.on { opacity: 1; animation: kb 30s ease-in-out infinite alternate; }
 @keyframes kb { from { transform: translateX(-50%) scale(1); } to { transform: translateX(-50%) scale(1.04); } }
 @media (orientation: landscape) {
@@ -919,7 +919,6 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
 <div class="player" id="player" role="region" aria-label="Now playing" hidden>
   <button type="button" class="pt" id="pOpen" aria-label="Open the story being read"><div class="pk" id="pKick">Listening</div><div class="ph" id="pTitle"></div></button>
   <div class="pc">
-    <button type="button" class="rate" id="pRate" aria-label="Reading speed">1×</button>
     <button type="button" class="pp" id="pPlay" aria-label="Pause"></button>
     <button type="button" id="pNext" aria-label="Next story"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 5.5v13l9-6.5zM16 5h3v14h-3z"/></svg></button>
     <button type="button" id="pStop" aria-label="Stop listening"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
@@ -1450,6 +1449,16 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
   document.addEventListener("visibilitychange", () => { if (!document.hidden) keepAwake(); });
   const monoOf = i => MONO[publisherOf(i.source)] || MONO[i.source] || publisherOf(i.source).slice(0, 3);
   // Ask the publisher for a bigger copy of the photo where its address says the size.
+  // A 4:3 picture for the now-playing screen: a free image service crops the full-size photo around
+  // what matters (faces first), so people's heads aren't cut off. SBS's own crops are a thin strip,
+  // so its original photo is used instead.
+  function npPic(u) {
+    u = String(u || "");
+    if (!/^https?:/.test(u)) return u;
+    const sbs = u.match(/assets\.sbs\.com\.au\/.*[?&]url=([^&]+)/);
+    const src = sbs ? decodeURIComponent(sbs[1]) : bigPic(u);
+    return `https://wsrv.nl/?url=${encodeURIComponent(src)}&w=1080&h=810&fit=cover&a=attention&output=jpg&q=78`;
+  }
   function bigPic(u) {
     return String(u || "")
       .replace(/(ichef\.bbci\.co\.uk\/(?:ace|news)\/(?:standard|ws))\/\d+\//, "$1/976/")
@@ -1461,12 +1470,13 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     const img = $("npImg"), bg = $("npBg"), mono = $("npMono");
     img.classList.remove("on"); bg.classList.remove("on");
     if (i.image) {
-      const src = bigPic(i.image);
+      const src = npPic(i.image), alt2 = bigPic(i.image);
       mono.textContent = "";
       // A small photo isn't stretched past about twice its size, so it stays sharp.
-      const shown = () => { img.style.setProperty("--pw", img.naturalWidth < 700 ? Math.round(img.naturalWidth * 1.6) + "px" : "100%"); img.classList.add("on"); bg.classList.add("on"); };
+      const shown = () => { img.style.setProperty("--pw", img.naturalWidth < 500 ? Math.round(img.naturalWidth * 1.6) + "px" : "100%"); img.classList.add("on"); bg.classList.add("on"); };
       img.onload = shown;
-      img.onerror = () => { if (img.src !== i.image && src !== i.image) { img.src = i.image; bg.src = i.image; return; } img.removeAttribute("src"); bg.removeAttribute("src"); mono.textContent = monoOf(i); };
+      // If the smart crop can't load, try the publisher's bigger photo, then the original.
+      img.onerror = () => { const next = img.src === src ? alt2 : img.src === alt2 && alt2 !== i.image ? i.image : null; if (next) { img.src = next; bg.src = next; return; } img.removeAttribute("src"); bg.removeAttribute("src"); mono.textContent = monoOf(i); };
       img.src = src; bg.src = src;
       if (img.complete && img.naturalWidth) shown();
     }
@@ -2423,6 +2433,8 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
   const canSpeak = !!tts && typeof window.SpeechSynthesisUtterance === "function";
   const RATES = [0.9, 1, 1.15, 1.3, 1.5, 1.75];
   const L = { fails: 0, aiProg: 0, aiWait: false, aiAt: -1, unlocked: false, on: false, paused: false, queue: [], at: 0, parts: [], part: 0, loading: false, waiting: false, token: 0, sid: 0, kind: "", curPara: -1, rate: store.get("brief.rate", 1) };
+  // Speed is set in Settings only now; anything a stray tap on the old player button changed goes back to 1×.
+  if (!store.get("brief.rateReset", false)) { L.rate = 1; store.set("brief.rate", 1); store.set("brief.rateReset", true); }
   let voices = [];
   // Joke and robot voices that macOS and iOS ship alongside the real ones.
   const NOVELTY = /^(Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Deranged|Good News|Hysterical|Jester|Junior|Kathy|Organ|Pipe Organ|Princess|Ralph|Superstar|Trinoids|Whisper|Wobble|Zarvox|Fred|Grandma|Grandpa|Eddy|Flo|Reed|Rocko|Sandy|Shelley)\b/i;
@@ -2812,7 +2824,7 @@ const handle = async (m, post) => {
   function cycleRate() {
     L.rate = RATES[(RATES.indexOf(L.rate) + 1) % RATES.length] || 1;
     store.set("brief.rate", L.rate);
-    $("pRate").textContent = L.rate + "×";
+    if ($("pRate")) $("pRate").textContent = L.rate + "×";
     if (useAI() || usePre()) { aud.defaultPlaybackRate = L.rate; aud.playbackRate = L.rate; return; }
     if (L.on && !L.paused) { L.token++; tts.cancel(); const tk = L.token; setTimeout(() => speakNext(tk), 60); }
   }
@@ -2843,7 +2855,7 @@ const handle = async (m, post) => {
     $("npPlay").innerHTML = L.paused ? I.play : I.pause;
     $("npPlay").setAttribute("aria-label", L.paused ? "Play" : "Pause");
     $("pPlay").setAttribute("aria-label", L.paused ? "Play" : "Pause");
-    $("pRate").textContent = L.rate + "×";
+    if ($("pRate")) $("pRate").textContent = L.rate + "×";
     if ("mediaSession" in navigator) {
       try {
         if (i && L.on) navigator.mediaSession.metadata = new MediaMetadata({ title: i.title, artist: publisherOf(i.source), album: "Awesome News",
