@@ -686,7 +686,7 @@ body.wxlisten #weather { z-index: 60; }
 .bs-hilo { display: grid; gap: 4px; padding-bottom: 12px; font-family: var(--ui); font-size: 1rem; color: var(--bs-dim); }
 .bs-hilo b { color: var(--bs-ink); font-weight: 750; }
 .bs-hilo span { white-space: nowrap; }
-.bs-hilo small { display: block; font-size: .82em; }
+.bs-hilo small { font-size: .82em; }
 .bs-when { font-family: var(--ui); font-weight: 650; font-size: 0.9rem; color: var(--bs-dim); }
 .bs-temp { font-family: var(--display); font-weight: 800; font-size: clamp(5.6rem, 30vw, 9rem); line-height: 0.92; letter-spacing: -0.06em; font-variant-numeric: tabular-nums; font-variation-settings: "opsz" 96; }
 .bs-temp sup { font-size: 0.45em; font-weight: 600; vertical-align: top; position: relative; top: 0.12em; margin-left: 0.04em; letter-spacing: 0; }
@@ -1595,8 +1595,9 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     if (!state.wx || document.body.classList.contains("wxlisten") || !$("weather").hidden) return;
     document.body.classList.add("wxlisten");
     BS.view = { mode: "live", ms: Date.now(), play: true, day: null, speed: 30 * 60 };  // faster while the news reads the weather
+    if (!BS.tick) BS.tick = setInterval(() => { if (!$("weather").hidden) bsTick(); }, 1000);
+    const el = $("weather"); el.hidden = false; el.scrollTop = 0;  // shown first, so the 3D sky sizes itself to the screen
     renderWeather();
-    const el = $("weather"); el.hidden = false; el.scrollTop = 0;
     requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("open")));
   }
   function wxListenOff() {
@@ -2845,6 +2846,8 @@ const handle = async (m, post) => {
     }
     L.parts = [...pre, ...intro, { text: `${clean(i.title)}.`, para: -1, kind: "title" }, { text: reports(i), para: -1, kind: "title", opt: true }];
     if (L.kind !== "story") npStory(i);
+    // Listen to the news: the full weather page shows straight away while the opening reads the weather, then steps aside.
+    if (L.kind === "drive" && L.at === 0) wxListenOn(); else wxListenOff();
     L.part = 0; L.loading = true; L.waiting = false; L.curPara = -1; L.aiAt = -1;
     L.dev = usePre() && !preReady(i);
     if (L.dev && L.kind === "story" && L.at === 0) toast("Emma hasn't recorded this story yet, so your phone's voice is reading it. It'll be ready after the next update.", 6000);
@@ -3489,7 +3492,7 @@ const handle = async (m, post) => {
     // The chips are for the whole day, so they don't jump around as the timeline plays.
     chips = [["Feels like up to", d.feels + "°"], ["Rain chance", d.rain + "%"], ["Rainfall", d.mm], ["Wind up to", d.wind + " km/h"], ["UV", `${d.uv} ${bsUv(d.uv)}`, "uv"]];
     $("bsTemp").textContent = d.hi; $("bsWhat").textContent = what; $("bsWhen").textContent = `${di ? new Intl.DateTimeFormat("en-AU", { timeZone: D.tz, weekday: "long" }).format(new Date(v.ms)) : "Today"}'s high`;
-    $("bsHiLo").innerHTML = `<span>Low <b>${d.lo}°</b></span><span><b>${temp}°</b> <small>at ${bsTime(bsStep(now && v.mode === "live" ? Date.now() : v.ms)).replace(" ", "")}</small></span>`;
+    $("bsHiLo").innerHTML = `<span>Low <b>${d.lo}°</b></span><span><b>${temp}°</b> <small>${bsTime(bsStep(now && v.mode === "live" ? Date.now() : v.ms)).replace(" ", "")}</small></span>`;
     if (BS.rainDay !== d.date) { BS.rainDay = d.date; bsRain(d); }
     $("bsChips").innerHTML = chips.map(c => `<span class="bs-chip${c[2] ? " " + c[2] : ""}">${c[0]} <b>${c[1]}</b></span>`).join("");
     $("bsNote").textContent = `${d.note}${d.severe ? " Severe weather warnings may apply." : ""}`;
