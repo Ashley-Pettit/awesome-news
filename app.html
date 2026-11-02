@@ -2439,7 +2439,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
       </form>${keepNote()}</div><p class="hint">The passphrase is saved on this device only.</p></div>`;
     const gh = store.get("brief.ghToken", "");
     return `<div class="group"><h2>Full articles</h2><div class="card">
-      ${toggle("data-admin", "full", A.full, "Full articles in the app", "Every story opens in full right here. No links out.")}
+      ${toggle("data-admin", "full", A.full, "Full articles", A.full ? "On. Every story opens in full right here." : "Off. Stories show the publisher's preview.")}
       <div class="field col"><div class="top"><span class="lbl">Update when I open the app<span class="sub">${gh ? (A.ghBad ? "GitHub key isn't working. Paste a new one." : "On. Opening the app updates stories over 3 hours old.") : "Optional, for Ash. Paste a GitHub key to turn this on. Otherwise stories update once a day."}</span></span></div>
         <form class="adminpass" id="ghForm" style="margin-top:0"><input type="password" id="ghTok" placeholder="${gh ? "Saved. Paste to replace" : "GitHub key"}" aria-label="GitHub key" autocomplete="off"><button type="submit">Save</button></form></div>
       ${keepNote()}<button class="field" type="button" id="adminLock"><span class="lbl">Forget passphrase<span class="sub">Locks full articles on this device again</span></span></button>
@@ -2451,7 +2451,9 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     STABS = BASE_STABS;
     const tab = STABS.some(t => t[0] === state.sTab) ? state.sTab : "news";
     const panes = {
-      news: `<div class="group"><h2>You</h2><div class="card">
+      news: `${state.mode === "static" && A.unlocked && vaultKey ? `<div class="group"><div class="card">
+        ${toggle("data-admin", "full", A.full, "Full articles", A.full ? "On. Every story opens in full right here." : "Off. Stories show the publisher's preview.")}
+      </div></div>` : ""}<div class="group"><h2>You</h2><div class="card">
         <div class="field"><label for="setName">Your name</label><input type="text" id="setName" placeholder="Optional" autocomplete="given-name" maxlength="30" value="${esc(S.name)}"></div>
         <div class="field"><label for="setRegion">Local news</label><select id="setRegion">${regions.map(r => `<option value="${r.id}"${r.id === S.region ? " selected" : ""}>${esc(r.label)}${counts["local-" + r.id] != null ? ` (${counts["local-" + r.id]})` : ""}</option>`).join("")}</select></div>
       </div><p class="hint">Your name is used in the greeting. Everything here stays on this device.</p></div>
@@ -2475,13 +2477,12 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
           <div class="negscale" aria-hidden="true"><span>All news</span><span>No negative news</span></div>
         </div>
       </div><p class="hint" id="negHint">${esc(negHint())}</p></div>`,
-      reading: `<div class="group"><h2>Reading</h2><div class="card">
+      reading: `${fullHTML()}<div class="group"><h2>Reading</h2><div class="card">
         ${toggle("data-hideread", "1", state.hideRead, "Hide stories I've read", "Read stories drop out of your feeds")}
         ${state.mode === "static" && !fullOn() ? toggle("data-fullonly", "1", !!S.fullOnly, "Full stories only", "Hide previews that open the publisher's site") : ""}
         <div class="field"><span class="lbl">Text size</span>${seg("textSize", S.textSize, [["s", "A", "Small"], ["m", "A", "Medium"], ["l", "A", "Large"], ["xl", "A", "Extra large"]])}</div>
         <div class="field"><span class="lbl">Appearance</span>${seg("theme", S.theme, [["system", "Auto"], ["light", "Light"], ["dark", "Dark"]])}</div>
       </div><p class="hint">${offlineArticles ? `${Object.keys(offlineArticles).length} full stories are kept on this device, so they still open with no signal.` : "Stories are kept on this device as they load, so they still open with no signal."}</p></div>
-      ${fullHTML()}
       <div class="group"><h2>Your data</h2><div class="card">
         <button class="field danger" type="button" id="clearRead">Clear read history <span class="sub" style="color:var(--muted)">${state.read.size} stories</span></button>
         <button class="field danger" type="button" id="clearSaved">Clear saved stories <span class="sub" style="color:var(--muted)">${state.saved.length} saved</span></button>
@@ -3413,7 +3414,7 @@ const handle = async (m, post) => {
     if (t.closest("#unlockConfirm")) { confirmUnlock(t.closest("#unlockConfirm")); return; }
     if (t.closest("#unlockBack")) { unlock.pass = ""; unlock.step = "pass"; renderSettings(); $("adminPass")?.focus(); return; }
     const adm = t.closest("[data-admin]");
-    if (adm) { A.full = !A.full; saveAdmin(); adm.setAttribute("aria-checked", String(A.full)); applyVault(); for (const k in textCache) delete textCache[k]; store.set("brief.offlineAt", ""); saveOffline(); render(true); return; }
+    if (adm) { A.full = !A.full; saveAdmin(); adm.setAttribute("aria-checked", String(A.full)); const sb = adm.querySelector(".sub"); if (sb) sb.textContent = A.full ? "On. Every story opens in full right here." : "Off. Stories show the publisher's preview."; toast(A.full ? "Full articles on" : "Full articles off"); applyVault(); for (const k in textCache) delete textCache[k]; store.set("brief.offlineAt", ""); saveOffline(); render(true); return; }
     if (t.closest("#adminLock")) { A.unlocked = false; saveAdmin(); keepSecret(""); store.set("brief.ghToken", ""); vaultKey = null; applyVault(); renderSettings(); render(true); return; }
     if (t.closest("#weather") && bsClick(t)) return;
     const stb = t.closest("[data-stab]");
