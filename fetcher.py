@@ -136,7 +136,8 @@ INTERESTS = [
      r"EVs?|electric vehicles?|electric cars?|Tesla|BYD|cars?|motorists?|driverless|self-driving|fuel prices?|petrol"),
     ("startups", "Startups", "tech", [("TechCrunch", "https://techcrunch.com/category/startups/feed/"), ("SmartCompany", "https://www.smartcompany.com.au/feed/"),
                                       ("Startup Daily", "https://www.startupdaily.net/feed/")], r"start-?ups?|founders?|venture capital|unicorn"),
-    ("health", "Health", "life", [("The Conversation", CONV.format("health")), ("BBC Health", "https://feeds.bbci.co.uk/news/health/rss.xml")],
+    ("health", "Health", "life", [("The Conversation", CONV.format("health")), ("BBC Health", "https://feeds.bbci.co.uk/news/health/rss.xml"),
+                                  ("KFF Health News", "https://kffhealthnews.org/feed/")],
      r"health|hospitals?|doctors?|GPs?|cancer|vaccines?|diet|sleep|disease|medicine|medical|patients?|nurses?|dementia|obesity|nutrition"),
     ("education", "Education", "life", [("The Conversation", CONV.format("education"))],
      r"schools?|students?|teachers?|universit\w+|education|HECS|childcare|early childhood|NAPLAN"),
@@ -147,9 +148,9 @@ INTERESTS = [
      r"films?|movies?|TV|television|series|albums?|music|singers?|bands?|concerts?|festival|books?|novels?|authors?|artists?|gallery|theatre|exhibition|Netflix|Oscars?"),
     ("environment", "Environment & climate", "planet", [("The Conversation", CONV.format("environment")),
                                                         ("The Conversation", "https://theconversation.com/topics/climate-change-27/articles.atom"),
-                                                        ("The Guardian", GU.format("au/environment"))],
+                                                        ("The Guardian", GU.format("au/environment")), ("Mongabay", "https://news.mongabay.com/feed/")],
      r"climate|emissions?|renewables?|solar|wind farms?|coal|net zero|pollution|plastics?|recycling|drought|floods?|flooding|bushfires?|heatwaves?|environment\w*|carbon"),
-    ("wildlife", "Wildlife & nature", "planet", [],
+    ("wildlife", "Wildlife & nature", "planet", [("Mongabay", "https://news.mongabay.com/feed/")],
      r"wildlife|species|animals?|birds?|koalas?|kangaroos?|reefs?|whales?|sharks?|crocs?|crocodiles?|turtles?|conservation|endangered|extinct\w*|insects?|bees?|forests?|national parks?"),
 ]
 INTEREST_GROUPS = [("news", "News"), ("tech", "Tech & science"), ("life", "Life"), ("culture", "Culture"), ("planet", "Planet")]
@@ -238,6 +239,8 @@ CC_SOURCES = {
     "Global Voices": ("CC BY 3.0", "https://creativecommons.org/licenses/by/3.0/"),
     "EFF": ("CC BY 4.0", "https://creativecommons.org/licenses/by/4.0/"),
     "NASA": ("Public domain", "https://www.nasa.gov/nasa-brand-center/images-and-media/"),
+    "Mongabay": ("CC BY-ND 4.0", "https://creativecommons.org/licenses/by-nd/4.0/"),
+    "KFF Health News": ("CC BY-NC-ND 4.0", "https://creativecommons.org/licenses/by-nc-nd/4.0/"),
 }
 
 

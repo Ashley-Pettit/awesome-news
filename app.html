@@ -1203,7 +1203,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   const PUBLISHERS = [
     { id: "ABC", label: "ABC News" }, { id: "SBS", label: "SBS News" }, { id: "BBC", label: "BBC" }, { id: "The Guardian", label: "The Guardian" }, { id: "7NEWS", label: "7NEWS" },
     { id: "The Conversation", label: "The Conversation" }, { id: "360info", label: "360info" }, { id: "Global Voices", label: "Global Voices" },
-    { id: "NASA", label: "NASA" }, { id: "EFF", label: "EFF" }, { id: "Ars", label: "Ars Technica" }, { id: "TechCrunch", label: "TechCrunch" },
+    { id: "NASA", label: "NASA" }, { id: "EFF", label: "EFF" }, { id: "Mongabay", label: "Mongabay" }, { id: "KFF Health News", label: "KFF Health News" }, { id: "Ars", label: "Ars Technica" }, { id: "TechCrunch", label: "TechCrunch" },
     { id: "iTnews", label: "iTnews" }, { id: "Engadget", label: "Engadget" }, { id: "SmartCompany", label: "SmartCompany" },
     { id: "Startup Daily", label: "Startup Daily" }, { id: "ScienceAlert", label: "ScienceAlert" }, { id: "New Atlas", label: "New Atlas" },
     { id: "Knowable", label: "Knowable Magazine" }, { id: "Space.com", label: "Space.com" }, { id: "PC Gamer", label: "PC Gamer" },
@@ -1217,7 +1217,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     { id: "sa", label: "South Australia" }, { id: "tas", label: "Tasmania" }, { id: "act", label: "Canberra" }, { id: "nt", label: "Northern Territory" }];
   const FOR_YOU_PER_SECTION = 7;
   const FEATURE_EVERY = 6;
-  const MONO = { "ABC": "ABC", "SBS": "SBS", "BBC": "BBC", "M365": "365", "Microsoft": "MS", "Office 365": "IT", "Windows Central": "WC", "Ars": "Ars", "360info": "360", "Global Voices": "GV", "NASA": "NASA", "EFF": "EFF", "TechCrunch": "TC", "iTnews": "iT", "The Conversation": "C", "The Guardian": "G", "7NEWS": "7" };
+  const MONO = { "ABC": "ABC", "SBS": "SBS", "BBC": "BBC", "M365": "365", "Microsoft": "MS", "Office 365": "IT", "Windows Central": "WC", "Ars": "Ars", "360info": "360", "Global Voices": "GV", "NASA": "NASA", "EFF": "EFF", "Mongabay": "MB", "KFF": "KFF", "TechCrunch": "TC", "iTnews": "iT", "The Conversation": "C", "The Guardian": "G", "7NEWS": "7" };
   const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || "Australia/Brisbane";
   const SIZES = { s: "1rem", m: "1.12rem", l: "1.24rem", xl: "1.38rem" };
 
@@ -1630,12 +1630,16 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
       [i.id, b.id, ...siblings(i.id), ...siblings(b.id)].forEach(x => seen.add(x));
       out.push(b.id); secOf.set(b.id, sec); secs += words(b) / 2.6 + 7;
     };
-    briefing().filter(listenable).forEach(i => add(i, "top"));
-    // Stories with text to read move up a few places, so the drive isn't just headlines.
+    // Top stories: the ones with a proper article to read (a headline and one line isn't worth a listen),
+    // unless there are hardly any.
+    const tops = briefing().filter(listenable), deep = tops.filter(i => depth(best(i) || i) > 0);
+    (deep.length >= 3 ? deep : tops).forEach(i => add(i, "top"));
+    // Full articles first: stories with the whole article (or a long feed excerpt) come well ahead of
+    // short ones, which only fill in when a section runs out.
     // Beta: kinds of stories you've said "more like this" to come round first.
     const likes = store.get("beta.likes", {}) || {}, likeOf = sc => likes[sc.id === "local" ? "local news" : sc.id === "headlines" ? "more headlines" : sc.label] || 0;
     const lanes = enabledSections().slice().sort((a, b) => likeOf(b) - likeOf(a)).map(sc => ({ sc, list: items(sc.id).filter(i => listenable(i) && !(Number(S.negCut) && isNegative(i))).slice(0, 30)
-      .map((i, n) => ({ i, k: n - depth(i) * 5 })).sort((a, b) => a.k - b.k).map(x => x.i) }));
+      .map((i, n) => { const d = depth(best(i) || i); return { i, k: n + (d === 2 ? 0 : d === 1 ? 10 : 60) }; }).sort((a, b) => a.k - b.k).map(x => x.i) }));
     for (let r = 0; secs < target && r < 40; r++) for (const { sc, list } of lanes) { if (secs >= target) break; add(list[r], sc.id === "local" ? "local news" : sc.id === "headlines" ? "more headlines" : sc.label); }
     return { ids: out, secOf, secs };
   }
@@ -3188,12 +3192,19 @@ const handle = async (m, post) => {
     }
     let resumed = false;
     if (kind === "drive") {
-      const r = getResume();
-      if (r) { L.queue = r.queue; L.secOf = r.sec; resumed = true; }
-      else {
-        L.queue = topUp(L.queue.filter(id => !heardish(id)), 24);
-        if (!L.queue.length) { toast("You've heard all the news for now. New stories come with the next update."); npClose(); return; }
-      }
+      // New stories you haven't heard or read come first. Coming back within the hour, the ones still to go
+      // from last time follow. Stories you've already heard or read go last, so there's always something on.
+      const r = getResume(), base = L.queue.slice();
+      let pool = base;
+      if (r) { pool = [...base.filter(id => !r.queue.includes(id)), ...r.queue]; L.secOf = new Map([...(L.secOf || []), ...r.sec]); resumed = true; }
+      const fresh = [];
+      for (const id of pool) if (!seenish(id) && !fresh.some(k => k === id || sameStory(k, id))) fresh.push(id);
+      topUp(fresh, 24);
+      const old = []; for (const id of pool) if (!fresh.includes(id) && !old.some(k => k === id || sameStory(k, id))) old.push(id);
+      if (!fresh.length && !old.length) { toast("You've heard all the news for now. New stories come with the next update."); npClose(); return; }
+      if (!fresh.length) toast("Nothing new since last time, so here's what you've already heard");
+      L.welcome = r && fresh.length && !r.queue.includes(fresh[0]) ? WELCOME_NEW : WELCOME_BACK;
+      L.queue = [...fresh, ...old];
     }
     if (!L.queue.length) { toast("There's nothing to read out yet"); return; }
     Object.assign(L, { on: true, paused: false, at: 0, kind, opened: resumed, resumed, lastSec: null, back: null, done: new Set(), listShown: false, cueN: 0 });
@@ -3213,7 +3224,7 @@ const handle = async (m, post) => {
     if (L.kind === "drive") {
       const sec = L.secOf?.get(id);
       if (L.resumed) {  // beta: back within the hour, straight in with a quick welcome back (skipped if not recorded yet)
-        pre.push({ text: WELCOME_BACK, para: -1, kind: "cue", opt: true }); L.resumed = false; L.lastSec = sec;
+        pre.push({ text: L.welcome || WELCOME_BACK, para: -1, kind: "cue", opt: true }); L.resumed = false; L.lastSec = sec;
       }
       if (!L.opened) {
         const t = usePre() ? preOpening() : "";
@@ -3221,13 +3232,7 @@ const handle = async (m, post) => {
         // quietly for a few seconds rather than switching to the phone's voice.
         pre.push(t ? { text: t, para: -1, kind: "open" } : { text: driveOpening(), para: -1, kind: "open", silent: usePre() });
       }
-      if (sec && sec !== L.lastSec) {
-        // The way in takes turns: "Now, AI.", "Next, AI.", "On to AI."...
-        const way = CUE_WAYS[(L.cueN = (L.cueN || 0) + 1) % CUE_WAYS.length];
-        // After the next button: straight to the headline, nothing said first.
-        if (!L.skipped) pre.push(sec === "top" ? { text: "Here are the top stories.", para: -1, kind: "cue", sec }
-          : { text: way.replace("{}", sec), alt: `Now, ${sec}.`, para: -1, kind: "cue", sec });  // alt: if that way isn't recorded yet
-      }
+      // No "Next, tech." between sections: straight from one headline to the next.
       L.skipped = false;
       L.lastSec = sec;
     }
@@ -3307,12 +3312,14 @@ const handle = async (m, post) => {
     store.set("brief.heard2", HEARD_AT);
   }
   const heardish = id => HEARD.has(id) || siblings(id).some(x => HEARD.has(x));
+  // Heard in Listen, or read in the app.
+  const seenish = id => heardish(id) || state.read.has(id) || siblings(id).some(x => state.read.has(x));
   // Beta: more stories when the list runs low: anything Emma has read that hasn't been heard, newest first.
   function topUp(queue, want) {
-    const have = new Set(queue);
-    for (const i of forYou()) {
+    const have = new Set(queue), dep = i => i.text ? 2 : i.feed ? 1 : 0;
+    for (const i of forYou().slice().sort((a, b) => dep(b) - dep(a))) {
       if (queue.length >= want) break;
-      if (have.has(i.id) || heardish(i.id) || (usePre() && !preReady(i)) || !listenable(i) || queue.some(k => sameStory(k, i.id))) continue;
+      if (have.has(i.id) || seenish(i.id) || (usePre() && !preReady(i)) || !listenable(i) || queue.some(k => sameStory(k, i.id))) continue;
       queue.push(i.id); have.add(i.id); if (L.secOf && !L.secOf.has(i.id)) L.secOf.set(i.id, "more headlines");
     }
     return queue;
@@ -3326,10 +3333,11 @@ const handle = async (m, post) => {
   function getResume() {
     const r = store.get("brief.resume", null);
     if (!r || !Array.isArray(r.queue) || Date.now() - r.t > RESUME_MS) return null;
-    const rest = r.queue.slice(r.at).filter((id, n) => findItem(id) && (n === 0 || !heardish(id)));
+    const rest = r.queue.slice(r.at).filter(id => findItem(id));
     return rest.length ? { queue: rest, sec: new Map(r.sec || []) } : null;
   }
-  const WELCOME_BACK = "Welcome back. Picking up where you left off.";  // voice.py records it
+  const WELCOME_BACK = "Welcome back. Picking up where you left off.";  // voice.py records both
+  const WELCOME_NEW = "Welcome back. Here's what's new.";
   function speakNext(tk) {
     if (tk !== L.token || !L.on || L.paused) return;
     const sp = L.parts[L.part];
@@ -3382,7 +3390,6 @@ const handle = async (m, post) => {
     }
     speakNext(tk);
   }
-  const CUE_WAYS = ["Now, {}.", "Next, {}.", "On to {}.", "Moving on to {}.", "Over to {}."];  // CUE_WAYS in voice.py
   // ---- Beta: the listen guides the app ----
   // "More like this": the next couple of stories closest to this one move up, and that kind of story ranks
   // higher next time. "Read along": the article opens with the spoken paragraph lit up, still playing.

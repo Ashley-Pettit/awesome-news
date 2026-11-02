@@ -253,11 +253,9 @@ def plan(data, vkey):
                     want(it["text"])
         except Exception:
             pass
-    for t in ["Here are the top stories.", "Welcome back. Picking up where you left off.", SAMPLE, MORE] + [w.format(x) for x in ("local news", "more headlines") for w in CUE_WAYS]:
+    # No section cues ("Next, tech.") any more: the app goes straight from one headline to the next.
+    for t in ["Welcome back. Picking up where you left off.", "Welcome back. Here's what's new.", SAMPLE, MORE]:
         want(t)
-    for lbl in CORE_LABELS + [x["label"] for x in status.get("interests", [])]:
-        for w in CUE_WAYS:
-            want(w.format(lbl))
     for n in range(1, 9):
         want(f"Story {n}.")
 
