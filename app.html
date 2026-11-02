@@ -1820,7 +1820,14 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   // ======================================================================
   // Feed pictures at a size that's sharp on a phone: BBC sends 240px thumbnails, so ask for a bigger copy
   // (the original is the fallback if the bigger one won't load).
-  const feedPic = (u, big) => big ? bigPic(u) : String(u || "").replace(/(ichef\.bbci\.co\.uk\/(?:ace|news)\/(?:standard|ws))\/\d+\//, "$1/480/");
+  // Some publishers send huge pictures (7NEWS: 3840px PNGs) that phones only half draw. A free image service
+  // resizes each one to what the card needs, as a JPEG; the publisher's own copy is the fallback.
+  const feedPic = (u, big) => {
+    u = String(u || ""); if (!/^https?:/.test(u)) return u;
+    const sbs = u.match(/assets\.sbs\.com\.au\/.*[?&]url=([^&]+)/);
+    const src = big ? (sbs ? decodeURIComponent(sbs[1]) : bigPic(u)) : u.replace(/(ichef\.bbci\.co\.uk\/(?:ace|news)\/(?:standard|ws))\/\d+\//, "$1/480/");
+    return `https://wsrv.nl/?url=${encodeURIComponent(src)}&w=${big ? 900 : 400}&output=jpg&q=80`;
+  };
   const pic = (i, cls = "", big = false) => `<div class="pic ${cls}">${i.image ? `<img src="${esc(feedPic(i.image, big))}" data-o="${esc(i.image)}" onerror="if(this.dataset.o&&this.src!==this.dataset.o)this.src=this.dataset.o" alt="" loading="${cls ? "eager" : "lazy"}" decoding="async" referrerpolicy="no-referrer">` : ""}<span class="mono" aria-hidden="true"${i.image ? " hidden" : ""}>${esc(mono(i.source))}</span></div>`;
   const secColour = i => colourOf(i._sid);
   const meta = (i, withSec) => `<div class="meta">${withSec && i._sec ? `<span class="sec" style="--sc:${secColour(i)}">${esc(i._sec)}</span><span class="sep"></span>` : ""}<span class="src">${esc(i.source)}</span><span class="sep"></span><time datetime="${esc(i.published)}">${esc(ago(i.published))}</time></div>`;
