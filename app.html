@@ -230,10 +230,19 @@ body.tvson { overflow: hidden; }
 body.npon { overflow: hidden; }
 body.npon .player { display: none; }
 .np-pic { position: absolute; inset: 0; z-index: 0; }
-.np-pic img { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; max-width: 100%; opacity: 0; transition: opacity 0.8s ease; }
-.np-pic img.on { opacity: 1; animation: kb 30s ease-in-out infinite alternate; }
-@keyframes kb { from { transform: scale(1); } to { transform: scale(1.06); } }
-@media (prefers-reduced-motion: reduce) { .np-pic img.on { animation: none; } }
+/* The photo is shown whole at its own shape (news photos are wide, phones are tall, so filling the
+   screen blew them up and blurred them). A soft, dimmed copy fills the space behind it. */
+.np-pic .np-bg { position: absolute; inset: -40px; z-index: 0; width: calc(100% + 80px); height: calc(100% + 80px); max-width: none; object-fit: cover; filter: blur(28px) brightness(0.5) saturate(1.2); opacity: 0; transition: opacity 0.8s ease; }
+.np-pic .np-bg.on { opacity: 1; }
+.np-pic #npImg { position: absolute; z-index: 0; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 74px); transform: translateX(-50%); width: var(--pw, 100%); max-width: 100%; height: auto; max-height: 46%;
+  object-fit: contain; border-radius: 4px; box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45); opacity: 0; transition: opacity 0.8s ease; }
+.np-pic #npImg.on { opacity: 1; animation: kb 30s ease-in-out infinite alternate; }
+@keyframes kb { from { transform: translateX(-50%) scale(1); } to { transform: translateX(-50%) scale(1.04); } }
+@media (orientation: landscape) {
+  .np-pic #npImg { inset: 0; top: 0; left: 0; transform: none; width: 100%; height: 100%; max-height: none; object-fit: cover; object-position: center 30%; border-radius: 0; box-shadow: none; }
+  @keyframes kb { from { transform: scale(1); } to { transform: scale(1.04); } }
+}
+@media (prefers-reduced-motion: reduce) { .np-pic #npImg.on { animation: none; } }
 /* Calm layer: blurs and dims the picture while the weather or a section cue is on screen. */
 .np-pic::before { content: ""; position: absolute; inset: 0; z-index: 1; background: rgba(10, 8, 20, 0.5); -webkit-backdrop-filter: blur(24px) saturate(1.15); backdrop-filter: blur(24px) saturate(1.15); opacity: 0; transition: opacity 0.7s ease; }
 .np.calm .np-pic::before { opacity: 1; }
@@ -776,7 +785,7 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
   <p class="tvs-foot">Clips from the broadcasters' own YouTube channels. A story covered by more than one channel is shown once.</p>
 </div>
 <div class="np" id="np" role="dialog" aria-label="Now playing" hidden>
-  <div class="np-pic"><img id="npImg" alt=""><div class="np-mono" id="npMono"></div></div>
+  <div class="np-pic"><img class="np-bg" id="npBg" alt=""><img id="npImg" alt=""><div class="np-mono" id="npMono"></div></div>
   <div class="np-top">
     <div class="np-brand"><img id="npLogo" alt=""><span>Awesome News</span></div>
     <span class="np-pos" id="npPos"></span>
@@ -1329,12 +1338,28 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
   }
   document.addEventListener("visibilitychange", () => { if (!document.hidden) keepAwake(); });
   const monoOf = i => MONO[publisherOf(i.source)] || MONO[i.source] || publisherOf(i.source).slice(0, 3);
+  // Ask the publisher for a bigger copy of the photo where its address says the size.
+  function bigPic(u) {
+    return String(u || "")
+      .replace(/(ichef\.bbci\.co\.uk\/(?:ace|news)\/(?:standard|ws))\/\d+\//, "$1/976/")
+      .replace(/(abc-cdn\.net\.au\/[^?]+\?.*\bwidth=)\d+/, "$11200")
+      .replace(/(\/wp-content\/uploads\/[^?]+)-(\d+)x(\d+)(\.(?:jpe?g|png|webp))/i, (m, a, w, h, ext) => Number(w) < 700 ? a + ext : m);
+  }
   function npStory(i) {
     if (!i) return;
-    const img = $("npImg"), mono = $("npMono");
-    img.classList.remove("on");
-    if (i.image) { mono.textContent = ""; img.onload = () => img.classList.add("on"); img.onerror = () => { img.removeAttribute("src"); mono.textContent = monoOf(i); }; img.src = i.image; if (img.complete && img.naturalWidth) img.classList.add("on"); }
-    else { img.removeAttribute("src"); mono.textContent = monoOf(i); }
+    const img = $("npImg"), bg = $("npBg"), mono = $("npMono");
+    img.classList.remove("on"); bg.classList.remove("on");
+    if (i.image) {
+      const src = bigPic(i.image);
+      mono.textContent = "";
+      // A small photo isn't stretched past about twice its size, so it stays sharp.
+      const shown = () => { img.style.setProperty("--pw", img.naturalWidth < 700 ? Math.round(img.naturalWidth * 1.6) + "px" : "100%"); img.classList.add("on"); bg.classList.add("on"); };
+      img.onload = shown;
+      img.onerror = () => { if (img.src !== i.image && src !== i.image) { img.src = i.image; bg.src = i.image; return; } img.removeAttribute("src"); bg.removeAttribute("src"); mono.textContent = monoOf(i); };
+      img.src = src; bg.src = src;
+      if (img.complete && img.naturalWidth) shown();
+    }
+    else { img.removeAttribute("src"); bg.removeAttribute("src"); mono.textContent = monoOf(i); }
     const sec = L.secOf?.get(i.id);
     $("npSec").textContent = sec === "top" ? "Top story" : sec === "local news" ? "Local" : sec === "more headlines" ? "Headlines" : sec || "";
     $("npSrc").textContent = publisherOf(i.source);
