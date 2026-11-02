@@ -327,8 +327,19 @@ body.npon .player { display: none; }
 .np-cue small { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 10px; font-family: var(--ui); font-size: 0.8rem; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255, 255, 255, 0.7); }
 .np-cue small::before, .np-cue small::after { content: ""; width: 22px; height: 1px; background: rgba(255, 255, 255, 0.4); }
 .np-cue .t { display: block; }
+/* The opening title: app icon, name with a light sweep, the date, a short accent line */
+.np-hello { position: relative; display: grid; justify-items: center; gap: 14px; }
+.np-hello::before { content: ""; position: absolute; inset: -110px -40px; z-index: -1; background: radial-gradient(closest-side, rgba(124, 92, 255, 0.38), rgba(124, 92, 255, 0) 70%); pointer-events: none; }
+.hl-logo { width: 84px; height: 84px; border-radius: 21px; box-shadow: 0 18px 48px rgba(124, 92, 255, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.14); animation: hlPop 0.7s cubic-bezier(0.2, 0.9, 0.25, 1.2) both; }
+.hl-name { font-size: clamp(2.6rem, 12vw, 4.4rem); line-height: 1; letter-spacing: -0.04em; color: transparent; background: linear-gradient(100deg, #ffffff 30%, #cdbdff 50%, #ffffff 70%) 0 0 / 250% 100%; -webkit-background-clip: text; background-clip: text;
+  animation: npIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.08s both, hlShine 1.6s ease-in-out 0.3s both; }
+.hl-date { font-family: var(--ui); font-size: 0.8rem; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255, 255, 255, 0.72); }
+.hl-line { width: 56px; height: 3px; border-radius: 3px; background: linear-gradient(90deg, #8b6cff, #ff8fb1); animation: hlLine 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s both; }
+@keyframes hlPop { from { opacity: 0; transform: scale(0.6) rotate(-8deg); } to { opacity: 1; transform: none; } }
+@keyframes hlShine { from { background-position: 100% 0; } to { background-position: 0 0; } }
+@keyframes hlLine { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @media (prefers-reduced-motion: reduce) {
-  .np-in, .np-fc .d { animation: none; }
+  .np-in, .np-fc .d, .hl-logo, .hl-name, .hl-line { animation: none; }
   .np-wx .cond svg { animation: none !important; }
   .np-pic::before { transition: none; }
 }
@@ -663,6 +674,7 @@ body.locked .player { z-index: 45; bottom: calc(env(safe-area-inset-bottom, 0px)
 .pchip .n { font-size: 0.72rem; color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
 #weather { z-index: 43; }
 body.wxlisten #weather { z-index: 60; }
+body.wxlisten #weather .bs-scrubrow { display: none; }  /* while the news reads it, the timeline just plays */
 /* ---------- Weather: Brisbane Sky (Ash's design). A full-screen 3D sky with the readout floating over it. ---------- */
 #weather { --bs-ink: #f3f6fb; --bs-dim: rgba(243, 246, 251, .72); --bs-faint: rgba(243, 246, 251, .46); --bs-scrim: rgba(8, 14, 30, .42); --bs-line: rgba(243, 246, 251, .18);
   --bs-jac: #b79cf0; --bs-jac-deep: #7d5fd1; --bs-storm: #ffd166; --bs-display: "Big Shoulders Display", "Arial Narrow", "Helvetica Neue", Impact, sans-serif; --bs-body: "Atkinson Hyperlegible", "Trebuchet MS", Verdana, sans-serif;
@@ -1580,7 +1592,8 @@ body.wxlisten #weather { z-index: 60; }
     // The opening starts on a quick "Awesome News" title; once it gets to the weather, the full 3D weather page takes over.
     wx.hidden = true; cue.hidden = p.kind !== "cue" && p.kind !== "open";
     np.classList.toggle("calm", p.kind === "open" || p.kind === "cue");
-    if (p.kind === "open" && cue.dataset.k !== "open") { cue.dataset.k = "open"; cue.innerHTML = `<small class="np-in">This is</small><span class="t np-in" style="--i:1">Awesome News</span>`; }
+    if (p.kind === "open" && cue.dataset.k !== "open") { cue.dataset.k = "open"; const date = new Intl.DateTimeFormat("en-AU", { timeZone: TZ, weekday: "long", day: "numeric", month: "long" }).format(new Date());
+      cue.innerHTML = `<div class="np-hello"><img class="hl-logo" src="${$("npLogo").src}" alt=""><span class="hl-name">Awesome News</span><span class="hl-date np-in" style="--i:3">${esc(date)}</span><span class="hl-line" aria-hidden="true"></span></div>`; }
     if (p.kind !== "open") wxListenOff();
     if (p.kind === "cue") {
       const label = p.sec === "top" ? "Top stories" : p.sec === "local news" ? "Local news" : p.sec === "more headlines" ? "More headlines" : p.sec;
@@ -1608,7 +1621,7 @@ body.wxlisten #weather { z-index: 60; }
       const p = L.parts[L.part], now = performance.now(), dt = now - last; last = now;
       if (!L.on || L.kind !== "drive" || L.at !== 0 || (p && p.kind !== "open")) { clearInterval(L.wxT); L.wxT = 0; return; }
       if (!p || L.paused) return;
-      const f = p.text.indexOf("First, the weather"), frac = f > 0 ? f / p.text.length : 0;
+      const f = p.text.indexOf("First,"), frac = f > 0 ? 0.5 * f / p.text.length : 0;  // half way through the hello
       let go = false;
       if (aud.src && !aud.paused && isFinite(aud.duration) && aud.duration > 2) go = aud.currentTime >= frac * aud.duration;
       else if (tts && tts.speaking) { spoke += dt; go = spoke >= frac * p.text.length / 14 * 1000 / (L.rate || 1); }
@@ -1628,10 +1641,22 @@ body.wxlisten #weather { z-index: 60; }
       : c <= 48 ? "and foggy" : c <= 53 ? "with light drizzle" : c <= 57 ? "with drizzle" : c <= 61 ? "with light rain" : c <= 63 ? "and raining" : c <= 67 ? "with heavy rain"
       : c <= 77 ? "and snowing" : c <= 81 ? "with showers about" : c <= 82 ? "with heavy showers" : c <= 86 ? "with snow showers" : "with storms about";
   }
+  // From 6pm, Listen gives (and shows) tomorrow's weather.
+  const isNight = () => +new Intl.DateTimeFormat("en-AU", { timeZone: TZ, hour: "numeric", hourCycle: "h23" }).format(new Date()) >= 18;
+  // A day's sky as it reads after "Expect": "Expect light drizzle tomorrow".
+  function wxExpect(c) {
+    return c === 0 ? "clear skies" : c === 1 ? "mostly sunny skies" : c === 2 ? "partly cloudy skies" : c === 3 ? "cloudy skies" : c <= 48 ? "fog" : c <= 51 ? "light drizzle"
+      : c <= 53 ? "some drizzle" : c <= 55 ? "heavy drizzle" : c <= 57 ? "freezing drizzle" : c <= 61 ? "light rain" : c <= 63 ? "rain" : c <= 67 ? "heavy rain" : c <= 77 ? "snow"
+      : c <= 80 ? "a few showers" : c <= 81 ? "showers" : c <= 82 ? "heavy showers" : c <= 86 ? "snow showers" : c === 95 ? "storms" : "storms with hail";
+  }
   function driveOpening() {
     let wx = "";
     try {
-      if (state.wx) {
+      const v0 = state.wx && wxView(state.wx), n = v0 ? v0.di + 1 : -1;
+      if (v0 && isNight() && v0.dy.time[n]) {
+        const dy = v0.dy, p = dy.precipitation_probability_max?.[n] ?? 0;
+        wx = ` First, tomorrow's weather in ${state.wx.city}. Expect ${wxExpect(dy.weather_code[n])} tomorrow, with a top of ${Math.round(dy.temperature_2m_max[n])} degrees and a low of ${Math.round(dy.temperature_2m_min[n])}.${p >= 20 ? ` There's a ${p} percent chance of rain.` : ""}`;
+      } else if (state.wx) {
         const v = wxView(state.wx);
         wx = ` First, the weather in ${state.wx.city}. It's ${Math.round(v.cur.temperature_2m)} degrees ${wxSay(v.cur.weather_code, v.cur.is_day)}. ${wxSummary(v).replace(/°/g, " degrees").replace(/\((\d+)%\)/g, ", $1 percent").replace(/\((\d+)\)/g, "$1")}`;
       }
@@ -2710,7 +2735,8 @@ const handle = async (m, post) => {
   }
   const preOpening = () => {
     const o = PRE?.open?.[S.region];
-    return o && o.day === new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new Date()) ? o.text : "";
+    if (!o || o.day !== new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new Date())) return "";
+    return isNight() ? (o.night || "") : o.text;  // at night: tomorrow's weather
   };
   let aiWhy = "";
   function aiFail(err) {

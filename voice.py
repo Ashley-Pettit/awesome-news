@@ -137,7 +137,17 @@ def opening(region, w):
     rain = d.get("precipitation_probability_max", [None] * (k + 1))[k]
     if rain is not None and rain >= 20:
         text += f" There's a {rain} percent chance of rain."
-    return today, text
+    # Listening at night (6pm on), the opening gives tomorrow's weather instead.
+    night = None
+    if k + 1 < len(d["time"]):
+        n = k + 1
+        night = (f"This is Awesome News for {day:%A} the {ordinal(day.day)} of {day:%B}. First, tomorrow's weather in {city}. "
+                 f"Expect {WMO.get(d['weather_code'][n], 'mixed weather')} tomorrow, with a top of {round(d['temperature_2m_max'][n])} degrees "
+                 f"and a low of {round(d['temperature_2m_min'][n])}.")
+        rain = d.get("precipitation_probability_max", [None] * (n + 1))[n]
+        if rain is not None and rain >= 20:
+            night += f" There's a {rain} percent chance of rain."
+    return today, text, night
 
 
 # ---------------------------------------------------------------------------
@@ -174,10 +184,12 @@ def plan(data, vkey):
     opens = {}
     for r, w in (status.get("weather") or {}).items():
         try:
-            day, text = opening(r, w)
+            day, text, night = opening(r, w)
             if text:
-                opens[r] = {"day": day, "text": text}
+                opens[r] = {"day": day, "text": text, "night": night}
                 want(text)
+                if night:
+                    want(night)
         except Exception:
             pass
     for t in ["Here are the top stories.", "Now, local news.", "Now, more headlines.", SAMPLE, MORE]:
@@ -363,7 +375,8 @@ def merge(data, vkey):
         if bits:
             done[sid] = bits
     index = {"v": TAG, "voice": VOICE, "at": status.get("updatedAt", ""), "lk": lock_fp(vkey) if vkey else None,
-             "open": {r: o for r, o in opens.items() if key_of(o["text"]) in have}, "sample": SAMPLE, "c": have, "s": done}
+             "open": {r: {**o, "night": o["night"] if o.get("night") and key_of(o["night"]) in have else None}
+                      for r, o in opens.items() if key_of(o["text"]) in have}, "sample": SAMPLE, "c": have, "s": done}
     with open(os.path.join(out_dir, "index.json"), "w") as f:
         json.dump(index, f, separators=(",", ":"))
     print(json.dumps({"pieces": len(jobs), "have": len(have), "stories": len(stories), "complete": len(done),
