@@ -390,6 +390,9 @@ body.beta-heads button.np-pos::after { content: ""; display: inline-block; width
 .hcard.solo { flex: none; width: 100%; aspect-ratio: 4 / 3.3; margin-top: 16px; }
 .hcard .pic { position: absolute; inset: 0; background: #2a2540; }
 .hcard .pic img { transition: transform 6s ease; }
+/* The whole photo across the top (no cutting a wide or two-part photo in half, no blurry zoom), with a soft blurred copy filling behind the headline */
+.hcard .pic img:not(.bgb) { object-fit: contain; object-position: center top; }
+.hcard .pic img.bgb { object-fit: cover; filter: blur(22px) brightness(0.55) saturate(1.2); transform: scale(1.15); }
 @media (hover: hover) { .hcard:hover .pic img { transform: scale(1.04); } }
 .hcard::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(to top, rgba(10, 8, 22, 0.95) 0%, rgba(10, 8, 22, 0.55) 42%, rgba(10, 8, 22, 0) 70%); }
 .hcard .body { z-index: 2; padding: 16px 16px 18px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; color: #ffffff; }
@@ -1828,11 +1831,11 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     const src = big ? (sbs ? decodeURIComponent(sbs[1]) : bigPic(u)) : u.replace(/(ichef\.bbci\.co\.uk\/(?:ace|news)\/(?:standard|ws))\/\d+\//, "$1/480/");
     return `https://wsrv.nl/?url=${encodeURIComponent(src)}&w=${big ? 900 : 400}&output=jpg&q=80`;
   };
-  const pic = (i, cls = "", big = false) => `<div class="pic ${cls}">${i.image ? `<img src="${esc(feedPic(i.image, big))}" data-o="${esc(i.image)}" onerror="if(this.dataset.o&&this.src!==this.dataset.o)this.src=this.dataset.o" alt="" loading="${cls ? "eager" : "lazy"}" decoding="async" referrerpolicy="no-referrer">` : ""}<span class="mono" aria-hidden="true"${i.image ? " hidden" : ""}>${esc(mono(i.source))}</span></div>`;
+  const pic = (i, cls = "", big = false, whole = false) => `<div class="pic ${cls}">${i.image && whole ? `<img class="bgb" src="${esc(feedPic(i.image, false))}" alt="" aria-hidden="true" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : ""}${i.image ? `<img src="${esc(feedPic(i.image, big))}" data-o="${esc(i.image)}" onerror="if(this.dataset.o&&this.src!==this.dataset.o)this.src=this.dataset.o" alt="" loading="${cls ? "eager" : "lazy"}" decoding="async" referrerpolicy="no-referrer">` : ""}<span class="mono" aria-hidden="true"${i.image ? " hidden" : ""}>${esc(mono(i.source))}</span></div>`;
   const secColour = i => colourOf(i._sid);
   const meta = (i, withSec) => `<div class="meta">${withSec && i._sec ? `<span class="sec" style="--sc:${secColour(i)}">${esc(i._sec)}</span><span class="sep"></span>` : ""}<span class="src">${esc(i.source)}</span><span class="sep"></span><time datetime="${esc(i.published)}">${esc(ago(i.published))}</time></div>`;
   const heroCard = (i, solo, withSec, eager) => `<article class="story hcard${solo ? " solo" : ""}${readCls(i)}" style="--hc:${secColour(i)}">
-      ${pic(i, eager ? "eager" : "", true)}
+      ${pic(i, eager ? "eager" : "", true, true)}
       <div class="body">
         ${withSec && i._sec ? `<span class="chip">${esc(i._sec)}</span>` : i._new && !state.read.has(i.id) ? `<span class="chip">New</span>` : ""}
         <h2 class="h">${link(i, esc(i.title))}</h2>${meta(i, false)}
