@@ -45,9 +45,10 @@ SAY = [(r"\b7NEWS\b", "Seven News"), (r"\b9News\b", "Nine News"), (r"\b10 News\b
        (r"\bASX\b", "A.S.X."), (r"\bRBA\b", "R.B.A."), (r"\bCEO\b", "C.E.O."), (r"\bLNP\b", "L.N.P."), (r"\bSBS\b", "S.B.S."),
        (r"\bABC\b", "A.B.C."), (r"\bBBC\b", "B.B.C."), (r"\bNSW\b", "New South Wales"), (r"\bEFF\b", "E.F.F."),
        (r"\bM365\b", "M three six five"), (r"\bSEQ\b", "south-east Queensland"), (r"\bPM\b", "Prime Minister")]
-WMO = {0: "clear skies", 1: "mostly sunny", 2: "partly cloudy", 3: "cloudy", 45: "foggy", 48: "foggy", 51: "light drizzle", 53: "drizzle",
-       55: "heavy drizzle", 61: "light rain", 63: "rain", 65: "heavy rain", 80: "showers", 81: "showers", 82: "heavy showers",
-       95: "storms", 96: "storms with hail", 99: "storms with hail"}
+# Read as "Expect ... today": "Expect light drizzle today", "Expect clear skies today".
+WMO = {0: "clear skies", 1: "mostly sunny skies", 2: "partly cloudy skies", 3: "cloudy skies", 45: "fog", 48: "fog", 51: "light drizzle", 53: "some drizzle",
+       55: "heavy drizzle", 56: "freezing drizzle", 57: "freezing drizzle", 61: "light rain", 63: "rain", 65: "heavy rain", 80: "a few showers", 81: "showers",
+       82: "heavy showers", 95: "storms", 96: "storms with hail", 99: "storms with hail"}
 
 
 # ---- The app's own text rules (clean(), speakable() and chunks() in app.html), copied exactly ----
@@ -132,7 +133,7 @@ def opening(region, w):
     city = fetcher.CITIES[region][0]
     sky = WMO.get(d["weather_code"][k], "mixed weather")
     text = (f"This is Awesome News for {day:%A} the {ordinal(day.day)} of {day:%B}. First, the weather in {city}. "
-            f"Today, {sky}, with a top of {round(d['temperature_2m_max'][k])} degrees and a low of {round(d['temperature_2m_min'][k])}.")
+            f"Expect {sky} today, with a top of {round(d['temperature_2m_max'][k])} degrees and a low of {round(d['temperature_2m_min'][k])}.")
     rain = d.get("precipitation_probability_max", [None] * (k + 1))[k]
     if rain is not None and rain >= 20:
         text += f" There's a {rain} percent chance of rain."

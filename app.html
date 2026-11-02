@@ -1618,12 +1618,18 @@ body.wxlisten #weather { z-index: 60; }
     const el = $("weather"); el.classList.remove("open");
     setTimeout(() => { if (!el.classList.contains("open")) el.hidden = true; }, 320);
   }
+  // The sky as it reads in a sentence: "It's 21 degrees with light drizzle", not "21 degrees and drizzle".
+  function wxSay(c, day) {
+    return c === 0 ? (day ? "and sunny" : "under clear skies") : c === 1 ? (day ? "and mostly sunny" : "and mostly clear") : c === 2 ? "and partly cloudy" : c === 3 ? "and cloudy"
+      : c <= 48 ? "and foggy" : c <= 53 ? "with light drizzle" : c <= 57 ? "with drizzle" : c <= 61 ? "with light rain" : c <= 63 ? "and raining" : c <= 67 ? "with heavy rain"
+      : c <= 77 ? "and snowing" : c <= 81 ? "with showers about" : c <= 82 ? "with heavy showers" : c <= 86 ? "with snow showers" : "with storms about";
+  }
   function driveOpening() {
     let wx = "";
     try {
       if (state.wx) {
         const v = wxView(state.wx);
-        wx = ` First, the weather in ${state.wx.city}. It's ${Math.round(v.cur.temperature_2m)} degrees and ${wxLabel(v.cur.weather_code, v.cur.is_day).toLowerCase()}. ${wxSummary(v).replace(/°/g, " degrees").replace(/\((\d+)%\)/g, ", $1 percent").replace(/\((\d+)\)/g, "$1")}`;
+        wx = ` First, the weather in ${state.wx.city}. It's ${Math.round(v.cur.temperature_2m)} degrees ${wxSay(v.cur.weather_code, v.cur.is_day)}. ${wxSummary(v).replace(/°/g, " degrees").replace(/\((\d+)%\)/g, ", $1 percent").replace(/\((\d+)\)/g, "$1")}`;
       }
     } catch {}
     return `${greeting()}. This is Awesome News.${wx}`;
