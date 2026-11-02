@@ -1591,7 +1591,11 @@ body.wxlisten #weather { z-index: 60; }
   function wxListenOn() {
     if (!state.wx || document.body.classList.contains("wxlisten") || !$("weather").hidden) return;
     document.body.classList.add("wxlisten");
-    BS.view = { mode: "live", ms: bsStep(Date.now()), play: true, day: null, jump: 45 * 60 };  // while the news reads the weather: 45 minutes a jump, a jump a second
+    // While the news reads the weather: the day from 4:45am in 30-minute jumps, one every 0.7 seconds.
+    // In the morning and afternoon it's today; from 6pm it's tomorrow.
+    BS.D = bsData();
+    const t = Date.now(), day = bsMins(t) >= 18 * 60 ? (BS.D.days[1] || BS.D.days[0]).date : bsKey(t);
+    BS.view = { mode: "day", ms: bsMidnight(day) + 285 * 60000, play: true, day, jump: 30 * 60, every: 0.7, dawn: 285 };
     if (!BS.tick) BS.tick = setInterval(() => { if (!$("weather").hidden) bsTick(); }, 1000);
     const el = $("weather"); el.hidden = false; el.scrollTop = 0;  // shown first, so the 3D sky sizes itself to the screen
     renderWeather();
@@ -3713,9 +3717,9 @@ const handle = async (m, post) => {
     // Play through the day; at the end of it, replay the same day from 6am.
     if (v.play) {
       const day0 = v.day || bsKey(v.ms);
-      if (v.jump) { v.acc = (v.acc || 0) + real; while (v.acc >= 1) { v.acc -= 1; v.ms += v.jump * 1000; } }  // Listen: one jump a second
+      if (v.jump) { v.acc = (v.acc || 0) + real; while (v.acc >= v.every) { v.acc -= v.every; v.ms += v.jump * 1000; } }  // Listen: jumps
       else v.ms += real * BS_SPEED * 1000;
-      if (bsKey(v.ms) !== day0 || v.ms > BS.D.end) v.ms = bsMidnight(day0) + BS_DAWN * 60000;
+      if (bsKey(v.ms) !== day0 || v.ms > BS.D.end) v.ms = bsMidnight(day0) + (v.dawn ?? BS_DAWN) * 60000;
       v.day = day0;
       if (v.mode === "live" && Math.abs(v.ms - Date.now()) > 45 * 60000) v.mode = "day";
     }
