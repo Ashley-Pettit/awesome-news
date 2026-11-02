@@ -2495,11 +2495,16 @@ const handle = async (m, post) => {
   // unlocks this player, so the voice can start once it's ready.
   let SILENT = "";
   function unlockAudio() {
+    // Tell Safari this is media playback, like a podcast: it plays with the silent switch on and keeps
+    // going with the screen locked (otherwise iPhones can mute it).
+    try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch {}
     if (L.unlocked || !aud.paused) return;
     try {
       SILENT = SILENT || wavURL(new Float32Array(4800), 24000);
       aud.onended = aud.onerror = null; aud.src = SILENT;
-      const p = aud.play(); if (p) p.then(() => { L.unlocked = true; }).catch(() => {});
+      const p = aud.play();
+      // The first real clip waits for this, so it doesn't cut the unlock off part way (iPhones then refuse to play).
+      L.unlockP = p ? p.then(() => { L.unlocked = true; }).catch(() => {}).finally(() => { L.unlockP = null; }) : null;
     } catch {}
   }
   const isSilent = () => !aud.src || aud.src === SILENT || aud.src.startsWith("data:");
@@ -2570,7 +2575,8 @@ const handle = async (m, post) => {
     aiBroken = true; L.aiWait = false; aiWhy = String(err?.message || err || "");
     toast("The natural voice couldn't load. Tap play to hear your phone's voice instead. Settings, Listen shows why.", 7000);
   }
-  function hush() { try { tts?.cancel(); } catch {} try { aud.pause(); } catch {} }
+  // Stop whatever's playing, but never the silent unlock clip from this tap, or iPhones refuse what comes next.
+  function hush() { try { tts?.cancel(); } catch {} try { if (!L.unlockP) aud.pause(); } catch {} }
   function bindClip(tk, k) {
     aud.onended = () => { if (tk !== L.token) return; L.part++; updateBar(); speakNext(tk); };
     aud.onerror = () => { if (tk !== L.token || isSilent()) return; L.part++; speakNext(tk); };
@@ -2586,6 +2592,7 @@ const handle = async (m, post) => {
       bindClip(tk, k);
       L.aiAt = k;
       npPart(k);
+      if (L.unlockP) { L.unlockP.then(() => play(url)); return; }
       aud.src = url; aud.defaultPlaybackRate = L.rate; aud.playbackRate = L.rate;
       const go = aud.play();
       if (go) go.then(() => { L.unlocked = true; }).catch(e => { if (tk !== L.token) return; if (e && e.name === "NotAllowedError") { L.unlocked = false; pauseListen(); toast("Tap play to start listening"); } });
@@ -2656,7 +2663,7 @@ const handle = async (m, post) => {
     if (!canSpeak && !useAI() && !usePre()) { toast("Listening isn't available in this browser"); return; }
     if (useAI() || usePre()) unlockAudio();
     // The phone's own voice fills any gaps, and iPhones only allow it after it has spoken once in a tap.
-    if (usePre() && canSpeak && !L.ttsPrimed) { try { tts.speak(new SpeechSynthesisUtterance(" ")); L.ttsPrimed = true; } catch {} }
+
     if (kind === "story") {
       const id = state.readerId;
       if (L.on && L.queue[L.at] === id) { L.paused ? resumeListen() : pauseListen(); return; }
@@ -3530,7 +3537,7 @@ const handle = async (m, post) => {
     if (L.on) stopListen();
     // Unlock sound inside the tap, in case this turns into News TV (phones only allow it from a tap).
     if (useAI() || usePre()) unlockAudio();
-    if (usePre() && canSpeak && !L.ttsPrimed) { try { tts.speak(new SpeechSynthesisUtterance(" ")); L.ttsPrimed = true; } catch {} }
+
     const all = TV.items.length ? TV.items : await loadTV();
     TV.items = all.filter(i => !tvBad.has(i.id));
     // No clips (YouTube's feed is down): News TV instead. Today's stories full screen, with their
