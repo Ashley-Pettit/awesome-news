@@ -2756,7 +2756,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
       try {
         preBlob(preOpening()); preBlob("Here are the top stories.");
         const i = findItem(driveList().ids[0]);
-        if (i) { preBlob(`${clean(i.title)}.`); preBlob(reports(i)); }
+        if (i) preBlob(`${clean(i.title)}.`);
         if (state.wx) bsLoadThree();
       } catch {}
     };
@@ -2918,7 +2918,7 @@ const handle = async (m, post) => {
     const sec = L.secOf?.get(i.id), cur = L.secOf?.get(L.queue[L.at]);
     if (L.kind === "drive" && sec && sec !== cur) preBlob(sec === "top" ? "Here are the top stories." : `Now, ${sec}.`);
     if (L.kind === "brief") preBlob(`Story ${L.at + 2}.`);
-    preBlob(`${clean(i.title)}.`); preBlob(reports(i));
+    preBlob(`${clean(i.title)}.`);
     const ps = await storyParas(i, true);
     if (ps[0]) chunks(ps[0][0], 0).slice(0, 2).forEach(c => preBlob(c.text));
   }
@@ -3114,7 +3114,8 @@ const handle = async (m, post) => {
       L.skipped = false;
       L.lastSec = sec;
     }
-    L.parts = [...pre, ...intro, { text: `${clean(i.title)}.`, para: -1, kind: "title" }, { text: reports(i), para: -1, kind: "title", opt: true }];
+    // The headline, then straight into the story (the publisher is already on screen, so it isn't read out).
+    L.parts = [...pre, ...intro, { text: `${clean(i.title)}.`, para: -1, kind: "title" }];
     if (L.kind !== "story") npStory(i);
     // Listen to the news: the full weather page shows straight away while the opening reads the weather, then steps aside.
     if (L.kind === "drive" && !L.opened) { L.opened = true; wxListenIntro(); wxListenSoon(); } else wxListenOff();

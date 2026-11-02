@@ -293,7 +293,7 @@ def plan(data, vkey):
         for i in row:
             if i["id"] in stories:
                 continue
-            head = [want(f"{clean(i['title'])}."), want(reports(publisher_of(i.get('source', ''))))]
+            head = [want(f"{clean(i['title'])}.")]  # the publisher isn't read out: it's on screen
             heads.add(head[0])
             st = stories[i["id"]] = {}
             has_lock = bool(vkey and i.get("ptext") and i["id"] in locked)
