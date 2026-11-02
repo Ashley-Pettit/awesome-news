@@ -193,6 +193,39 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
 .lb-listen b { font-size: 1.32rem; }
 .lb-listen small { font-size: 0.8rem; margin-top: 3px; }
 .lb-tv { border-radius: 20px; }
+.devlink { display: block; margin: 12px auto 0; padding: 4px 8px; font: inherit; font-size: 0.76rem; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; background: none; }
+/* ---- Beta ---- */
+.lb-tv, #dockTV { display: none !important; }  /* TV hidden in the beta */
+.dock-in { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.lb-listen { min-height: 150px; padding: 18px 18px 18px 16px; }
+.lb-listen .lb-ic { width: 66px; height: 66px; }
+.lb-listen .lb-ic svg { width: 30px; height: 30px; }
+.lb-listen b { font-size: 1.6rem; }
+.lb-listen small { font-size: 0.86rem; }
+.np-ctl .np-btn.sm { width: 46px; height: 46px; }
+.np-wkbtn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px; border-radius: 999px; font: inherit; font-size: 0.74rem; font-weight: 700; color: #ffffff;
+  background: rgba(255, 255, 255, 0.12); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14); white-space: nowrap; }
+.np-wkbtn svg { width: 14px; height: 14px; }
+.np-wkbtn[hidden] { display: none; }
+/* Weather: round icon button, so the top bar stays tidy */
+@media (max-width: 430px) { #np .np-brand span { display: none; } }  /* phone: the logo alone, so the buttons fit */
+#npWk { width: 34px; height: 34px; padding: 0; justify-content: center; font-size: 0; gap: 0; flex: none; }
+#npWk svg { width: 16px; height: 16px; }
+/* Beta: while listening, steer things: more like this, read along, save; and what's up next */
+.np-acts { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+.np-acts[hidden] { display: none; }
+.np-act { display: inline-flex; align-items: center; gap: 6px; padding: 8px 13px; border-radius: 999px; font: inherit; font-size: 0.8rem; font-weight: 700; color: #ffffff;
+  background: rgba(255, 255, 255, 0.12); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14); transition: background-color 0.2s ease, transform 0.15s ease; }
+.np-act:active { transform: scale(0.95); }
+.np-act svg { width: 16px; height: 16px; }
+.np-act[aria-pressed="true"] { background: rgba(124, 92, 255, 0.55); }
+.np-act[aria-pressed="true"] svg { fill: currentColor; }
+.np-next { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 10px; width: 100%; padding: 9px 12px; border-radius: 14px; text-align: left; font: inherit; color: #ffffff;
+  background: rgba(255, 255, 255, 0.07); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1); }
+.np-next[hidden] { display: none; }
+.np-next small { font-size: 0.64rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255, 255, 255, 0.55); }
+.np-next span { font-size: 0.86rem; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body.calm-acts .np-acts, .np.calm .np-acts, .np.calm .np-next { display: none; }
 .lb-ic { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, 0.22); }
 .lb-ic svg { width: 20px; height: 20px; margin-left: 2px; }
 .lb-listen b { display: block; font-family: var(--display); font-size: 1.08rem; letter-spacing: -0.01em; line-height: 1.15; }
@@ -1039,6 +1072,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   <div class="np-pic"><img class="np-bg" id="npBg" alt=""><img id="npImg" alt=""><div class="np-mono" id="npMono"></div></div>
   <div class="np-top">
     <div class="np-brand"><img id="npLogo" alt=""><span>Awesome News</span></div>
+    <button type="button" class="np-wkbtn" id="npWk" aria-label="Hear the week's weather" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Weather</button>
     <button type="button" class="np-cust" id="npCust" aria-label="Personalise your stories in Settings" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg>Personalise</button>
     <button type="button" class="np-pos" id="npPos" aria-label="Show the headlines" aria-expanded="false"></button>
     <button type="button" class="np-btn mic" data-cmd aria-pressed="false" aria-label="Voice commands: say skip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
@@ -1055,12 +1089,19 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     <div class="np-meta"><span class="np-sec" id="npSec"></span><span id="npSrc"></span></div>
     <h2 class="np-h" id="npTitle"></h2>
     <p class="np-cap" id="npCap" aria-live="off"></p>
+    <div class="np-acts" id="npActs" hidden>
+      <button type="button" class="np-act" id="npLike" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span>More like this</span></button>
+      <button type="button" class="np-act" id="npRead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 11h16M4 16h10"/></svg><span>Read along</span></button>
+      <button type="button" class="np-act" id="npSave" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11a1 1 0 0 1 1 1V20l-6.5-4-6.5 4V4.5a1 1 0 0 1 1-1z"/></svg><span>Save</span></button>
+    </div>
     <div class="np-ctl">
+      <button type="button" class="np-btn sm" id="npPrev" aria-label="Previous story"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 5.5v13l-9-6.5zM5 5h3v14H5z"/></svg></button>
       <button type="button" class="np-btn" id="npStop" aria-label="Stop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
       <button type="button" class="np-btn big" id="npPlay" aria-label="Pause"></button>
       <button type="button" class="np-btn" id="npNext" aria-label="Next story"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 5.5v13l9-6.5zM16 5h3v14h-3z"/></svg></button>
     </div>
     <div class="np-bar"><i id="npBar"></i></div>
+    <button type="button" class="np-next" id="npUpNext" hidden><small>Up next</small><span id="npUpNextT"></span></button>
   </div>
 </div>
 <div class="player" id="player" role="region" aria-label="Now playing" hidden>
@@ -1526,7 +1567,9 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   function forYou() {
     const secs = enabledSections();
     const lanes = secs.map(s => visible(items(s.id)).slice(0, FOR_YOU_PER_SECTION).sort((a, b) => rank(b) - rank(a)));
-    const order = secs.map((_, n) => n).sort((a, b) => (lanes[b][0] ? rank(lanes[b][0]) : 0) - (lanes[a][0] ? rank(lanes[a][0]) : 0));
+    // Beta: kinds of stories you've said "more like this" to while listening lead the mix.
+    const likes = store.get("beta.likes", {}) || {}, likeOf = sc => likes[sc.id === "local" ? "local news" : sc.id === "headlines" ? "more headlines" : sc.label] || 0;
+    const order = secs.map((_, n) => n).sort((a, b) => (likeOf(secs[b]) - likeOf(secs[a])) || ((lanes[b][0] ? rank(lanes[b][0]) : 0) - (lanes[a][0] ? rank(lanes[a][0]) : 0)));
     const out = [], seen = new Set();
     const take = id => { seen.add(id); siblings(id).forEach(x => seen.add(x)); };
     for (const t of S.topics) for (const i of visible(topicItems(t)).slice(0, 3)) if (!seen.has(i.id)) { take(i.id); out.push({ ...i, _sec: t, _sid: "topic" }); }
@@ -1578,7 +1621,9 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     };
     briefing().filter(listenable).forEach(i => add(i, "top"));
     // Stories with text to read move up a few places, so the drive isn't just headlines.
-    const lanes = enabledSections().map(sc => ({ sc, list: items(sc.id).filter(i => listenable(i) && !(Number(S.negCut) && isNegative(i))).slice(0, 30)
+    // Beta: kinds of stories you've said "more like this" to come round first.
+    const likes = store.get("beta.likes", {}) || {}, likeOf = sc => likes[sc.id === "local" ? "local news" : sc.id === "headlines" ? "more headlines" : sc.label] || 0;
+    const lanes = enabledSections().slice().sort((a, b) => likeOf(b) - likeOf(a)).map(sc => ({ sc, list: items(sc.id).filter(i => listenable(i) && !(Number(S.negCut) && isNegative(i))).slice(0, 30)
       .map((i, n) => ({ i, k: n - depth(i) * 5 })).sort((a, b) => a.k - b.k).map(x => x.i) }));
     for (let r = 0; secs < target && r < 40; r++) for (const { sc, list } of lanes) { if (secs >= target) break; add(list[r], sc.id === "local" ? "local news" : sc.id === "headlines" ? "more headlines" : sc.label); }
     return { ids: out, secOf, secs };
@@ -1586,7 +1631,17 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   // ---- News video screen ----
   let wake = null;
   async function keepAwake() { try { if (!$("np").hidden && navigator.wakeLock && !wake) { wake = await navigator.wakeLock.request("screen"); wake.addEventListener("release", () => { wake = null; }); } } catch {} }
-  document.body.classList.toggle("beta-heads", !!store.get("brief.betaHeads", false));
+  document.body.classList.add("beta-heads");
+  // Beta: swipe the player left for the next story, right for the one before.
+  (() => {
+    let sx = 0, sy = 0, st = 0;
+    document.addEventListener("touchstart", e => { if (!e.target.closest?.("#np") || e.target.closest(".np-list")) return; const t = e.touches[0]; sx = t.clientX; sy = t.clientY; st = Date.now(); }, { passive: true });
+    document.addEventListener("touchend", e => {
+      if (!st || !L.on || L.kind !== "drive" || $("np").hidden || document.body.classList.contains("wxlisten")) { st = 0; return; }
+      const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy, quick = Date.now() - st < 600; st = 0;
+      if (quick && Math.abs(dx) > 70 && Math.abs(dy) < 50) { if (dx < 0) skipListen(); else prevStory(); }
+    }, { passive: true });
+  })();
   // The "Awesome News" title, shown the moment Listen is tapped so nothing else flashes up while it loads.
   function npHello() {
     const cue = $("npCue"), np = $("np");
@@ -1609,7 +1664,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   document.addEventListener("visibilitychange", () => { if (!document.hidden) keepAwake(); });
   // ---- The headlines in the player: shown after the weather, or any time from the "1 of 28" button ----
   // Beta (Settings, Listen): off unless switched on.
-  const betaHeads = () => !!store.get("brief.betaHeads", false);
+  const betaHeads = () => true;  // beta: the headlines list is always there, from the "1 of 28" button
   function npListShow(auto) {
     if (L.kind !== "drive" || !betaHeads()) return;
     npListRender();
@@ -1649,7 +1704,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     if (!/^https?:/.test(u)) return u;
     const sbs = u.match(/assets\.sbs\.com\.au\/.*[?&]url=([^&]+)/);
     const src = sbs ? decodeURIComponent(sbs[1]) : bigPic(u);
-    return `https://wsrv.nl/?url=${encodeURIComponent(src)}&w=1080&output=jpg&q=78`;
+    return `https://wsrv.nl/?url=${encodeURIComponent(src)}${SPLIT[u] || ""}&w=1080&output=jpg&q=78`;  // beta: one photo of a pair
   }
   function bigPic(u) {
     return String(u || "")
@@ -1729,8 +1784,8 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     // Straight after the weather: the headlines, so you can jump to one (and a tip about Settings).
     if (p.kind !== "open" && p.kind !== "wk" && L.kind === "drive" && L.opened && !L.listShown) {
       L.listShown = true;
-      $("npCust").hidden = false;  // from here on: a small "Customise" pill that opens Settings (shown, not read out)
-      if (betaHeads()) npListShow(true);
+      $("npCust").hidden = false; $("npWk").hidden = !state.wx;  // from here on: a small "Customise" pill that opens Settings (shown, not read out)
+      // (beta: the headlines list opens from the "1 of 28" button, not by itself)
     }
     if (p.kind === "cue") {
       const label = p.sec === "top" ? "Top stories" : p.sec === "local news" ? "Local news" : p.sec === "more headlines" ? "More headlines" : p.sec;
@@ -1841,9 +1896,37 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     u = String(u || ""); if (!/^https?:/.test(u)) return u;
     const sbs = u.match(/assets\.sbs\.com\.au\/.*[?&]url=([^&]+)/);
     const src = big ? (sbs ? decodeURIComponent(sbs[1]) : bigPic(u)) : u.replace(/(ichef\.bbci\.co\.uk\/(?:ace|news)\/(?:standard|ws))\/\d+\//, "$1/480/");
-    return `https://wsrv.nl/?url=${encodeURIComponent(src)}&w=${big ? 900 : 400}&output=jpg&q=80`;
+    return `https://wsrv.nl/?url=${encodeURIComponent(src)}${SPLIT[u] || ""}&w=${big ? 900 : 400}&output=jpg&q=80`;
   };
-  const pic = (i, cls = "", big = false, whole = false) => `<div class="pic ${cls}">${i.image && whole ? `<img class="bgb" src="${esc(feedPic(i.image, false))}" alt="" aria-hidden="true" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : ""}${i.image ? `<img src="${esc(feedPic(i.image, big))}" data-o="${esc(i.image)}" onerror="if(this.dataset.o&&this.src!==this.dataset.o)this.src=this.dataset.o" alt="" loading="${cls ? "eager" : "lazy"}" decoding="async" referrerpolicy="no-referrer">` : ""}<span class="mono" aria-hidden="true"${i.image ? " hidden" : ""}>${esc(mono(i.source))}</span></div>`;
+  // Beta: 7NEWS often puts two photos side by side in one picture. Spot the line down the middle and show just one.
+  const SPLIT = (() => { try { const v = store.get("brief.split", {}); return v && typeof v === "object" ? v : {}; } catch { return {}; } })();
+  async function checkSplit(u) {
+    if (u in SPLIT) return false;
+    const m = u.match(/w(\d+)h(\d+)\.(?:jpe?g|png|webp)/i); if (!m) { SPLIT[u] = ""; return false; }
+    try {
+      const img = new Image(); img.crossOrigin = "anonymous";
+      img.src = `https://wsrv.nl/?url=${encodeURIComponent(u)}&w=160&h=90&fit=fill&output=png`;
+      await img.decode();
+      const c = document.createElement("canvas"); c.width = 160; c.height = 90;
+      const g = c.getContext("2d", { willReadFrequently: true }); g.drawImage(img, 0, 0, 160, 90);
+      const d = g.getImageData(0, 0, 160, 90).data, lum = (x, y) => { const k = (y * 160 + x) * 4; return 0.3 * d[k] + 0.59 * d[k + 1] + 0.11 * d[k + 2]; };
+      let seam = -1;
+      for (let x = 60; x < 100 && seam < 0; x++) { let n = 0; for (let y = 0; y < 90; y++) if (Math.abs(lum(x, y) - lum(x + 1, y)) > 40) n++; if (n / 90 > 0.7) seam = x; }
+      SPLIT[u] = seam > 0 ? `&cx=0&cy=0&cw=${Math.round(+m[1] * seam / 160)}&ch=${m[2]}` : "";
+    } catch { return false; }
+    const keys = Object.keys(SPLIT); if (keys.length > 400) for (const k of keys.slice(0, keys.length - 400)) delete SPLIT[k];
+    store.set("brief.split", SPLIT);
+    return !!SPLIT[u];
+  }
+  let splitBusy = false;
+  async function scanSplits() {
+    if (splitBusy) return; splitBusy = true;
+    try {
+      const urls = [...new Set([...document.querySelectorAll("img[data-o]")].map(i => i.dataset.o).filter(u => /images\.7news\.com\.au/.test(u) && !(u in SPLIT)))].slice(0, 12);
+      for (const u of urls) if (await checkSplit(u)) document.querySelectorAll("img[data-o]").forEach(im => { if (im.dataset.o === u) im.src = feedPic(u, im.dataset.b === "1"); });
+    } finally { splitBusy = false; }
+  }
+  const pic = (i, cls = "", big = false, whole = false) => `<div class="pic ${cls}">${i.image && whole ? `<img class="bgb" data-o="${esc(i.image)}" data-b="0" src="${esc(feedPic(i.image, false))}" alt="" aria-hidden="true" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : ""}${i.image ? `<img src="${esc(feedPic(i.image, big))}" data-o="${esc(i.image)}" data-b="${big ? 1 : 0}" onerror="if(this.dataset.o&&this.src!==this.dataset.o)this.src=this.dataset.o" alt="" loading="${cls ? "eager" : "lazy"}" decoding="async" referrerpolicy="no-referrer">` : ""}<span class="mono" aria-hidden="true"${i.image ? " hidden" : ""}>${esc(mono(i.source))}</span></div>`;
   const secColour = i => colourOf(i._sid);
   const meta = (i, withSec) => `<div class="meta">${withSec && i._sec ? `<span class="sec" style="--sc:${secColour(i)}">${esc(i._sec)}</span><span class="sep"></span>` : ""}<span class="src">${esc(i.source)}</span><span class="sep"></span><time datetime="${esc(i.published)}">${esc(ago(i.published))}</time></div>`;
   const heroCard = (i, solo, withSec, eager) => `<article class="story hcard${solo ? " solo" : ""}${readCls(i)}" style="--hc:${secColour(i)}">
@@ -1995,8 +2078,14 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     $("savedBadge").hidden = !state.saved.length;
   }
   // The Listen card's photo: the first story the news will read.
+  // Beta: within the hour of stopping, the card offers to pick up where you left off.
+  function lbIdle() {
+    let r = null; try { r = state.loaded ? getResume() : null; } catch {}
+    return r ? `<b>Carry on listening</b><small>Pick up where you left off, ${r.queue.length} stories to go</small>` : `<b>Listen to the news</b><small>About 30 minutes, top stories first</small>`;
+  }
   function listenArt() {
     const img = $("lbBg"); if (!img || !state.loaded) return;
+    if (!L.on) { const sp = $("lbListen")?.querySelector("span:last-child"); if (sp) sp.innerHTML = lbIdle(); }
     try {
       const i = driveList().ids.map(findItem).find(x => x?.image);
       const src = i ? feedPic(i.image, false) : "";
@@ -2005,6 +2094,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   }
   function render(keepScroll) {
     renderHeader(); listenArt();
+    ("requestIdleCallback" in window ? requestIdleCallback : setTimeout)(() => scanSplits());  // beta: two-photo pictures
     renderTabs();
     if (!state.loaded) return;
     const y = window.scrollY, cur = currentTab(), railX = $("heroRail")?.scrollLeft || 0;
@@ -2299,7 +2389,9 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     $("rSave").setAttribute("aria-pressed", String(isSaved(id)));
     $("rShare").hidden = !(state.mode === "static" && navigator.share);
     const pub = publisherOf(i.source);
-    const original = (label, ghost) => `<a class="cta${ghost ? " ghost" : ""}" href="${esc(i.url)}" target="_blank" rel="noopener">${label} ${I.out}</a>`;
+    // Under the link to the original: a small "Developer?" for people who work on the app (opens the passphrase in Settings).
+    const dev = state.mode === "static" && state.status?.vault && !vaultKey ? `<button class="devlink" type="button" data-dev-unlock>Developer?</button>` : "";
+    const original = (label, ghost) => `<a class="cta${ghost ? " ghost" : ""}" href="${esc(i.url)}" target="_blank" rel="noopener">${label} ${I.out}</a>${dev}`;
     const skeleton = `${i.summary ? `<p class="lede">${esc(i.summary)}</p>` : ""}<div class="r-sk" aria-hidden="true"><div class="sk"></div><div class="sk"></div><div class="sk" style="width:70%"></div></div>`;
     $("rBody").innerHTML = readerHTML(i, { html: i.text || i.feed ? skeleton : "" });
     $("rBody").classList.remove("slide-l", "slide-r");
@@ -3083,13 +3175,18 @@ const handle = async (m, post) => {
         for (const i of forYou()) { if (L.queue.length >= 5) break; if (preReady(i) && !L.queue.some(k => sameStory(k, i.id))) L.queue.push(i.id); }
       }
     }
+    let resumed = false;
     if (kind === "drive") {
-      const fresh = L.queue.filter(id => !HEARD.has(id) && !siblings(id).some(x => HEARD.has(x)));
-      if (!fresh.length && L.queue.length) { toast("You've heard all the news for now. New stories come with the next update."); npClose(); return; }
-      L.queue = fresh;
+      const r = getResume();
+      if (r) { L.queue = r.queue; L.secOf = r.sec; resumed = true; }
+      else {
+        L.queue = topUp(L.queue.filter(id => !heardish(id)), 24);
+        if (!L.queue.length) { toast("You've heard all the news for now. New stories come with the next update."); npClose(); return; }
+      }
     }
     if (!L.queue.length) { toast("There's nothing to read out yet"); return; }
-    Object.assign(L, { on: true, paused: false, at: 0, kind, opened: false, lastSec: null, back: null, done: new Set(), listShown: false, cueN: 0 });
+    Object.assign(L, { on: true, paused: false, at: 0, kind, opened: resumed, resumed, lastSec: null, back: null, done: new Set(), listShown: false, cueN: 0 });
+    if (resumed) { $("npCue").hidden = true; $("np").classList.remove("calm"); }
     $("npCust").hidden = true;
     npListHide();
     document.body.classList.add("playing");
@@ -3097,12 +3194,16 @@ const handle = async (m, post) => {
   }
   async function playStory() {
     const sid = ++L.sid, tk = ++L.token, id = L.queue[L.at], i = findItem(id);
+    saveResume();
     if (!i) { nextStory(); return; }
     markRead(id);
     const intro = L.kind === "brief" ? [{ text: `Story ${L.at + 1}.`, para: -1, kind: "title" }] : [];
     const pre = [];
     if (L.kind === "drive") {
       const sec = L.secOf?.get(id);
+      if (L.resumed) {  // beta: back within the hour, straight in with a quick welcome back (skipped if not recorded yet)
+        pre.push({ text: WELCOME_BACK, para: -1, kind: "cue", opt: true }); L.resumed = false; L.lastSec = sec;
+      }
       if (!L.opened) {
         const t = usePre() ? preOpening() : "";
         // No Emma opening for this hour (e.g. just after midnight, before the morning update): show the weather
@@ -3121,7 +3222,7 @@ const handle = async (m, post) => {
     }
     // The headline, then straight into the story (the publisher is already on screen, so it isn't read out).
     L.parts = [...pre, ...intro, { text: `${clean(i.title)}.`, para: -1, kind: "title" }];
-    if (L.kind !== "story") npStory(i);
+    if (L.kind !== "story") { npStory(i); npActs(); }
     // Listen to the news: the full weather page shows straight away while the opening reads the weather, then steps aside.
     if (L.kind === "drive" && !L.opened) { L.opened = true; wxListenIntro(); wxListenSoon(); } else wxListenOff();
     if (!$("npList").hidden) npListRender();
@@ -3158,15 +3259,17 @@ const handle = async (m, post) => {
   async function preHas(text) { if (!PRE) return false; const t = PRE.c[await sha16(`${PRE.v}|${text}`)]; return t === 1; }
   async function weekBrief() {
     const k = L.part, cur = L.parts[k];
-    if (!L.on || L.kind !== "drive" || !cur || cur.kind !== "open") return;
+    if (!L.on || L.kind !== "drive" || !cur || cur.kind === "wk") return;
     const items = weekItems(); if (!items.length) return;
+    // Beta: also any time from the player's Weather button; afterwards the story picks up from the bit it was on.
+    if (cur.kind !== "open") { wxListenIntro(); }
     document.body.classList.add("wxweek"); wxListenOn();
     const parts = [{ text: "Here's the week ahead.", para: -1, kind: "wk", date: items[0].date }, ...items.map(x => ({ text: x.text, para: -1, kind: "wk", date: x.date }))];
     // Any day Emma hasn't recorded yet just shows on screen for a few seconds.
     if (usePre()) await Promise.all(parts.map(async q => { q.silent = !(await preHas(q.text)); }));
     if (!L.on || L.part !== k) return;
     const tk = ++L.token; hush(); L.paused = false; L.sid++;
-    L.parts = [...L.parts.slice(0, k), ...parts, ...L.parts.slice(k + 1)]; L.part = k;
+    L.parts = [...L.parts.slice(0, k), ...parts, ...L.parts.slice(cur.kind === "open" ? k + 1 : k)]; L.part = k;
     updatePlayer(); armDog(); speakNext(tk);
   }
   function wxShowDay(date) {
@@ -3178,15 +3281,44 @@ const handle = async (m, post) => {
   function skipWeather() {
     if (!L.on || !["open", "wk"].includes(L.parts[L.part]?.kind)) { wxListenOff(); return; }
     const tk = ++L.token; hush(); L.paused = false;
-    L.part = L.parts.findIndex(p => p.kind !== "open" && p.kind !== "wk"); if (L.part < 0) L.part = L.parts.length;
+    const from = L.part; L.part = L.parts.findIndex((p, n) => n >= from && p.kind !== "open" && p.kind !== "wk"); if (L.part < 0) L.part = L.parts.length;
     wxListenOff(); updatePlayer(); armDog(); speakNext(tk);
   }
   // Stories already heard in Listen to the news are left out next time.
-  const HEARD = new Set(store.get("brief.heard", []));
+  // Beta: remembered with the time, for 3 days (older ones drop off), and a story counts as heard once its
+  // story starts, or when it's skipped part way into its story.
+  const HEARD_AT = (() => { const v = store.get("brief.heard2", null); if (v && typeof v === "object" && !Array.isArray(v)) return v; const o = {}; for (const id of store.get("brief.heard", [])) o[id] = Date.now(); return o; })();
+  const HEARD = new Set(Object.keys(HEARD_AT).filter(id => Date.now() - HEARD_AT[id] < 3 * 864e5));
   function heardAdd(id) {
     if (!id || HEARD.has(id)) return;
-    HEARD.add(id); store.set("brief.heard", [...HEARD].slice(-600));
+    HEARD.add(id); HEARD_AT[id] = Date.now();
+    for (const k of Object.keys(HEARD_AT)) if (Date.now() - HEARD_AT[k] > 3 * 864e5) delete HEARD_AT[k];
+    store.set("brief.heard2", HEARD_AT);
   }
+  const heardish = id => HEARD.has(id) || siblings(id).some(x => HEARD.has(x));
+  // Beta: more stories when the list runs low: anything Emma has read that hasn't been heard, newest first.
+  function topUp(queue, want) {
+    const have = new Set(queue);
+    for (const i of forYou()) {
+      if (queue.length >= want) break;
+      if (have.has(i.id) || heardish(i.id) || (usePre() && !preReady(i)) || !listenable(i) || queue.some(k => sameStory(k, i.id))) continue;
+      queue.push(i.id); have.add(i.id); if (L.secOf && !L.secOf.has(i.id)) L.secOf.set(i.id, "more headlines");
+    }
+    return queue;
+  }
+  // Beta: where you were, so coming back within the hour picks up there (no weather, a quick welcome back).
+  const RESUME_MS = 60 * 60000;
+  function saveResume() {
+    if (L.kind !== "drive" || !L.on) return;
+    store.set("brief.resume", { t: Date.now(), at: L.at, queue: L.queue, sec: [...(L.secOf || new Map())].filter(([id]) => L.queue.includes(id)) });
+  }
+  function getResume() {
+    const r = store.get("brief.resume", null);
+    if (!r || !Array.isArray(r.queue) || Date.now() - r.t > RESUME_MS) return null;
+    const rest = r.queue.slice(r.at).filter((id, n) => findItem(id) && (n === 0 || !heardish(id)));
+    return rest.length ? { queue: rest, sec: new Map(r.sec || []) } : null;
+  }
+  const WELCOME_BACK = "Welcome back. Picking up where you left off.";  // voice.py records it
   function speakNext(tk) {
     if (tk !== L.token || !L.on || L.paused) return;
     const sp = L.parts[L.part];
@@ -3223,7 +3355,8 @@ const handle = async (m, post) => {
     // After a story picked from the headlines, go back to where you were; stories already heard are skipped.
     if (L.back != null) { L.at = L.back; L.back = null; } else L.at++;
     while (L.done && L.at < L.queue.length && L.done.has(L.queue[L.at])) L.at++;
-    if (L.at >= L.queue.length) { const k = L.kind; stopListen(); toast(k === "brief" ? "That's your briefing. You're across it." : k === "drive" ? "That's the news. See you next time." : "That's the end of the list."); if (!openSheet) render(true); return; }
+    if (L.kind === "drive" && L.queue.length - L.at < 3) topUp(L.queue, L.queue.length + 10);  // running low: fetch more
+    if (L.at >= L.queue.length) { const k = L.kind; if (k === "drive") store.set("brief.resume", null); stopListen(); toast(k === "brief" ? "That's your briefing. You're across it." : k === "drive" ? "That's the news. See you next time." : "That's the end of the list."); if (!openSheet) render(true); return; }
     playStory();
     if (openSheet === "reader") { state.readerList = L.queue.slice(); openReader(L.queue[L.at], 1); }
   }
@@ -3239,9 +3372,51 @@ const handle = async (m, post) => {
     speakNext(tk);
   }
   const CUE_WAYS = ["Now, {}.", "Next, {}.", "On to {}.", "Moving on to {}.", "Over to {}."];  // CUE_WAYS in voice.py
+  // ---- Beta: the listen guides the app ----
+  // "More like this": the next couple of stories closest to this one move up, and that kind of story ranks
+  // higher next time. "Read along": the article opens with the spoken paragraph lit up, still playing.
+  const LIKES = (() => { const v = store.get("beta.likes", {}); return v && typeof v === "object" ? v : {}; })();
+  const likeWords = i => new Set(clean(`${i?.title || ""} ${i?.summary || ""}`).toLowerCase().match(/[a-z]{4,}/g) || []);
+  function likeThis() {
+    const id = L.queue[L.at], i = findItem(id); if (!i) return;
+    const sec = L.secOf?.get(id) || "";
+    if (sec) { LIKES[sec] = (LIKES[sec] || 0) + 1; store.set("beta.likes", LIKES); }
+    const w = likeWords(i), rest = L.queue.slice(L.at + 1);
+    const score = x => { const j = findItem(x), o = likeWords(j); let n = 0; for (const t of o) if (w.has(t)) n++; return n * 2 + ((L.secOf?.get(x) || "") === sec ? 1 : 0); };
+    const pick = rest.map(x => [x, score(x)]).filter(x => x[1] >= 2).sort((a, b) => b[1] - a[1]).slice(0, 2).map(x => x[0]);
+    if (pick.length) {
+      L.queue = [...L.queue.slice(0, L.at + 1), ...pick, ...rest.filter(x => !pick.includes(x))];
+      saveResume(); npUpNext();
+    }
+    $("npLike").setAttribute("aria-pressed", "true");
+    toast(pick.length ? `${pick.length === 1 ? "One more" : "Two more"} like this coming up next` : "Got it. More stories like this next time.");
+  }
+  function readAlong() {
+    const id = L.queue[L.at]; if (!id) return;
+    npClose(); state.readerList = L.queue.slice(); openReader(id);
+    setTimeout(() => highlightPara(L.curPara), 600);
+  }
+  function npActs() {
+    const id = L.queue[L.at], on = L.kind === "drive" && !!id;
+    $("npActs").hidden = !on;
+    if (!on) return;
+    $("npLike").setAttribute("aria-pressed", "false");
+    $("npSave").setAttribute("aria-pressed", String(isSaved(id)));
+    npUpNext();
+  }
+  function npUpNext() {
+    const nx = findItem(L.queue[L.at + 1]), b = $("npUpNext");
+    b.hidden = !nx || L.kind !== "drive"; if (nx) $("npUpNextT").textContent = nx.title;
+  }
+  function prevStory() {
+    if (!L.on || L.at <= 0) { if (L.on) { L.token++; L.sid++; hush(); L.paused = false; playStory(); } return; }  // first story: from its start
+    L.token++; L.sid++; hush(); L.paused = false; L.back = null; L.skipped = true;
+    L.at--; playStory();
+  }
   function skipListen() { L.token++; L.sid++; hush(); L.paused = false; L.skipped = true; nextStory(); }
   function stopListen() {
-    wxListenOff(); $("npCust").hidden = true;
+    saveResume();  // beta: come back within the hour to pick up here
+    wxListenOff(); $("npCust").hidden = true; $("npWk").hidden = true;
     L.on = false; L.paused = false; L.token++; L.sid++; L.aiWait = false;
     hush(); npClose();
     if ($("tvs").hidden) cmdStop();
@@ -3282,7 +3457,7 @@ const handle = async (m, post) => {
     const lb = $("lbListen");
     if (lb) lb.querySelector("span:last-child").innerHTML = L.on && L.kind === "drive"
       ? `<b>${L.paused ? "Carry on listening" : "Back to the news"}</b><small>Story ${L.at + 1} of ${L.queue.length}${L.paused ? ", paused" : ", playing now"}</small>`
-      : `<b>Listen to the news</b><small>About 30 minutes, top stories first</small>`;
+      : lbIdle();
     $("pTitle").textContent = i ? i.title : "";
     $("pKick").textContent = `${L.kind === "brief" ? "Briefing" : L.kind === "drive" ? "The news" : "Listening"} · ${L.at + 1} of ${L.queue.length}${L.paused ? " · Paused" : L.aiWait ? (L.aiProg > 0 && L.aiProg < 100 && !AI.loaded ? ` · Downloading voice ${L.aiProg}%` : " · Getting the voice ready") : ""}`;
     $("pPlay").innerHTML = L.paused ? I.play : I.pause;
@@ -3468,6 +3643,18 @@ const handle = async (m, post) => {
     if (t.closest("#npPlay")) { L.paused ? resumeListen() : pauseListen(); return; }
     if (t.closest("#npNext")) { skipListen(); return; }
     if (t.closest("#npStop")) { stopListen(); return; }
+    if (t.closest("[data-dev-unlock]")) {  // Settings, Reading, ready to type the passphrase
+      if (!$("reader").hidden) hideSheet("reader");
+      state.sTab = "reading"; store.set("brief.sTab", "reading"); openSettings();
+      setTimeout(() => { const f = $("adminPass"); if (f) { f.scrollIntoView({ block: "center" }); f.focus(); } }, 350);
+      return;
+    }
+    if (t.closest("#npPrev")) { prevStory(); return; }
+    if (t.closest("#npLike")) { likeThis(); return; }
+    if (t.closest("#npRead")) { readAlong(); return; }
+    if (t.closest("#npSave")) { const id = L.queue[L.at]; if (id) { toggleSave(id); $("npSave").setAttribute("aria-pressed", String(isSaved(id))); toast(isSaved(id) ? "Saved for later" : "Removed from saved"); } return; }
+    if (t.closest("#npUpNext")) { skipListen(); return; }
+    if (t.closest("#npWk")) { weekBrief(); return; }
     // Customise: the news keeps playing; Settings opens over it, and the Listen card brings the player back.
     if (t.closest("#npCust")) { npClose(); state.sTab = "news"; openSettings(); return; }  // the News tab: your interests and local area
     if (t.closest("#bsSkip")) { skipWeather(); return; }

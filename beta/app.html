@@ -208,11 +208,10 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
   background: rgba(255, 255, 255, 0.12); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14); white-space: nowrap; }
 .np-wkbtn svg { width: 14px; height: 14px; }
 .np-wkbtn[hidden] { display: none; }
-/* Sleep and Weather: round icon buttons, so the top bar stays tidy (the sleep one shows its time when on) */
+/* Weather: round icon button, so the top bar stays tidy */
 @media (max-width: 430px) { #np .np-brand span { display: none; } }  /* phone: the logo alone, so the buttons fit */
-#npSleep, #npWk { width: 34px; height: 34px; padding: 0; justify-content: center; font-size: 0; gap: 0; flex: none; }
-#npSleep svg, #npWk svg { width: 16px; height: 16px; }
-#npSleep[data-on] { width: auto; padding: 0 11px; gap: 6px; font-size: 0.74rem; background: rgba(124, 92, 255, 0.4); }
+#npWk { width: 34px; height: 34px; padding: 0; justify-content: center; font-size: 0; gap: 0; flex: none; }
+#npWk svg { width: 16px; height: 16px; }
 /* Beta: while listening, steer things: more like this, read along, save; and what's up next */
 .np-acts { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
 .np-acts[hidden] { display: none; }
@@ -1074,7 +1073,6 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   <div class="np-pic"><img class="np-bg" id="npBg" alt=""><img id="npImg" alt=""><div class="np-mono" id="npMono"></div></div>
   <div class="np-top">
     <div class="np-brand"><img id="npLogo" alt=""><span>Awesome News</span></div>
-    <button type="button" class="np-wkbtn" id="npSleep" aria-label="Sleep timer: off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg><span id="npSleepT">Sleep</span></button>
     <button type="button" class="np-wkbtn" id="npWk" aria-label="Hear the week's weather" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Weather</button>
     <button type="button" class="np-cust" id="npCust" aria-label="Personalise your stories in Settings" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg>Personalise</button>
     <button type="button" class="np-pos" id="npPos" aria-label="Show the headlines" aria-expanded="false"></button>
@@ -3354,7 +3352,6 @@ const handle = async (m, post) => {
     updateBar();
   }
   function nextStory() {
-    if (L.sleepEnd) { L.sleepEnd = false; L.sleepI = 0; stopListen(); toast("Sleep timer: the news has stopped. Goodnight."); return; }
     L.done?.add(L.queue[L.at]);
     // After a story picked from the headlines, go back to where you were; stories already heard are skipped.
     if (L.back != null) { L.at = L.back; L.back = null; } else L.at++;
@@ -3412,17 +3409,6 @@ const handle = async (m, post) => {
     const nx = findItem(L.queue[L.at + 1]), b = $("npUpNext");
     b.hidden = !nx || L.kind !== "drive"; if (nx) $("npUpNextT").textContent = nx.title;
   }
-  // Sleep timer: off, 15 minutes, 30 minutes, end of this story.
-  const SLEEP = [0, 15, 30, -1];
-  function sleepCycle() {
-    L.sleepI = ((L.sleepI || 0) + 1) % SLEEP.length; clearTimeout(L.sleepT); L.sleepEnd = false;
-    const m = SLEEP[L.sleepI], b = $("npSleep");
-    if (m > 0) { L.sleepT = setTimeout(() => { if (L.on) { stopListen(); toast("Sleep timer: the news has stopped. Goodnight."); } }, m * 60000); }
-    if (m < 0) L.sleepEnd = true;
-    $("npSleepT").textContent = m > 0 ? `${m} min` : m < 0 ? "End of story" : "Sleep";
-    b.toggleAttribute("data-on", m !== 0); b.setAttribute("aria-label", `Sleep timer: ${m > 0 ? m + " minutes" : m < 0 ? "end of this story" : "off"}`);
-    toast(m > 0 ? `The news will stop in ${m} minutes` : m < 0 ? "The news will stop after this story" : "Sleep timer off");
-  }
   function prevStory() {
     if (!L.on || L.at <= 0) { if (L.on) { L.token++; L.sid++; hush(); L.paused = false; playStory(); } return; }  // first story: from its start
     L.token++; L.sid++; hush(); L.paused = false; L.back = null; L.skipped = true;
@@ -3431,7 +3417,6 @@ const handle = async (m, post) => {
   function skipListen() { L.token++; L.sid++; hush(); L.paused = false; L.skipped = true; nextStory(); }
   function stopListen() {
     saveResume();  // beta: come back within the hour to pick up here
-    clearTimeout(L.sleepT); L.sleepI = 0; L.sleepEnd = false; $("npSleep").removeAttribute("data-on"); $("npSleepT").textContent = "Sleep";
     wxListenOff(); $("npCust").hidden = true; $("npWk").hidden = true;
     L.on = false; L.paused = false; L.token++; L.sid++; L.aiWait = false;
     hush(); npClose();
@@ -3670,7 +3655,6 @@ const handle = async (m, post) => {
     if (t.closest("#npRead")) { readAlong(); return; }
     if (t.closest("#npSave")) { const id = L.queue[L.at]; if (id) { toggleSave(id); $("npSave").setAttribute("aria-pressed", String(isSaved(id))); toast(isSaved(id) ? "Saved for later" : "Removed from saved"); } return; }
     if (t.closest("#npUpNext")) { skipListen(); return; }
-    if (t.closest("#npSleep")) { sleepCycle(); return; }
     if (t.closest("#npWk")) { weekBrief(); return; }
     // Customise: the news keeps playing; Settings opens over it, and the Listen card brings the player back.
     if (t.closest("#npCust")) { npClose(); state.sTab = "news"; openSettings(); return; }  // the News tab: your interests and local area
