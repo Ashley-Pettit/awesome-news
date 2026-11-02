@@ -919,7 +919,7 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     name: DEFAULT_NAME, region: "qld",
     tabs: { local: true, headlines: true, politics: true, finance: true, tech: true, ai: true },
     topics: [], muted: [], hiddenSources: [],
-    openIn: "app", textSize: "m", theme: "system", welcomed: false, fullOnly: false, negCut: 0,
+    openIn: "app", textSize: "m", theme: "system", welcomed: false, fullOnly: false, negCut: 0, skipAds: true,
   };
   const saved = store.get("brief.settings", null);
   const S = Object.assign({}, defaults, saved || {}, { tabs: Object.assign({}, defaults.tabs, (saved || {}).tabs) });
@@ -2074,7 +2074,7 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
           <div class="negscale" aria-hidden="true"><span>All news</span><span>No negative news</span></div>
         </div>
       </div><p class="hint" id="negHint">${esc(negHint())}</p></div>`,
-      reading: `${fullHTML()}${listenHTML()}<div class="group"><h2>Reading</h2><div class="card">
+      reading: `${fullHTML()}${listenHTML()}${tvAdsHTML()}<div class="group"><h2>Reading</h2><div class="card">
         ${toggle("data-hideread", "1", state.hideRead, "Hide stories I've read", "Read stories drop out of your feeds")}
         ${state.mode === "static" && !fullOn() ? toggle("data-fullonly", "1", !!S.fullOnly, "Full stories only", "Hide previews that open the publisher's site") : ""}
         <div class="field"><span class="lbl">Text size</span>${seg("textSize", S.textSize, [["s", "A", "Small"], ["m", "A", "Medium"], ["l", "A", "Large"], ["xl", "A", "Extra large"]])}</div>
@@ -2725,6 +2725,12 @@ const handle = async (m, post) => {
       : "Microsoft Edge has the most natural voices on a computer. Open this page in Edge and pick a voice with Natural in its name.";
     return `<p class="keepnote" style="margin:10px 0 0">The voices on this device sound robotic. ${tip}</p>`;
   }
+  function tvAdsHTML() {
+    if (state.mode === "claude") return "";  // TV here opens the website, which has its own copy of this setting
+    return `<div class="group"><h2>Watch TV</h2><div class="card">
+      ${toggle("data-skipads", "1", S.skipAds, "Skip ads", "Jump to the next clip when an ad starts")}
+    </div><p class="hint">Ads are shown by YouTube, so the app can't cut them out of a clip. When it sees one start, it moves straight to the next clip instead.</p></div>`;
+  }
   function listenHTML() {
     if (!canSpeak && !aiOK) return "";
     loadVoices();
@@ -2791,6 +2797,8 @@ const handle = async (m, post) => {
       renderTabs();
       return;
     }
+    const sa = t.closest("[data-skipads]");
+    if (sa) { S.skipAds = !S.skipAds; saveSettings(); sa.setAttribute("aria-checked", String(S.skipAds)); return; }
     const fo = t.closest("[data-fullonly]");
     if (fo) { S.fullOnly = !S.fullOnly; saveSettings(); fo.setAttribute("aria-checked", String(S.fullOnly)); return; }
     if (t.closest("#dismissWelcome")) { S.welcomed = true; saveSettings(); render(true); return; }
@@ -3197,7 +3205,7 @@ const handle = async (m, post) => {
     if (!TV.items.length) return;
     if (n >= TV.items.length) n = 0;
     if (TV.played >= TV.cap) { try { p.pauseVideo(); } catch {} $("tvsEnd").hidden = false; return; }
-    TV.idx = n; tvNow(n);
+    TV.idx = n; tvNow(n); TV.frozen = 0; TV.lastT = -1;
     try { p.loadVideoById(TV.items[n].id); if (!TV.sound) p.mute(); } catch {}
     tvWatch();
   }
@@ -3240,8 +3248,27 @@ const handle = async (m, post) => {
     tvWatch();
   }
   // Progress line, and the shield goes back over the video once sound is on.
+  // Ad check. While YouTube plays an ad the player says "playing" but the clip's own clock stands
+  // still (or it reports a different video), so when that happens the app moves to the next clip.
+  function tvAdCheck() {
+    const p = TV.player; if (!S.skipAds || !p?.getPlayerState || $("tvs").hidden) return;
+    try {
+      const want = TV.items[TV.idx]?.id, vid = p.getVideoData?.()?.video_id;
+      if (p.getPlayerState() !== 1) { TV.frozen = 0; return; }
+      const t = p.getCurrentTime() || 0;
+      TV.frozen = Math.abs(t - (TV.lastT ?? -1)) < 0.05 ? (TV.frozen || 0) + 0.5 : 0;
+      TV.lastT = t;
+      if ((vid && want && vid !== want) || TV.frozen >= 2) {
+        TV.frozen = 0; TV.adSkips = (TV.adSkips || 0) + 1;
+        toast("Ad skipped. On to the next clip.", 2200);
+        tvGo(TV.idx + 1);
+      }
+    } catch {}
+  }
   function tvTick() {
-    clearInterval(TV.tick);
+    clearInterval(TV.tick); clearInterval(TV.adTick);
+    TV.frozen = 0; TV.lastT = -1;
+    TV.adTick = setInterval(tvAdCheck, 500);
     TV.tick = setInterval(() => {
       const p = TV.player; if (!p?.getCurrentTime || $("tvs").hidden) return;
       try {
@@ -3252,7 +3279,7 @@ const handle = async (m, post) => {
   }
   function closeTV() {
     if ($("tvs").hidden) return;
-    try { TV.player?.destroy?.(); } catch {} TV.player = null; clearInterval(TV.tick); clearTimeout(TV.stall);
+    try { TV.player?.destroy?.(); } catch {} TV.player = null; clearInterval(TV.tick); clearInterval(TV.adTick); clearTimeout(TV.stall);
     $("tvsPlayer").replaceWith(Object.assign(document.createElement("div"), { id: "tvsPlayer" }));
     $("tvs").hidden = true; document.body.classList.remove("tvson");
     cmdStop();
