@@ -79,7 +79,6 @@ mark { background: var(--hl); color: var(--hl-ink); border-radius: 3px; padding:
 
 .wrap { max-width: 720px; margin: 0 auto; padding-left: var(--gut-l); padding-right: var(--gut-r); }
 main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 40px); }
-body.playing main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 112px); }
 
 /* ---------- Masthead ---------- */
 .head { padding-block: 10px 2px; }
@@ -465,7 +464,6 @@ body.locked .player { z-index: 45; bottom: calc(env(safe-area-inset-bottom, 0px)
   padding-top: env(safe-area-inset-top, 0px); padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 40px); }
 .sheet.up { transform: translateY(100%); }
 .sheet.open { transform: none; }
-body.playing .sheet { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 110px); }
 .bar { position: sticky; top: 0; z-index: 2; background: var(--bg); border-bottom: 1px solid transparent; transition: border-color 0.2s ease; }
 .sheet.scrolled .bar { border-bottom-color: var(--line); }
 .bar .wrap { height: 54px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -850,7 +848,6 @@ body.wxlisten #weather { z-index: 60; }
   transform: translate(-50%, 12px); opacity: 0; pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease;
   width: max-content; max-width: min(92vw, 420px); padding: 11px 16px; border-radius: 12px; background: var(--ink); color: var(--bg); font-size: 0.85rem; font-weight: 550; box-shadow: 0 8px 24px var(--shade); }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
-body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 90px); }
 
 @media (min-width: 640px) {
   .lead .h { font-size: 1.9rem; }
@@ -1580,11 +1577,11 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     const p = L.parts[k]; if (!p) return;
     const wx = $("npWx"), cue = $("npCue"), np = $("np");
     const was = wx.hidden ? (cue.hidden ? "" : "cue:" + cue.dataset.k) : "open";
-    wx.hidden = p.kind !== "open"; cue.hidden = p.kind !== "cue";
+    // The opening starts on a quick "Awesome News" title; once it gets to the weather, the full 3D weather page takes over.
+    wx.hidden = true; cue.hidden = p.kind !== "cue" && p.kind !== "open";
     np.classList.toggle("calm", p.kind === "open" || p.kind === "cue");
-    if (p.kind === "open" && was !== "open") { wx.innerHTML = npWeatherHTML(); npCount(wx.querySelector("[data-count]")); }
-    // While the weather is read out, the 3D Brisbane sky plays over the player, then steps aside for the stories.
-    if (p.kind === "open") wxListenOn(); else wxListenOff();
+    if (p.kind === "open" && cue.dataset.k !== "open") { cue.dataset.k = "open"; cue.innerHTML = `<small class="np-in">This is</small><span class="t np-in" style="--i:1">Awesome News</span>`; }
+    if (p.kind !== "open") wxListenOff();
     if (p.kind === "cue") {
       const label = p.sec === "top" ? "Top stories" : p.sec === "local news" ? "Local news" : p.sec === "more headlines" ? "More headlines" : p.sec;
       if (was !== "cue:" + label) { cue.dataset.k = label; cue.innerHTML = `<small class="np-in">Up next</small><span class="t np-in" style="--i:1">${esc(label.charAt(0).toUpperCase() + label.slice(1))}</span>`; }
@@ -1600,7 +1597,22 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     renderWeather();
     requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("open")));
   }
+  // Open the weather page when the opening reaches "First, the weather", going by how far through the audio it is.
+  function wxListenSoon() {
+    clearInterval(L.wxT); let spoke = 0, last = performance.now();
+    L.wxT = setInterval(() => {
+      const p = L.parts[L.part], now = performance.now(), dt = now - last; last = now;
+      if (!L.on || L.kind !== "drive" || L.at !== 0 || (p && p.kind !== "open")) { clearInterval(L.wxT); L.wxT = 0; return; }
+      if (!p || L.paused) return;
+      const f = p.text.indexOf("First, the weather"), frac = f > 0 ? f / p.text.length : 0;
+      let go = false;
+      if (aud.src && !aud.paused && isFinite(aud.duration) && aud.duration > 2) go = aud.currentTime >= frac * aud.duration;
+      else if (tts && tts.speaking) { spoke += dt; go = spoke >= frac * p.text.length / 14 * 1000 / (L.rate || 1); }
+      if (go) { clearInterval(L.wxT); L.wxT = 0; wxListenOn(); }
+    }, 120);
+  }
   function wxListenOff() {
+    clearInterval(L.wxT); L.wxT = 0;
     if (!document.body.classList.contains("wxlisten")) return;
     document.body.classList.remove("wxlisten");
     const el = $("weather"); el.classList.remove("open");
@@ -2793,7 +2805,7 @@ const handle = async (m, post) => {
       return startListen(list, "story");
     }
     if (kind === "drive") {
-      if (L.on && L.kind === "drive") { L.paused ? resumeListen() : pauseListen(); return; }
+      if (L.on && L.kind === "drive") { npOpen(); npStory(findItem(L.queue[L.at])); npPart(L.part); if (L.paused) resumeListen(); return; }
       const d = driveList();
       L.secOf = d.secOf; L.driveSecs = d.secs;
       npOpen();
@@ -2847,7 +2859,7 @@ const handle = async (m, post) => {
     L.parts = [...pre, ...intro, { text: `${clean(i.title)}.`, para: -1, kind: "title" }, { text: reports(i), para: -1, kind: "title", opt: true }];
     if (L.kind !== "story") npStory(i);
     // Listen to the news: the full weather page shows straight away while the opening reads the weather, then steps aside.
-    if (L.kind === "drive" && L.at === 0) wxListenOn(); else wxListenOff();
+    if (L.kind === "drive" && L.at === 0) wxListenSoon(); else wxListenOff();
     L.part = 0; L.loading = true; L.waiting = false; L.curPara = -1; L.aiAt = -1;
     L.dev = usePre() && !preReady(i);
     if (L.dev && L.kind === "story" && L.at === 0) toast("Emma hasn't recorded this story yet, so your phone's voice is reading it. It'll be ready after the next update.", 6000);
@@ -2937,7 +2949,11 @@ const handle = async (m, post) => {
   }
   function updatePlayer() {
     const i = findItem(L.queue[L.at]);
-    $("player").hidden = !L.on;
+    $("player").hidden = true;  // no mini player bar: the Listen card on the home page brings the player back
+    const lb = $("lbListen");
+    if (lb) lb.querySelector("span:last-child").innerHTML = L.on && L.kind === "drive"
+      ? `<b>${L.paused ? "Carry on listening" : "Back to the news"}</b><small>Story ${L.at + 1} of ${L.queue.length}${L.paused ? ", paused" : ", playing now"}</small>`
+      : `<b>Listen to the news</b><small>About 30 minutes, top stories first</small>`;
     $("pTitle").textContent = i ? i.title : "";
     $("pKick").textContent = `${L.kind === "brief" ? "Briefing" : L.kind === "drive" ? "The news" : "Listening"} · ${L.at + 1} of ${L.queue.length}${L.paused ? " · Paused" : L.aiWait ? (L.aiProg > 0 && L.aiProg < 100 && !AI.loaded ? ` · Downloading voice ${L.aiProg}%` : " · Getting the voice ready") : ""}`;
     $("pPlay").innerHTML = L.paused ? I.play : I.pause;
