@@ -1629,11 +1629,11 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   function wxListenIntro() {
     if (!state.wx || document.body.classList.contains("wxlisten") || !$("weather").hidden) return;
     document.body.classList.add("wxlisten", "wxintro");
-    // The day from 4:45am in 10-minute steps, one every 0.2 seconds for the sky; the words update every 2 seconds (100 minutes).
+    // The day from 4:45am in 5-minute steps, one every 0.2 seconds for the sky; the words update every 2 seconds (50 minutes).
     // In the morning and afternoon it's today; from 6pm it's tomorrow.
     BS.D = bsData();
     const t = Date.now(), day = bsMins(t) >= 18 * 60 ? (BS.D.days[1] || BS.D.days[0]).date : bsKey(t);
-    BS.view = { mode: "day", ms: bsMidnight(day) + 285 * 60000, play: false, day, jump: 10 * 60, every: 0.2, dawn: 285, acc: 0, n: 0 };
+    BS.view = { mode: "day", ms: bsMidnight(day) + 285 * 60000, play: false, day, jump: 5 * 60, every: 0.2, dawn: 285, acc: 0, n: 0 };
     if (!BS.tick) BS.tick = setInterval(() => { if (!$("weather").hidden) bsTick(); }, 1000);
     const el = $("weather"); el.hidden = false; el.scrollTop = 0;  // shown first, so the 3D sky sizes itself to the screen
     renderWeather();
@@ -3579,7 +3579,7 @@ const handle = async (m, post) => {
     else if (v.mode === "storm") Object.assign(BS.target, { cover: .98, rain: .9, storm: 1 });
     else Object.assign(BS.target, { cover: s.cover, rain: s.rain, storm: s.storm });
     BS.target.wind = s.wind ?? D.cur.wind_speed_10m ?? 15;
-    // Listen: the sky moves every step, the words every 2 seconds (every 10 steps, 100 minutes), so the text doesn't flicker.
+    // Listen: the sky moves every step, the words every 2 seconds (every 10 steps, 50 minutes), so the text doesn't flicker.
     const key = v.jump ? `j|${v.day}|${v.play}|${Math.floor((v.n || 0) / 10)}` : `${bsHourKey(v.ms)}|${v.mode}|${v.play}|${Math.floor(bsMins(v.ms) / 15)}`;
     if (!force && key === BS.shown) return;
     BS.shown = key;
