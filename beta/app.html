@@ -1213,6 +1213,9 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     { id: "Office 365 for IT Pros", label: "Office 365 for IT Pros" }, { id: "Windows Central", label: "Windows Central" },
   ];
   const REGION_FALLBACK = [{ id: "qld", label: "Queensland" }];
+  // Every state the news update can fetch. Picking one asks the next update to include it.
+  const ALL_REGIONS = [{ id: "qld", label: "Queensland" }, { id: "nsw", label: "New South Wales" }, { id: "vic", label: "Victoria" }, { id: "wa", label: "Western Australia" },
+    { id: "sa", label: "South Australia" }, { id: "tas", label: "Tasmania" }, { id: "act", label: "Canberra" }, { id: "nt", label: "Northern Territory" }];
   const FOR_YOU_PER_SECTION = 7;
   const FEATURE_EVERY = 6;
   const MONO = { "ABC": "ABC", "SBS": "SBS", "BBC": "BBC", "M365": "365", "Microsoft": "MS", "Office 365": "IT", "Windows Central": "WC", "Ars": "Ars", "360info": "360", "Global Voices": "GV", "NASA": "NASA", "EFF": "EFF", "TechCrunch": "TC", "iTnews": "iT", "The Conversation": "C", "The Guardian": "G", "7NEWS": "7" };
@@ -1235,7 +1238,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   const saved = store.get("brief.settings", null);
   const S = Object.assign({}, defaults, saved || {}, { tabs: Object.assign({}, defaults.tabs, (saved || {}).tabs) });
   if (!saved && DEFAULT_NAME) S.welcomed = true;
-  const saveSettings = () => store.set("brief.settings", S);
+  const saveSettings = () => { store.set("brief.settings", S); syncPicks(); };
   // Admin (hidden): the website's full text is published locked. A passphrase entered here
   // unlocks it on this device, and the app then reads like the private Claude copy.
   const A = Object.assign({ unlocked: false, full: true }, store.get("brief.admin", {}));
@@ -1388,7 +1391,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   const longDate = iso => new Intl.DateTimeFormat("en-AU", { day: "numeric", month: "long", hour: "numeric", minute: "2-digit", timeZone: TZ }).format(new Date(iso));
   const mono = source => { const k = Object.keys(MONO).find(k => source.startsWith(k)); return k ? MONO[k] : source.slice(0, 2); };
   const publisherOf = source => PUBLISHERS.find(p => source.startsWith(p.id))?.label || source;
-  const regionLabel = () => (state.status?.regions || REGION_FALLBACK).find(r => r.id === S.region)?.label || "your area";
+  const regionLabel = () => [...(state.status?.regions || REGION_FALLBACK), ...ALL_REGIONS].find(r => r.id === S.region)?.label || "your area";
 
   // ======================================================================
   // Icons
@@ -1556,9 +1559,17 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     const c = clusters(), ids = c.of.get(id);
     return ids ? new Set(ids.map(x => publisherOf(c.raw.get(x)?.source || ""))).size : 1;
   }
+  // A followed topic: its own news search (fetched for everyone who follows it) plus any story that names it.
+  const topicSlug = t => String(t).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
   function topicItems(topic) {
     const re = new RegExp(`\\b${topic.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "i");
-    return everything().filter(i => re.test(`${i.title} ${i.summary || ""}`)).sort((a, b) => b.published.localeCompare(a.published));
+    const sl = topicSlug(topic);
+    let own = sl ? (state.feeds["topic-" + sl]?.items || []).map(i => ({ ...i, _sec: topic, _sid: "topic", _new: !!state.prevVisit && Date.parse(i.published) > state.prevVisit })) : [];
+    own = calmer(allowed(own));
+    if (privateMode()) own = own.filter(i => i.text);
+    const seen = new Set(), out = [];
+    for (const i of [...own, ...everything().filter(i => re.test(`${i.title} ${i.summary || ""}`))]) if (!seen.has(i.id)) { seen.add(i.id); out.push(i); }
+    return out.sort((a, b) => b.published.localeCompare(a.published));
   }
   const ARCH = { items: [], byId: new Map(), at: "", loading: null };
   const findItem = id => everything().find(i => i.id === id) || ARCH.byId.get(id) || state.saved.find(i => i.id === id);
@@ -2572,7 +2583,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     </div><p class="hint">Saved on this device only.${n ? ` ${n} full stories in the latest update.` : ""}</p></div>`;
   }
   function renderSettings() {
-    const regions = state.status?.regions || REGION_FALLBACK;
+    const regions = state.mode === "claude" ? ALL_REGIONS : (state.status?.regions || REGION_FALLBACK);
     const counts = state.status?.counts || {};
     STABS = BASE_STABS;
     const tab = STABS.some(t => t[0] === state.sTab) ? state.sTab : "news";
@@ -3728,12 +3739,12 @@ const handle = async (m, post) => {
     if (list.some(w => w.toLowerCase() === word.toLowerCase())) { toast(`“${word}” is already there`); return; }
     if (kind === "topics" && list.length >= 6) { toast("You can follow up to 6 topics"); return; }
     list.push(word); saveSettings(); renderSettings();
-    toast(kind === "topics" ? `Added a ${word} tab` : `Muted “${word}”`);
+    toast(kind === "topics" ? `Added a ${word} tab${state.mode === "claude" ? ". More stories arrive with the next update" : ""}` : `Muted “${word}”`);
     document.getElementById(kind === "topics" ? "addTopic" : "addMuted")?.focus();
   });
   document.addEventListener("change", e => {
     if (e.target.id === "setVoice") { store.set("brief.voice", e.target.value); aiBroken = false; dropClips(-1); toast("Voice changed. Tap Play a sample to hear it."); renderSettings(); return; }
-    if (e.target.id === "setRegion") { S.region = e.target.value; saveSettings(); renderSettings(); loadWeather(); toast(`Local news: ${regionLabel()}`); }
+    if (e.target.id === "setRegion") { S.region = e.target.value; saveSettings(); renderSettings(); loadWeather(); toast(state.mode === "claude" && !(state.status?.regions || []).some(r => r.id === S.region) ? `${regionLabel()} news arrives with the next update` : `Local news: ${regionLabel()}`); }
   });
   document.addEventListener("input", e => {
     if (e.target.id === "setName") { S.name = e.target.value.slice(0, 30); saveSettings(); renderHeader(); }
@@ -4582,9 +4593,29 @@ const handle = async (m, post) => {
     }
   }
 
+  // Each person's local area and topics go in the shared database ("picks"), so the nightly update fetches them.
+  var picksTimer = 0;
+  function syncPicks() {
+    if (state.mode !== "claude" || !state.db) return;
+    clearTimeout(picksTimer);
+    picksTimer = setTimeout(async () => {
+      try {
+        const user = await use("user");
+        const uid = user && await user.id();
+        if (!uid) return;
+        const picks = { region: S.region, topics: S.topics.slice(0, 6) };
+        const sig = uid + JSON.stringify(picks);
+        if (store.get("brief.picksSent", "") === sig) return;  // write only when something changed
+        await state.db.doc("picks/" + uid).set({ ...picks, at: new Date().toISOString() });
+        store.set("brief.picksSent", sig);
+      } catch {}
+    }, 1500);
+  }
+
   // ---- Claude database (private copy) ----
   function loadClaude(db) {
     state.db = db;
+    syncPicks();
     let first = 2;
     const arrived = () => {
       if (--first <= 0) { state.loaded = true; saveOffline(); loadWeather(); }
