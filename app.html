@@ -680,15 +680,23 @@ body.playing .sheet { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 11
 .bs-place h1 { font-family: var(--display); font-weight: 800; font-size: 1.7rem; line-height: 1; margin: 0; letter-spacing: -0.02em; text-shadow: 0 1px 12px rgba(0, 0, 0, .35); }
 .bs-place .bs-alt { color: var(--bs-dim); margin: 5px 0 0; font-size: 0.8rem; font-family: var(--ui); }
 .bs-done { flex: none; font-family: var(--ui); font-weight: 700; font-size: 0.9rem; color: var(--bs-ink); background: var(--bs-scrim); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border: 1px solid var(--bs-line); border-radius: 999px; padding: 8px 15px; }
-.bs-now { margin-top: 6px; display: flex; flex-direction: column; align-items: flex-start; text-shadow: 0 1px 2px rgba(0, 0, 0, .55), 0 2px 18px rgba(0, 0, 0, .45); }
+.bs-now { margin-top: 10px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; column-gap: 10px; text-shadow: 0 1px 2px rgba(0, 0, 0, .55), 0 2px 18px rgba(0, 0, 0, .45); }
 .bs-tempwrap { display: flex; align-items: flex-end; gap: 14px; }
-.bs-hilo { display: grid; gap: 2px; padding-bottom: 12px; font-family: var(--ui); font-size: 1rem; color: var(--bs-dim); font-variant-numeric: tabular-nums; }
+.bs-hilo { display: grid; gap: 4px; padding-bottom: 12px; font-family: var(--ui); font-size: 1rem; color: var(--bs-dim); }
 .bs-hilo b { color: var(--bs-ink); font-weight: 750; }
 .bs-when { font-family: var(--ui); font-weight: 650; font-size: 0.9rem; color: var(--bs-dim); }
 .bs-temp { font-family: var(--display); font-weight: 800; font-size: clamp(5.6rem, 30vw, 9rem); line-height: 0.92; letter-spacing: -0.06em; font-variant-numeric: tabular-nums; font-variation-settings: "opsz" 96; }
 .bs-temp sup { font-size: 0.45em; font-weight: 600; vertical-align: top; position: relative; top: 0.12em; margin-left: 0.04em; letter-spacing: 0; }
 .bs-what { font-family: var(--display); font-weight: 700; font-size: 1.5rem; line-height: 1.1; letter-spacing: -0.02em; margin-top: 2px; padding: 2px 10px 3px; margin-left: -10px; border-radius: 10px; background: rgba(6, 10, 26, 0.32); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
-.bs-chips { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+.bs-main { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
+.bs-chips { grid-column: 1 / -1; display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+.bs-rain { margin-top: 26px; width: 118px; display: grid; gap: 2px; padding: 10px 12px; border-radius: 16px; background: rgba(6, 10, 26, 0.42); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  font-family: var(--ui); font-size: 0.78rem; color: var(--bs-dim); text-shadow: none; line-height: 1.3; }
+.bs-rain svg { width: 22px; height: 22px; color: #8cc2ff; margin-bottom: 2px; }
+.bs-rain b { color: var(--bs-ink); font-size: 0.92rem; font-weight: 750; }
+.bs-rain.wet b { color: #9cc8ff; }
+.bs-rain .t { color: var(--bs-ink); font-weight: 650; margin-top: 4px; }
+.bs-rain .p { font-size: 0.72rem; }
 .bs-chip { display: inline-flex; align-items: baseline; gap: 5px; padding: 6px 10px; border-radius: 999px; background: var(--bs-scrim); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); font-family: var(--ui); font-size: 0.8rem; color: var(--bs-dim); font-variant-numeric: tabular-nums; white-space: nowrap; text-shadow: none; }
 .bs-chip b { font-weight: 700; color: var(--bs-ink); }
 .bs-chip.uv b { color: var(--bs-storm); }
@@ -3345,7 +3353,7 @@ const handle = async (m, post) => {
     ptr: { tx: 0, ty: 0, x: 0, y: 0 }, view: { mode: "live", ms: Date.now(), play: true }, D: null, lastT: 0, shown: "" };
   const BS_KIND = { sun: "Sunny", partly: "Partly cloudy", cloud: "Cloudy", rain: "Showers", storm: "Thunderstorms" };
   const BS_ICON = { sun: "i-sun", partly: "i-partly", cloud: "i-cloud", rain: "i-rain", storm: "i-storm" };
-  const BS_SPEED = 10 * 60;  // seconds of forecast per second of real time (10 minutes a second)
+  const BS_SPEED = 15 * 60;  // seconds of forecast per second of real time (15 minutes a second)
   const BS_DAWN = 6 * 60;    // a chosen day starts playing at 6am
   // ---- astronomy (the suncalc formulas) ----
   const bsRad = Math.PI / 180, bsDayMs = 864e5, J1970 = 2440588, J2000 = 2451545, bsEcl = bsRad * 23.4397;
@@ -3406,24 +3414,24 @@ const handle = async (m, post) => {
     const D = BS.D;
     $("wBody").innerHTML = `
       <header class="bs-top">
-        <div class="bs-place"><h1>${esc(D.city)}</h1><p class="bs-alt" id="bsSunLine"></p></div>
+        <div class="bs-place"><h1>${esc(D.city)}</h1></div>
         <button class="bs-done" type="button" data-close="weather">Done</button>
       </header>
       <section class="bs-now">
-        <div class="bs-when" id="bsWhen"></div>
-        <div class="bs-tempwrap"><div class="bs-temp"><span id="bsTemp">--</span><sup>°</sup></div><div class="bs-hilo" id="bsHiLo"></div></div>
-        <div class="bs-what" id="bsWhat"></div>
+        <div class="bs-main">
+          <div class="bs-when" id="bsWhen"></div>
+          <div class="bs-tempwrap"><div class="bs-temp" aria-label="High"><span id="bsTemp">--</span><sup>°</sup></div><div class="bs-hilo" id="bsHiLo"></div></div>
+          <div class="bs-what" id="bsWhat"></div>
+        </div>
+        <aside class="bs-rain" id="bsRain" aria-live="polite"></aside>
         <div class="bs-chips" id="bsChips"></div>
       </section>
       <section class="bs-panel">
         <div class="bs-week" id="bsWeek" role="group" aria-label="Seven day forecast. Choose a day to see its sky.">${D.days.map((d, i) => `<button class="bs-day${d.severe ? " severe" : ""}" type="button" aria-pressed="false" data-bsday="${i}"><span class="d">${i ? d.name : "Today"}</span><svg class="i" aria-hidden="true"><use href="#${BS_ICON[d.kind]}"/></svg><span class="hi">${d.hi}°</span><span class="lo">${d.lo}°</span></button>`).join("")}</div>
         <p class="bs-note" id="bsNote"></p>
-        <p class="bs-rainsum" id="bsRainSum"></p>
         <div class="bs-scrubrow">
           <div class="bs-track">
-            <div class="bs-rainbar" id="bsRainBar" aria-hidden="true"></div>
             <input type="range" id="bsHourIn" min="0" max="1439" step="5" value="0" aria-label="Time of day">
-            <div class="bs-ticks" aria-hidden="true"><span>12am</span><span>6am</span><span>12pm</span><span>6pm</span><span>12am</span></div>
           </div>
           <output id="bsHourOut" for="bsHourIn"></output>
         </div>
@@ -3432,6 +3440,7 @@ const handle = async (m, post) => {
     $("bsHourIn").addEventListener("input", e => { BS.view.play = false; BS.view.ms = bsMidnight(bsKey(BS.view.ms)) + (+e.target.value) * 60000; BS.view.day = bsKey(BS.view.ms); if (BS.view.mode === "live") BS.view.mode = "day"; bsApply(true); });
     bsApply(true); bsTick();
   }
+  const bsStep = ms => Math.floor(ms / 9e5) * 9e5;  // shown times move in 15-minute steps
   function bsDayIndex() { const k = bsKey(BS.view.ms); const i = BS.D.days.findIndex(d => d.date === k); return i < 0 ? 0 : i; }
   // Point the scene at the view's moment and redraw the readout when the hour changes.
   function bsApply(force) {
@@ -3441,7 +3450,7 @@ const handle = async (m, post) => {
     else if (v.mode === "storm") Object.assign(BS.target, { cover: .98, rain: .9, storm: 1 });
     else Object.assign(BS.target, { cover: s.cover, rain: s.rain, storm: s.storm });
     BS.target.wind = s.wind ?? D.cur.wind_speed_10m ?? 15;
-    const key = `${bsHourKey(v.ms)}|${v.mode}|${v.play}|${Math.floor(bsMins(v.ms) / 5)}`;
+    const key = `${bsHourKey(v.ms)}|${v.mode}|${v.play}|${Math.floor(bsMins(v.ms) / 15)}`;
     if (!force && key === BS.shown) return;
     BS.shown = key;
     const di = bsDayIndex(), d = D.days[di], i = bsHour(v.ms), hr = D.hr, now = Math.abs(v.ms - Date.now()) < 45 * 60000;
@@ -3458,33 +3467,34 @@ const handle = async (m, post) => {
       temp = d.hi; what = BS_KIND[d.kind]; when = `Forecast high for ${bsDate(bsMidnight(d.date) + 432e5)}`;
       chips = [["Low", d.lo + "°"], ["Rain", d.rain + "%"], ["Rainfall", d.mm], ["UV", `${d.uv} ${bsUv(d.uv)}`, "uv"]];
     }
-    $("bsTemp").textContent = temp; $("bsWhat").textContent = what; $("bsWhen").textContent = when;
-    $("bsHiLo").innerHTML = `<span>H <b>${d.hi}°</b></span><span>L <b>${d.lo}°</b></span>`;
+    $("bsTemp").textContent = d.hi; $("bsWhat").textContent = what; $("bsWhen").textContent = `${di ? new Intl.DateTimeFormat("en-AU", { timeZone: D.tz, weekday: "long" }).format(new Date(v.ms)) : "Today"}'s high`;
+    $("bsHiLo").innerHTML = `<span>Low <b>${d.lo}°</b></span><span>${now && v.mode === "live" ? "Now" : bsTime(bsStep(v.ms))} <b>${temp}°</b></span>`;
     if (BS.rainDay !== d.date) { BS.rainDay = d.date; bsRain(d); }
     $("bsChips").innerHTML = chips.map(c => `<span class="bs-chip${c[2] ? " " + c[2] : ""}">${c[0]} <b>${c[1]}</b></span>`).join("");
     $("bsNote").textContent = `${d.note}${d.severe ? " Severe weather warnings may apply." : ""}`;
     const inp = $("bsHourIn"); if (document.activeElement !== inp) inp.value = bsMins(v.ms);
-    $("bsHourOut").textContent = now && v.mode === "live" && !v.play ? "Now" : bsTime(v.ms);
+    $("bsHourOut").textContent = now && v.mode === "live" && !v.play ? "Now" : bsTime(bsStep(v.ms));
   }
   // When in the day it's likely to rain: a strip over the timeline, and a line saying when.
+  // When in the day it's likely to rain, on the right of the readout.
   function bsRain(d) {
     const hr = BS.D.hr, pp = [];
     for (let h = 0; h < 24; h++) { const i = BS.D.hours.get(`${d.date}T${String(h).padStart(2, "0")}`); pp.push(i == null ? null : (hr.precipitation_probability?.[i] ?? 0)); }
-    $("bsRainBar").innerHTML = pp.map(p => `<i style="--p:${p == null ? 0 : p / 100}"></i>`).join("");
     const label = h => h === 0 || h === 24 ? "midnight" : h === 12 ? "midday" : `${h % 12}${h < 12 ? "am" : "pm"}`;
     const spans = [];
     pp.forEach((p, h) => { if (p != null && p >= 40) { const last = spans[spans.length - 1]; if (last && last[1] === h) { last[1] = h + 1; last[2] = Math.max(last[2], p); } else spans.push([h, h + 1, p]); } });
-    const sum = $("bsRainSum");
-    if (!spans.length) { const top = Math.max(0, ...pp.filter(p => p != null)); sum.textContent = top >= 20 ? `Mostly dry, a small chance of a shower (up to ${top}%)` : "No rain expected"; sum.classList.remove("wet"); return; }
-    sum.textContent = "Rain likely " + spans.slice(0, 3).map(([a, b, p]) => b - a <= 1 ? `around ${label(a)} (${p}%)` : `${label(a)} to ${label(b)} (up to ${p}%)`).join(", and ");
-    sum.classList.add("wet");
+    const box = $("bsRain");
+    const umbrella = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 1 9 9H3a9 9 0 0 1 9-9z" fill="currentColor"/><path d="M12 12v6.5a2 2 0 0 1-4 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+    if (!spans.length) {
+      const top = Math.max(0, ...pp.filter(p => p != null));
+      box.className = "bs-rain dry";
+      box.innerHTML = `<b>${top >= 20 ? "Mostly dry" : "No rain"}</b><span>${top >= 20 ? `Small chance of a shower, up to ${top}%` : "Dry all day"}</span>`;
+      return;
+    }
+    box.className = "bs-rain wet";
+    box.innerHTML = `${umbrella}<b>Rain likely</b>${spans.slice(0, 2).map(([a, b, p]) => `<span class="t">${b - a <= 1 ? `Around ${label(a)}` : `${label(a)} to ${label(b)}`}</span><span class="p">up to ${p}%</span>`).join("")}`;
   }
-  function bsTick() {
-    if (!BS.D || !$("bsSunLine")) return;
-    const key = bsKey(BS.view.ms);
-    if (BS.sunKey !== key) { BS.sunKey = key; BS.sunTimes = bsRiseSet(key); }
-    $("bsSunLine").textContent = `Sunrise ${BS.sunTimes.rise ? bsTime(BS.sunTimes.rise) : "–"} · Sunset ${BS.sunTimes.set ? bsTime(BS.sunTimes.set) : "–"}`;
-  }
+  function bsTick() {}
   function bsClick(t) {
     const day = t.closest("[data-bsday]");
     // A chosen day plays from 6am.
