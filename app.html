@@ -1629,11 +1629,11 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   function wxListenIntro() {
     if (!state.wx || document.body.classList.contains("wxlisten") || !$("weather").hidden) return;
     document.body.classList.add("wxlisten", "wxintro");
-    // The day from 4:45am in 15-minute steps, one every 0.2 seconds for the sky; the words update once a second (75 minutes).
+    // The day from 4:45am in 10-minute steps, one every 0.2 seconds for the sky; the words update every 2 seconds (100 minutes).
     // In the morning and afternoon it's today; from 6pm it's tomorrow.
     BS.D = bsData();
     const t = Date.now(), day = bsMins(t) >= 18 * 60 ? (BS.D.days[1] || BS.D.days[0]).date : bsKey(t);
-    BS.view = { mode: "day", ms: bsMidnight(day) + 285 * 60000, play: false, day, jump: 15 * 60, every: 0.2, dawn: 285, acc: 0, n: 0 };
+    BS.view = { mode: "day", ms: bsMidnight(day) + 285 * 60000, play: false, day, jump: 10 * 60, every: 0.2, dawn: 285, acc: 0, n: 0 };
     if (!BS.tick) BS.tick = setInterval(() => { if (!$("weather").hidden) bsTick(); }, 1000);
     const el = $("weather"); el.hidden = false; el.scrollTop = 0;  // shown first, so the 3D sky sizes itself to the screen
     renderWeather();
@@ -2610,8 +2610,9 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   let PRE = null;
   function loadPre(v) {
     if (state.mode !== "static") return;
-    fetch(`data/voice/index.json?v=${encodeURIComponent(v || "")}`).then(r => r.ok ? r.json() : null)
-      .then(d => { PRE = d && d.c && Object.keys(d.c).length ? d : null; if (openSheet === "settings") renderSettings(); }).catch(() => {});
+    state.preP = fetch(`data/voice/index.json?v=${encodeURIComponent(v || "")}`).then(r => r.ok ? r.json() : null)
+      .then(d => { PRE = d && d.c && Object.keys(d.c).length ? d : null; if (openSheet === "settings") renderSettings(); }).catch(() => {})
+      .finally(() => { state.preP = null; });
   }
   const voicePref = () => {
     const v = store.get("brief.voice", "");
@@ -2776,7 +2777,7 @@ const handle = async (m, post) => {
   const preOpening = () => {
     const o = PRE?.open?.[S.region];
     if (!o || o.day !== new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new Date())) return "";
-    return isNight() ? (o.night || "") : o.text;  // at night: tomorrow's weather
+    return isNight() ? (o.night || o.text) : o.text;  // at night: tomorrow's weather (today's if that isn't made yet)
   };
   let aiWhy = "";
   function aiFail(err) {
@@ -2870,9 +2871,11 @@ const handle = async (m, post) => {
     if (cur.trim()) out.push({ text: cur.trim(), para });
     return out;
   }
-  function listenToggle(kind) {
-    if (!canSpeak && !useAI() && !usePre()) { toast("Listening isn't available in this browser"); return; }
-    if (useAI() || usePre()) unlockAudio();
+  async function listenToggle(kind) {
+    if (!canSpeak && !useAI() && !usePre() && !state.preP) { toast("Listening isn't available in this browser"); return; }
+    if (useAI() || usePre() || state.preP || state.mode === "static") unlockAudio();  // inside the tap, before any waiting
+    // Emma's list still loading (just opened the app): wait a moment for it rather than using the phone's voice.
+    if (!PRE && state.preP) await Promise.race([state.preP, new Promise(r => setTimeout(r, 4000))]);
     // The phone's own voice fills any gaps, and iPhones only allow it after it has spoken once in a tap.
 
     if (kind === "story") {
@@ -2913,6 +2916,9 @@ const handle = async (m, post) => {
     L.queue = oneEach(ids.filter((id, n) => (kind === "story" && n === 0) || listenable(findItem(id))));
     if (usePre()) {
       if (kind === "story") L.queue = L.queue.filter((id, n) => n === 0 || preReady(findItem(id)));
+      // The news: only stories Emma has read already, so it never drops to the phone's voice (which iPhones
+      // won't start outside a tap, leaving it stuck). Newer stories join after the next update.
+      else if (kind === "drive") { const ready = L.queue.filter(id => preReady(findItem(id))); if (ready.length >= 3) L.queue = ready; }
       else if (kind === "brief") {
         L.queue = L.queue.filter(id => preReady(findItem(id)));
         for (const i of forYou()) { if (L.queue.length >= 5) break; if (preReady(i) && !L.queue.some(k => sameStory(k, i.id))) L.queue.push(i.id); }
@@ -2969,6 +2975,9 @@ const handle = async (m, post) => {
     };
     if (p.para !== L.curPara) highlightPara(p.para);
     npPart(L.part);
+    // If the phone's voice never starts (iPhones refuse it outside a tap), skip this bit rather than sit stuck.
+    let started = false; u.onstart = () => { started = true; };
+    setTimeout(() => { if (!started && tk === L.token && L.on && !L.paused && L.parts[L.part] === p) { try { tts.cancel(); } catch {} L.part++; speakNext(tk); } }, 2500);
     tts.speak(u);
     updateBar();
   }
@@ -3570,8 +3579,8 @@ const handle = async (m, post) => {
     else if (v.mode === "storm") Object.assign(BS.target, { cover: .98, rain: .9, storm: 1 });
     else Object.assign(BS.target, { cover: s.cover, rain: s.rain, storm: s.storm });
     BS.target.wind = s.wind ?? D.cur.wind_speed_10m ?? 15;
-    // Listen: the sky moves every step, the words only once a second (every 5 steps), so the text doesn't flicker.
-    const key = v.jump ? `j|${v.day}|${v.play}|${Math.floor((v.n || 0) / 5)}` : `${bsHourKey(v.ms)}|${v.mode}|${v.play}|${Math.floor(bsMins(v.ms) / 15)}`;
+    // Listen: the sky moves every step, the words every 2 seconds (every 10 steps, 100 minutes), so the text doesn't flicker.
+    const key = v.jump ? `j|${v.day}|${v.play}|${Math.floor((v.n || 0) / 10)}` : `${bsHourKey(v.ms)}|${v.mode}|${v.play}|${Math.floor(bsMins(v.ms) / 15)}`;
     if (!force && key === BS.shown) return;
     BS.shown = key;
     const di = bsDayIndex(), d = D.days[di], i = bsHour(v.ms), hr = D.hr, now = Math.abs(v.ms - Date.now()) < 15 * 60000;
@@ -4101,8 +4110,10 @@ const handle = async (m, post) => {
         state.status = st; TV.items = [];
         for (const k in textCache) delete textCache[k];
         await checkVault();
-        loadPre(st.updatedAt);
       }
+      // Emma's audio list. Loaded on every open, not just when the news changed: opening the app a second time
+      // (news unchanged) used to skip it, so Listen fell back to the phone's voice, which iPhones won't start.
+      if (changed || !PRE) loadPre(st.updatedAt);
       state.loaded = true;
       if (manual) { finishRefresh(changed); if (!changed) toast("You're up to date"); }
       else if (state.refreshing && changed) finishRefresh(true);
