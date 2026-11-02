@@ -19,7 +19,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
@@ -64,7 +64,7 @@ jobs:
           NEWS_KEY: ${{ secrets.NEWS_KEY }}
           KOKORO_DIR: kokoro
           # Most time on the daily run; a quick top-up when an update is started from the app.
-          BUDGET: ${{ github.event_name == 'schedule' && '1500' || github.event_name == 'push' && '600' || '240' }}
+          BUDGET: ${{ github.event_name == 'schedule' && '2400' || github.event_name == 'push' && '600' || '240' }}
         run: |
           pip install -q "kokoro-onnx==0.6.1" "lameenc==1.9.0"
           python voice.py _site/data --reuse-from https://ashley-pettit.github.io/awesome-news/ --budget "$BUDGET"
