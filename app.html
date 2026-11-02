@@ -2534,7 +2534,7 @@ const handle = async (m, post) => {
     // Tell Safari this is media playback, like a podcast: it plays with the silent switch on and keeps
     // going with the screen locked (otherwise iPhones can mute it).
     try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch {}
-    if (L.unlocked || !aud.paused) return;
+    if (!aud.paused) return;  // every tap unlocks again: iPhones can forget between listens
     try {
       SILENT = SILENT || wavURL(new Float32Array(4800), 24000);
       aud.onended = aud.onerror = null; aud.src = SILENT;
