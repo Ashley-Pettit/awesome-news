@@ -3095,7 +3095,7 @@ const handle = async (m, post) => {
       L.lastSec = sec;
     }
     L.parts = [...pre, ...intro, { text: `${clean(i.title)}.`, para: -1, kind: "title" }, { text: reports(i), para: -1, kind: "title", opt: true }];
-    if (L.kind !== "story") npStory(i);
+    if (L.kind !== "story") { npStory(i); if (L.parts[0].kind === "cue") npPart(0); }  // a section cue first: blurred from the start, then the story sharpens
     // Listen to the news: the full weather page shows straight away while the opening reads the weather, then steps aside.
     if (L.kind === "drive" && !L.opened) { L.opened = true; wxListenIntro(); wxListenSoon(); } else wxListenOff();
     if (!$("npList").hidden) npListRender();
