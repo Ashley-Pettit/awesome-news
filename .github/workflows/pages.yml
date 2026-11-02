@@ -19,7 +19,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
@@ -40,6 +40,34 @@ jobs:
           NEWS_KEY: ${{ secrets.NEWS_KEY }}
           YT_API_KEY: ${{ secrets.YT_API_KEY }}  # optional: TV keeps working when YouTube's free feed is down
         run: python fetcher.py _site/data --regions all --images url --text cc --interests all --private-text NEWS_KEY --archive-from https://ashley-pettit.github.io/awesome-news/
+
+      # Ready-made voice: the news read aloud in a natural voice (Kokoro), made here so phones just
+      # play it. Audio made on earlier runs is reused; new audio is made until the time budget runs out.
+      - name: Voice model
+        id: kokoro
+        uses: actions/cache@v4
+        with:
+          path: kokoro
+          key: kokoro-v1.0
+
+      - name: Get the voice model
+        if: steps.kokoro.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p kokoro
+          for f in kokoro-v1.0.onnx voices-v1.0.bin; do
+            curl -fsSL -o kokoro/$f https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/$f
+          done
+
+      - name: Make the audio
+        continue-on-error: true   # the news still goes out if this fails
+        env:
+          NEWS_KEY: ${{ secrets.NEWS_KEY }}
+          KOKORO_DIR: kokoro
+          # Most time on the daily run; a quick top-up when an update is started from the app.
+          BUDGET: ${{ github.event_name == 'schedule' && '1500' || github.event_name == 'push' && '600' || '240' }}
+        run: |
+          pip install -q "kokoro-onnx==0.6.1" "lameenc==1.9.0"
+          python voice.py _site/data --reuse-from https://ashley-pettit.github.io/awesome-news/ --budget "$BUDGET"
 
       - name: Build the page
         run: python build.py _site

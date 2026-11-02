@@ -1162,6 +1162,37 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     return CL;
   }
   const siblings = id => (clusters().of.get(id) || []).filter(x => x !== id);
+  // Same story from another outlet, even with a different headline: compares the headline and the start
+  // of the summary, leaving out words a publisher puts in every summary and words that are in everything today.
+  const GIST = { key: "", w: new Map() };
+  function gists() {
+    const c = clusters();
+    if (GIST.key === c.key) return GIST;
+    GIST.key = c.key; GIST.w = new Map();
+    const list = [...c.raw.values()];
+    const raw = list.map(i => wordsOf(`${i.title} ${String(i.summary || "").split(/\s+/).slice(0, 40).join(" ")}`));
+    const pubOf = i => String(i.source || "").split(" ")[0];
+    const df = new Map(), bySrc = new Map();
+    raw.forEach((ws, k) => { ws.forEach(w => df.set(w, (df.get(w) || 0) + 1)); const p = pubOf(list[k]); if (!bySrc.has(p)) bySrc.set(p, []); bySrc.get(p).push(k); });
+    const boiler = new Map();
+    bySrc.forEach((ks, p) => {
+      if (ks.length < 4) return;
+      const n = new Map(); ks.forEach(k => raw[k].forEach(w => n.set(w, (n.get(w) || 0) + 1)));
+      boiler.set(p, new Set([...n].filter(([, c]) => c >= Math.max(3, ks.length * 0.3)).map(([w]) => w)));
+    });
+    const common = Math.max(8, list.length * 0.03);
+    list.forEach((i, k) => { const b = boiler.get(pubOf(i)); GIST.w.set(i.id, new Set([...raw[k]].filter(w => !(b && b.has(w)) && df.get(w) <= common))); });
+    return GIST;
+  }
+  function sameStory(a, b) {
+    if (a === b || siblings(a).includes(b)) return true;
+    const g = gists().w, x = g.get(a), y = g.get(b);
+    if (!x || !y || !x.size || !y.size) return false;
+    let c = 0; for (const w of x) if (y.has(w)) c++;
+    return c >= 4 && c / Math.min(x.size, y.size) >= 0.4;
+  }
+  // Keeps the first of each story, so listening never reads the same news twice from different outlets.
+  const oneEach = ids => ids.reduce((keep, id) => { if (!keep.some(k => sameStory(k, id))) keep.push(id); return keep; }, []);
   function sourceCount(id) {
     const c = clusters(), ids = c.of.get(id);
     return ids ? new Set(ids.map(x => publisherOf(c.raw.get(x)?.source || ""))).size : 1;
@@ -1205,7 +1236,7 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     const picks = [], seen = new Set(), per = {};
     for (const { i } of cands) {
       if (picks.length >= 5) break;
-      if (seen.has(i.id) || (per[i._sid] || 0) >= 2) continue;
+      if (seen.has(i.id) || (per[i._sid] || 0) >= 2 || picks.some(p => sameStory(p.id, i.id))) continue;
       per[i._sid] = (per[i._sid] || 0) + 1;
       picks.push(i); seen.add(i.id); siblings(i.id).forEach(x => seen.add(x));
     }
@@ -1221,7 +1252,7 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
     const best = i => [i, ...siblings(i.id).map(findItem).filter(Boolean)].sort((a, b) => depth(b) - depth(a))[0];
     let secs = 45;
     const add = (i, sec) => {
-      if (!i || seen.has(i.id)) return;
+      if (!i || seen.has(i.id) || out.some(x => sameStory(x, i.id))) return;
       const b = best(i);
       [i.id, b.id, ...siblings(i.id), ...siblings(b.id)].forEach(x => seen.add(x));
       out.push(b.id); secOf.set(b.id, sec); secs += words(b) / 2.6 + 7;
@@ -2186,9 +2217,24 @@ body.playing .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock
   const KOKORO = "https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/+esm";
   const aiOK = typeof WebAssembly === "object" && typeof Blob === "function" && typeof Promise.prototype.finally === "function";
   let aiBroken = false;
-  const voicePref = () => store.get("brief.voice", "") || (aiOK ? "ai:af_heart" : "device");
+  // Ready-made voice: the news update makes the audio in a natural voice (voice.py), so the phone
+  // just plays it. Nothing to download or run here. iPhones use it even if a device-run voice was picked,
+  // because those often run out of memory on a phone.
+  let PRE = null;
+  function loadPre(v) {
+    if (state.mode !== "static") return;
+    fetch(`data/voice/index.json?v=${encodeURIComponent(v || "")}`).then(r => r.ok ? r.json() : null)
+      .then(d => { PRE = d && d.c && Object.keys(d.c).length ? d : null; if (openSheet === "settings") renderSettings(); }).catch(() => {});
+  }
+  const voicePref = () => {
+    const v = store.get("brief.voice", "");
+    if (PRE && (!v || (isIOS && v.startsWith("ai:")))) return "pre";
+    if (v === "pre" && !PRE) return aiOK && !isIOS ? "ai:bf_emma" : "device";
+    return v || (aiOK ? "ai:af_heart" : "device");
+  };
+  const usePre = () => !!PRE && voicePref() === "pre";
   const useAI = () => aiOK && !aiBroken && voicePref().startsWith("ai:");
-  const aiVoice = () => { const id = voicePref().slice(3); return AI_VOICES.some(v => v[0] === id) ? id : "af_heart"; };
+  const aiVoice = () => { if (voicePref() === "pre") return PRE?.v || "bf_emma"; const id = voicePref().slice(3); return AI_VOICES.some(v => v[0] === id) ? id : "af_heart"; };
   const AI = (() => {
     // One job at a time; jobs from a story that's been skipped are dropped.
     const handler = `let tts = null, live = 0, q = Promise.resolve();
@@ -2278,12 +2324,37 @@ const handle = async (m, post) => {
   function clip(k) {
     const p = L.parts[k]; if (!p) return null;
     const key = L.sid + ":" + k;
-    if (!clips.has(key)) { const pr = AI.say(p.text, L.sid); pr.then(u => ready.set(key, u)).catch(() => {}); clips.set(key, pr); }
+    if (!clips.has(key)) { const pr = usePre() ? preSay(p.text) : AI.say(p.text, L.sid); pr.then(u => ready.set(key, u)).catch(() => {}); clips.set(key, pr); }
     return clips.get(key);
   }
   function dropClips(keepSid) {
     for (const [key, pr] of clips) if (!key.startsWith(keepSid + ":")) { clips.delete(key); ready.delete(key); pr.then(u => URL.revokeObjectURL(u)).catch(() => {}); }
   }
+  async function sha16(t) {
+    const b = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(t));
+    return [...new Uint8Array(b)].slice(0, 8).map(x => x.toString(16).padStart(2, "0")).join("");
+  }
+  // A piece of the ready-made audio (locked pieces need this device's passphrase). Anything not made
+  // yet, like a story that only just arrived, falls back to the same voice run here where that works.
+  async function preSay(text) {
+    const h = await sha16(`${PRE.v}|${text}`), t = PRE.c[h];
+    if (t === 1 || (t === 2 && vaultKey)) {
+      try {
+        const r = await withTimeout(fetch(`data/voice/${h}.${t === 1 ? "mp3" : "bin"}`), 20000);
+        if (r.ok) {
+          let buf = await r.arrayBuffer();
+          if (t === 2) buf = await crypto.subtle.decrypt({ name: "AES-GCM", iv: new Uint8Array(buf, 0, 12) }, vaultKey, new Uint8Array(buf, 12));
+          return URL.createObjectURL(new Blob([buf], { type: "audio/mpeg" }));
+        }
+      } catch {}
+    }
+    if (aiOK && !aiBroken && !isIOS) return AI.say(text, L.sid);
+    throw Object.assign(new Error("not made yet"), { pre: true });
+  }
+  const preOpening = () => {
+    const o = PRE?.open?.[S.region];
+    return o && o.day === new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new Date()) ? o.text : "";
+  };
   let aiWhy = "";
   function aiFail(err) {
     if (aiBroken) return;
@@ -2316,6 +2387,11 @@ const handle = async (m, post) => {
     L.aiWait = true; updatePlayer();
     pr.then(play).catch(err => {
       if (tk !== L.token || sid !== L.sid) return;
+      if (usePre()) {  // this bit wasn't made ahead: the phone's own voice reads just this bit
+        L.aiWait = false; updatePlayer();
+        if (canSpeak) speakDevice(tk); else { L.part++; speakNext(tk); }
+        return;
+      }
       aiFail(err);
       // The phone's own voice also needs a tap, so wait for one rather than failing silently.
       if (canSpeak) pauseListen(); else stopListen();
@@ -2338,8 +2414,10 @@ const handle = async (m, post) => {
     return out;
   }
   function listenToggle(kind) {
-    if (!canSpeak && !useAI()) { toast("Listening isn't available in this browser"); return; }
-    if (useAI()) unlockAudio();
+    if (!canSpeak && !useAI() && !usePre()) { toast("Listening isn't available in this browser"); return; }
+    if (useAI() || usePre()) unlockAudio();
+    // The phone's own voice fills any gaps, and iPhones only allow it after it has spoken once in a tap.
+    if (usePre() && canSpeak && !L.ttsPrimed) { try { tts.speak(new SpeechSynthesisUtterance(" ")); L.ttsPrimed = true; } catch {} }
     if (kind === "story") {
       const id = state.readerId;
       if (L.on && L.queue[L.at] === id) { L.paused ? resumeListen() : pauseListen(); return; }
@@ -2362,7 +2440,7 @@ const handle = async (m, post) => {
   }
   function startListen(ids, kind) {
     hush();
-    L.queue = ids.filter(id => findItem(id));
+    L.queue = oneEach(ids.filter(id => findItem(id)));
     if (!L.queue.length) { toast("There's nothing to read out yet"); return; }
     Object.assign(L, { on: true, paused: false, at: 0, kind });
     document.body.classList.add("playing");
@@ -2372,17 +2450,17 @@ const handle = async (m, post) => {
     const sid = ++L.sid, tk = ++L.token, id = L.queue[L.at], i = findItem(id);
     if (!i) { nextStory(); return; }
     markRead(id);
-    const intro = L.kind === "brief" ? `Story ${L.at + 1}. ` : "";
+    const intro = L.kind === "brief" ? [{ text: `Story ${L.at + 1}.`, para: -1, kind: "title" }] : [];
     const pre = [];
     if (L.kind === "drive") {
       const sec = L.secOf?.get(id), prev = L.at ? L.secOf?.get(L.queue[L.at - 1]) : null;
-      if (L.at === 0) pre.push({ text: driveOpening(), para: -1, kind: "open" });
+      if (L.at === 0) pre.push({ text: (usePre() && preOpening()) || driveOpening(), para: -1, kind: "open" });
       if (sec && sec !== prev) pre.push({ text: sec === "top" ? "Here are the top stories." : `Now, ${sec}.`, para: -1, kind: "cue", sec });
     }
-    L.parts = [...pre, { text: `${intro}${clean(i.title)}.`, para: -1, kind: "title" }, { text: `From ${publisherOf(i.source)}.`, para: -1, kind: "title" }];
+    L.parts = [...pre, ...intro, { text: `${clean(i.title)}.`, para: -1, kind: "title" }, { text: `From ${publisherOf(i.source)}.`, para: -1, kind: "title" }];
     if (L.kind !== "story") npStory(i);
     L.part = 0; L.loading = true; L.waiting = false; L.curPara = -1; L.aiAt = -1;
-    if (useAI()) { AI.skip(sid); dropClips(sid); }
+    if (useAI() || usePre()) { if (useAI()) AI.skip(sid); dropClips(sid); }
     updatePlayer();
     speakNext(tk);  // starts at once with the headline, so phones treat it as part of the tap
     let t = null;
@@ -2401,7 +2479,10 @@ const handle = async (m, post) => {
   function speakNext(tk) {
     if (tk !== L.token || !L.on || L.paused) return;
     if (L.part >= L.parts.length) { if (L.loading) { L.waiting = true; return; } nextStory(); return; }
-    if (useAI()) { speakAI(tk); return; }
+    if (useAI() || usePre()) { speakAI(tk); return; }
+    speakDevice(tk);
+  }
+  function speakDevice(tk) {
     const p = L.parts[L.part], u = new SpeechSynthesisUtterance(p.text), v = pickVoice();
     u.rate = L.rate; u.lang = v?.lang || "en-AU"; if (v) u.voice = v;
     u.onend = () => { if (tk !== L.token) return; L.fails = 0; L.part++; updateBar(); speakNext(tk); };
@@ -2425,9 +2506,9 @@ const handle = async (m, post) => {
   function pauseListen() { L.paused = true; L.token++; hush(); updatePlayer(); }
   function resumeListen() {
     L.paused = false; const tk = ++L.token; updatePlayer();
-    if (useAI()) unlockAudio();
+    if (useAI() || usePre()) unlockAudio();
     // Carry on mid-sentence when the natural voice was paused part way through a clip.
-    if (useAI() && L.aiAt === L.part && !isSilent() && !aud.ended && aud.currentTime > 0) {
+    if ((useAI() || usePre()) && L.aiAt === L.part && !isSilent() && !aud.ended && aud.currentTime > 0) {
       bindClip(tk, L.part); aud.playbackRate = L.rate; aud.play().catch(() => speakNext(tk)); return;
     }
     speakNext(tk);
@@ -2447,7 +2528,7 @@ const handle = async (m, post) => {
     L.rate = RATES[(RATES.indexOf(L.rate) + 1) % RATES.length] || 1;
     store.set("brief.rate", L.rate);
     $("pRate").textContent = L.rate + "×";
-    if (useAI()) { aud.defaultPlaybackRate = L.rate; aud.playbackRate = L.rate; return; }
+    if (useAI() || usePre()) { aud.defaultPlaybackRate = L.rate; aud.playbackRate = L.rate; return; }
     if (L.on && !L.paused) { L.token++; tts.cancel(); const tk = L.token; setTimeout(() => speakNext(tk), 60); }
   }
   function highlightPara(n) {
@@ -2499,7 +2580,7 @@ const handle = async (m, post) => {
     h("stop", () => { if (L.on) stopListen(); });
   }
   function voiceTip() {
-    if (useAI()) return "";
+    if (useAI() || usePre()) return "";
     const best = voices.some(v => /natural|neural|online|premium|enhanced/i.test(v.name));
     if (best) return "";
     const tip = device.os === "ios" ? "On iPhone, go to Settings, Accessibility, Spoken Content, Voices, English. Download a Premium or Enhanced voice, such as Karen or Lee (Australian). Then pick it here."
@@ -2512,12 +2593,14 @@ const handle = async (m, post) => {
     if (!canSpeak && !aiOK) return "";
     loadVoices();
     const want = voicePref(), auto = pickVoice();
-    const ai = aiOK ? `<optgroup label="Natural voices">${AI_VOICES.map(([id, nm, acc]) => `<option value="ai:${id}"${want === "ai:" + id ? " selected" : ""}>${nm} · ${acc}</option>`).join("")}</optgroup>` : "";
+    const pre = PRE ? `<optgroup label="Ready-made (starts instantly, any phone)"><option value="pre"${want === "pre" ? " selected" : ""}>Emma · British</option></optgroup>` : "";
+    const ai = aiOK ? `<optgroup label="Natural voices${PRE ? ", run on this device" : ""}">${AI_VOICES.map(([id, nm, acc]) => `<option value="ai:${id}"${want === "ai:" + id ? " selected" : ""}>${nm} · ${acc}</option>`).join("")}</optgroup>` : "";
     const dev = `<optgroup label="This device's voices"><option value="device"${want === "device" ? " selected" : ""}>Automatic${auto ? ` (${esc(auto.name)})` : ""}</option>${voices.map(v => `<option value="${esc(v.name)}"${v.name === want ? " selected" : ""}>${esc(v.name)} · ${esc(v.lang)}</option>`).join("")}</optgroup>`;
-    const note = !aiOK ? "" : aiBroken ? `<p class="keepnote" style="margin:10px 0 0">The natural voice couldn't load here${aiWhy ? ` (${esc(aiWhy)})` : ""}, so this device's voice is reading for now. Pick a natural voice again to retry.</p>`
+    const note = usePre() ? `<p class="hint">Emma's voice is made with each news update, so it starts straight away and works on any phone. A story that only just arrived is read by ${isIOS ? "your phone's own voice" : "the same voice, made on this device,"} until the next update.</p>`
+      : !aiOK ? "" : aiBroken ? `<p class="keepnote" style="margin:10px 0 0">The natural voice couldn't load here${aiWhy ? ` (${esc(aiWhy)})` : ""}, so this device's voice is reading for now. Pick a natural voice again to retry.</p>`
       : useAI() ? `<p class="hint">Natural voices run on this device, so nothing you listen to is sent anywhere. The voice downloads once (about 90 MB) the first time you listen, then works offline.</p>` : "";
     return `<div class="group"><h2>Listening</h2><div class="card">
-      <div class="field"><label for="setVoice">Voice</label><select id="setVoice">${ai}${dev}</select></div>
+      <div class="field"><label for="setVoice">Voice</label><select id="setVoice">${pre}${ai}${dev}</select></div>
       <div class="field"><span class="lbl">Speed</span>${seg("rate", String(L.rate), RATES.map(r => [String(r), r + "×"]))}</div>
       <button class="field" type="button" id="voiceTry"><span class="lbl">Play a sample<span class="sub">Hear the voice and speed before you listen</span></span><span class="chev" aria-hidden="true">›</span></button>
     </div>${note}${voiceTip()}<p class="hint">Tap Listen on the briefing or any story. The app reads each story in full, then moves to the next. Shortcuts on a keyboard: <kbd>/</kbd> search, <kbd>←</kbd> <kbd>→</kbd> previous and next story, <kbd>S</kbd> save, <kbd>L</kbd> listen.</p></div>`;
@@ -2615,6 +2698,12 @@ const handle = async (m, post) => {
       if (L.on) pauseListen();
       const line = `${greeting()}. Here's your briefing. Five stories, about ten minutes.`;
       hush();
+      if (usePre()) {
+        unlockAudio();
+        preSay(PRE.sample || "").then(url => { aud.onended = aud.onerror = null; aud.src = url; aud.playbackRate = L.rate; aud.play().catch(() => {}); })
+          .catch(() => toast("The sample isn't ready yet. Try again after the next news update."));
+        return;
+      }
       if (useAI()) {
         unlockAudio();
         if (!AI.loaded) toast("Getting the natural voice ready. The first time takes a minute or two.", 5000);
@@ -3100,6 +3189,7 @@ const handle = async (m, post) => {
         state.status = st; TV.items = [];
         for (const k in textCache) delete textCache[k];
         await checkVault();
+        loadPre(st.updatedAt);
       }
       state.loaded = true;
       if (manual) { finishRefresh(changed); if (!changed) toast("You're up to date"); }

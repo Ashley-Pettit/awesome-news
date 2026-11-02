@@ -9,6 +9,8 @@ self.addEventListener("fetch", e => {
   const req = e.request;
   const url = new URL(req.url);
   if (req.method !== "GET" || url.origin !== self.location.origin) return;
+  // Ready-made voice clips change with every update, so they aren't kept (they'd pile up on the phone).
+  if (url.pathname.includes("/data/voice/")) return;
   // One cache entry per file, ignoring the ?v= cache-busting query.
   const key = url.origin + url.pathname;
   // Opening the app always checks for a fresh page, so updates show straight away.
