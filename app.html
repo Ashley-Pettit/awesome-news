@@ -742,7 +742,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
 .bs-hud > * { pointer-events: auto; }
 .bs-hud::before { content: ""; position: fixed; inset: 0 0 auto; height: 62vh; z-index: -1; pointer-events: none;
   background: radial-gradient(120% 70% at 0% 30%, rgba(6, 10, 26, 0.55), rgba(6, 10, 26, 0) 70%), linear-gradient(to bottom, rgba(6, 10, 26, 0.5), rgba(6, 10, 26, 0) 40%); }
-.bs-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.bs-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 40px; }  /* Brisbane lines up with the buttons */
 .bs-place h1 { font-family: var(--display); font-weight: 800; font-size: 1.7rem; line-height: 1; margin: 0; letter-spacing: -0.02em; text-shadow: 0 1px 12px rgba(0, 0, 0, .35); }
 .bs-place .bs-alt { color: var(--bs-dim); margin: 5px 0 0; font-size: 0.8rem; font-family: var(--ui); }
 .bs-done { flex: none; font-family: var(--ui); font-weight: 700; font-size: 0.9rem; color: var(--bs-ink); background: var(--bs-scrim); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border: 1px solid var(--bs-line); border-radius: 999px; padding: 8px 15px; }
