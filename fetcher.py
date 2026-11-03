@@ -614,6 +614,31 @@ def feed_paras(raw):
     return out
 
 
+def split_crop(url):
+    """A wsrv crop that keeps the bigger of two side-by-side photos, or "" for a normal picture."""
+    try:
+        from PIL import Image, ImageFile
+        ImageFile.LOAD_TRUNCATED_IMAGES = True
+        thumb = get("https://wsrv.nl/?url=" + urllib.parse.quote(url, safe="") + "&w=160&h=90&fit=fill&output=png", timeout=20)
+        px = Image.open(io.BytesIO(thumb)).convert("L").resize((160, 90)).load()
+        best, seam = 0, -1
+        for x in range(24, 136):
+            n = sum(1 for y in range(90) if abs(px[x, y] - px[x + 1, y]) > 40)
+            if n > best:
+                best, seam = n, x
+        if best < 0.7 * 90:
+            return ""
+        # The real size (the address's w/h isn't always right): the start of the file has it.
+        req = urllib.request.Request(url, headers={"User-Agent": UA, "Range": "bytes=0-131071"})
+        with urllib.request.urlopen(req, timeout=20) as r:
+            w, h = Image.open(io.BytesIO(r.read(131072))).size
+        cut = round(w * (seam + 1) / 160)
+        # (precrop: crop the full-size picture first, then resize)
+        return f"&cx=0&cy=0&cw={cut - 2}&ch={h}&precrop" if seam >= 64 else f"&cx={cut + 2}&cy=0&cw={w - cut - 2}&ch={h}&precrop"
+    except Exception:
+        return ""
+
+
 def make_inline(url, size, quality):
     try:
         from PIL import Image, ImageOps
@@ -950,6 +975,12 @@ def main():
         for st in unique.values():
             if st["_img"]:
                 st["image"] = st["_img"]
+        # 7NEWS often puts two photos side by side in one picture: find the line between them and keep the bigger one.
+        cand = [st for st in unique.values() if st.get("image", "").startswith("https://images.7news.com.au/")][:160]
+        with cf.ThreadPoolExecutor(8) as ex:
+            for st, crop in zip(cand, ex.map(lambda st: split_crop(st["image"]), cand)):
+                if crop:
+                    st["crop"] = crop
     else:
         jobs = {}
         for items in sections.values():

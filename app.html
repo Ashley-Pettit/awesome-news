@@ -1524,7 +1524,10 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
       : `${st.neg} of ${st.all} stories today read as negative. Slide to see fewer of them.`;
   }
 
+  // Two-photo pictures the news update has already found (fetcher.py split_crop): the crop that keeps one photo.
+  const CROPS = new Map();
   function items(id) {
+    for (const i of state.feeds[sectionKey(id)]?.items || []) if (i.crop && i.image) CROPS.set(i.image, i.crop);
     let list = (state.feeds[sectionKey(id)]?.items || []).map(i => ({ ...i, _sec: tagFor(id), _sid: id, _new: !!state.prevVisit && Date.parse(i.published) > state.prevVisit }));
     if (id === "headlines") {  // stories already in your Local tab don't repeat here
       const local = new Set((state.feeds[sectionKey("local")]?.items || []).map(i => i.id));
@@ -1776,7 +1779,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     if (!/^https?:/.test(u)) return u;
     const sbs = u.match(/assets\.sbs\.com\.au\/.*[?&]url=([^&]+)/);
     const src = sbs ? decodeURIComponent(sbs[1]) : bigPic(u);
-    return `https://wsrv.nl/?url=${encodeURIComponent(src)}${SPLIT[u] || ""}&w=1080&output=jpg&q=78`;  // beta: one photo of a pair
+    return `https://wsrv.nl/?url=${encodeURIComponent(src)}${CROPS.get(u) || SPLIT[u] || ""}&w=1080&output=jpg&q=78`;  // beta: one photo of a pair
   }
   function bigPic(u) {
     return String(u || "")
@@ -1995,12 +1998,12 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     u = String(u || ""); if (!/^https?:/.test(u)) return u;
     const sbs = u.match(/assets\.sbs\.com\.au\/.*[?&]url=([^&]+)/);
     const src = big ? (sbs ? decodeURIComponent(sbs[1]) : bigPic(u)) : u.replace(/(ichef\.bbci\.co\.uk\/(?:ace|news)\/(?:standard|ws))\/\d+\//, "$1/480/");
-    return `https://wsrv.nl/?url=${encodeURIComponent(src)}${SPLIT[u] || ""}&w=${big ? 900 : 400}&output=jpg&q=80`;
+    return `https://wsrv.nl/?url=${encodeURIComponent(src)}${CROPS.get(u) || SPLIT[u] || ""}&w=${big ? 900 : 400}&output=jpg&q=80`;
   };
   // Beta: 7NEWS often puts two photos side by side in one picture. Spot the line down the middle and show just one.
-  const SPLIT = (() => { try { const v = store.get("brief.split", {}); return v && typeof v === "object" ? v : {}; } catch { return {}; } })();
+  const SPLIT = (() => { try { const v = store.get("brief.split2", {}); return v && typeof v === "object" ? v : {}; } catch { return {}; } })();  // (brief.split held crops without &precrop, which did nothing)
   async function checkSplit(u) {
-    if (u in SPLIT) return false;
+    if (u in SPLIT || CROPS.has(u)) return false;
     const m = u.match(/w(\d+)h(\d+)\.(?:jpe?g|png|webp)/i); if (!m) { SPLIT[u] = ""; return false; }
     try {
       const img = new Image(); img.crossOrigin = "anonymous";
@@ -2011,10 +2014,10 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
       const d = g.getImageData(0, 0, 160, 90).data, lum = (x, y) => { const k = (y * 160 + x) * 4; return 0.3 * d[k] + 0.59 * d[k + 1] + 0.11 * d[k + 2]; };
       let seam = -1;
       for (let x = 60; x < 100 && seam < 0; x++) { let n = 0; for (let y = 0; y < 90; y++) if (Math.abs(lum(x, y) - lum(x + 1, y)) > 40) n++; if (n / 90 > 0.7) seam = x; }
-      SPLIT[u] = seam > 0 ? `&cx=0&cy=0&cw=${Math.round(+m[1] * seam / 160)}&ch=${m[2]}` : "";
+      SPLIT[u] = seam > 0 ? `&cx=0&cy=0&cw=${Math.round(+m[1] * seam / 160)}&ch=${m[2]}&precrop` : "";
     } catch { return false; }
     const keys = Object.keys(SPLIT); if (keys.length > 400) for (const k of keys.slice(0, keys.length - 400)) delete SPLIT[k];
-    store.set("brief.split", SPLIT);
+    store.set("brief.split2", SPLIT);
     return !!SPLIT[u];
   }
   let splitBusy = false;
