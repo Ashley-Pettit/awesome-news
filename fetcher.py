@@ -107,6 +107,10 @@ REGIONS = {
     "tas": ("Tasmania", [], r"Tasmanian?s?|Hobart|Launceston|Devonport|Burnie", r"Tas"),
     "act": ("Canberra", [], r"Canberra|Australian Capital Territory", r"ACT"),
     "nt": ("Northern Territory", [], r"Darwin|Northern Territory|Alice Springs|Katherine|Arnhem|Tiwi|Wadeye", r"NT"),
+    # A town, not a state: Inverloch and the Bass Coast, from the local paper (the South Gippsland Sentinel-Times).
+    "inv": ("Inverloch", [("Sentinel-Times", "https://www.sgst.com.au/feed/")],
+            r"Inverloch|Bass Coast|Wonthaggi|Leongatha|San Remo|Phillip Island|Cowes|Cape Paterson|Venus Bay|Tarwin|Korumburra|"
+            r"Kilcunda|Anderson Inlet|Bunurong|Mirboo North|South Gippsland", r"(?!x)x"),
 }
 # National feeds mined for each region's place names.
 REGION_MINE = [("ABC News", ABC_JUST_IN), ("ABC News", ABC_TOP), ("SBS News", SBS_AUSTRALIA), ("SBS News", SBS_LATEST),
@@ -181,7 +185,9 @@ LOGAN_RSS = ["https://www.logan.qld.gov.au/rss/news", "http://www.logan.qld.gov.
 WARN_KIND = re.compile(r"\b(Severe Thunderstorm|Severe Weather|Heatwave|Fire Weather|Flood Warning|Tropical Cyclone|Tsunami)\b", re.I)
 SEQ = re.compile(r"\b(Southeast Queensland|South East Queensland|Brisbane|Logan|Ipswich|Moreton|Gold Coast|Redland|Scenic Rim|Bremer|"
                  r"Lockyer|Southeast Coast|Queensland\)?$|\(QLD\)$)", re.I)
-WARN_FEEDS = {"qld": ("https://www.bom.gov.au/fwo/IDZ00056.warnings_qld.xml", SEQ)}
+WARN_FEEDS = {"qld": ("https://www.bom.gov.au/fwo/IDZ00056.warnings_qld.xml", SEQ),
+              "vic": ("https://www.bom.gov.au/fwo/IDZ00059.warnings_vic.xml", re.compile(r"\b(Central|Melbourne|Port Phillip|Yarra|Maribyrnong)\b", re.I)),
+              "inv": ("https://www.bom.gov.au/fwo/IDZ00059.warnings_vic.xml", re.compile(r"\b(West and South Gippsland|South Gippsland|Bass Coast|Gippsland|Westernport|Phillip Island|Powlett|Tarwin)\b", re.I))}
 # Logan's own local news, each with its pictures (and MyCity Logan's whole article in its feed).
 LOGAN_FEEDS = [("MyCity Logan", "https://mycitylogan.com.au/feed/"), ("Queensland Police", "https://mypolice.qld.gov.au/logan/feed/"),
                ("Jimboomba Times", "https://www.jimboombatimes.com.au/rss.xml")]
@@ -193,7 +199,7 @@ PER_INTEREST = 30
 NO_MINE = {"PC Gamer", "Kotaku", "Startup Daily", "Good News Network", "Positive News"}  # too niche to lend stories to other interests
 MAX_AGE_INTEREST = timedelta(days=10)  # niche feeds publish less often
 
-CITIES = {"logan": ("Logan", -27.64, 153.11), "qld": ("Brisbane", -27.47, 153.03), "nsw": ("Sydney", -33.87, 151.21), "vic": ("Melbourne", -37.81, 144.96),
+CITIES = {"logan": ("Logan", -27.64, 153.11), "inv": ("Inverloch", -38.63, 145.73), "qld": ("Brisbane", -27.47, 153.03), "nsw": ("Sydney", -33.87, 151.21), "vic": ("Melbourne", -37.81, 144.96),
           "wa": ("Perth", -31.95, 115.86), "sa": ("Adelaide", -34.93, 138.6), "tas": ("Hobart", -42.88, 147.33),
           "act": ("Canberra", -35.28, 149.13), "nt": ("Darwin", -12.46, 130.84)}
 SECTION_ORDER = ["copilot", "politics", "finance", "ai", "tech", "headlines"]
@@ -498,9 +504,14 @@ def title_key(title):
     return re.sub(r"\W+", "", title.lower())[:80]
 
 
+NOT_NEWS_CATS = {"jobs", "job", "careers", "real estate", "property listings", "digital editions", "classifieds", "advertising", "sponsored"}
+
+
 def to_story(it, source, now, max_age=MAX_AGE):
     """Feed entry -> story dict, or None when it should be skipped."""
     url, title = it["url"], it["title"]
+    if any((c or "").strip().lower() in NOT_NEWS_CATS for c in it.get("cats", [])):
+        return None
     if not url.startswith("http") or not title:
         return None
     if SKIP_TITLE.search(title) or SKIP_URL.search(url) or is_sport(it):
