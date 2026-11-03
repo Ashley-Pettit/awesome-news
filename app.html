@@ -704,6 +704,17 @@ body.locked .player { z-index: 45; bottom: calc(env(safe-area-inset-bottom, 0px)
 .danger { color: #b3261e; font-weight: 650; }
 :root[data-theme="dark"] .danger { color: #ff8a80; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .danger { color: #ff8a80; } }
+/* "Use AI instead" card at the top of Settings (coming soon) */
+.ai-set { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 12px; padding: 12px 14px 12px 12px; border-radius: 16px; text-align: left; font: inherit;
+  color: #ffffff; background: linear-gradient(135deg, #6a4fd8, #4b33a8); box-shadow: 0 8px 22px rgba(90, 62, 194, 0.28); }
+.ai-set:active { transform: scale(0.98); }
+.ai-set .ai-ic { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, 0.2); }
+.ai-set .ai-ic svg { width: 20px; height: 20px; }
+.ai-set b { display: block; font-family: var(--display); font-size: 1rem; letter-spacing: -0.01em; line-height: 1.2; }
+.ai-set small { display: block; font-size: 0.8rem; opacity: 0.88; margin-top: 2px; }
+.ai-set .soon { flex: none; padding: 3px 8px; border-radius: 999px; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; background: rgba(255, 255, 255, 0.2); }
+.ai-set-msg { margin: 8px 2px 0; font-size: 0.84rem; color: var(--muted); }
+.ai-set-msg[hidden] { display: none; }
 .stabs { position: sticky; top: 54px; z-index: 1; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 2px; margin: 14px 0 0; padding: 3px; border-radius: 12px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
 .stabs button { min-height: 40px; padding: 8px 2px; border-radius: 9px; font-size: 0.88rem; font-weight: 650; color: var(--muted); white-space: nowrap; }
 .stabs button[aria-selected="true"] { background: var(--ink); color: var(--bg); }
@@ -2705,6 +2716,12 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     };
     $("sBody").innerHTML = `
       <h1>Settings</h1>
+      <button class="ai-set" type="button" data-ai-settings aria-describedby="aiSetMsg">
+        <span class="ai-ic"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.9L12 2.5zM18.5 15l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9.9-2.6z"/></svg></span>
+        <span style="flex:1;min-width:0"><b>Think settings are boring?</b><small>Click here to use AI instead and I'll update the settings for you</small></span>
+        <span class="soon">Soon</span>
+      </button>
+      <p class="ai-set-msg" id="aiSetMsg" role="status" hidden>This feature isn't available yet. It's coming soon.</p>
       <div class="stabs" role="tablist" aria-label="Settings sections">${STABS.map(([id, label]) => `<button type="button" role="tab" data-stab="${id}" aria-selected="${id === tab}">${label}</button>`).join("")}</div>
       <div role="tabpanel">${panes[tab]}</div>`;
     // Size the A buttons so they read as small to large.
@@ -3658,6 +3675,7 @@ const handle = async (m, post) => {
     const close = t.closest("[data-close]");
     if (close) { hideSheet(close.dataset.close); return; }
     if (t.closest("[data-open-settings]") || t.closest("#settingsBtn")) { openSettings(); return; }
+    if (t.closest("[data-ai-settings]")) { const m = $("aiSetMsg"); if (m) m.hidden = false; toast("AI settings aren't available yet. Coming soon."); return; }
     if (t.closest("[data-open-interests]")) { openInterests(); return; }
     if (t.closest("[data-open-weather]")) { openWeather(); return; }
     const pk = t.closest("[data-pick]");
