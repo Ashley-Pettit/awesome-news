@@ -153,6 +153,18 @@ INTERESTS = [
     ("wildlife", "Wildlife & nature", "planet", [("Mongabay", "https://news.mongabay.com/feed/")],
      r"wildlife|species|animals?|birds?|koalas?|kangaroos?|reefs?|whales?|sharks?|crocs?|crocodiles?|turtles?|conservation|endangered|extinct\w*|insects?|bees?|forests?|national parks?"),
 ]
+# Logan: the council's own news, a news search, and any story from any feed that's about the City of Logan.
+LOGAN_RE = re.compile(r"\b(Logan (City|Council|councill?ors?|Hospital|Central|Village|Reserve|Motorway|River|region|mayor|residents?|police|area|community|families|schools?)|"
+                      r"City of Logan|Logan['\u2019]s|(in|at|from|across|around|near|south of) Logan|Loganholme|Loganlea|Beenleigh|Woodridge|Slacks Creek|Browns Plains|"
+                      r"Jimboomba|Shailer Park|Daisy Hill|Yarrabilba|Eagleby|Crestmead|Edens Landing|Holmview|Kingston Butter Factory|Jon Raven)\b", re.I)
+LOGAN_NOT = re.compile(r"\b(Utah|Cache Valley|Herald Journal|KSL|Deseret|Mark Anderson|USU|Aggies|Logan Paul|Logan Roy|Logan Sargeant|Logan Lerman|Logan Henderson|Wolverine|Ohio|West Virginia)\b", re.I)
+LOGAN_NEWS = "https://www.logan.qld.gov.au/news"
+LOGAN_RSS = ["https://www.logan.qld.gov.au/rss/news", "http://www.logan.qld.gov.au/about-council/news-and-publications/connect/rss/feeds/latest-news"]
+LOGAN_SEARCH = "https://news.google.com/rss/search?q=" + urllib.parse.quote_plus(
+    '("Logan City Council" OR "City of Logan" OR "Logan mayor" OR "Logan Hospital" OR "Logan police" OR Beenleigh OR Jimboomba OR Woodridge OR Loganholme OR "Browns Plains" OR "Logan Central" OR "Logan Village" OR Yarrabilba OR "Shailer Park" OR "Slacks Creek") when:21d') + "&hl=en-AU&gl=AU&ceid=AU:en"
+MAX_AGE_LOGAN = timedelta(days=21)
+PER_LOGAN = 40
+
 INTEREST_GROUPS = [("news", "News"), ("tech", "Tech & science"), ("life", "Life"), ("culture", "Culture"), ("planet", "Planet")]
 PER_INTEREST = 30
 NO_MINE = {"PC Gamer", "Kotaku", "Startup Daily", "Good News Network", "Positive News"}  # too niche to lend stories to other interests
@@ -241,6 +253,8 @@ CC_SOURCES = {
     "NASA": ("Public domain", "https://www.nasa.gov/nasa-brand-center/images-and-media/"),
     "Mongabay": ("CC BY-ND 4.0", "https://creativecommons.org/licenses/by-nd/4.0/"),
     "KFF Health News": ("CC BY-NC-ND 4.0", "https://creativecommons.org/licenses/by-nc-nd/4.0/"),
+    # Council news is published as open data (data.gov.au "Logan City News & Events").
+    "Logan City Council": ("CC BY 3.0 AU", "https://creativecommons.org/licenses/by/3.0/au/"),
 }
 
 
@@ -358,6 +372,18 @@ def parse_feed(url):
             "cats": [c.get("term") or c.get("label") for c in en.findall("atom:category", NS)],
         })
     return out
+
+
+def logan_council():
+    """The council's newsroom feed, where it has one (its stories also come through the news search)."""
+    for u in LOGAN_RSS:
+        try:
+            got = parse_feed(u)
+            if got:
+                return got
+        except Exception:
+            pass
+    return []
 
 
 def is_sport(it):
@@ -727,6 +753,50 @@ def main():
                 items.append(st)
         sections[iid] = sorted(items, key=lambda x: x["published"], reverse=True)[:PER_INTEREST]
 
+    # 3c. Logan: the council's news, a news search, and anything from any feed that's about the City of Logan.
+    if a.interests == "all":
+        lg = []
+        try:
+            lg += [("Logan City Council", it) for it in logan_council()]
+        except Exception as e:
+            errors.append(f"{LOGAN_NEWS}: {e}")
+        try:
+            for it in parse_feed(LOGAN_SEARCH):
+                m = re.match(r"^(.*\S)\s+-\s+([^-]{2,60})$", it["title"])  # "Headline - Publisher"
+                if m:
+                    it["title"] = m.group(1)
+                if not (LOGAN_RE.search(it["title"]) or re.search(r"\bLogan\b", it["title"])) or LOGAN_NOT.search(f"{it['title']} {m.group(2) if m else ''}"):
+                    continue
+                lg.append((m.group(2).strip() if m else "News search", dict(it, summary="", content="")))
+        except Exception as e:
+            errors.append(f"news search: {e}")
+        mined = {}
+        for u in raw:
+            mined.setdefault(u, feed_source.get(u))
+        for r in REGIONS.values():
+            for src, u in r[1]:
+                mined[u] = mined.get(u) or src
+        for src, u in REGION_MINE:
+            mined[u] = mined.get(u) or src
+        for u, src in mined.items():
+            for it in raw.get(u, []):
+                text = f"{it['title']} {clean(it['summary'], 400)}"
+                if src and LOGAN_RE.search(text) and not LOGAN_NOT.search(text):
+                    lg.append((src, it))
+        items, su, stt = [], set(), set()
+        for src, it in lg:
+            st = to_story(it, src, now, MAX_AGE_LOGAN)
+            if not st or LOGAN_NOT.search(st["title"]):
+                continue
+            k, t = url_key(st["url"]), title_key(st["title"])
+            if k in su or t in stt:
+                continue
+            su.add(k)
+            stt.add(t)
+            items.append(st)
+        # The council's own and fuller stories are kept ahead of headline-only search results.
+        sections["logan"] = sorted(items, key=lambda x: x["published"], reverse=True)[:PER_LOGAN]
+
     # Same story in several sections -> one shared object, so pictures and text are fetched once.
     unique = {}
     for name, items in sections.items():
@@ -740,7 +810,8 @@ def main():
         for st in unique.values():
             st.pop("_text", None)
     texts = {st["id"]: dict(st["_text"], cc=False) for st in unique.values() if st.get("_text")}
-    todo = [st for st in unique.values() if not st.get("_text") and (wants_text(st) or not st["_img"])]
+    # (News search results link through news.google.com, which has no article or picture of its own to read.)
+    todo = [st for st in unique.values() if not st.get("_text") and (wants_text(st) or not st["_img"]) and "news.google.com" not in st["url"]]
     with cf.ThreadPoolExecutor(12) as ex:
         for st, (img, text) in zip(todo, ex.map(lambda s: read_page(s, wants_text(s)), todo)):
             if img and not st["_img"]:
@@ -954,7 +1025,8 @@ def main():
         "updatedAt": stamp,
         "counts": counts,
         "regions": [{"id": r, "label": REGIONS[r][0]} for r in regions],
-        "interests": [{"id": "copilot", "label": "Microsoft Copilot", "group": "tech"}] + [{"id": i[0], "label": i[1], "group": i[2]} for i in interests],
+        "interests": [{"id": "copilot", "label": "Microsoft Copilot", "group": "tech"}] + [{"id": i[0], "label": i[1], "group": i[2]} for i in interests]
+                     + ([{"id": "logan", "label": "Logan", "group": "news"}] if "logan" in sections else []),
         "weather": weather,
         "groups": [{"id": g, "label": l} for g, l in INTEREST_GROUPS],
         "fullSources": sorted(CC_SOURCES),
