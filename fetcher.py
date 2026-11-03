@@ -1364,15 +1364,21 @@ def main():
     except Exception as e:
         tv = []
         errors.append(f"TV: {e}"[:160])
-    if len(tv) < 6 and a.archive_from:
-        # YouTube's feed was down: keep the last good clips (up to four days old) so TV still works.
+    got = {it.get("channel") for it in tv}
+    if a.archive_from and (len(tv) < 6 or len(got) < len(TV_CHANNELS)):
+        # A channel's YouTube feed was down (it often is, a few at a time): keep that channel's last good clips
+        # (up to four days old) so TV isn't left with one channel.
         try:
             prev = json.loads(get(a.archive_from.rstrip("/") + f"/data/tv.json?v={int(now.timestamp())}", timeout=20)).get("items", [])
             have = {it["id"] for it in tv}
             keep = (now - timedelta(days=4)).strftime("%Y-%m-%dT%H:%M:%SZ")
-            tv += [it for it in prev if it.get("id") not in have and it.get("published", "") >= keep]
+            tv += [it for it in prev if it.get("id") not in have and it.get("published", "") >= keep and (len(tv) < 6 or it.get("channel") not in got)]
         except Exception as e:
             errors.append(f"TV carry-over: {e}"[:160])
+        lanes = {}
+        for it in tv:
+            lanes.setdefault(it.get("channel"), []).append(it)
+        tv = [it for r in range(8) for lane in lanes.values() if r < len(lane) for it in [lane[r]]]  # channels take turns again
     with open(os.path.join(a.out, "tv.json"), "w") as f:
         json.dump({"updatedAt": stamp, "items": tv}, f, ensure_ascii=False, separators=(",", ":"))
     for n, ch in enumerate(chunks, 1):
