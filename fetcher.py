@@ -606,7 +606,10 @@ def is_sport(it):
 def url_key(url):
     base = re.sub(r"[?#].*$", "", url).rstrip("/")
     m = re.search(r"[?&]id=(\d+)", url)
-    return f"{base}#{m.group(1)}" if m and base.endswith("/roadmap") else base  # roadmap entries differ only by ?id=
+    if m and base.endswith("/roadmap"):
+        return f"{base}#{m.group(1)}"  # roadmap entries differ only by ?id=
+    v = re.search(r"[?&]v=([\w-]{6,})", url)
+    return f"{base}#{v.group(1)}" if v and base.endswith("youtube.com/watch") else base  # every YouTube video is watch?v=...
 
 
 def title_key(title):
