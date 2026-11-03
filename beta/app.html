@@ -2051,6 +2051,21 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     store.set("brief.split2", SPLIT);
     return !!SPLIT[u];
   }
+  // Pictures on screen that are still loading after a few seconds: switch to the small copy (often already
+  // loaded for the blurred background), then to the original, so nothing sits blank.
+  function picRescue() {
+    clearTimeout(picRescue.t);
+    picRescue.t = setTimeout(() => {
+      const vh = innerHeight, vw = innerWidth;
+      for (const im of document.querySelectorAll(".pic img:not(.bgb)")) {
+        if (im.complete && im.naturalWidth) continue;
+        const r = im.getBoundingClientRect(); if (r.bottom < 0 || r.top > vh || r.right < 0 || r.left > vw) continue;
+        if (im.dataset.s && im.src !== im.dataset.s) im.src = im.dataset.s;
+        else if (im.dataset.o && im.src !== im.dataset.o) im.src = im.dataset.o;
+      }
+    }, 4000);
+  }
+  document.addEventListener("scroll", () => picRescue(), { passive: true, capture: true });
   let splitBusy = false;
   async function scanSplits() {
     if (splitBusy) return; splitBusy = true;
@@ -2059,7 +2074,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
       for (const u of urls) if (await checkSplit(u)) document.querySelectorAll("img[data-o]").forEach(im => { if (im.dataset.o === u) im.src = feedPic(u, im.dataset.b === "1"); });
     } finally { splitBusy = false; }
   }
-  const pic = (i, cls = "", big = false, whole = false) => `<div class="pic ${cls}">${i.image && whole ? `<img class="bgb" data-o="${esc(i.image)}" data-b="0" src="${esc(feedPic(i.image, false))}" alt="" aria-hidden="true" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : ""}${i.image ? `<img src="${esc(feedPic(i.image, big))}" data-o="${esc(i.image)}" data-b="${big ? 1 : 0}" onerror="if(this.dataset.o&&this.src!==this.dataset.o)this.src=this.dataset.o" alt="" loading="${cls ? "eager" : "lazy"}" decoding="async" referrerpolicy="no-referrer">` : ""}<span class="mono" aria-hidden="true"${i.image ? " hidden" : ""}>${esc(mono(i.source))}</span></div>`;
+  const pic = (i, cls = "", big = false, whole = false) => `<div class="pic ${cls}">${i.image && whole ? `<img class="bgb" data-o="${esc(i.image)}" data-b="0" src="${esc(feedPic(i.image, false))}" alt="" aria-hidden="true" loading="eager" decoding="async" referrerpolicy="no-referrer">` : ""}${i.image ? `<img src="${esc(feedPic(i.image, big))}" data-o="${esc(i.image)}" data-b="${big ? 1 : 0}" data-s="${big ? esc(feedPic(i.image, false)) : ""}" onerror="if(this.dataset.o&&this.src!==this.dataset.o)this.src=this.dataset.o" alt="" loading="${cls || whole ? "eager" : "lazy"}" fetchpriority="${cls || whole ? "high" : "auto"}" decoding="async" referrerpolicy="no-referrer">` : ""}<span class="mono" aria-hidden="true"${i.image ? " hidden" : ""}>${esc(mono(i.source))}</span></div>`;
   const secColour = i => colourOf(i._sid);
   const meta = (i, withSec) => `<div class="meta">${withSec && i._sec ? `<span class="sec" style="--sc:${secColour(i)}">${esc(i._sec)}</span><span class="sep"></span>` : ""}<span class="src">${esc(i.source)}</span><span class="sep"></span><time datetime="${esc(i.published)}">${esc(ago(i.published))}</time></div>`;
   const heroCard = (i, solo, withSec, eager) => `<article class="story hcard${solo ? " solo" : ""}${readCls(i)}" style="--hc:${secColour(i)}">
@@ -2250,6 +2265,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   function render(keepScroll) {
     renderHeader(); listenArt();
     ("requestIdleCallback" in window ? requestIdleCallback : setTimeout)(() => scanSplits());  // beta: two-photo pictures
+    picRescue();
     renderTabs();
     if (!state.loaded) return;
     const y = window.scrollY, cur = currentTab(), railX = $("heroRail")?.scrollLeft || 0;
