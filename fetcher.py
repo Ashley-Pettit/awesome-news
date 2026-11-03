@@ -176,7 +176,7 @@ INTERESTS = [
                                                  ("The Dodo", "https://www.youtube.com/feeds/videos.xml?channel_id=UCINb0wqPz-A0dV9nARjJlOQ")],
      r"wildlife|species|animals?|birds?|koalas?|kangaroos?|reefs?|whales?|sharks?|crocs?|crocodiles?|turtles?|conservation|endangered|extinct\w*|insects?|bees?|forests?|national parks?"),
     ("birds", "Birds", "planet", [("eBird", EBIRD_NEWS), ("The Dodo", "https://www.youtube.com/feeds/videos.xml?channel_id=UCINb0wqPz-A0dV9nARjJlOQ"),
-                                  ("BirdLife Australia", "https://birdlife.org.au/news/feed/"), ("All About Birds", "https://www.allaboutbirds.org/news/feed/"),
+                                  ("BirdLife Australia", "https://birdlife.org.au/news/feed/"),
                                   ("Birds in Backyards", "https://www.birdsinbackyards.net/news/rss.xml"), ("Australian Geographic", "https://www.australiangeographic.com.au/feed/"),
                                   ("The Guardian", "https://www.theguardian.com/environment/birds/rss")],
      BIRD_WORDS),
@@ -234,6 +234,7 @@ LOOSE_SOURCES = {"7NEWS", "7NEWS Brisbane", "The Guardian", "The Conversation", 
                  "New Scientist", "Smithsonian", "ScienceDaily", "Australian Geographic", "ScienceAlert", "New Atlas"}
 # Sources whose stories go first in a topic.
 PRIORITY = {"birds": ["The Dodo", "eBird"], "wildlife": ["The Dodo"]}
+TITLE_ONLY = {"The Dodo"}  # its video descriptions carry the same links and tags every time
 TRUSTED_IN = {("wildlife", "The Dodo")}  # animal rescue videos: all of them belong in Wildlife & nature  # no one source takes more than this share (7NEWS posts crime all day)
 NO_MINE = {"PC Gamer", "Kotaku", "Startup Daily", "Good News Network", "Positive News"}  # too niche to lend stories to other interests
 MAX_AGE_INTEREST = timedelta(days=10)  # niche feeds publish less often
@@ -556,6 +557,16 @@ def ebird_news():
         u = m.group(1) if m.group(1).startswith("http") else "https://ebird.org" + m.group(1)
         if u not in links and not re.search(r"/news/(page|tag|category|archive)", u):
             links.append(u)
+    if not links:  # the page draws its list with script: find its articles through a news search instead
+        try:
+            q = "https://news.google.com/rss/search?" + urllib.parse.urlencode({"q": "site:ebird.org when:60d", "hl": "en-AU", "gl": "AU", "ceid": "AU:en"})
+            found = [it["url"] for it in parse_feed(q)][:15]
+            with cf.ThreadPoolExecutor(6) as ex:
+                for real in ex.map(gnews_real_url, found):
+                    if real and "ebird.org/" in real and real not in links and not re.search(r"/(checklist|hotspot|species|region|map|explore|targets)/", real):
+                        links.append(real.split("?")[0])
+        except Exception:
+            pass
     out = []
     for u in links[:12]:
         try:
@@ -993,7 +1004,8 @@ def main():
                 st = to_story(it, source, now, MAX_AGE_INTEREST)
                 if not st or (url not in own and not kw.search(st["title"])):
                     continue
-                if url in own and kw and source in LOOSE_SOURCES and (iid, source) not in TRUSTED_IN and not kw.search(f"{st['title']} {clean(st['summary'] or '')}"):
+                if url in own and kw and source in LOOSE_SOURCES and (iid, source) not in TRUSTED_IN and \
+                        not kw.search(st["title"] if source in TITLE_ONLY else f"{st['title']} {clean(st['summary'] or '')}"):
                     continue  # filed under this topic by its source, but not about it
                 k, t = url_key(st["url"]), title_key(st["title"])
                 if k in su or t in stt:
