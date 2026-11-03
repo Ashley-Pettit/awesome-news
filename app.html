@@ -187,6 +187,8 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
 .lb-fresh:active { transform: scale(0.95); }
 .lb-fresh svg { width: 14px; height: 14px; }
 .lb-fresh[hidden] { display: none; }
+.vid { position: relative; aspect-ratio: 16 / 9; margin: 14px 0 6px; border-radius: 16px; overflow: hidden; background: #000; }
+.vid iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 /* Bureau weather warnings: a line under the forecast, and in Listen after the weather */
 .wxwarn { display: flex; align-items: center; gap: 8px; margin-top: 8px; padding: 9px 12px; border-radius: 12px; font-size: 0.84rem; font-weight: 650; line-height: 1.3;
   color: #8a1c1c; background: #fde8e8; box-shadow: inset 0 0 0 1px #f5c2c2; text-decoration: none; }
@@ -1258,7 +1260,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   const PUBLISHERS = [
     { id: "ABC", label: "ABC News" }, { id: "SBS", label: "SBS News" }, { id: "BBC", label: "BBC" }, { id: "The Guardian", label: "The Guardian" }, { id: "7NEWS", label: "7NEWS" },
     { id: "The Conversation", label: "The Conversation" }, { id: "360info", label: "360info" }, { id: "Global Voices", label: "Global Voices" },
-    { id: "NASA", label: "NASA" }, { id: "EFF", label: "EFF" }, { id: "Mongabay", label: "Mongabay" }, { id: "KFF Health News", label: "KFF Health News" }, { id: "MyCity Logan", label: "MyCity Logan" }, { id: "Queensland Police", label: "Queensland Police" }, { id: "Jimboomba Times", label: "Jimboomba Times" }, { id: "Logan City Council", label: "Logan City Council" }, { id: "Sentinel-Times", label: "Sentinel-Times" }, { id: "Australian Geographic", label: "Australian Geographic" }, { id: "Wildlife Victoria", label: "Wildlife Victoria" }, { id: "New Scientist", label: "New Scientist" }, { id: "ScienceDaily", label: "ScienceDaily" }, { id: "Smithsonian", label: "Smithsonian" }, { id: "Ars", label: "Ars Technica" }, { id: "TechCrunch", label: "TechCrunch" },
+    { id: "NASA", label: "NASA" }, { id: "EFF", label: "EFF" }, { id: "Mongabay", label: "Mongabay" }, { id: "KFF Health News", label: "KFF Health News" }, { id: "MyCity Logan", label: "MyCity Logan" }, { id: "Queensland Police", label: "Queensland Police" }, { id: "Jimboomba Times", label: "Jimboomba Times" }, { id: "Logan City Council", label: "Logan City Council" }, { id: "Sentinel-Times", label: "Sentinel-Times" }, { id: "Australian Geographic", label: "Australian Geographic" }, { id: "Wildlife Victoria", label: "Wildlife Victoria" }, { id: "New Scientist", label: "New Scientist" }, { id: "ScienceDaily", label: "ScienceDaily" }, { id: "Smithsonian", label: "Smithsonian" }, { id: "The Dodo", label: "The Dodo" }, { id: "Ars", label: "Ars Technica" }, { id: "TechCrunch", label: "TechCrunch" },
     { id: "iTnews", label: "iTnews" }, { id: "Engadget", label: "Engadget" }, { id: "SmartCompany", label: "SmartCompany" },
     { id: "Startup Daily", label: "Startup Daily" }, { id: "ScienceAlert", label: "ScienceAlert" }, { id: "New Atlas", label: "New Atlas" },
     { id: "Knowable", label: "Knowable Magazine" }, { id: "Space.com", label: "Space.com" }, { id: "PC Gamer", label: "PC Gamer" },
@@ -1272,7 +1274,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     { id: "sa", label: "South Australia" }, { id: "tas", label: "Tasmania" }, { id: "act", label: "Canberra" }, { id: "nt", label: "Northern Territory" }, { id: "inv", label: "Inverloch" }];
   const FOR_YOU_PER_SECTION = 7;
   const FEATURE_EVERY = 6;
-  const MONO = { "ABC": "ABC", "SBS": "SBS", "BBC": "BBC", "M365": "365", "Microsoft": "MS", "Office 365": "IT", "Windows Central": "WC", "Ars": "Ars", "360info": "360", "Global Voices": "GV", "NASA": "NASA", "EFF": "EFF", "Mongabay": "MB", "Logan City Council": "LCC", "MyCity Logan": "ML", "Queensland Police": "QPS", "Jimboomba Times": "JT", "Sentinel-Times": "ST", "Australian Geographic": "AG", "Wildlife Victoria": "WV", "New Scientist": "NS", "ScienceDaily": "SD", "Smithsonian": "SM", "KFF": "KFF", "TechCrunch": "TC", "iTnews": "iT", "The Conversation": "C", "The Guardian": "G", "7NEWS": "7" };
+  const MONO = { "ABC": "ABC", "SBS": "SBS", "BBC": "BBC", "M365": "365", "Microsoft": "MS", "Office 365": "IT", "Windows Central": "WC", "Ars": "Ars", "360info": "360", "Global Voices": "GV", "NASA": "NASA", "EFF": "EFF", "Mongabay": "MB", "Logan City Council": "LCC", "MyCity Logan": "ML", "Queensland Police": "QPS", "Jimboomba Times": "JT", "Sentinel-Times": "ST", "Australian Geographic": "AG", "Wildlife Victoria": "WV", "New Scientist": "NS", "ScienceDaily": "SD", "Smithsonian": "SM", "The Dodo": "Dodo", "KFF": "KFF", "TechCrunch": "TC", "iTnews": "iT", "The Conversation": "C", "The Guardian": "G", "7NEWS": "7" };
   const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || "Australia/Brisbane";
   const SIZES = { s: "1rem", m: "1.12rem", l: "1.24rem", xl: "1.38rem" };
 
@@ -2485,6 +2487,8 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     const side = dir > 0 ? state.readerList.slice(idx + 1) : state.readerList.slice(0, idx).reverse();
     return side.find(x => findItem(x)) || null;
   };
+  // A YouTube video story (The Dodo, say): plays right in the reader.
+  const ytId = u => (String(u || "").match(/youtube\.com\/(?:watch\?v=|shorts\/)([\w-]{6,})/) || [])[1] || "";
   function readerHTML(i, body) {
     const idx = state.readerList.indexOf(i.id), total = state.readerList.length;
     const prev = neighbour(i.id, -1), next = neighbour(i.id, 1);
@@ -2496,7 +2500,8 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
       <h1>${esc(i.title)}</h1>
       <div class="byline">${body.author ? `<span>By <b>${esc(body.author)}</b></span>` : ""}<span>${esc(longDate(i.published))}</span>${i.text && i.mins ? `<span>${i.mins} min read</span>` : ""}
         ${canSpeak ? `<button class="listen-btn" type="button" data-listen="story">${nowPlaying && !L.paused ? I.pause + "Pause" : I.phones + "Listen"}</button>` : ""}</div>
-      ${i.image ? pic(i, "hero", true) : ""}
+      ${ytId(i.url) ? `<div class="vid"><iframe src="https://www.youtube-nocookie.com/embed/${ytId(i.url)}?playsinline=1&rel=0" title="${esc(i.title)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe></div>`
+        : i.image ? pic(i, "hero", true) : ""}
       <div class="prose">${body.html}</div>
       ${others.length ? `<div class="also"><div class="label">Also covered by</div>${others.map(o => `<button type="button" data-open="${esc(o.id)}"><span class="as">${esc(o.source)}</span><span class="at">${esc(o.title)}</span></button>`).join("")}</div>` : ""}
       ${p || n ? `<div class="pager">

@@ -160,7 +160,8 @@ INTERESTS = [
                                                  ("Wildlife Victoria", "https://www.wildlifevictoria.org.au/feed"),
                                                  ("New Scientist", "https://www.newscientist.com/subject/life/feed/"),
                                                  ("ScienceDaily", "https://www.sciencedaily.com/rss/plants_animals.xml"),
-                                                 ("Smithsonian", "https://www.smithsonianmag.com/rss/science-nature/")],
+                                                 ("Smithsonian", "https://www.smithsonianmag.com/rss/science-nature/"),
+                                                 ("The Dodo", "https://www.youtube.com/feeds/videos.xml?channel_id=UCINb0wqPz-A0dV9nARjJlOQ")],
      r"wildlife|species|animals?|birds?|koalas?|kangaroos?|reefs?|whales?|sharks?|crocs?|crocodiles?|turtles?|conservation|endangered|extinct\w*|insects?|bees?|forests?|national parks?"),
 ]
 # Logan: the council's own news, a news search, and any story from any feed that's about the City of Logan.
@@ -400,6 +401,15 @@ def parse_feed(url):
             if l.get("rel", "alternate") == "alternate":
                 link = l.get("href", "")
         content = en.findtext("atom:content", namespaces=NS)
+        vid = re.search(r"youtube\.com/(?:watch\?v=|shorts/)([\w-]{6,})", link)
+        if vid:  # a YouTube channel feed (e.g. The Dodo): its picture and description are in media:group
+            desc = en.findtext("media:group/media:description", namespaces=YT_NS) or ""
+            desc = re.sub(r"https?://\S+|#\w+|[\U0001F000-\U0001FFFF\u2600-\u27BF\uFE0F]", " ", desc.split("\n\n")[0])
+            desc = re.sub(r"\s+", " ", desc).strip()
+            out.append({"title": re.sub(r"\s*\|\s*The Dodo\s*$", "", clean(en.findtext("atom:title", namespaces=NS))), "url": link,
+                        "summary": desc[:400], "published": parse_date(en.findtext("atom:published", namespaces=NS)),
+                        "image": f"https://i.ytimg.com/vi/{vid.group(1)}/hqdefault.jpg", "content": "", "cats": ["video"]})
+            continue
         out.append({
             "title": clean(en.findtext("atom:title", namespaces=NS)),
             "url": link,
