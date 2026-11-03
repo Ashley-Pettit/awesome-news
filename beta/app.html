@@ -187,6 +187,27 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
 .lb-fresh:active { transform: scale(0.95); }
 .lb-fresh svg { width: 14px; height: 14px; }
 .lb-fresh[hidden] { display: none; }
+/* Beta: your commute, after the weather in Listen */
+.np-traffic { margin: 0; padding: 14px 16px; border-radius: 18px; background: rgba(255, 255, 255, 0.08); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12); color: #ffffff; }
+.np-traffic[hidden] { display: none; }
+.np-traffic .tr-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.np-traffic .tr-top b { font-family: var(--display); font-size: 1.15rem; letter-spacing: -0.01em; }
+.np-traffic .tr-top span { font-size: 0.86rem; color: rgba(255, 255, 255, 0.7); white-space: nowrap; }
+.np-traffic ul { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
+.np-traffic li { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; font-size: 0.88rem; line-height: 1.35; }
+.np-traffic li i { font-style: normal; font-size: 0.66rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 7px; border-radius: 6px; background: rgba(255, 255, 255, 0.16); }
+.np-traffic li i.hot { background: #e5484d; }
+.np-traffic li small { display: block; color: rgba(255, 255, 255, 0.65); font-size: 0.8rem; }
+.np-traffic .tr-ok { margin: 10px 0 0; font-size: 0.9rem; color: rgba(255, 255, 255, 0.8); }
+.np-traffic .tr-src { margin: 10px 0 0; font-size: 0.7rem; color: rgba(255, 255, 255, 0.5); }
+.np.traffic .np-meta, .np.traffic .np-h, .np.traffic .np-cap, .np.traffic .np-acts { display: none; }
+.linkish { padding: 0; font: inherit; color: var(--accent); background: none; text-decoration: underline; text-underline-offset: 2px; }
+.cm-row { padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.cm-row:last-child { border-bottom: 0; }
+.cm-row .lbl { display: block; font-weight: 550; }
+.cm-row .add { padding: 6px 0 0; }
+.cm-row .add input { text-align: left; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.cm-saved { display: block; font-size: 0.78rem; color: var(--muted); margin-top: 6px; }
 /* Logan news: its own Listen, under the main one */
 .lb-logan { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 8px; padding: 10px 14px 10px 10px; border-radius: 16px; text-align: left; font: inherit;
   color: var(--ink); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
@@ -229,8 +250,10 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
 @media (max-width: 430px) { #np .np-brand span { display: none; } }  /* phone: the logo alone, so the buttons fit */
 #npWk { height: 38px; padding: 0 14px 0 12px; gap: 7px; font-size: 0.86rem; flex: none; background: rgba(255, 255, 255, 0.16); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24); }
 #npWk svg { width: 19px; height: 19px; }
-/* Phones: Personalise shows as its icon, so "Detailed weather" fits beside it */
-@media (max-width: 430px) { #npCust { width: 38px; height: 38px; padding: 0; justify-content: center; font-size: 0; gap: 0; flex: none; } #npCust svg { width: 17px; height: 17px; } }
+/* Personalise sits beside Detailed, same size */
+#npCust { height: 38px; padding: 0 14px 0 12px; gap: 7px; font-size: 0.86rem; flex: none; }
+#npCust svg { width: 17px; height: 17px; }
+@media (max-width: 380px) { #npCust { padding: 0 11px 0 9px; gap: 5px; font-size: 0.76rem; } }
 @media (max-width: 380px) { #npWk { padding: 0 11px 0 9px; gap: 5px; font-size: 0.76rem; } }  /* small phones */
 /* No "Up next" bar under the player */
 #npUpNext { display: none !important; }
@@ -705,6 +728,17 @@ body.locked .player { z-index: 45; bottom: calc(env(safe-area-inset-bottom, 0px)
 .danger { color: #b3261e; font-weight: 650; }
 :root[data-theme="dark"] .danger { color: #ff8a80; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .danger { color: #ff8a80; } }
+/* "Use AI instead" card at the top of Settings (coming soon) */
+.ai-set { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 12px; padding: 12px 14px 12px 12px; border-radius: 16px; text-align: left; font: inherit;
+  color: #ffffff; background: linear-gradient(135deg, #6a4fd8, #4b33a8); box-shadow: 0 8px 22px rgba(90, 62, 194, 0.28); }
+.ai-set:active { transform: scale(0.98); }
+.ai-set .ai-ic { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, 0.2); }
+.ai-set .ai-ic svg { width: 20px; height: 20px; }
+.ai-set b { display: block; font-family: var(--display); font-size: 1rem; letter-spacing: -0.01em; line-height: 1.2; }
+.ai-set small { display: block; font-size: 0.8rem; opacity: 0.88; margin-top: 2px; }
+.ai-set .soon { flex: none; padding: 3px 8px; border-radius: 999px; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; background: rgba(255, 255, 255, 0.2); }
+.ai-set-msg { margin: 8px 2px 0; font-size: 0.84rem; color: var(--muted); }
+.ai-set-msg[hidden] { display: none; }
 .stabs { position: sticky; top: 54px; z-index: 1; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 2px; margin: 14px 0 0; padding: 3px; border-radius: 12px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
 .stabs button { min-height: 40px; padding: 8px 2px; border-radius: 9px; font-size: 0.88rem; font-weight: 650; color: var(--muted); white-space: nowrap; }
 .stabs button[aria-selected="true"] { background: var(--ink); color: var(--bg); }
@@ -1097,7 +1131,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   <div class="np-pic"><img class="np-bg" id="npBg" alt=""><img id="npImg" alt=""><div class="np-mono" id="npMono"></div></div>
   <div class="np-top">
     <div class="np-brand"><img id="npLogo" alt=""><span>Awesome News</span></div>
-    <button type="button" class="np-wkbtn" id="npWk" aria-label="Detailed weather: hear the week ahead" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M8.5 3.5v1.6M3.6 8.4h1.6M5 5l1.1 1.1M13.4 5l-1.1 1.1"/><path d="M5.6 11.6a3.6 3.6 0 1 1 6.6-2.4"/><path d="M8 20.5h9.5a3.5 3.5 0 0 0 .3-7 5 5 0 0 0-9.5 1A3 3 0 0 0 8 20.5z"/></svg>Detailed weather</button>
+    <button type="button" class="np-wkbtn" id="npWk" aria-label="Detailed weather: hear the week ahead" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M8.5 3.5v1.6M3.6 8.4h1.6M5 5l1.1 1.1M13.4 5l-1.1 1.1"/><path d="M5.6 11.6a3.6 3.6 0 1 1 6.6-2.4"/><path d="M8 20.5h9.5a3.5 3.5 0 0 0 .3-7 5 5 0 0 0-9.5 1A3 3 0 0 0 8 20.5z"/></svg>Detailed</button>
     <button type="button" class="np-cust" id="npCust" aria-label="Personalise your stories in Settings" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg>Personalise</button>
     <button type="button" class="np-pos" id="npPos" aria-label="Show the headlines" aria-expanded="false"></button>
     <button type="button" class="np-btn mic" data-cmd aria-pressed="false" aria-label="Voice commands: say skip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
@@ -1114,6 +1148,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     <div class="np-meta"><span class="np-sec" id="npSec"></span><span id="npSrc"></span></div>
     <h2 class="np-h" id="npTitle"></h2>
     <p class="np-cap" id="npCap" aria-live="off"></p>
+    <div class="np-traffic" id="npTraffic" hidden></div>
     <div class="np-acts" id="npActs" hidden>
       <button type="button" class="np-act" id="npLike" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span>More like this</span></button>
       <button type="button" class="np-act" id="npRead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 11h16M4 16h10"/></svg><span>Read along</span></button>
@@ -1817,6 +1852,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     // Section cues ("Next, AI.") are just said, over the story's own picture and headline: no big header screen.
     wx.hidden = true; cue.hidden = p.kind !== "open";
     np.classList.toggle("calm", p.kind === "open");
+    np.classList.toggle("traffic", p.kind === "traffic"); $("npTraffic").hidden = p.kind !== "traffic";
     if (p.kind === "open") npHello();
     if (p.kind === "wk") wxShowDay(p.date);  // the week ahead: the weather steps through each day as it's read
     else if (p.kind !== "open") wxListenOff();
@@ -1896,13 +1932,37 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
       : c <= 80 ? "a few showers" : c <= 81 ? "showers" : c <= 82 ? "heavy showers" : c <= 86 ? "snow showers" : c === 95 ? "storms" : "storms with hail";
   }
   const rainLine = (p, when) => p >= 90 ? ` It's going to rain ${when}.` : p >= 70 ? ` Rain is likely ${when}.` : ` There's a ${p} percent chance of rain.`;  // rain_line() in voice.py
+  // When the rain is due on a day, from the hourly forecast: " Rain is forecast from 8am to 10am." (rain_when() in voice.py)
+  function rainWhen(w, date, when, start = 5) {
+    const hr = w.hourly || {}, t = hr.time || [], p = hr.precipitation_probability || [], c = hr.weather_code || [];
+    const say = h => h % 24 === 0 ? "midnight" : h === 12 ? "midday" : `${h % 12}${h < 12 ? "am" : "pm"}`;
+    const wet = t.map((x, k) => [x, k]).filter(([x, k]) => x.slice(0, 10) === date && +x.slice(11, 13) >= start && (p[k] ?? 0) >= 50).map(([x, k]) => [+x.slice(11, 13), c[k] ?? 0]);
+    if (!wet.length) {
+      const hrs = t.map((x, k) => [p[k] ?? 0, x]).filter(([, x]) => x.slice(0, 10) === date && +x.slice(11, 13) >= start).sort((a, b) => b[0] - a[0]);
+      return { part: hrs.length && hrs[0][0] >= 20 ? (+hrs[0][1].slice(11, 13) < 12 ? "in the morning" : +hrs[0][1].slice(11, 13) < 18 ? "in the afternoon" : "in the evening") : "" };
+    }
+    const spans = [];
+    for (const [h] of wet) { if (spans.length && h - spans[spans.length - 1][1] <= 2) spans[spans.length - 1][1] = h; else spans.push([h, h]); }
+    const what = wet.some(([, k]) => k >= 95) ? "Storms are" : "Rain is", day = when === "today" ? "" : ` ${when}`;
+    if (wet.length >= 14) return { text: ` ${what} forecast most of the day${day}.` };
+    if (spans.length > 2) return { text: ` ${what} forecast on and off${day}, from ${say(spans[0][0])} to ${say(spans[spans.length - 1][1] + 1)}.` };
+    return { text: ` ${what} forecast${day} ${spans.map(([a, b]) => `from ${say(a)} to ${say(b + 1)}`).join(" and again ")}.` };
+  }
+  function rainSay(w, dy, n, when) {
+    const r = rainWhen(w, dy.time[n], when);
+    if (r.text) return r.text;
+    const p = dy.precipitation_probability_max?.[n] ?? 0;
+    if (p < 20) return "";
+    const line = rainLine(p, when);
+    return r.part ? line.slice(0, -1) + `, most likely ${r.part}.` : line;
+  }
   function driveOpening() {
     let wx = "";
     try {
       const v0 = state.wx && wxView(state.wx), n = v0 ? v0.di + 1 : -1;
       if (v0 && isNight() && v0.dy.time[n]) {
         const dy = v0.dy, p = dy.precipitation_probability_max?.[n] ?? 0;
-        wx = ` First, tomorrow's weather in ${state.wx.city}. Expect ${wxExpect(dy.weather_code[n])} tomorrow, with a top of ${Math.round(dy.temperature_2m_max[n])} degrees and a low of ${Math.round(dy.temperature_2m_min[n])}.${p >= 20 ? rainLine(p, "tomorrow") : ""}`;
+        wx = ` First, tomorrow's weather in ${state.wx.city}. Expect ${wxExpect(dy.weather_code[n])} tomorrow, with a top of ${Math.round(dy.temperature_2m_max[n])} degrees and a low of ${Math.round(dy.temperature_2m_min[n])}.${rainSay(state.wx, dy, n, "tomorrow")}`;
       } else if (state.wx) {
         const v = wxView(state.wx);
         wx = ` First, the weather in ${state.wx.city}. It's ${Math.round(v.cur.temperature_2m)} degrees ${wxSay(v.cur.weather_code, v.cur.is_day)}. ${wxSummary(v).replace(/°/g, " degrees").replace(/\((\d+)%\)/g, ", $1 percent").replace(/\((\d+)\)/g, "$1")}`;
@@ -2142,6 +2202,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   }
   function listenArt() {
     const img = $("lbBg"); if (!img || !state.loaded) return;
+    if (commuteSet() && !L.on) commuteNow();  // beta: the drive's ready before Listen is tapped (kept 5 minutes)
     if (!(L.on && L.scope === "logan") && $("lbLoganT")) $("lbLoganT").textContent = loganLine();
     if (!L.on) { const sp = $("lbListen")?.querySelector("span:last-child"); if (sp) sp.innerHTML = lbIdle(); }
     try {
@@ -2672,6 +2733,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
         <button class="field danger" type="button" id="clearSaved">Clear saved stories <span class="sub" style="color:var(--muted)">${state.saved.length} saved</span></button>
       </div></div>`,
       listen: `${listenHTML() || `<p class="hint" style="margin-top:20px">This browser can't read stories out loud.</p>`}${tvAdsHTML()}
+      ${commuteHTML()}
       <div class="group"><h2>Beta</h2><div class="card">
         ${toggle("data-betaheads", "1", !!store.get("brief.betaHeads", false), "Headlines list while listening", "After the weather, see the stories and tap one to hear it next")}
       </div><p class="hint">Still being tried out, so it may change.</p></div>`,
@@ -2682,6 +2744,12 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     };
     $("sBody").innerHTML = `
       <h1>Settings</h1>
+      <button class="ai-set" type="button" data-ai-settings aria-describedby="aiSetMsg">
+        <span class="ai-ic"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.9L12 2.5zM18.5 15l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9.9-2.6z"/></svg></span>
+        <span style="flex:1;min-width:0"><b>Think settings are boring?</b><small>Click here to use AI instead and I'll update the settings for you</small></span>
+        <span class="soon">Soon</span>
+      </button>
+      <p class="ai-set-msg" id="aiSetMsg" role="status" hidden>This feature isn't available yet. It's coming soon.</p>
       <div class="stabs" role="tablist" aria-label="Settings sections">${STABS.map(([id, label]) => `<button type="button" role="tab" data-stab="${id}" aria-selected="${id === tab}">${label}</button>`).join("")}</div>
       <div role="tabpanel">${panes[tab]}</div>`;
     // Size the A buttons so they read as small to large.
@@ -3208,6 +3276,8 @@ const handle = async (m, post) => {
       if (!d.ids.length) { toast(scope === "logan" ? "No Logan stories yet. They come with the next update." : "There's nothing to read out yet"); return; }
       L.scope = scope; L.secOf = d.secOf; L.driveSecs = d.secs;
       // Logan news uses Logan's weather while it plays (your own comes back when it stops).
+      L.commute = null;
+      if (commuteSet()) { const c = await Promise.race([commuteNow(), new Promise(r => setTimeout(r, 4000))]); if (c) L.commute = c; }
       if (scope === "logan") { const lw = await Promise.race([loganWx(), new Promise(r => setTimeout(r, 2500))]); if (lw) { state.wxHome = state.wxHome || state.wx; state.wx = lw; } }
       document.body.classList.add("npstart"); $("npCue").dataset.k = ""; npHello();
       npOpen();
@@ -3289,6 +3359,7 @@ const handle = async (m, post) => {
         // No Emma opening for this hour (e.g. just after midnight, before the morning update): show the weather
         // quietly for a few seconds rather than switching to the phone's voice.
         pre.push(t ? { text: t, para: -1, kind: "open" } : { text: driveOpening(), para: -1, kind: "open", silent: usePre() });
+        pre.push(...trafficParts());  // beta: your drive, straight after the weather
       }
       // No "Next, tech." between sections: straight from one headline to the next.
       L.skipped = false;
@@ -3635,6 +3706,7 @@ const handle = async (m, post) => {
     const close = t.closest("[data-close]");
     if (close) { hideSheet(close.dataset.close); return; }
     if (t.closest("[data-open-settings]") || t.closest("#settingsBtn")) { openSettings(); return; }
+    if (t.closest("[data-ai-settings]")) { const m = $("aiSetMsg"); if (m) m.hidden = false; toast("AI settings aren't available yet. Coming soon."); return; }
     if (t.closest("[data-open-interests]")) { openInterests(); return; }
     if (t.closest("[data-open-weather]")) { openWeather(); return; }
     const pk = t.closest("[data-pick]");
@@ -3799,6 +3871,22 @@ const handle = async (m, post) => {
     if (cs) { confirmTap(cs, "saved", "Tap again to clear saved stories", () => { state.saved = []; store.set("brief.saved", []); renderSettings(); renderHeader(); toast("Saved stories cleared"); }); return; }
   });
 
+  // Beta: save home or work for the commute (looked up once, kept on this phone).
+  document.addEventListener("submit", async e => {
+    const f = e.target.closest?.("[data-commute]"); if (!f) return;
+    e.preventDefault();
+    const k = f.dataset.commute, q = f.querySelector("input").value.trim(), c = CM();
+    if (!q) { delete c[k]; store.set("beta.commute", c); renderSettings(); return; }
+    const btn = f.querySelector("button"); btn.disabled = true; btn.textContent = "Finding…";
+    let hit = null; try { hit = await geocode(q); } catch {}
+    if (!hit) { btn.disabled = false; btn.textContent = "Save"; toast("Couldn't find that address. Try adding the suburb."); return; }
+    c[k] = hit; store.set("beta.commute", c); COMMUTE_CACHE = null;
+    renderSettings(); toast(`${k === "home" ? "Home" : "Work"} saved: ${hit.label}`);
+  });
+  document.addEventListener("click", e => {
+    const b = e.target.closest?.("[data-commute-clear]"); if (!b) return;
+    const c = CM(); delete c[b.dataset.commuteClear]; store.set("beta.commute", c); COMMUTE_CACHE = null; renderSettings();
+  });
   document.addEventListener("submit", e => {
     const f = e.target.closest("[data-add]");
     if (!f) return;
@@ -3923,7 +4011,9 @@ const handle = async (m, post) => {
     const p = k => hr.precipitation_probability?.[k] ?? 0;
     let first = -1, peak = 0, mm = 0;
     for (let k = h; k < end; k++) { if (first < 0 && p(k) >= 50) first = k; peak = Math.max(peak, p(k)); mm += hr.precipitation?.[k] ?? 0; }
-    if (first >= 0) { const storm = (hr.weather_code?.[first] ?? 0) >= 95; out.push(`${storm ? "Storms" : "Rain"} likely ${first === h ? "now" : "from " + clock(hr.time[first])} (${p(first)}%)${mm >= 0.5 ? `, about ${mm < 10 ? mm.toFixed(1) : Math.round(mm)} mm over the next 12 hours` : ""}`); }
+    if (first >= 0) { const storm = (hr.weather_code?.[first] ?? 0) >= 95; let last = first; while (last + 1 < end && p(last + 1) >= 50) last++;
+      const until = last + 1 < hr.time.length ? (+hr.time[last + 1].slice(11, 13) === 0 ? "midnight" : clock(hr.time[last + 1])) : "";
+      out.push(`${storm ? "Storms" : "Rain"} likely ${first === h ? "now" : "from " + clock(hr.time[first])}${until ? (first === h ? " until " : " to ") + until : ""} (${p(first)}%)${mm >= 0.5 ? `, about ${mm < 10 ? mm.toFixed(1) : Math.round(mm)} mm over the next 12 hours` : ""}`); }
     else if (peak >= 25) out.push(`A small chance of a shower (up to ${peak}%)`);
     else out.push("Dry for the next 12 hours");
     const hi = dy.temperature_2m_max?.[di];
@@ -4652,6 +4742,106 @@ const handle = async (m, post) => {
     if (changed) toast("Fresh stories are in");
   }
 
+  // ---- Beta: your commute ----
+  // Home and work go in Settings, Listen. After the weather, Listen tells you about the drive: to work before
+  // midday, home after. Everything's free and needs no sign-up: OpenStreetMap finds the addresses (once, when
+  // you save them), the OSRM route planner gives the usual drive time, and QLDTraffic (Queensland's Department
+  // of Transport and Main Roads, CC BY 4.0) gives the crashes, congestion, hazards, flooding and roadworks now.
+  // Addresses stay on this phone.
+  const QLDT = "https://api.qldtraffic.qld.gov.au/v2/events?apikey=3e83add325cbb69ac4d8e5bf433d770b";  // its public key
+  const CM = () => { try { const v = store.get("beta.commute", {}); return v && typeof v === "object" ? v : {}; } catch { return {}; } };
+  const commuteSet = () => { const c = CM(); return !!(c.home?.lat && c.work?.lat); };
+  async function geocode(q) {
+    const u = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=au&viewbox=152.4,-26.6,153.6,-28.3&q=" + encodeURIComponent(q);
+    const d = await withTimeout(fetch(u, { headers: { "Accept-Language": "en-AU" } }).then(r => r.json()), 10000);
+    const h = d?.[0]; if (!h) return null;
+    const label = String(h.display_name || q).split(",").map(x => x.trim()).filter(x => !/^(Queensland|Australia|\d{4})$/.test(x)).slice(0, 3).join(", ");
+    return { q, label, lat: +h.lat, lon: +h.lon };
+  }
+  let QLDT_CACHE = null;
+  async function trafficEvents() {
+    if (QLDT_CACHE && Date.now() - QLDT_CACHE.at < 5 * 60000) return QLDT_CACHE.list;
+    const d = await withTimeout(fetch(QLDT).then(r => r.json()), 12000);
+    const list = (d?.features || []).filter(f => f?.properties?.status === "Published");
+    QLDT_CACHE = { at: Date.now(), list };
+    return list;
+  }
+  // Metres from a point to the route (a straight-line approximation, fine at city scale).
+  function distToRoute(pt, route) {
+    const k = 111320, cos = Math.cos(pt[1] * Math.PI / 180), X = p => p[0] * k * cos, Y = p => p[1] * k;
+    let best = Infinity;
+    for (let i = 1; i < route.length; i++) {
+      const ax = X(route[i - 1]), ay = Y(route[i - 1]), bx = X(route[i]), by = Y(route[i]), px = X(pt), py = Y(pt);
+      const dx = bx - ax, dy = by - ay, t = dx || dy ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy))) : 0;
+      best = Math.min(best, Math.hypot(px - ax - t * dx, py - ay - t * dy));
+    }
+    return best;
+  }
+  const pointsOf = g => !g ? [] : g.type === "Point" ? [g.coordinates] : g.type === "MultiPoint" || g.type === "LineString" ? g.coordinates
+    : g.type === "MultiLineString" || g.type === "Polygon" ? g.coordinates.flat() : g.type === "GeometryCollection" ? g.geometries.flatMap(pointsOf) : [];
+  let COMMUTE_CACHE = null;
+  async function commuteNow() {
+    const c = CM(); if (!c.home?.lat || !c.work?.lat) return null;
+    const toWork = hourNow() < 12, a = toWork ? c.home : c.work, b = toWork ? c.work : c.home, key = `${toWork}|${a.lat},${a.lon}|${b.lat},${b.lon}`;
+    if (COMMUTE_CACHE?.key === key && Date.now() - COMMUTE_CACHE.at < 5 * 60000) return COMMUTE_CACHE.v;
+    try {
+      const [r, evs] = await Promise.all([
+        withTimeout(fetch(`https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${b.lon},${b.lat}?overview=full&geometries=geojson`).then(x => x.json()), 10000),
+        trafficEvents().catch(() => null)]);
+      const rt = r?.routes?.[0]; if (!rt) return null;
+      const line = rt.geometry.coordinates, now = Date.now();
+      const near = (evs || []).filter(f => {
+        const p = f.properties, t = p.event_type;
+        if (!["Crash", "Congestion", "Hazard", "Flooding", "Roadworks", "Special event"].includes(t)) return false;
+        const st = Date.parse(p.duration?.start || ""), en = Date.parse(p.duration?.end || "");
+        if (st > now || en < now) return false;
+        if ((t === "Roadworks" || t === "Special event") && /no blockage/i.test(p.impact?.impact_type || "")) return false;  // nothing in your way
+        return pointsOf(f.geometry).some(pt => distToRoute(pt, line) < 120);
+      }).map(f => { const p = f.properties; return { type: p.event_type, road: p.road_summary?.road_name || "", place: p.road_summary?.locality || "",
+        impact: p.impact?.impact_type || "", delay: p.impact?.delay || "", what: p.event_subtype || "" }; });
+      const v = { toWork, mins: Math.round(rt.duration / 60), km: Math.round(rt.distance / 100) / 10, from: a.label, to: b.label, events: near.slice(0, 8), more: Math.max(0, near.length - 8) };
+      COMMUTE_CACHE = { key, at: Date.now(), v };
+      return v;
+    } catch { return null; }
+  }
+  const ORDER = ["Crash", "Flooding", "Hazard", "Congestion", "Roadworks", "Special event"];
+  // What's said: Emma's lines are fixed (voice.py records them), the details are on screen. The phone's own voice can say the roads.
+  function trafficParts() {
+    const c = L.commute; if (!c) return [];
+    const n = c.mins <= 20 ? Math.max(2, c.mins) : Math.min(120, Math.round(c.mins / 5) * 5);
+    const parts = [c.toWork ? "Now, your drive to work." : "Now, your drive home.", `It usually takes about ${n} minutes.`];
+    const by = t => c.events.filter(e => e.type === t);
+    if (!c.events.length) parts.push("Nothing's been reported on your way.");
+    else {
+      for (const t of ORDER) {
+        const e = by(t); if (!e.length) continue;
+        const say = usePre() ? ({ Crash: e.length > 1 ? "There are crashes on your way." : "There's a crash on your way.", Flooding: "There's flooding on your way.",
+          Hazard: e.length > 1 ? "There are hazards on your way." : "There's a hazard on your way.", Congestion: "There's heavy traffic on your way.",
+          Roadworks: "There are roadworks on your way.", "Special event": "There's an event on your way." })[t]
+          : `${({ Crash: "A crash", Flooding: "Flooding", Hazard: "A hazard", Congestion: "Heavy traffic", Roadworks: "Roadworks", "Special event": "An event" })[t]} on ${[...new Set(e.map(x => x.road).filter(Boolean))].slice(0, 2).join(" and ") || "your way"}.`;
+        parts.push(say);
+      }
+      if (c.events.some(e => ["Crash", "Congestion", "Flooding"].includes(e.type) || /clos/i.test(e.impact))) parts.push("Allow some extra time.");
+      parts.push("The details are on screen.");
+    }
+    trafficCard(c);
+    return parts.map(text => ({ text, para: -1, kind: "traffic", opt: usePre() }));
+  }
+  function trafficCard(c) {
+    const hot = t => t === "Crash" || t === "Flooding" || t === "Congestion";
+    $("npTraffic").innerHTML = `<div class="tr-top"><b>${c.toWork ? "Your drive to work" : "Your drive home"}</b><span>Usually ${c.mins} min · ${c.km} km</span></div>
+      ${c.events.length ? `<ul>${c.events.map(e => `<li><i class="${hot(e.type) ? "hot" : ""}">${esc(e.type === "Congestion" ? "Traffic" : e.type)}</i><span>${esc(e.road || "On your way")}${e.place ? `, ${esc(e.place)}` : ""}<small>${esc([e.what, e.impact, e.delay].filter(x => x && x !== e.type).join(" · "))}</small></span></li>`).join("")}</ul>${c.more ? `<p class="tr-ok">And ${c.more} more.</p>` : ""}`
+        : `<p class="tr-ok">Nothing reported on your way right now.</p>`}
+      <p class="tr-src">Drive time without traffic: OSRM, OpenStreetMap. Incidents: QLDTraffic.</p>`;
+  }
+  function commuteHTML() {
+    const c = CM(), row = (k, label, ph) => `<div class="cm-row"><label class="lbl" for="cm-${k}">${label}</label>
+        <form class="add" data-commute="${k}"><input type="text" id="cm-${k}" placeholder="${ph}" maxlength="120" value="${esc(c[k]?.q || "")}" autocomplete="off"><button type="submit">Save</button></form>
+        ${c[k]?.label ? `<span class="cm-saved">Found: ${esc(c[k].label)} · <button type="button" class="linkish" data-commute-clear="${k}">Clear</button></span>` : ""}</div>`;
+    return `<div class="group"><h2>Your commute (beta)</h2><div class="card">
+      ${row("home", "Home", "Address or suburb, e.g. Moorooka")}${row("work", "Work", "Address or suburb, e.g. 150 Wembley Road, Logan Central")}
+    </div><p class="hint">After the weather, Listen tells you about your drive: to work before midday, home after. Your addresses stay on this phone. OpenStreetMap looks them up once when you save.</p></div>`;
+  }
   // The page's build (stamped by build.py) against the latest on the site. Never mid-listen: it waits until you stop.
   let newBuild = false;
   async function checkBuild() {

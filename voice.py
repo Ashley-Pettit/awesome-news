@@ -314,6 +314,13 @@ def plan(data, vkey):
     # No section cues ("Next, tech.") any more: the app goes straight from one headline to the next.
     for t in ["Welcome back. Picking up where you left off.", "Welcome back. Here's what's new.", SAMPLE, MORE]:
         want(t)
+    # Beta: your commute after the weather (trafficParts() in beta/app.html). Fixed lines, so Emma can say them for anyone.
+    for t in (["Now, your drive to work.", "Now, your drive home.", "Nothing's been reported on your way.", "There's a crash on your way.",
+               "There are crashes on your way.", "There's flooding on your way.", "There's a hazard on your way.", "There are hazards on your way.",
+               "There's heavy traffic on your way.", "There are roadworks on your way.", "There's an event on your way.", "Allow some extra time.",
+               "The details are on screen."]
+              + [f"It usually takes about {n} minutes." for n in list(range(2, 21)) + list(range(25, 125, 5))]):
+        want(t)
     for n in range(1, 9):
         want(f"Story {n}.")
 
