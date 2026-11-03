@@ -4642,130 +4642,104 @@ const handle = async (m, post) => {
     const llg = new THREE.BufferGeometry(); llg.setAttribute("position", new THREE.Float32BufferAttribute(lgLights, 3));
     W.loganLights = new THREE.PointsMaterial({ color: 0xffd9a0, size: 0.7, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: true });
     lgn.add(new THREE.Points(llg, W.loganLights));
-    // ---- Moorooka, like the postcard: Beaudesert Road shops, the station and a mTrain, Queenslanders and jacarandas up the mHill, Toohey Forest, the city far off ----
-    const moo = new THREE.Group(); moo.visible = false; moo.position.z = 42; scene.add(moo); W.moo = moo;  // the whole street sits closer than the river does
+    // ---- Moorooka: a street of high-set Queenslanders under jacarandas, petals on the road, bins out (and an ibis on one),
+    // power poles and wires, the bushland of Toohey Forest at the end of the street, the city's towers peeking over ----
+    const moo = new THREE.Group(); moo.visible = false; scene.add(moo); W.moo = moo;
     const mooLights = [], mStd = (color, o) => new THREE.MeshStandardMaterial(Object.assign({ color, roughness: .9 }, o || {}));
     const mTex = (w, h, draw) => { const c = document.createElement("canvas"); c.width = w; c.height = h; draw(c.getContext("2d"), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; };
     const mBox = (w, h, d, mat, x, y, z, par) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); (par || moo).add(m); return m; };
-    const jacSeason = month >= 9 && month <= 11, petal = jacSeason ? "#a07fd8" : "#7e9a5e";
-    const park = mStd(0x6a9a4e, { roughness: 1 });
-    mBox(900, 1, 600, park, 0, 0.5, -150);  // covers the river: no water here
-    // the road and its dashes, the kerb, the footpath (purple with jacaranda petals in season)
-    const roadT = mTex(256, 64, (g, w, h) => { g.fillStyle = "#45484e"; g.fillRect(0, 0, w, h); g.fillStyle = "#eeeeee"; g.fillRect(0, 30, 128, 5); }); roadT.wrapS = THREE.RepeatWrapping; roadT.repeat.set(90, 1);
-    mBox(900, 0.12, 10, new THREE.MeshStandardMaterial({ map: roadT, roughness: .9 }), 0, 1.06, -43);
-    mBox(900, 0.4, 0.4, mStd(0x9c9483), 0, 1.2, -48.1);
-    const pathT = mTex(256, 64, (g, w, h) => { g.fillStyle = "#cbc4b5"; g.fillRect(0, 0, w, h); g.fillStyle = "#b5ad9c"; for (let x = 0; x < w; x += 32) g.fillRect(x, 0, 2, h);
-      g.fillStyle = petal; for (let i = 0; i < (jacSeason ? 70 : 12); i++) { g.beginPath(); g.ellipse(rnd(i + 401) * w, rnd(i + 471) * h, 2.4, 1.4, rnd(i + 541) * 3, 0, 7); g.fill(); } });
-    pathT.wrapS = THREE.RepeatWrapping; pathT.repeat.set(36, 1);
-    mBox(900, 0.3, 4.4, new THREE.MeshStandardMaterial({ map: pathT, roughness: 1 }), 0, 1.15, -50.2);
-    mBox(900, 0.3, 3.4, new THREE.MeshStandardMaterial({ map: pathT, roughness: 1 }), 0, 1.15, -36.3); mBox(900, 0.4, 0.4, mStd(0x9c9483), 0, 1.2, -37.9);  // this side of the road
-    // the shops: 1920s and 30s fronts with stepped, arched and curved parapets, signs, cantilever awnings on posts
-    const SHOPS = [["CAFÉ · COFFEE", "#e9d8b4", "#7a3b2e", "step"], ["AFRICAN GROCERIES", "#c86f4c", "#fff3d9", "flat"], ["MOOROOKA ARCADE", "#f1ead8", "#2f5d50", "arch"], ["BARBER", "#8fae9a", "#ffffff", "flat"],
-      ["ETHIOPIAN RESTAURANT", "#f3c76b", "#5a2a1e", "step"], ["HALAL BUTCHER", "#d9b8c4", "#4b1f2e", "flat"], ["NEWSAGENT", "#e6e0cf", "#1f3b63", "curve"], ["PHARMACY", "#b7cbd8", "#1d4f3a", "flat"],
-      ["BAKERY", "#f2d7a6", "#7a3b2e", "curve"], ["AFRICAN FASHION", "#e7a65a", "#3b1f12", "flat"], ["FRUIT & VEG", "#a9c48d", "#24401c", "step"], ["HAIR & BEAUTY", "#e9c3d3", "#5a1f3e", "flat"],
-      ["FISH & CHIPS", "#9cc3d9", "#123a5a", "flat"], ["MEDICAL CENTRE", "#eeeeea", "#1d4f6e", "curve"], ["THAI TAKEAWAY", "#d98b6a", "#fff3d9", "flat"], ["TAILOR", "#c9b8e0", "#33204f", "step"]];
-    const facade = (w, h, bg, fg, label, two) => mTex(256, Math.round(256 * h / w), (g, cw, ch) => {
-      const k = cw / w; g.fillStyle = bg; g.fillRect(0, 0, cw, ch); g.fillStyle = "rgba(0,0,0,.07)"; g.fillRect(0, 0, cw, 0.22 * k);
-      const sy = 0.35 * k, sh = 1.05 * k; g.strokeStyle = fg; g.lineWidth = Math.max(2, 0.08 * k); g.strokeRect(0.5 * k, sy, cw - k, sh);
-      let fs = sh * 0.6; g.font = `700 ${fs}px Arial, sans-serif`; while (g.measureText(label).width > cw - 1.5 * k && fs > 6) { fs -= 1; g.font = `700 ${fs}px Arial, sans-serif`; }
-      g.fillStyle = fg; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(label, cw / 2, sy + sh / 2 + 1);
-      if (two) { const n = w > 10 ? 3 : 2, wy = 1.8 * k, wh = 1.7 * k, ww = 1.25 * k;
-        for (let i = 0; i < n; i++) { const wx = cw * (i + 1) / (n + 1) - ww / 2; g.fillStyle = "#3d4f5e"; g.fillRect(wx, wy, ww, wh); g.fillStyle = bg; g.fillRect(wx, wy + wh * .47, ww, wh * .06);
-          g.fillStyle = "rgba(255,255,255,.75)"; g.fillRect(wx - .12 * k, wy + wh, ww + .24 * k, .14 * k); } } });
-    const parapet = (kind, w) => { const s = new THREE.Shape(), a = -w / 2, b = w / 2; s.moveTo(a, 0);
-      if (kind === "step") { s.lineTo(a, .7); s.lineTo(a + w * .3, .7); s.lineTo(a + w * .3, 1.4); s.lineTo(b - w * .3, 1.4); s.lineTo(b - w * .3, .7); s.lineTo(b, .7); }
-      else if (kind === "arch") { s.lineTo(a, .8); s.lineTo(a + w * .22, .8); s.quadraticCurveTo(0, 3.6, b - w * .22, .8); s.lineTo(b, .8); }
-      else if (kind === "curve") { s.lineTo(a, .5); s.quadraticCurveTo(0, 2.3, b, .5); }
-      else { s.lineTo(a, .45); s.lineTo(b, .45); }
-      s.lineTo(b, 0); s.lineTo(a, 0); return new THREE.ExtrudeGeometry(s, { depth: .5, bevelEnabled: false, curveSegments: 12 }); };
-    const goodsT = [0, 1, 2, 3].map(v => mTex(256, 64, (g, cw, ch) => { g.fillStyle = "#2b3d4c"; g.fillRect(0, 0, cw, ch); g.fillStyle = "#18242d"; g.fillRect(cw / 2 - 20, 0, 40, ch);
-      for (let i = 0; i < 18; i++) { const x = 8 + rnd(v * 50 + i) * (cw - 30); if (Math.abs(x - cw / 2) < 28) continue; g.fillStyle = ["#f5c400", "#e74c3c", "#27ae60", "#f39c12", "#ecf0f1", "#9b59b6"][Math.floor(rnd(v * 70 + i) * 6)];
-        g.fillRect(x, 28 + rnd(v * 90 + i) * 20, 8 + rnd(i + v + 3) * 10, 6 + rnd(i * 3 + v) * 12); }
-      g.fillStyle = "rgba(255,255,255,.1)"; g.beginPath(); g.moveTo(24, 0); g.lineTo(64, 0); g.lineTo(24, ch); g.lineTo(0, ch); g.fill(); }));
-    W.mooGlow = goodsT.map(t => new THREE.MeshStandardMaterial({ map: t, emissive: 0x8a6a34, emissiveIntensity: 0, roughness: .3, metalness: .1 }));
-    const awnM = mStd(0x6d7a82, { roughness: .6 }), fasM = mStd(0x4a555c, { roughness: .6 }), ledgeM = mStd(0xd8d0bf), postGeo = new THREE.CylinderGeometry(0.09, 0.09, 3, 6);
-    const mRow = Array.from({ length: 30 }, (_, k) => { const s = SHOPS[(k + 4) % SHOPS.length]; return { s, w: s[3] === "arch" ? 13 : 8.5 + rnd(k * 3 + 361) * 3, h: s[3] === "flat" ? 5.6 + rnd(k + 371) * 0.8 : 8.5 }; });
-    let sx = 0; mRow.forEach(r => { r.x = sx + r.w / 2; sx += r.w; }); const shift = -4 - mRow[14].x;
-    mRow.forEach((r, k) => { const { s, w, h } = r, x = r.x + shift, bg = new THREE.Color(s[1]).getHex(), plain = mStd(bg);
-      const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, 10), [plain, plain, plain, plain, new THREE.MeshStandardMaterial({ map: facade(w, h, s[1], s[2], s[0], h > 8), roughness: .9 }), plain]);
-      body.position.set(x, 1 + h / 2, -57.4); moo.add(body);
-      const par = new THREE.Mesh(parapet(s[3], w), plain); par.position.set(x, 1 + h, -52.9); moo.add(par);
-      if (s[3] === "arch") { const yr = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.75), new THREE.MeshStandardMaterial({ map: mTex(128, 44, (g, cw, ch) => { g.fillStyle = s[1]; g.fillRect(0, 0, cw, ch); g.fillStyle = "#8a7a5c"; g.font = "700 32px Arial, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("1934", cw / 2, ch / 2 + 2); }), roughness: .9 }));
-        yr.position.set(x, 1 + h + 0.95, -52.38); moo.add(yr); }
-      mBox(w + 0.2, 0.22, 0.5, ledgeM, x, 1 + h, -52.6);
-      const gl = new THREE.Mesh(new THREE.PlaneGeometry(w - 0.8, 2.75), W.mooGlow[k % 4]); gl.position.set(x, 2.55, -52.38); moo.add(gl);
-      mBox(w + 0.04, 0.26, 2.8, awnM, x, 4.15, -51.0); mBox(w + 0.04, 0.42, 0.1, fasM, x, 4.0, -49.6);
-      const post = new THREE.Mesh(postGeo, fasM); post.position.set(x - w / 2, 2.65, -49.75); moo.add(post);
-      mooLights.push(x - w * .25, 2.3, -52.2, x + w * .25, 2.3, -52.2); });
-    // street lamps along the kerb
-    const lampM = mStd(0x5c646b, { roughness: .5 });
-    for (let x = -132; x <= 132; x += 24) { mBox(0.18, 6, 0.18, lampM, x, 4, -48.6); mBox(1.4, 0.16, 0.3, lampM, x + 0.6, 7, -48.6); mooLights.push(x + 1.1, 6.8, -48.6); }
-    // people on the footpath
-    const skin = [0x5b3a29, 0x7a4a2e, 0x3d2618, 0xc8946e, 0xe0b48f], shirts = [0xe67e22, 0x16a085, 0x8e44ad, 0x2980b9, 0xc0392b, 0xf1c40f, 0xecf0f1, 0x2c3e50], legM = mStd(0x2c3e50);
-    for (let i = 0; i < 16; i++) { const p = new THREE.Group(), x = -60 + rnd(i + 381) * 120, z = -49.4 - rnd(i + 391) * 2.2;
-      const legs = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.2, 0.85, 8), legM); legs.position.y = 0.43; p.add(legs);
-      const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.26, 0.85, 8), mStd(shirts[i % shirts.length])); torso.position.y = 1.25; p.add(torso);
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), mStd(skin[i % skin.length])); head.position.y = 1.9; p.add(head);
-      p.position.set(x, 1.3, z); moo.add(p); }
-    // a red mCar and a yellow-and-white council mBus on Beaudesert Road
-    const mCar = new THREE.Group(), wheelM = mStd(0x222222), wheelG = new THREE.CylinderGeometry(0.42, 0.42, 0.3, 12);
-    mBox(4.3, 0.9, 1.9, mStd(0xc0392b, { roughness: .4 }), 0, 0.85, 0, mCar); mBox(2.3, 0.75, 1.7, mStd(0x2c3e50, { roughness: .2 }), -0.2, 1.65, 0, mCar);
-    for (const [wx, wz] of [[-1.4, 0.95], [1.4, 0.95], [-1.4, -0.95], [1.4, -0.95]]) { const wh = new THREE.Mesh(wheelG, wheelM); wh.rotation.x = Math.PI / 2; wh.position.set(wx, 0.42, wz); mCar.add(wh); }
-    mCar.position.set(-30, 1.1, -41.2); moo.add(mCar); W.mooCar = mCar;
-    const busT = mTex(512, 128, (g, w, h) => { g.fillStyle = "#f7f7f2"; g.fillRect(0, 0, w, h); g.fillStyle = "#22313d"; g.fillRect(14, 16, w - 28, 44); g.fillStyle = "#f5c400"; g.fillRect(0, 70, w, 22);
-      g.fillStyle = "#3a4b58"; g.fillRect(150, 16, 40, h - 26); g.fillStyle = "#f39c12"; g.fillRect(w - 70, 20, 52, 14); });
-    const busM = mStd(0xf7f7f2, { roughness: .5 }), busSide = new THREE.MeshStandardMaterial({ map: busT, roughness: .5 }), mBus = new THREE.Group();
-    const bb = new THREE.Mesh(new THREE.BoxGeometry(12, 3, 2.5), [busM, busM, busM, busM, busSide, busSide]); bb.position.y = 1.9; mBus.add(bb);
-    for (const [wx, wz] of [[-4, 1.2], [4, 1.2], [-4, -1.2], [4, -1.2]]) { const wh = new THREE.Mesh(wheelG, wheelM); wh.scale.set(1.3, 1, 1.3); wh.rotation.x = Math.PI / 2; wh.position.set(wx, 0.55, wz); mBus.add(wh); }
-    mBus.position.set(18, 1.1, -45.4); mBus.rotation.y = Math.PI; moo.add(mBus); W.mooBus = mBus;
-    // the railway on its embankment behind the shops, the overhead wires, and Moorooka station
-    mBox(900, 9, 14, mStd(0x8a7a66, { roughness: 1 }), 0, 5.5, -73); mBox(900, 0.4, 9, mStd(0x6e6252, { roughness: 1 }), 0, 10.2, -73);
-    const mRail = mStd(0x8a8a8a, { roughness: .4, metalness: .6 }); [-75.2, -73.8, -72.2, -70.8].forEach(z => mBox(900, 0.2, 0.15, mRail, 0, 10.5, z));
-    const poleM = mStd(0x6c7378, { roughness: .6 }), wireM = new THREE.MeshBasicMaterial({ color: 0x333333 });
-    for (let x = -240; x <= 240; x += 30) { mBox(0.3, 8, 0.3, poleM, x, 14.2, -66.6); mBox(0.2, 0.2, 10, poleM, x, 17.6, -71.4); }
-    [-71.5, -74.5].forEach(z => mBox(900, 0.06, 0.06, wireM, 0, 16.6, z));
-    mBox(36, 1.0, 3.8, mStd(0xcfc6b6), -20, 10.7, -67.9); mBox(36, 0.05, 0.4, mStd(0xf2d24b), -20, 11.23, -69.6);
-    mBox(32, 0.3, 4.4, mStd(0xe7e2d6), -20, 14.7, -67.9); [-34, -26, -18, -10].forEach(x => { mBox(0.25, 3.4, 0.25, poleM, x, 12.9, -66.6); mooLights.push(x + 2, 14.3, -67.4); });
-    const mStn = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 1.5), new THREE.MeshStandardMaterial({ map: mTex(256, 60, (g, w, h) => { g.fillStyle = "#0b2a4a"; g.fillRect(0, 0, w, h); g.fillStyle = "#fff"; g.font = "700 38px Arial, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("Moorooka", w / 2, h / 2 + 2); }), roughness: .6 }));
-    mStn.position.set(-22, 12.9, -65.85); moo.add(mStn); mBox(0.15, 1.8, 0.15, poleM, -24.6, 12, -65.95); mBox(0.15, 1.8, 0.15, poleM, -19.4, 12, -65.95);
-    // the mTrain: white, a black window band, yellow doors
-    const trainT = mTex(512, 96, (g, w, h) => { g.fillStyle = "#f4f5f2"; g.fillRect(0, 0, w, h); g.fillStyle = "#2b3036"; g.fillRect(0, 18, w, 32); g.fillRect(0, 84, w, 6);
-      for (const d of [0.2, 0.74]) { g.fillStyle = "#f5c400"; g.fillRect(d * w, 12, 40, 72); g.fillStyle = "#2b3036"; g.fillRect(d * w + 5, 20, 12, 28); g.fillRect(d * w + 23, 20, 12, 28); } });
-    const carW = mStd(0xf4f5f2, { roughness: .5 }), carS = new THREE.MeshStandardMaterial({ map: trainT, roughness: .5 }), mTrain = new THREE.Group();
-    for (let k = 0; k < 6; k++) { const c = new THREE.Mesh(new THREE.BoxGeometry(19, 3.6, 3), [carW, carW, carW, carW, carS, carS]); c.position.set(k * 19.6, 12.6, 0); mTrain.add(c);
-      mBox(3, 0.4, 1.6, poleM, k * 19.6, 14.6, 0, mTrain); }
-    mBox(0.4, 1.4, 2.6, mStd(0x2b3036, { roughness: .2 }), 5 * 19.6 + 9.6, 13.1, 0, mTrain);
-    mTrain.position.set(-200, 0, -71.5); moo.add(mTrain); W.mooTrain = mTrain;
-    // the mHill behind: a slope of Queenslanders on stumps, tin and red roofs, white verandahs, gums and jacarandas
-    const slopeY = z => 10 + Math.max(0, -z - 80) * 0.18;
-    const mSg = new THREE.PlaneGeometry(900, 160, 1, 16); mSg.rotateX(-Math.PI / 2); const mSp = mSg.attributes.position;
-    for (let i = 0; i < mSp.count; i++) { const z = mSp.getZ(i) - 160; mSp.setZ(i, z); mSp.setY(i, slopeY(z)); } mSg.computeVertexNormals(); moo.add(new THREE.Mesh(mSg, park));
-    const houseT = [["#f3ead8", "#3d4f5e"], ["#e9efe4", "#3d4f5e"], ["#f6efe2", "#3d4f5e"], ["#efe6f0", "#3d4f5e"]].map(([bg]) => mTex(128, 64, (g, w, h) => {
-      g.fillStyle = bg; g.fillRect(0, 0, w, h); g.fillStyle = "#3d4f5e"; g.fillRect(20, 10, 18, 22); g.fillRect(w - 38, 10, 18, 22); g.fillStyle = "#5a4636"; g.fillRect(w / 2 - 8, 10, 16, 30);
-      g.fillStyle = "#ffffff"; g.fillRect(0, 38, w, 4); g.fillRect(0, h - 5, w, 5); for (let x = 2; x < w; x += 6) g.fillRect(x, 40, 2, h - 44); }));
-    const tinR = mStd(0xb9c0c7, { roughness: .45, metalness: .45 }), redR = mStd(0xa9443a, { roughness: .7 }), under = mStd(0x4b4038), roofG = new THREE.ConeGeometry(6.6, 3, 4);
-    for (let i = 0; i < 46; i++) { const x = -170 + rnd(i * 7 + 311) * 340, z = -86 - rnd(i * 11 + 311) * 90, y = slopeY(z), v = i % 4;
-      const wall = mStd(new THREE.Color(["#f3ead8", "#e9efe4", "#f6efe2", "#efe6f0"][v]).getHex()), hs = new THREE.Group();
-      const body = new THREE.Mesh(new THREE.BoxGeometry(8, 3.4, 7), [wall, wall, wall, wall, new THREE.MeshStandardMaterial({ map: houseT[v], roughness: .9 }), wall]); body.position.y = 3.5; hs.add(body);
-      mBox(7.2, 1.8, 6.2, under, 0, 0.9, 0, hs);
-      const roof = new THREE.Mesh(roofG, i % 3 === 0 ? tinR : redR); roof.position.y = 6.7; roof.rotation.y = Math.PI / 4; hs.add(roof);
-      hs.position.set(x, y, z); hs.rotation.y = (rnd(i * 13 + 311) - 0.5) * 0.3; moo.add(hs); mooLights.push(x - 2, y + 3.7, z + 3.6, x + 2, y + 3.7, z + 3.6); }
-    const mJac = mStd(jacSeason ? 0x9d82e6 : 0x4f7a42, { roughness: 1 }), mJac2 = mStd(jacSeason ? 0x8466cc : 0x456c3a, { roughness: 1 }), mGum = mStd(0x56774c, { roughness: 1 }), mGum2 = mStd(0x46663f, { roughness: 1 });
-    const mTree = (x, y, z, s, a, b) => { const g = new THREE.Group(), t = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.5, 4.5, 6), trunkMat); t.position.y = 2.25; g.add(t);
-      for (let k = 0; k < 6; k++) { const c = new THREE.Mesh(new THREE.SphereGeometry(1.6 + rnd(x * 3 + k) * 1.2, 9, 7), k % 2 ? a : b); c.position.set((rnd(x + k + 331) - 0.5) * 4.5, 4.6 + rnd(z + k + 331) * 2.2, (rnd(x * 7 + k) - 0.5) * 3); g.add(c); }
-      g.position.set(x, y, z); g.scale.setScalar(s); moo.add(g); return g; };
-    for (let i = 0; i < 16; i++) { const x = -150 + i * 20 + rnd(i * 11 + 331) * 8, z = -84 - rnd(i * 5 + 333) * 80; mTree(x, slopeY(z), z, 1.3, mJac, mJac2); }
-    for (let i = 0; i < 26; i++) { const x = -200 + rnd(i * 17 + 335) * 400, z = -90 - rnd(i * 19 + 337) * 85; mTree(x, slopeY(z), z, 1.5, mGum, mGum2); }
-    // street jacarandas this side of the road, framing the view on wider screens
-    [[-27, -33], [24, -32], [-70, -33], [66, -33]].forEach(([x, z]) => mTree(x, 1, z, 1.35, mJac, mJac2));
-    // Toohey Forest along the ridge: dark mGum bushland
-    const mBush = mStd(0x3e5b38, { roughness: 1 });
-    const mHill = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 12), mBush); mHill.scale.set(160, 40, 50); mHill.position.set(150, slopeY(-245), -260); moo.add(mHill);
-    for (let i = 0; i < 34; i++) { const c = new THREE.Mesh(new THREE.SphereGeometry(5 + rnd(i * 13 + 341) * 4, 8, 6), i % 2 ? mBush : mGum2); c.position.set(30 + rnd(i * 3 + 341) * 260, slopeY(-240) + 26 + rnd(i * 5 + 341) * 12, -235 - rnd(i * 7 + 341) * 30); moo.add(c); }
-    // the CBD, small on the horizon
-    const mCbd = mStd(0x8fa3bd, { roughness: .8 });
-    for (let i = 0; i < 16; i++) { const h = 22 + rnd(i * 3 + 351) * 42, b = new THREE.Mesh(new THREE.BoxGeometry(8, h, 8), mCbd); b.position.set(-110 + i * 8 + rnd(i * 5 + 351) * 4, 20 + h / 2, -420); moo.add(b);
-      for (let k = 0; k < 6; k++) mooLights.push(b.position.x + (rnd(i * 7 + k) - 0.5) * 6, 22 + rnd(i * 11 + k) * (h - 3), -415.9); }
+    const jacSeason = month >= 9 && month <= 11;
+    const mGrass = mStd(0x6f9a4f, { roughness: 1 });
+    mBox(900, 1, 700, mGrass, 0, 0.5, -200);  // covers the river: no water here
+    // the street runs away from you: road, kerbs, footpaths, mGrass verges
+    mBox(8, 0.2, 340, mStd(0x4a4d52, { roughness: .95 }), 0, 1.1, -130);
+    [-1, 1].forEach(sd => { mBox(0.4, 0.35, 340, mStd(0xa39c8c), sd * 4.2, 1.18, -130); mBox(1.4, 0.24, 340, mStd(0xcfc9bc), sd * 5.8, 1.12, -130); });
+    // jacaranda petals on the road and verges, in season
+    const petalM = new THREE.MeshStandardMaterial({ color: 0xa88cf0, transparent: true, opacity: jacSeason ? .8 : 0, depthWrite: false, roughness: 1, polygonOffset: true, polygonOffsetFactor: -2 });
+    // picket fences along the front of each yard
+    const picketT = mTex(128, 32, (g, w, h) => { g.clearRect(0, 0, w, h); g.fillStyle = "#f4f1ea"; for (let x = 2; x < w; x += 16) { g.fillRect(x, 6, 9, h - 6); g.beginPath(); g.moveTo(x, 6); g.lineTo(x + 4.5, 0); g.lineTo(x + 9, 6); g.fill(); } g.fillRect(0, 10, w, 3); g.fillRect(0, 24, w, 3); });
+    picketT.wrapS = THREE.RepeatWrapping; picketT.repeat.set(80, 1);
+    const picketM = new THREE.MeshStandardMaterial({ map: picketT, alphaTest: .5, side: THREE.DoubleSide, roughness: .9 });
+    [-1, 1].forEach(sd => { const f = new THREE.Mesh(new THREE.PlaneGeometry(300, 1.1), picketM); f.rotation.y = Math.PI / 2; f.position.set(sd * 9.6, 1.55, -115); moo.add(f); });
+    // the houses: high-set on stumps, battens underneath, a front verandah with white balustrade and stairs, hip roofs in red, silver and green
+    const walls = ["#f3efe4", "#efe3c6", "#e3ecdf", "#dfe8ee", "#f2e2da", "#fbf6ec"], roofs = [0xa9443a, 0xb9c0c7, 0x4f6f55, 0xa9443a, 0xb9c0c7, 0x8a3a30];
+    const boardT = walls.map(c => mTex(128, 64, (g, w, h) => { g.fillStyle = c; g.fillRect(0, 0, w, h); g.fillStyle = "rgba(0,0,0,.07)"; for (let y = 4; y < h; y += 6) g.fillRect(0, y, w, 1); }));
+    const battenT = mTex(64, 32, (g, w, h) => { g.fillStyle = "#3b332c"; g.fillRect(0, 0, w, h); g.fillStyle = "#e9e4d8"; for (let x = 0; x < w; x += 8) g.fillRect(x, 0, 4, h); });
+    const balT = mTex(128, 32, (g, w, h) => { g.clearRect(0, 0, w, h); g.fillStyle = "#ffffff"; g.fillRect(0, 0, w, 4); g.fillRect(0, h - 4, w, 4); for (let x = 2; x < w; x += 7) g.fillRect(x, 0, 3, h); });
+    balT.wrapS = THREE.RepeatWrapping; balT.repeat.set(4, 1);
+    const balM = new THREE.MeshStandardMaterial({ map: balT, alphaTest: .5, side: THREE.DoubleSide, roughness: .8 }), trimM = mStd(0xf7f5ef), deckM = mStd(0x8a6a4a), underM = mStd(0x3b332c);
+    const battenM = new THREE.MeshStandardMaterial({ map: battenT, roughness: 1 });
+    W.mooGlow = [new THREE.MeshStandardMaterial({ color: 0x2e3c48, emissive: 0xffc77a, emissiveIntensity: 0, roughness: .2, metalness: .1 })];
+    const roofG = new THREE.ConeGeometry(7.6, 3.2, 4);
+    const house = (cx, z, k, flip) => {
+      const g = new THREE.Group(), stH = 2.1 + rnd(k + 501) * 0.8, wallM = new THREE.MeshStandardMaterial({ map: boardT[k % walls.length], roughness: .9 }), plain = mStd(new THREE.Color(walls[k % walls.length]).getHex());
+      const under = new THREE.Mesh(new THREE.BoxGeometry(8.4, stH, 9.4), [battenM, underM, underM, underM, underM, underM]); under.position.set(0, stH / 2, 0); g.add(under);
+      const body = new THREE.Mesh(new THREE.BoxGeometry(9, 3.4, 10), [wallM, plain, plain, plain, plain, plain]); body.position.set(0, stH + 1.7, 0); g.add(body);
+      for (const wz of [-2.7, 2.7]) { const wn = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.7), W.mooGlow[0]); wn.rotation.y = Math.PI / 2; wn.position.set(4.52, stH + 1.9, wz); g.add(wn);
+        mBox(0.06, 0.16, 1.8, trimM, 4.53, stH + 0.98, wz, g); }
+      mBox(2.6, 0.25, 10, deckM, 5.8, stH, 0, g);
+      const bal = new THREE.Mesh(new THREE.PlaneGeometry(10, 1.1), balM); bal.rotation.y = Math.PI / 2; bal.position.set(7.05, stH + 0.68, 0); g.add(bal);
+      for (const pz of [-4.9, -1.2, 1.2, 4.9]) mBox(0.2, 3.3, 0.2, trimM, 7.0, stH + 1.65, pz, g);
+      const run = 2.6, st = new THREE.Mesh(new THREE.BoxGeometry(Math.hypot(run, stH), 0.25, 1.6), deckM); st.position.set(7.1 + run / 2, stH / 2, 0); st.rotation.z = -Math.atan2(stH, run); g.add(st);
+      const roof = new THREE.Mesh(roofG, mStd(roofs[k % roofs.length], { roughness: .55, metalness: roofs[k % roofs.length] === 0xb9c0c7 ? .45 : 0 })); roof.scale.set(1.12, 1, 1); roof.rotation.y = Math.PI / 4; roof.position.set(1.3, stH + 3.4 + 1.6, 0); g.add(roof);
+      g.position.set(cx, 1, z); if (flip) g.rotation.y = Math.PI; moo.add(g);
+      const fx = flip ? -1 : 1; mooLights.push(cx + fx * 4.7, 1 + stH + 2.6, z + 0.001);  // the verandah light
+      // a letterbox at the gate
+      mBox(0.15, 1.1, 0.15, mStd(0x6b5a48), cx + fx * 11, 1.55, z + 2.2); mBox(0.5, 0.45, 0.4, mStd(k % 2 ? 0xc0392b : 0xf2f2f2), cx + fx * 11, 2.25, z + 2.2);
+    };
+    for (let k = 0; k < 13; k++) { const z = 26 - k * 17; house(-20.5, z, k, false); house(20.5, z - 8, k + 7, true); }
+    // jacarandas on the verges, wide and flat-topped, alternating sides; petals underneath
+    const jacM = mStd(jacSeason ? 0x9d82e6 : 0x4f7a42, { roughness: 1 }), jacM2 = mStd(jacSeason ? 0x8466cc : 0x456c3a, { roughness: 1 });
+    const jaca = (x, z, s) => { const g = new THREE.Group();
+      for (const [a, b] of [[0, .35], [.5, -.3], [-.6, -.1]]) { const t = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.38, 5.5, 6), trunkMat); t.position.set(a * 1.2, 2.6, b * 1.2); t.rotation.set(b * .5, 0, -a * .5); g.add(t); }
+      for (let k = 0; k < 9; k++) { const c = new THREE.Mesh(new THREE.SphereGeometry(2 + rnd(x * 3 + z + k) * 1.2, 10, 7), k % 2 ? jacM : jacM2); c.scale.y = 0.55;
+        const a = rnd(x + z * 7 + k) * 6.28, r = rnd(z + k * 11 + 3) * 3.6; c.position.set(Math.cos(a) * r, 5.6 + rnd(x + k * 5) * 1.4, Math.sin(a) * r); g.add(c); }
+      g.position.set(x, 1, z); g.scale.setScalar(s); moo.add(g);
+      const pd = new THREE.Mesh(new THREE.CircleGeometry(6.5 * s, 22), petalM); pd.rotation.x = -Math.PI / 2; pd.position.set(x * 0.85, 1.25, z); moo.add(pd); };
+    for (let k = 0; k < 9; k++) jaca(k % 2 ? 7.6 : -7.6, 8 - k * 26 - rnd(k + 521) * 6, 1.25 + rnd(k + 531) * 0.3);
+    // a mango tree and a couple of palms in the yards
+    const mango = mStd(0x2f5a2c, { roughness: 1 });
+    [[-31, -40], [30, -120]].forEach(([x, z]) => { const t = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.7, 4, 6), trunkMat); t.position.set(x, 3, z); moo.add(t);
+      const c = new THREE.Mesh(new THREE.SphereGeometry(5.5, 12, 9), mango); c.scale.y = 0.85; c.position.set(x, 8.2, z); moo.add(c); });
+    const frond = mStd(0x4f7d3a, { roughness: 1 });
+    [[13.5, -62], [-13.5, -150]].forEach(([x, z]) => { const t = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.28, 11, 6), mStd(0x8b8378)); t.position.set(x, 6.5, z); moo.add(t);
+      for (let k = 0; k < 8; k++) { const f = new THREE.Mesh(new THREE.BoxGeometry(4, 0.08, 0.7), frond); const a = k / 8 * 6.28; f.position.set(x + Math.cos(a) * 1.8, 11.6, z + Math.sin(a) * 1.8); f.rotation.set(0, -a, -0.45); moo.add(f); } });
+    // timber power poles down one side, wires, and street lights
+    const poleM = mStd(0x6b5848, { roughness: 1 }), wireM = new THREE.MeshBasicMaterial({ color: 0x2a2a2a }), lampM = mStd(0x8a9096, { roughness: .5 });
+    for (let k = 0; k < 9; k++) { const z = 30 - k * 32;
+      mBox(0.35, 10, 0.35, poleM, 7, 6, z); mBox(2.6, 0.22, 0.22, poleM, 7, 10.4, z);
+      if (k % 2 === 0) { mBox(2.2, 0.12, 0.2, lampM, 5.9, 8.4, z); mBox(0.7, 0.2, 0.4, lampM, 4.9, 8.3, z); mooLights.push(4.9, 8.1, z); } }
+    [6, 8].forEach(x => { const wr = mBox(0.05, 0.05, 260, wireM, x, 10.35, -98); });
+    // bins out on the kerb (green, red and yellow lids), and an ibis on one of them
+    const binG = mStd(0x2e6b3a, { roughness: .6 }), lids = [mStd(0xb83227, { roughness: .6 }), mStd(0xf2c200, { roughness: .6 })];
+    [[-5.2, 18], [-5.2, 16.9], [5.2, -6], [5.2, -7.1], [-5.2, -48], [5.2, -79], [5.2, -80.1], [-5.2, -116]].forEach(([x, z], k) => {
+      mBox(0.8, 1.15, 0.8, binG, x, 1.82, z); mBox(0.9, 0.12, 0.9, lids[k % 2], x, 2.45, z); });
+    const ibisW = mStd(0xf2f0ea, { roughness: .9 }), ibisB = mStd(0x1c1c1c, { roughness: .7 });
+    const ibis = (x, y, z, ry) => { const g = new THREE.Group(), b = new THREE.Mesh(new THREE.SphereGeometry(0.42, 10, 8), ibisW); b.scale.set(1.5, 0.85, 0.8); b.position.y = 0.8; g.add(b);
+      const n = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, 0.7, 6), ibisB); n.position.set(0.55, 1.1, 0); n.rotation.z = -0.6; g.add(n);
+      const h = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 6), ibisB); h.position.set(0.8, 1.38, 0); g.add(h);
+      const bk = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.05, 0.75, 5), ibisB); bk.position.set(1.05, 1.15, 0); bk.rotation.z = 0.9; g.add(bk);
+      for (const lz of [-.12, .12]) { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.6, 4), ibisB); l.position.set(0, 0.3, lz); g.add(l); }
+      g.position.set(x, y, z); g.rotation.y = ry; g.scale.setScalar(1.15); moo.add(g); return g; };
+    W.mooIbis = [ibis(5.2, 2.5, -6, 2.6), ibis(-6.3, 1.2, -50, -0.6)];
+    // parked: a white ute and a blue hatch
+    const car = (x, z, col, ute) => { const g = new THREE.Group(); mBox(1.9, 0.9, 4.6, mStd(col, { roughness: .35 }), 0, 0.95, 0, g);
+      mBox(1.8, 0.8, ute ? 1.9 : 2.6, mStd(0x2c3e50, { roughness: .2 }), 0, 1.8, ute ? 0.9 : 0.2, g);
+      for (const [wx, wz] of [[-.95, 1.5], [.95, 1.5], [-.95, -1.5], [.95, -1.5]]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.3, 12), mStd(0x222222)); w.rotation.z = Math.PI / 2; w.position.set(wx, 0.45, wz); g.add(w); }
+      g.position.set(x, 1.2, z); moo.add(g); };
+    car(2.9, -30, 0xf2f2ee, true); car(-2.9, -92, 0x2f6fb0, false);
+    // Toohey Forest closing off the end of the street: a ridge of dark gum bushland
+    const bush = mStd(0x3e5b38, { roughness: 1 }), bush2 = mStd(0x56774c, { roughness: 1 });
+    const ridge = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 12), bush); ridge.scale.set(260, 42, 60); ridge.position.set(10, -8, -300); moo.add(ridge);
+    for (let i = 0; i < 46; i++) { const c = new THREE.Mesh(new THREE.SphereGeometry(5 + rnd(i * 13 + 541) * 5, 8, 6), i % 3 ? bush : bush2); const x = -220 + rnd(i * 3 + 541) * 460;
+      c.position.set(x, 18 + 14 * Math.cos(x / 260 * 1.4) + rnd(i * 5 + 541) * 6, -262 - rnd(i * 7 + 541) * 30); moo.add(c); }
+    // gums and roofs along the street's far end, before the bush
+    for (let i = 0; i < 18; i++) { const c = new THREE.Mesh(new THREE.SphereGeometry(4 + rnd(i * 17 + 551) * 3, 8, 6), i % 2 ? bush2 : mango); const sd = i % 2 ? 1 : -1;
+      c.position.set(sd * (24 + rnd(i * 19 + 551) * 60), 7 + rnd(i + 553) * 5, -40 - rnd(i * 23 + 551) * 200); moo.add(c); }
+    // the city's towers, small, peeking over the ridge to the left
+    const cbd = mStd(0x8fa3bd, { roughness: .8 });
+    for (let i = 0; i < 12; i++) { const h = 30 + rnd(i * 3 + 561) * 40, b = new THREE.Mesh(new THREE.BoxGeometry(9, h, 9), cbd); b.position.set(-200 + i * 10 + rnd(i * 5 + 561) * 4, 10 + h / 2, -470); moo.add(b);
+      for (let k = 0; k < 5; k++) mooLights.push(b.position.x + (rnd(i * 7 + k) - 0.5) * 7, 14 + rnd(i * 11 + k) * (h - 4), -465.4); }
     const mlg = new THREE.BufferGeometry(); mlg.setAttribute("position", new THREE.Float32BufferAttribute(mooLights, 3));
     W.mooLights = new THREE.PointsMaterial({ color: 0xffd9a0, size: 0.75, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: true });
     moo.add(new THREE.Points(mlg, W.mooLights));
@@ -4925,8 +4899,6 @@ const handle = async (m, post) => {
     if (W.invFlags && !still) W.invFlags.forEach((f, i) => { f.rotation.y = Math.sin(t * 2.2 + i) * 0.35 + (st.wind || 15) / 60; });
     if (W.invFoam) W.invFoam.position.z = -32.5 + Math.sin(t * 0.8) * 0.9;
     if (W.koala && !still) W.koala.rotation.y = Math.sin(t * 0.3) * 0.4;
-    if (W.mooTrain && !still) { W.mooTrain.position.x += dt * 9; if (W.mooTrain.position.x > 260) W.mooTrain.position.x = -420; }
-    if (W.mooCar && !still) { W.mooCar.position.x += dt * 10; if (W.mooCar.position.x > 150) W.mooCar.position.x = -150; W.mooBus.position.x -= dt * 4; if (W.mooBus.position.x < -150) W.mooBus.position.x = 150; }  // a train every so often  // the koala looks about, slowly
     r.render(B.scene, cam);
   }
   function renderWeather() {
