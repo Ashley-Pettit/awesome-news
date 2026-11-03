@@ -1511,8 +1511,8 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   // Negative-news dial: each story gets a negativity score from its headline and summary
   // (headline words count double). The slider hides that share of negative stories,
   // most negative first.
-  const NEG_STRONG = /\b(?:kill(?:s|ed|ing)?|dead|deaths?|dies|died|dying|murder\w*|homicide|manslaughter|wars?|warfare|attacks?|attacked|bomb\w*|missiles?|airstrikes?|shooting|gunman|stabb\w*|terror\w*|massacre|genocide|rape\w*|sexual assault|abuse\w*|assault\w*|violen\w*|hostages?|fatal\w*|tragedy|tragic|disaster\w*|catastroph\w*|famine|starv\w*|earthquake|cyclone|tsunami|bushfires?|wildfires?|floods?|flooding|drown\w*|crash\w*|collapse\w*|recession|layoffs?|laid off|sacked|bankrupt\w*|insolven\w*|jailed|prison|sentenced|charged|arrest\w*|convicted|fraud\w*|scam\w*|scandal|corrupt\w*|ransomware|data breach|hack(?:ed|ers?)|outbreak|pandemic|overdose|suicide|victims?|injur\w*|hospitalis\w*|critical condition|missing|evacuat\w*|crisis|crises)\b/gi;
-  const NEG_MILD = /\b(?:fears?|feared|warn\w*|threat\w*|risk\w*|danger\w*|crackdown|protest\w*|riots?|clash\w*|slump\w*|plunge\w*|tumbl\w*|losses|lose|losing|cuts?|shortage\w*|struggl\w*|decline\w*|worst|fail\w*|blame\w*|lawsuit|sued|fined|penalt\w*|probe|investigat\w*|police|court|accused|allegation\w*|toxic|pollut\w*|extinct\w*|endangered|drought|heatwave|inflation|debt|deficit|backlash|outrage|anger|angry|grief|mourn\w*|condemn\w*|sanctions?|tariffs?|strikes?|delay\w*|outage|vulnerab\w*|malware|spyware|leak\w*)\b/gi;
+  const NEG_STRONG = /\b(?:kill(?:s|ed|ing)?|dead|deaths?|dies|died|dying|murder\w*|homicide|manslaughter|wars?|warfare|attacks?|attacked|bomb\w*|missiles?|airstrikes?|shooting|gunman|stabb\w*|terror\w*|massacre|genocide|rape\w*|sexual assault|abuse\w*|assault\w*|violen\w*|hostages?|fatal\w*|tragedy|tragic|disaster\w*|catastroph\w*|famine|starv\w*|earthquake|cyclone|tsunami|bushfires?|wildfires?|floods?|flooding|drown\w*|crash\w*|collapse\w*|recession|layoffs?|laid off|sacked|bankrupt\w*|insolven\w*|jailed|prison|sentenced|charged|arrest\w*|convicted|fraud\w*|scam\w*|scandal|corrupt\w*|ransomware|data breach|hack(?:ed|ers?)|outbreak|pandemic|overdose|suicide|victims?|injur\w*|hospitalis\w*|critical condition|missing|evacuat\w*|crisis|crises|deadly|toll|jail\w*|guilty|explosive\w*|lash\w*|hailstones?|severe|thunderstorms?|storms?|hack|hacks|cancer|disease\w*|conflict|invasion|troops|military|chaos|emergenc\w*|horrif\w*|shock\w*|contaminat\w*|recall\w*|choking|hazard\w*)\b/gi;
+  const NEG_MILD = /\b(?:fears?|feared|warn\w*|threat\w*|risk\w*|danger\w*|crackdown|protest\w*|riots?|clash\w*|slump\w*|plunge\w*|tumbl\w*|losses|lose|losing|cuts?|shortage\w*|struggl\w*|decline\w*|worst|fail\w*|blame\w*|lawsuit|sued|fined|penalt\w*|probe|investigat\w*|police|court|accused|allegation\w*|toxic|pollut\w*|extinct\w*|endangered|drought|heatwave|inflation|debt|deficit|backlash|outrage|anger|angry|grief|mourn\w*|condemn\w*|sanctions?|tariffs?|strikes?|delay\w*|outage|vulnerab\w*|malware|spyware|leak\w*|pain|hikes?|rate rises?|denies|denied|dispute\w*|tension\w*|slams?|furious|fury|aghast|exposure|closures?|shut\w*|targets?|trial|appeal\w*|apolog\w*|worse|alert\w*|sick|illness|concern\w*|controvers\w*|critic\w*|attack\w*|row|close|closing|fall|falls|falling|fell|poverty|poor|dent\w*|refused|bail|chase|battle\w*|blindsided|guns?|loses|lost|fall short|bankrupt\w*|stoush|surge in crime)\b/gi;
   const NEG_AT = 4;
   const negCache = new Map();
   const hits = (re, t) => (t.match(re) || []).length;
@@ -1523,7 +1523,9 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     negCache.set(i.id, n);
     return n;
   }
-  const isNegative = i => negScore(i) >= NEG_AT;
+  // The higher the dial, the less it takes to count as negative: at 100% even one worrying word in the headline does.
+  const negAt = () => { const c = Number(S.negCut) || 0; return c >= 90 ? 2 : c >= 60 ? 3 : NEG_AT; };
+  const isNegative = i => negScore(i) >= negAt();
   function calmer(list) {
     const cut = Number(S.negCut) || 0;
     if (!cut) return list;
