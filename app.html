@@ -197,6 +197,28 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
 @media (prefers-color-scheme: dark) { .wxwarn { color: #ffd4d4; background: #3a1414; box-shadow: inset 0 0 0 1px #6b2424; } }
 .np.warn .np-meta, .np.warn .np-h, .np.warn .np-acts, .np.warn .np-traffic { display: none; }
 .np.warn .np-cap { color: #ffd4d4; font-weight: 650; }
+/* Your drive (set up for you only: the private copy, or a website unlocked with the passphrase), after the weather in Listen */
+.np-traffic { margin: 0; padding: 14px 16px; border-radius: 18px; background: rgba(255, 255, 255, 0.08); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12); color: #ffffff; }
+.np-traffic[hidden] { display: none; }
+.np-traffic .tr-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.np-traffic .tr-top b { font-family: var(--display); font-size: 1.15rem; letter-spacing: -0.01em; }
+.np-traffic .tr-top span { font-size: 0.86rem; color: rgba(255, 255, 255, 0.7); white-space: nowrap; }
+.np-traffic ul { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
+.np-traffic li { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; font-size: 0.88rem; line-height: 1.35; }
+.np-traffic li i { font-style: normal; font-size: 0.66rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 7px; border-radius: 6px; background: rgba(255, 255, 255, 0.16); }
+.np-traffic li i.hot { background: #e5484d; }
+.np-traffic li small { display: block; color: rgba(255, 255, 255, 0.65); font-size: 0.8rem; }
+.np-traffic .tr-ok { margin: 10px 0 0; font-size: 0.9rem; color: rgba(255, 255, 255, 0.8); }
+.np-traffic .tr-src { margin: 10px 0 0; font-size: 0.7rem; color: rgba(255, 255, 255, 0.5); }
+.np.traffic .np-meta, .np.traffic .np-h, .np.traffic .np-cap, .np.traffic .np-acts { display: none; }
+.linkish { padding: 0; font: inherit; color: var(--accent); background: none; text-decoration: underline; text-underline-offset: 2px; }
+.cm-row { padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.cm-row:last-child { border-bottom: 0; }
+.cm-row .lbl { display: block; font-weight: 550; }
+.cm-row .add { padding: 6px 0 0; }
+.cm-row .add input { text-align: left; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.cm-saved { display: block; font-size: 0.78rem; color: var(--muted); margin-top: 6px; }
+.lb-drive b small { font-weight: 500; opacity: .8; }
 /* Logan news: its own Listen, under the main one */
 .lb-logan { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 8px; padding: 10px 14px 10px 10px; border-radius: 16px; text-align: left; font: inherit;
   color: var(--ink); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
@@ -1081,6 +1103,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
         <button class="lb-tv" type="button" data-open-tv id="lbTV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Watch</button>
       </div>
       <div class="lb-catch" id="lbCatch" role="status" hidden></div>
+      <div class="lb-catch lb-drive" id="lbDrive" role="status" hidden></div>
       <div class="lb-lgwrap" id="lbLgWrap"><button class="lb-logan" type="button" data-listen="logan" id="lbLogan" hidden><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg></span><span><b>Logan news</b><small id="lbLoganT">News about the City of Logan</small></span></button><button class="lb-fresh lg" type="button" data-listen="loganfresh" id="lbLoganFresh" aria-label="Logan news from the start, as if new" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3.5 4v5h5"/></svg>From the start</button></div>
       <button class="topsearch" type="button" data-open-search aria-label="Search all news">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
@@ -1154,6 +1177,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     <div class="np-meta"><span class="np-sec" id="npSec"></span><span id="npSrc"></span></div>
     <h2 class="np-h" id="npTitle"></h2>
     <p class="np-cap" id="npCap" aria-live="off"></p>
+    <div class="np-traffic" id="npTraffic" hidden></div>
     <div class="np-acts" id="npActs" hidden>
       <button type="button" class="np-act" id="npLike" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span>More like this</span></button>
       <button type="button" class="np-act" id="npRead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 11h16M4 16h10"/></svg><span>Read along</span></button>
@@ -1264,6 +1288,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   ];
   const CORE_IDS = new Set(SECTIONS.map(s => s.id));
   const DEFAULT_ON = [];                // set per build: interests switched on out of the box
+  const DEFAULT_COMMUTE = null;         // set per build: the private copy's drive to work (never in the public build: it's an address)
   const OWN_COLOUR = new Set([...CORE_IDS, "copilot"]);
   const PUBLISHERS = [
     { id: "ABC", label: "ABC News" }, { id: "SBS", label: "SBS News" }, { id: "BBC", label: "BBC" }, { id: "The Guardian", label: "The Guardian" }, { id: "7NEWS", label: "7NEWS" },
@@ -1868,6 +1893,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     wx.hidden = true; cue.hidden = p.kind !== "open";
     np.classList.toggle("calm", p.kind === "open");
     np.classList.toggle("warn", p.kind === "warn");
+    np.classList.toggle("traffic", p.kind === "traffic"); $("npTraffic").hidden = p.kind !== "traffic";
     if (p.kind === "open") npHello();
     if (p.kind === "wk") wxShowDay(p.date);  // the week ahead: the weather steps through each day as it's read
     else if (p.kind === "warn") wxListenOn();  // weather warnings: still on the weather screen
@@ -2275,6 +2301,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     // A Bureau warning for your area, under the forecast (links to the Bureau's page).
     const ww = $("wxWarn"), w0 = Date.now() - Date.parse(state.status?.updatedAt || 0) < 6 * 3600000 ? state.status?.warnings?.[S.region]?.[0] : null;
     if (ww) { ww.hidden = !w0; if (w0) { ww.href = w0.url; ww.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17.5v.5"/></svg><span>${esc(w0.title)}</span>`; } }
+    if (commuteSet() && !L.on) commuteNow().then(driveLine);  // your drive, ready before Listen is tapped (kept 5 minutes)
     if (!(L.on && L.scope === "logan") && $("lbLoganT")) $("lbLoganT").textContent = loganLine();
     catchLine();
     if (!L.on) { const sp = $("lbListen")?.querySelector("span:last-child"); if (sp) sp.innerHTML = lbIdle(); }
@@ -2811,6 +2838,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
         <button class="field danger" type="button" id="clearSaved">Clear saved stories <span class="sub" style="color:var(--muted)">${state.saved.length} saved</span></button>
       </div></div>`,
       listen: `${listenHTML() || `<p class="hint" style="margin-top:20px">This browser can't read stories out loud.</p>`}${tvAdsHTML()}
+      ${commuteOK() ? commuteHTML() : ""}
       <div class="group"><h2>Beta</h2><div class="card">
         ${toggle("data-betaheads", "1", !!store.get("brief.betaHeads", false), "Headlines list while listening", "After the weather, see the stories and tap one to hear it next")}
       </div><p class="hint">Still being tried out, so it may change.</p></div>`,
@@ -3375,6 +3403,8 @@ const handle = async (m, post) => {
       if (!d.ids.length) { toast(scope === "logan" ? "No Logan stories yet. They come with the next update." : "There's nothing to read out yet"); return; }
       L.scope = scope; L.secOf = d.secOf; L.driveSecs = d.secs;
       // Logan news uses Logan's weather while it plays (your own comes back when it stops).
+      L.commute = null;
+      if (scope !== "logan" && commuteSet()) { const c = await Promise.race([commuteNow(), new Promise(r => setTimeout(r, 4000))]); if (c) L.commute = c; }
       if (scope === "logan") { const lw = await Promise.race([loganWx(), new Promise(r => setTimeout(r, 2500))]); if (lw) { state.wxHome = state.wxHome || state.wx; state.wx = lw; } }
       document.body.classList.add("npstart"); $("npCue").dataset.k = ""; npHello();
       npOpen();
@@ -3457,6 +3487,7 @@ const handle = async (m, post) => {
         // quietly for a few seconds rather than switching to the phone's voice.
         pre.push(t ? { text: t, para: -1, kind: "open" } : { text: driveOpening(), para: -1, kind: "open", silent: usePre() });
         pre.push(...warnParts());  // any Bureau weather warning, straight after the weather
+        pre.push(...trafficParts());  // your drive, straight after the weather
       }
       // No "Next, tech." between sections: straight from one headline to the next.
       L.skipped = false;
@@ -5086,6 +5117,166 @@ const handle = async (m, post) => {
     if (changed) toast("Fresh stories are in");
   }
 
+  // ---- Your drive (just for you: the private copy has it set up; on the website it shows only once unlocked with the passphrase) ----
+  // After the weather, Listen tells you about the drive: to work before midday (leaving at your usual time), home after.
+  // Free and needs no sign-up: OpenStreetMap finds the addresses, the OSRM route planner gives the drive time with
+  // no traffic, and QLDTraffic (Queensland's Department of Transport and Main Roads, CC BY 4.0) gives the crashes,
+  // congestion, hazards, flooding and roadworks now. The estimate adds the usual peak-hour slowdown for when you
+  // leave, plus time for anything reported on the way. Addresses stay on this phone.
+  const QLDT = "https://api.qldtraffic.qld.gov.au/v2/events?apikey=3e83add325cbb69ac4d8e5bf433d770b";  // its public key
+  const commuteOK = () => !!DEFAULT_COMMUTE || !!A.unlocked;
+  const CM = () => { if (!commuteOK()) return {}; let v = null; try { v = store.get("brief.commute", null); } catch {}
+    return Object.assign({ leave: "07:45" }, DEFAULT_COMMUTE || {}, v && typeof v === "object" ? v : {}); };
+  const commuteSet = () => { const c = CM(); return !!(c.home?.lat && c.work?.lat); };
+  async function geocode(q) {
+    const u = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=au&viewbox=152.4,-26.6,153.6,-28.3&q=" + encodeURIComponent(q);
+    const d = await withTimeout(fetch(u, { headers: { "Accept-Language": "en-AU" } }).then(r => r.json()), 10000);
+    const h = d?.[0]; if (!h) return null;
+    const label = String(h.display_name || q).split(",").map(x => x.trim()).filter(x => !/^(Queensland|Australia|\d{4})$/.test(x)).slice(0, 3).join(", ");
+    return { q, label, lat: +h.lat, lon: +h.lon };
+  }
+  let QLDT_CACHE = null;
+  async function trafficEvents() {
+    if (QLDT_CACHE && Date.now() - QLDT_CACHE.at < 5 * 60000) return QLDT_CACHE.list;
+    const d = await withTimeout(fetch(QLDT).then(r => r.json()), 12000);
+    const list = (d?.features || []).filter(f => f?.properties?.status === "Published");
+    QLDT_CACHE = { at: Date.now(), list };
+    return list;
+  }
+  // Metres from a point to the route (a straight-line approximation, fine at city scale).
+  function distToRoute(pt, route) {
+    const k = 111320, cos = Math.cos(pt[1] * Math.PI / 180), X = p => p[0] * k * cos, Y = p => p[1] * k;
+    let best = Infinity;
+    for (let i = 1; i < route.length; i++) {
+      const ax = X(route[i - 1]), ay = Y(route[i - 1]), bx = X(route[i]), by = Y(route[i]), px = X(pt), py = Y(pt);
+      const dx = bx - ax, dy = by - ay, t = dx || dy ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy))) : 0;
+      best = Math.min(best, Math.hypot(px - ax - t * dx, py - ay - t * dy));
+    }
+    return best;
+  }
+  const pointsOf = g => !g ? [] : g.type === "Point" ? [g.coordinates] : g.type === "MultiPoint" || g.type === "LineString" ? g.coordinates
+    : g.type === "MultiLineString" || g.type === "Polygon" ? g.coordinates.flat() : g.type === "GeometryCollection" ? g.geometries.flatMap(pointsOf) : [];
+  let COMMUTE_CACHE = null;
+  const hm = d => new Intl.DateTimeFormat("en-AU", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: TZ }).format(d).replace(/\s/g, "").toLowerCase();
+  // How much slower than an empty road, by when you leave (weekday peaks in Brisbane's south and Logan).
+  function peakFactor(d) {
+    const p = new Intl.DateTimeFormat("en-AU", { weekday: "short", hour: "numeric", minute: "numeric", hourCycle: "h23", timeZone: TZ }).formatToParts(d),
+      g = t => p.find(x => x.type === t)?.value, wd = !["Sat", "Sun"].includes(g("weekday")), m = Number(g("hour")) * 60 + Number(g("minute"));
+    if (!wd) return 1.08;
+    if (m >= 450 && m < 510) return 1.4;   // 7:30 to 8:30
+    if (m >= 420 && m < 540) return 1.3;   // 7:00 to 9:00
+    if (m >= 390 && m < 570) return 1.15;
+    if (m >= 945 && m < 1110) return 1.35;  // 3:45 to 6:30
+    return 1.08;
+  }
+  const isWeekend = () => ["Sat", "Sun"].includes(new Intl.DateTimeFormat("en-AU", { weekday: "short", timeZone: TZ }).format(new Date()));
+  // The planned leaving time today (e.g. 7:45am), as a Date.
+  function leaveToday(hhmm) {
+    const [h, m] = String(hhmm || "07:45").split(":").map(Number), now = new Date();
+    const p = new Intl.DateTimeFormat("en-AU", { hour: "numeric", minute: "numeric", hourCycle: "h23", timeZone: TZ }).formatToParts(now), g = t => Number(p.find(x => x.type === t)?.value);
+    return new Date(now.getTime() + ((h * 60 + m) - (g("hour") * 60 + g("minute"))) * 60000 - now.getSeconds() * 1000);
+  }
+  async function commuteNow() {
+    const c = CM(); if (!c.home?.lat || !c.work?.lat || isWeekend()) return null;
+    // Addresses set up with rough map points get looked up properly once, then kept.
+    if (!commuteNow.tried) { commuteNow.tried = true;
+      for (const k of ["home", "work"]) if (c[k].approx) try { const hit = await geocode(c[k].q); if (hit) { c[k] = { ...hit, label: c[k].label || hit.label }; saveCommute(c); } } catch {} }
+    const toWork = hourNow() < 12, a = toWork ? c.home : c.work, b = toWork ? c.work : c.home, key = `${toWork}|${a.lat},${a.lon}|${b.lat},${b.lon}|${c.leave}`;
+    if (COMMUTE_CACHE?.key === key && Date.now() - COMMUTE_CACHE.at < 5 * 60000) return COMMUTE_CACHE.v;
+    try {
+      const [r, evs] = await Promise.all([
+        withTimeout(fetch(`https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${b.lon},${b.lat}?overview=full&geometries=geojson`).then(x => x.json()), 10000),
+        trafficEvents().catch(() => null)]);
+      const rt = r?.routes?.[0]; if (!rt) return null;
+      const line = rt.geometry.coordinates, now = Date.now();
+      const near = (evs || []).filter(f => {
+        const p = f.properties, t = p.event_type;
+        if (!["Crash", "Congestion", "Hazard", "Flooding", "Roadworks", "Special event"].includes(t)) return false;
+        const st = Date.parse(p.duration?.start || ""), en = Date.parse(p.duration?.end || "");
+        if (st > now || en < now) return false;
+        if ((t === "Roadworks" || t === "Special event") && /no blockage/i.test(p.impact?.impact_type || "")) return false;  // nothing in your way
+        return pointsOf(f.geometry).some(pt => distToRoute(pt, line) < 120);
+      }).map(f => { const p = f.properties; return { type: p.event_type, road: p.road_summary?.road_name || "", place: p.road_summary?.locality || "",
+        impact: p.impact?.impact_type || "", delay: p.impact?.delay || "", what: p.event_subtype || "" }; });
+      // When you leave: your usual time if it's still ahead, otherwise now.
+      const plan = toWork ? leaveToday(c.leave) : null, planned = !!plan && plan.getTime() > now - 5 * 60000, leave = planned ? plan : new Date(now);
+      const base = rt.duration / 60, extra = Math.min(25, near.reduce((t, e) => t + ({ Crash: 8, Congestion: 6, Flooding: 10, Hazard: 2, Roadworks: 3, "Special event": 3 })[e.type] || 0, 0));
+      const est = Math.round(base * peakFactor(leave) + extra), arrive = new Date(leave.getTime() + est * 60000);
+      const v = { toWork, base: Math.round(base), est, extra, planned, leaveAt: hm(leave), arriveAt: hm(arrive), km: Math.round(rt.distance / 100) / 10,
+        from: a.label, to: b.label, events: near.slice(0, 8), more: Math.max(0, near.length - 8) };
+      COMMUTE_CACHE = { key, at: Date.now(), v };
+      return v;
+    } catch { return null; }
+  }
+  const ORDER = ["Crash", "Flooding", "Hazard", "Congestion", "Roadworks", "Special event"];
+  const QUARTER = { "07:45": "a quarter to eight", "07:30": "half past seven", "08:00": "eight", "07:15": "a quarter past seven", "08:15": "a quarter past eight", "08:30": "half past eight", "07:00": "seven" };
+  const say5 = n => n <= 20 ? Math.max(2, n) : Math.min(120, Math.round(n / 5) * 5);
+  // What's said: Emma's lines are fixed (voice.py records them), the details are on screen.
+  function trafficParts() {
+    const c = L.commute; if (!c) return [];
+    const n = say5(c.est), at = QUARTER[CM().leave];
+    const parts = [c.toWork ? "Now, your drive to work." : "Now, your drive home.",
+      c.planned && at ? `Leaving at ${at}, allow about ${n} minutes.` : `Leaving now, allow about ${n} minutes.`];
+    const by = t => c.events.filter(e => e.type === t);
+    if (!c.events.length) parts.push("Nothing's been reported on your way.");
+    else {
+      for (const t of ORDER) {
+        const e = by(t); if (!e.length) continue;
+        const say = usePre() ? ({ Crash: e.length > 1 ? "There are crashes on your way." : "There's a crash on your way.", Flooding: "There's flooding on your way.",
+          Hazard: e.length > 1 ? "There are hazards on your way." : "There's a hazard on your way.", Congestion: "There's heavy traffic on your way.",
+          Roadworks: "There are roadworks on your way.", "Special event": "There's an event on your way." })[t]
+          : `${({ Crash: "A crash", Flooding: "Flooding", Hazard: "A hazard", Congestion: "Heavy traffic", Roadworks: "Roadworks", "Special event": "An event" })[t]} on ${[...new Set(e.map(x => x.road).filter(Boolean))].slice(0, 2).join(" and ") || "your way"}.`;
+        parts.push(say);
+      }
+      if (c.events.some(e => ["Crash", "Congestion", "Flooding"].includes(e.type) || /clos/i.test(e.impact))) parts.push("Allow some extra time.");
+      parts.push("The details are on screen.");
+    }
+    trafficCard(c);
+    return parts.map(text => ({ text, para: -1, kind: "traffic", opt: usePre() }));
+  }
+  function trafficCard(c) {
+    const hot = t => t === "Crash" || t === "Flooding" || t === "Congestion";
+    $("npTraffic").innerHTML = `<div class="tr-top"><b>${c.toWork ? "Your drive to work" : "Your drive home"}</b><span>About ${c.est} min · ${c.km} km</span></div>
+      <p class="tr-ok">Leave ${c.leaveAt}, there about ${c.arriveAt}. ${c.base} min with empty roads${c.extra ? `, plus about ${c.extra} for what's reported` : ""}.</p>
+      ${c.events.length ? `<ul>${c.events.map(e => `<li><i class="${hot(e.type) ? "hot" : ""}">${esc(e.type === "Congestion" ? "Traffic" : e.type)}</i><span>${esc(e.road || "On your way")}${e.place ? `, ${esc(e.place)}` : ""}<small>${esc([e.what, e.impact, e.delay].filter(x => x && x !== e.type).join(" · "))}</small></span></li>`).join("")}</ul>${c.more ? `<p class="tr-ok">And ${c.more} more.</p>` : ""}`
+        : `<p class="tr-ok">Nothing reported on your way right now.</p>`}
+      <p class="tr-src">An estimate: OSRM drive time (OpenStreetMap) with the usual peak-hour slowdown. Incidents: QLDTraffic.</p>`;
+  }
+  // On the home page, under Listen: the drive at a glance.
+  function driveLine(c) {
+    const box = $("lbDrive"); if (!box) return;
+    box.hidden = !c;
+    if (!c) return;
+    const hot = c.events.filter(e => ["Crash", "Congestion", "Flooding"].includes(e.type)).length;
+    box.innerHTML = `<div class="lc-t"><b>${c.toWork ? "Drive to work" : "Drive home"} · about ${c.est} min</b><small>Leave ${c.leaveAt}, there about ${c.arriveAt}. ${c.events.length ? `${c.events.length} thing${c.events.length > 1 ? "s" : ""} reported on the way${hot ? ", allow extra time" : ""}.` : "Nothing reported on the way."}</small></div>`;
+  }
+  function commuteHTML() {
+    const c = CM(), row = (k, label, ph) => `<div class="cm-row"><label class="lbl" for="cm-${k}">${label}</label>
+        <form class="add" data-commute="${k}"><input type="text" id="cm-${k}" placeholder="${ph}" maxlength="120" value="${esc(c[k]?.q || "")}" autocomplete="off"><button type="submit">Save</button></form>
+        ${c[k]?.label ? `<span class="cm-saved">Found: ${esc(c[k].label)} · <button type="button" class="linkish" data-commute-clear="${k}">Clear</button></span>` : ""}</div>`;
+    return `<div class="group"><h2>Your drive</h2><div class="card">
+      ${row("home", "Home", "Address or suburb")}${row("work", "Work", "Address or suburb")}
+      <div class="cm-row"><label class="lbl" for="cm-leave">Leave for work at</label><form class="add" data-commute-leave><input type="time" id="cm-leave" value="${esc(c.leave || "07:45")}"><button type="submit">Save</button></form></div>
+    </div><p class="hint">Weekdays, after the weather, Listen tells you about your drive: to work in the morning (leaving at this time), home after midday. Only you see this. Your addresses stay on this phone.</p></div>`;
+  }
+  const saveCommute = c => { const { home, work, leave } = c; store.set("brief.commute", { home, work, leave }); COMMUTE_CACHE = null; };
+  document.addEventListener("submit", async e => {
+    const lv = e.target.closest?.("[data-commute-leave]");
+    if (lv) { e.preventDefault(); const v = lv.querySelector("input").value; if (/^\d\d:\d\d$/.test(v)) { const c = CM(); c.leave = v; saveCommute(c); toast(`Leaving at ${v}`); } return; }
+    const f = e.target.closest?.("[data-commute]"); if (!f) return;
+    e.preventDefault();
+    const k = f.dataset.commute, q = f.querySelector("input").value.trim(), c = CM();
+    if (!q) { delete c[k]; saveCommute(c); renderSettings(); return; }
+    const btn = f.querySelector("button"); btn.disabled = true; btn.textContent = "Finding…";
+    let hit = null; try { hit = await geocode(q); } catch {}
+    if (!hit) { btn.disabled = false; btn.textContent = "Save"; toast("Couldn't find that address. Try adding the suburb."); return; }
+    c[k] = hit; saveCommute(c);
+    renderSettings(); toast(`${k === "home" ? "Home" : "Work"} saved: ${hit.label}`);
+  });
+  document.addEventListener("click", e => {
+    const b = e.target.closest?.("[data-commute-clear]"); if (!b) return;
+    const c = CM(); delete c[b.dataset.commuteClear]; saveCommute(c); renderSettings();
+  });
   // The page's build (stamped by build.py) against the latest on the site. Never mid-listen: it waits until you stop.
   let newBuild = false;
   async function checkBuild() {

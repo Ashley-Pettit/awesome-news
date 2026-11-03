@@ -213,7 +213,7 @@ PER_LOGAN = 60
 INTEREST_GROUPS = [("news", "News"), ("tech", "Tech & science"), ("life", "Life"), ("culture", "Culture"), ("planet", "Planet")]
 PER_INTEREST = 30
 PER_INTEREST_MORE = {"wildlife": 50, "truecrime": 50}  # interests with lots of good sources keep more
-PER_SOURCE_MOST = {"truecrime": 0.5}  # no one source takes more than this share (7NEWS posts crime all day)
+PER_SOURCE_MOST = {"truecrime": 0.32}  # no one source takes more than this share (7NEWS posts crime all day)
 NO_MINE = {"PC Gamer", "Kotaku", "Startup Daily", "Good News Network", "Positive News"}  # too niche to lend stories to other interests
 MAX_AGE_INTEREST = timedelta(days=10)  # niche feeds publish less often
 
