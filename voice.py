@@ -263,6 +263,16 @@ def week(w):
 # ---------------------------------------------------------------------------
 # What to say
 # ---------------------------------------------------------------------------
+def same_as_title(p, title):
+    """A paragraph that mostly repeats the headline: short, and most of its words are the headline's."""
+    words = lambda t: re.findall(r"[a-z0-9']+", t.lower())
+    pw, tw = words(p), set(words(title))
+    if not pw or not tw:
+        return False
+    hit = sum(1 for w in pw if w in tw)
+    return len(pw) <= len(tw) * 1.6 + 3 and hit / len(pw) >= 0.7
+
+
 def plan(data, vkey):
     """Every piece to make, most useful first, plus the pieces each story needs to be complete."""
     status = json.load(open(os.path.join(data, "status.json")))
@@ -334,7 +344,8 @@ def plan(data, vkey):
         ps = [x for x in (speakable(p) for p in (t or {}).get("paras") or []) if x]
         if not ps and i.get("summary"):
             ps = [x for x in [speakable(i["summary"])] if x]
-        return ps
+        # A first line that just says the headline again isn't read twice (sameAsTitle() in app.html).
+        return [x for n, x in enumerate(ps) if not (n < 2 and same_as_title(x, i.get("title", "")))]
 
     def body(ps, cap):
         out, w = [], 0

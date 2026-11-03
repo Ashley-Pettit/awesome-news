@@ -827,6 +827,10 @@ body.wxlisten #weather .bs-stop { display: grid; }
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border: 1px solid var(--bs-line); border-radius: 999px; padding: 6px 12px; }
 .bs-skip svg { width: 14px; height: 14px; }
 body.wxlisten #weather .bs-skip { display: inline-flex; }
+#weather .bs-warn { margin-top: 12px; max-width: 34rem; padding: 10px 14px; border-radius: 14px; font-size: 0.92rem; font-weight: 600; line-height: 1.35;
+  color: #ffffff; background: rgba(190, 30, 40, 0.82); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25); }
+#weather .bs-warn[hidden] { display: none; }
+#weather .bs-warn b { display: block; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.9; margin-bottom: 2px; }
 body.wxweek #weather .bs-weekbtn { display: none; }  /* already hearing it */
 /* Listen intro: the weather blurred behind the title, then it sharpens and comes forward */
 #weather .bs-hud { transition: opacity 0.8s ease; }
@@ -1865,9 +1869,11 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     np.classList.toggle("traffic", p.kind === "traffic"); $("npTraffic").hidden = p.kind !== "traffic";
     if (p.kind === "open") npHello();
     if (p.kind === "wk") wxShowDay(p.date);  // the week ahead: the weather steps through each day as it's read
+    else if (p.kind === "warn") wxListenOn();  // weather warnings: still on the weather screen
     else if (p.kind !== "open") wxListenOff();
+    const bw = $("bsWarn"); if (bw) { bw.hidden = p.kind !== "warn"; if (p.kind === "warn") bw.innerHTML = `<b>Weather warning</b>${esc(p.text.replace(/^Weather warning\.\s*/, ""))}`; }
     // Once a story itself is being read (not just its headline), it counts as heard.
-    if (L.kind === "drive" && !["open", "cue", "title", "wk"].includes(p.kind)) heardAdd(L.queue[L.at]);
+    if (L.kind === "drive" && !["open", "cue", "title", "wk", "warn", "traffic"].includes(p.kind)) heardAdd(L.queue[L.at]);
     // Straight after the weather: the headlines, so you can jump to one (and a tip about Settings).
     if (p.kind !== "open" && p.kind !== "wk" && L.kind === "drive" && L.opened && !L.listShown) {
       L.listShown = true;
@@ -3246,11 +3252,20 @@ const handle = async (m, post) => {
   const reports = i => { const p = publisherOf(i.source); return `${SAY_PUB[p] || p} reports.`; };
   // The paragraphs to read out, each with its place in the article (for highlighting). Trimmed for the
   // 30-minute listen, and always with the ready-made voice, since that's as far as its audio goes.
+  // A paragraph that mostly repeats the headline: short, and most of its words are the headline's (same_as_title() in voice.py).
+  function sameAsTitle(p, title) {
+    const words = t => String(t).toLowerCase().match(/[a-z0-9']+/g) || [];
+    const pw = words(p), tw = new Set(words(title));
+    if (!pw.length || !tw.size) return false;
+    const hit = pw.filter(w => tw.has(w)).length;
+    return pw.length <= tw.size * 1.6 + 3 && hit / pw.length >= 0.7;
+  }
   async function storyParas(i, trim) {
     let t = null;
     try { t = i.text ? (await loadText(i.text))?.[i.id] : null; if (!t) t = (await getOffline())[i.id] || null; if (!t && i.feed) t = (await loadText(i.feed))?.[i.id] || null; } catch {}
     let ps = (t?.paras || []).map((p, n) => [speakable(p), n]).filter(x => x[0]);
     if (!ps.length && i.summary) { const x = speakable(i.summary); if (x) ps = [[x, 0]]; }
+    ps = ps.filter((x, n) => !(n < 2 && sameAsTitle(x[0], i.title || "")));  // a first line that just repeats the headline isn't read twice
     if (trim) {
       const keep = []; let w = 0;
       for (const x of ps) { if (w >= DRIVE_WORDS) { keep.push([MORE_LINE, -1]); break; } keep.push(x); w += x[0].split(" ").length; }
@@ -3445,9 +3460,9 @@ const handle = async (m, post) => {
   }
   // Skip button on the weather while listening: straight on to the stories.
   function skipWeather() {
-    if (!L.on || !["open", "wk"].includes(L.parts[L.part]?.kind)) { wxListenOff(); return; }
+    if (!L.on || !["open", "wk", "warn"].includes(L.parts[L.part]?.kind)) { wxListenOff(); return; }
     const tk = ++L.token; hush(); L.paused = false;
-    const from = L.part; L.part = L.parts.findIndex((p, n) => n >= from && p.kind !== "open" && p.kind !== "wk"); if (L.part < 0) L.part = L.parts.length;
+    const from = L.part; L.part = L.parts.findIndex((p, n) => n >= from && !["open", "wk", "warn"].includes(p.kind)); if (L.part < 0) L.part = L.parts.length;
     wxListenOff(); updatePlayer(); armDog(); speakNext(tk);
   }
   // Stories already heard in Listen to the news are left out next time.
@@ -4217,6 +4232,7 @@ const handle = async (m, post) => {
           <div class="bs-what" id="bsWhat"></div>
         </div>
         <div class="bs-chips" id="bsChips"></div>
+        <div class="bs-warn" id="bsWarn" role="status" hidden></div>
       </section>
       <aside class="bs-rain" id="bsRain" aria-live="polite"></aside>
       <section class="bs-panel">
