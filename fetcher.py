@@ -108,9 +108,13 @@ REGIONS = {
     "act": ("Canberra", [], r"Canberra|Australian Capital Territory", r"ACT"),
     "nt": ("Northern Territory", [], r"Darwin|Northern Territory|Alice Springs|Katherine|Arnhem|Tiwi|Wadeye", r"NT"),
     # A town, not a state: Inverloch and the Bass Coast, from the local paper (the South Gippsland Sentinel-Times).
-    "inv": ("Inverloch", [("Sentinel-Times", "https://www.sgst.com.au/feed/")],
+    "inv": ("Inverloch and Melbourne", [("Sentinel-Times", "https://www.sgst.com.au/feed/")],
             r"Inverloch|Bass Coast|Wonthaggi|Leongatha|San Remo|Phillip Island|Cowes|Cape Paterson|Venus Bay|Tarwin|Korumburra|"
             r"Kilcunda|Anderson Inlet|Bunurong|Mirboo North|South Gippsland", r"(?!x)x"),
+    # A suburb: Moorooka and the suburbs around it first, then the rest of Brisbane.
+    "moo": ("Moorooka and Brisbane", [],
+            r"Moorooka|Yeronga|Yeerongpilly|Tarragindi|Annerley|Salisbury|Rocklea|Coopers Plains|Tennyson|Fairfield|Nathan|"
+            r"Holland Park|Toohey Forest|Beaudesert Road|Ipswich Road|Archerfield|Acacia Ridge|Moorvale", r"(?!x)x"),
 }
 # National feeds mined for each region's place names.
 REGION_MINE = [("ABC News", ABC_JUST_IN), ("ABC News", ABC_TOP), ("SBS News", SBS_AUSTRALIA), ("SBS News", SBS_LATEST),
@@ -194,6 +198,7 @@ SEQ = re.compile(r"\b(Southeast Queensland|South East Queensland|Brisbane|Logan|
                  r"Lockyer|Southeast Coast|Queensland\)?$|\(QLD\)$)", re.I)
 WARN_FEEDS = {"qld": ("https://www.bom.gov.au/fwo/IDZ00056.warnings_qld.xml", SEQ),
               "vic": ("https://www.bom.gov.au/fwo/IDZ00059.warnings_vic.xml", re.compile(r"\b(Central|Melbourne|Port Phillip|Yarra|Maribyrnong)\b", re.I)),
+              "moo": ("https://www.bom.gov.au/fwo/IDZ00056.warnings_qld.xml", SEQ),
               "inv": ("https://www.bom.gov.au/fwo/IDZ00059.warnings_vic.xml", re.compile(r"\b(West and South Gippsland|South Gippsland|Bass Coast|Gippsland|Westernport|Phillip Island|Powlett|Tarwin)\b", re.I))}
 # Logan's own local news, each with its pictures (and MyCity Logan's whole article in its feed).
 LOGAN_FEEDS = [("MyCity Logan", "https://mycitylogan.com.au/feed/"), ("Queensland Police", "https://mypolice.qld.gov.au/logan/feed/"),
@@ -207,7 +212,7 @@ PER_INTEREST_MORE = {"wildlife": 50}  # interests with lots of good sources keep
 NO_MINE = {"PC Gamer", "Kotaku", "Startup Daily", "Good News Network", "Positive News"}  # too niche to lend stories to other interests
 MAX_AGE_INTEREST = timedelta(days=10)  # niche feeds publish less often
 
-CITIES = {"logan": ("Logan", -27.64, 153.11), "inv": ("Inverloch", -38.63, 145.73), "qld": ("Brisbane", -27.47, 153.03), "nsw": ("Sydney", -33.87, 151.21), "vic": ("Melbourne", -37.81, 144.96),
+CITIES = {"logan": ("Logan", -27.64, 153.11), "inv": ("Inverloch", -38.63, 145.73), "moo": ("Moorooka", -27.535, 153.024), "qld": ("Brisbane", -27.47, 153.03), "nsw": ("Sydney", -33.87, 151.21), "vic": ("Melbourne", -37.81, 144.96),
           "wa": ("Perth", -31.95, 115.86), "sa": ("Adelaide", -34.93, 138.6), "tas": ("Hobart", -42.88, 147.33),
           "act": ("Canberra", -35.28, 149.13), "nt": ("Darwin", -12.46, 130.84)}
 SECTION_ORDER = ["copilot", "politics", "finance", "ai", "tech", "headlines"]
@@ -858,13 +863,16 @@ def main():
             buckets[target].append(st)
     sections = {s: sorted(v, key=lambda x: x["published"], reverse=True)[:PER_SECTION] for s, v in buckets.items()}
 
-    # 3. Local editions: the state's own feeds plus national stories naming its places.
-    for r in regions:
+    # 3. Local editions: the state's own feeds plus national stories naming its places. A town or suburb comes
+    # first, then its city's news after it (Moorooka then Brisbane, Inverloch then Melbourne).
+    parent = {"moo": "qld", "inv": "vic"}
+    for r in sorted(regions, key=lambda x: x in parent):
         _, rfeeds, names, abbr = REGIONS[r]
         place = re.compile(rf"\b({names})\b", re.I)
         short = re.compile(rf"\b({abbr})\b")
         items, su, stt = [], set(), set()
-        cands = [(s, u, False) for s, u in rfeeds] + [(s, u, True) for s, u in REGION_MINE]
+        cands = [(s, u, False) for s, u in rfeeds] + [(s, u, True) for s, u in REGION_MINE] \
+            + ([(s, u, True) for s, u in REGIONS[parent[r]][1]] if r in parent else [])
         for source, url, mined in cands:
             for it in raw.get(url, []):
                 st = to_story(it, source, now, MAX_AGE_LOCAL)
@@ -876,7 +884,13 @@ def main():
                 su.add(k)
                 stt.add(t)
                 items.append(st)
-        sections[f"local-{r}"] = sorted(items, key=lambda x: x["published"], reverse=True)[:PER_REGION]
+        items = sorted(items, key=lambda x: x["published"], reverse=True)
+        if r in parent:
+            mine = {x["id"] for x in items}
+            for x in items[:20]:
+                x["near"] = True  # the app keeps these ahead of the city's news in Local
+            items = items[:20] + [x for x in sections.get(f"local-{parent[r]}", []) if x["id"] not in mine]
+        sections[f"local-{r}"] = items[:PER_REGION + (20 if r in parent else 0)]
 
     # 3b. Interests: own feeds first, then any story whose headline matches the keywords.
     feed_source = {}

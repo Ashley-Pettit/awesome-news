@@ -1271,7 +1271,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   const REGION_FALLBACK = [{ id: "qld", label: "Queensland" }];
   // Every state the news update can fetch. Picking one asks the next update to include it.
   const ALL_REGIONS = [{ id: "qld", label: "Queensland" }, { id: "nsw", label: "New South Wales" }, { id: "vic", label: "Victoria" }, { id: "wa", label: "Western Australia" },
-    { id: "sa", label: "South Australia" }, { id: "tas", label: "Tasmania" }, { id: "act", label: "Canberra" }, { id: "nt", label: "Northern Territory" }, { id: "inv", label: "Inverloch" }];
+    { id: "sa", label: "South Australia" }, { id: "tas", label: "Tasmania" }, { id: "act", label: "Canberra" }, { id: "nt", label: "Northern Territory" }, { id: "inv", label: "Inverloch and Melbourne" }, { id: "moo", label: "Moorooka and Brisbane" }];
   const FOR_YOU_PER_SECTION = 7;
   const FEATURE_EVERY = 6;
   const MONO = { "ABC": "ABC", "SBS": "SBS", "BBC": "BBC", "M365": "365", "Microsoft": "MS", "Office 365": "IT", "Windows Central": "WC", "Ars": "Ars", "360info": "360", "Global Voices": "GV", "NASA": "NASA", "EFF": "EFF", "Mongabay": "MB", "Logan City Council": "LCC", "MyCity Logan": "ML", "Queensland Police": "QPS", "Jimboomba Times": "JT", "Sentinel-Times": "ST", "Australian Geographic": "AG", "Wildlife Victoria": "WV", "New Scientist": "NS", "ScienceDaily": "SD", "Smithsonian": "SM", "The Dodo": "Dodo", "KFF": "KFF", "TechCrunch": "TC", "iTnews": "iT", "The Conversation": "C", "The Guardian": "G", "7NEWS": "7" };
@@ -1480,7 +1480,8 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   const colourOf = id => !id || id === "topic" ? "var(--c-topic)" : OWN_COLOUR.has(id) ? `var(--c-${id})`
     : `var(--c-g-${allSections().find(s => s.id === id)?.group || "news"})`;
   // Stories you can read right here get a 6-hour head start in the order.
-  const rank = i => Date.parse(i.published) + (state.mode === "static" && i.text ? 6 * 3600e3 : 0);
+  const rank = i => Date.parse(i.published) + (state.mode === "static" && i.text ? 6 * 3600e3 : 0)
+    + (i.near && i._sid === "local" ? 5 * 864e5 : 0);  // your town or suburb's own news before the city's (Moorooka, Inverloch)
   const mutedRe = () => S.muted.length ? new RegExp(`\\b(${S.muted.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "i") : null;
   function allowed(list) {
     const mr = mutedRe();
@@ -3968,7 +3969,7 @@ const handle = async (m, post) => {
   // Weather for your local area (public site; free Open-Meteo forecast, no key)
   // ======================================================================
   const CITY = { qld: ["Brisbane", -27.47, 153.03], nsw: ["Sydney", -33.87, 151.21], vic: ["Melbourne", -37.81, 144.96], wa: ["Perth", -31.95, 115.86],
-    sa: ["Adelaide", -34.93, 138.6], tas: ["Hobart", -42.88, 147.33], act: ["Canberra", -35.28, 149.13], nt: ["Darwin", -12.46, 130.84], inv: ["Inverloch", -38.63, 145.73],
+    sa: ["Adelaide", -34.93, 138.6], tas: ["Hobart", -42.88, 147.33], act: ["Canberra", -35.28, 149.13], nt: ["Darwin", -12.46, 130.84], inv: ["Inverloch", -38.63, 145.73], moo: ["Moorooka", -27.535, 153.024],
     logan: ["Logan", -27.64, 153.11] };  // Logan news: its own weather
   // Whose weather the listen is using: Logan's during Logan news, otherwise your local area's.
   const wxPlace = () => L.scope === "logan" && L.on ? "logan" : S.region;
