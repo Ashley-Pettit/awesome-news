@@ -50,13 +50,18 @@ SAY = [(r"\b7NEWS\b", "Seven News"), (r"\b9News\b", "Nine News"), (r"\b10 News\b
        # Letters read as letters without full stops ("A.I." made her pause: "A. I."); plain caps already read right.
        # Said the Aussie way, "Queens-lend" (kwˈiːnzlɛnd), not "Queens-land".
        (r"\bQueensland(er|ers)?\b", r"Queenzlend\1"),
-       # Logan said "Low-gan" (lˈəʊɡan), with its suburbs Loganholme ("Low-gan home") and Loganlea ("Low-gan lee").
-       (r"\bLoganholme\b", "Lowgann home"), (r"\bLoganlea\b", "Lowgann lee"), (r"\bLogan\b", "Lowgann"),
+       # Loganholme ("Logan home") and Loganlea ("Logan lee"), so Logan in them is said the same as on its own (SOUNDS).
+       (r"\bLoganholme\b", "Logan home"), (r"\bLoganlea\b", "Logan lee"),
        # Money read in plain order: "$400 million" is "400 million dollars" (the voice otherwise says "dollar 400 million").
        (r"\b(?:A|AU|US|NZ)?\$\s?(\d[\d,]*(?:\.\d+)?)(\s(?:thousand|million|billion|trillion))?", r"\1\2 dollars"),
        (r"(?<![\w])\$\s?(\d[\d,]*(?:\.\d+)?)(\s(?:thousand|million|billion|trillion))?", r"\1\2 dollars"),
        (r"£\s?(\d[\d,]*(?:\.\d+)?)(\s(?:thousand|million|billion|trillion))?", r"\1\2 pounds"),
        (r"€\s?(\d[\d,]*(?:\.\d+)?)(\s(?:thousand|million|billion|trillion))?", r"\1\2 euros")]
+# Words no spelling gets right: once the text is turned into sounds, theirs are swapped in.
+# Logan the Aussie way, "Loh-gn" (lˈoʊɡən). Bump SOUNDSV when this changes, to remake the pieces with them.
+SOUNDS = [(re.compile(r"\bLogan"), re.compile(r"(?<![^\s.,;:!?\"“”‘’'(—–-])lˈəʊɡən"), "lˈoʊɡən")]
+SOUNDSV = 1
+SOUNDW = re.compile(r"\bLogan")
 # Pieces with these words were made before the pronunciation above was fixed: remake them once.
 # Bump SAYV (and add the words) whenever another pronunciation fix is added.
 SAYV, RESAY = 3, re.compile(r"Logan|Queensland|\bQld\b|\bSEQ\b|[$£€]|\b(?:AI|EVs?|ASX|RBA|CEO|LNP|SBS|ABC|BBC|EFF|iTnews)\b")
@@ -333,12 +338,13 @@ def make(a, data, vkey):
     # Reuse what earlier runs made.
     if a.reuse_from:
         base = a.reuse_from.rstrip("/") + "/data/voice/"
-        prev, fixed = {}, set()
+        prev, fixed, sfixed = {}, set(), set()
         try:
             pidx = json.loads(urllib.request.urlopen(base + f"index.json?v={int(t0)}", timeout=20).read())
             if pidx.get("v") == TAG and pidx.get("lk") == (lock_fp(vkey) if vkey else None):
                 prev = pidx.get("c", {})
                 fixed = set(pidx.get("fx", [])) if pidx.get("sayv") == SAYV else set()
+                sfixed = set(pidx.get("sfx", [])) if pidx.get("sndv") == SOUNDSV else set()
         except Exception as e:
             print("no earlier audio:", e)
 
@@ -350,6 +356,8 @@ def make(a, data, vkey):
                 return None
             if RESAY.search(text) and h not in fixed:
                 return None  # made with the old pronunciation
+            if SOUNDW.search(text) and h not in sfixed:
+                return None  # made before its words' sounds were fixed
             try:
                 b = urllib.request.urlopen(f"{base}{h}.{'bin' if got_t == 2 else 'mp3'}", timeout=30).read()
                 with open(os.path.join(out_dir, f"{h}.{'bin' if got_t == 2 else 'mp3'}"), "wb") as f:
@@ -385,7 +393,14 @@ def make(a, data, vkey):
             for pat, rep in SAY:
                 say = re.sub(pat, rep, say)
             try:
-                audio, sr = model.create(say, voice=VOICE, speed=1.0, lang=LANG)
+                if any(w.search(say) for w, _, _ in SOUNDS):
+                    ph = model.tokenizer.phonemize(say, LANG)
+                    for w, pat, snd in SOUNDS:
+                        if w.search(say):
+                            ph = pat.sub(snd, ph)
+                    audio, sr = model.create(ph, voice=VOICE, speed=1.0, lang=LANG, is_phonemes=True)
+                else:
+                    audio, sr = model.create(say, voice=VOICE, speed=1.0, lang=LANG)
             except Exception as e:
                 print("skip:", text[:60], e)
                 continue
@@ -419,6 +434,8 @@ def make(a, data, vkey):
     # Which of this shard's pieces carry the current pronunciation fixes.
     with open(os.path.join(out_dir, f"fx-{n_of}.json"), "w") as f:
         json.dump([j[0][:16] for j in mine if j[0][:16] in have and RESAY.search(j[1])], f)
+    with open(os.path.join(out_dir, f"snd-{n_of}.json"), "w") as f:
+        json.dump([j[0][:16] for j in mine if j[0][:16] in have and SOUNDW.search(j[1])], f)
     print(json.dumps({"shard": a.shard, "pieces": len(mine), "reused": reused, "made": made, "madeMinutes": round(secs / 60, 1),
                       "missing": len(mine) - len(have), "seconds": round(time.time() - t0)}))
 
@@ -438,6 +455,10 @@ def merge(data, vkey):
     for p in glob.glob(os.path.join(out_dir, "fx-*.json")):
         fx.update(json.load(open(p)))
         os.remove(p)
+    sfx = set()
+    for p in glob.glob(os.path.join(out_dir, "snd-*.json")):
+        sfx.update(json.load(open(p)))
+        os.remove(p)
     done = {}
     for sid, st in stories.items():
         bits = 0
@@ -451,7 +472,7 @@ def merge(data, vkey):
              "open": {r: {**o, "night": o["night"] if o.get("night") and key_of(o["night"]) in have else None,
                           "next": o["next"] if o.get("next") and key_of(o["next"]["text"]) in have else None}
                       for r, o in opens.items() if key_of(o["text"]) in have}, "sample": SAMPLE, "c": have, "s": done,
-             "sayv": SAYV, "fx": sorted(h for h in fx if h in have)}
+             "sayv": SAYV, "fx": sorted(h for h in fx if h in have), "sndv": SOUNDSV, "sfx": sorted(h for h in sfx if h in have)}
     with open(os.path.join(out_dir, "index.json"), "w") as f:
         json.dump(index, f, separators=(",", ":"))
     print(json.dumps({"pieces": len(jobs), "have": len(have), "stories": len(stories), "complete": len(done),
