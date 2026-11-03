@@ -2272,11 +2272,14 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     if (at >= 0) sheetStack.splice(at, 1);
     openSheet = sheetStack[sheetStack.length - 1] || null;
     if (!openSheet) document.body.classList.remove("locked");
-    if (!fromPop) { try { if (history.state && history.state.sheet) history.back(); } catch {} }
+    if (!fromPop) { try { if (history.state && history.state.sheet) { ownBack = true; history.back(); } } catch {} }
     if (id === "interests" && openSheet === "settings") renderSettings();
     if (!openSheet) render(true);
   }
-  window.addEventListener("popstate", () => { if (openSheet) hideSheet(openSheet, true); });
+  // Our own history.back() (closing a sheet with Done) mustn't also close the sheet underneath it,
+  // so Settings, Your interests, Done comes back to Settings.
+  let ownBack = false;
+  window.addEventListener("popstate", () => { if (ownBack) { ownBack = false; return; } if (openSheet) hideSheet(openSheet, true); });
   document.addEventListener("keydown", e => {
     const typing = e.target.matches?.("input, textarea, select, [contenteditable]");
     if (!typing && !e.metaKey && !e.ctrlKey && !e.altKey) {
