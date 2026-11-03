@@ -154,7 +154,13 @@ INTERESTS = [
                                                         ("The Conversation", "https://theconversation.com/topics/climate-change-27/articles.atom"),
                                                         ("The Guardian", GU.format("au/environment")), ("Mongabay", "https://news.mongabay.com/feed/")],
      r"climate|emissions?|renewables?|solar|wind farms?|coal|net zero|pollution|plastics?|recycling|drought|floods?|flooding|bushfires?|heatwaves?|environment\w*|carbon"),
-    ("wildlife", "Wildlife & nature", "planet", [("Mongabay", "https://news.mongabay.com/feed/")],
+    ("wildlife", "Wildlife & nature", "planet", [("Mongabay", "https://news.mongabay.com/feed/"),
+                                                 ("Australian Geographic", "https://www.australiangeographic.com.au/feed/"),
+                                                 ("The Guardian", "https://www.theguardian.com/environment/wildlife/rss"),
+                                                 ("Wildlife Victoria", "https://www.wildlifevictoria.org.au/feed"),
+                                                 ("New Scientist", "https://www.newscientist.com/subject/life/feed/"),
+                                                 ("ScienceDaily", "https://www.sciencedaily.com/rss/plants_animals.xml"),
+                                                 ("Smithsonian", "https://www.smithsonianmag.com/rss/science-nature/")],
      r"wildlife|species|animals?|birds?|koalas?|kangaroos?|reefs?|whales?|sharks?|crocs?|crocodiles?|turtles?|conservation|endangered|extinct\w*|insects?|bees?|forests?|national parks?"),
 ]
 # Logan: the council's own news, a news search, and any story from any feed that's about the City of Logan.
@@ -196,6 +202,7 @@ PER_LOGAN = 60
 
 INTEREST_GROUPS = [("news", "News"), ("tech", "Tech & science"), ("life", "Life"), ("culture", "Culture"), ("planet", "Planet")]
 PER_INTEREST = 30
+PER_INTEREST_MORE = {"wildlife": 50}  # interests with lots of good sources keep more
 NO_MINE = {"PC Gamer", "Kotaku", "Startup Daily", "Good News Network", "Positive News"}  # too niche to lend stories to other interests
 MAX_AGE_INTEREST = timedelta(days=10)  # niche feeds publish less often
 
@@ -885,7 +892,7 @@ def main():
                 su.add(k)
                 stt.add(t)
                 items.append(st)
-        sections[iid] = sorted(items, key=lambda x: x["published"], reverse=True)[:PER_INTEREST]
+        sections[iid] = sorted(items, key=lambda x: x["published"], reverse=True)[:PER_INTEREST_MORE.get(iid, PER_INTEREST)]
 
     # 3c. Logan: the council's news, a news search, and anything from any feed that's about the City of Logan.
     if a.interests == "all":
