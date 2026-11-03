@@ -1895,13 +1895,37 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
       : c <= 80 ? "a few showers" : c <= 81 ? "showers" : c <= 82 ? "heavy showers" : c <= 86 ? "snow showers" : c === 95 ? "storms" : "storms with hail";
   }
   const rainLine = (p, when) => p >= 90 ? ` It's going to rain ${when}.` : p >= 70 ? ` Rain is likely ${when}.` : ` There's a ${p} percent chance of rain.`;  // rain_line() in voice.py
+  // When the rain is due on a day, from the hourly forecast: " Rain is forecast from 8am to 10am." (rain_when() in voice.py)
+  function rainWhen(w, date, when, start = 5) {
+    const hr = w.hourly || {}, t = hr.time || [], p = hr.precipitation_probability || [], c = hr.weather_code || [];
+    const say = h => h % 24 === 0 ? "midnight" : h === 12 ? "midday" : `${h % 12}${h < 12 ? "am" : "pm"}`;
+    const wet = t.map((x, k) => [x, k]).filter(([x, k]) => x.slice(0, 10) === date && +x.slice(11, 13) >= start && (p[k] ?? 0) >= 50).map(([x, k]) => [+x.slice(11, 13), c[k] ?? 0]);
+    if (!wet.length) {
+      const hrs = t.map((x, k) => [p[k] ?? 0, x]).filter(([, x]) => x.slice(0, 10) === date && +x.slice(11, 13) >= start).sort((a, b) => b[0] - a[0]);
+      return { part: hrs.length && hrs[0][0] >= 20 ? (+hrs[0][1].slice(11, 13) < 12 ? "in the morning" : +hrs[0][1].slice(11, 13) < 18 ? "in the afternoon" : "in the evening") : "" };
+    }
+    const spans = [];
+    for (const [h] of wet) { if (spans.length && h - spans[spans.length - 1][1] <= 2) spans[spans.length - 1][1] = h; else spans.push([h, h]); }
+    const what = wet.some(([, k]) => k >= 95) ? "Storms are" : "Rain is", day = when === "today" ? "" : ` ${when}`;
+    if (wet.length >= 14) return { text: ` ${what} forecast most of the day${day}.` };
+    if (spans.length > 2) return { text: ` ${what} forecast on and off${day}, from ${say(spans[0][0])} to ${say(spans[spans.length - 1][1] + 1)}.` };
+    return { text: ` ${what} forecast${day} ${spans.map(([a, b]) => `from ${say(a)} to ${say(b + 1)}`).join(" and again ")}.` };
+  }
+  function rainSay(w, dy, n, when) {
+    const r = rainWhen(w, dy.time[n], when);
+    if (r.text) return r.text;
+    const p = dy.precipitation_probability_max?.[n] ?? 0;
+    if (p < 20) return "";
+    const line = rainLine(p, when);
+    return r.part ? line.slice(0, -1) + `, most likely ${r.part}.` : line;
+  }
   function driveOpening() {
     let wx = "";
     try {
       const v0 = state.wx && wxView(state.wx), n = v0 ? v0.di + 1 : -1;
       if (v0 && isNight() && v0.dy.time[n]) {
         const dy = v0.dy, p = dy.precipitation_probability_max?.[n] ?? 0;
-        wx = ` First, tomorrow's weather in ${state.wx.city}. Expect ${wxExpect(dy.weather_code[n])} tomorrow, with a top of ${Math.round(dy.temperature_2m_max[n])} degrees and a low of ${Math.round(dy.temperature_2m_min[n])}.${p >= 20 ? rainLine(p, "tomorrow") : ""}`;
+        wx = ` First, tomorrow's weather in ${state.wx.city}. Expect ${wxExpect(dy.weather_code[n])} tomorrow, with a top of ${Math.round(dy.temperature_2m_max[n])} degrees and a low of ${Math.round(dy.temperature_2m_min[n])}.${rainSay(state.wx, dy, n, "tomorrow")}`;
       } else if (state.wx) {
         const v = wxView(state.wx);
         wx = ` First, the weather in ${state.wx.city}. It's ${Math.round(v.cur.temperature_2m)} degrees ${wxSay(v.cur.weather_code, v.cur.is_day)}. ${wxSummary(v).replace(/°/g, " degrees").replace(/\((\d+)%\)/g, ", $1 percent").replace(/\((\d+)\)/g, "$1")}`;
@@ -3922,7 +3946,9 @@ const handle = async (m, post) => {
     const p = k => hr.precipitation_probability?.[k] ?? 0;
     let first = -1, peak = 0, mm = 0;
     for (let k = h; k < end; k++) { if (first < 0 && p(k) >= 50) first = k; peak = Math.max(peak, p(k)); mm += hr.precipitation?.[k] ?? 0; }
-    if (first >= 0) { const storm = (hr.weather_code?.[first] ?? 0) >= 95; out.push(`${storm ? "Storms" : "Rain"} likely ${first === h ? "now" : "from " + clock(hr.time[first])} (${p(first)}%)${mm >= 0.5 ? `, about ${mm < 10 ? mm.toFixed(1) : Math.round(mm)} mm over the next 12 hours` : ""}`); }
+    if (first >= 0) { const storm = (hr.weather_code?.[first] ?? 0) >= 95; let last = first; while (last + 1 < end && p(last + 1) >= 50) last++;
+      const until = last + 1 < hr.time.length ? (+hr.time[last + 1].slice(11, 13) === 0 ? "midnight" : clock(hr.time[last + 1])) : "";
+      out.push(`${storm ? "Storms" : "Rain"} likely ${first === h ? "now" : "from " + clock(hr.time[first])}${until ? (first === h ? " until " : " to ") + until : ""} (${p(first)}%)${mm >= 0.5 ? `, about ${mm < 10 ? mm.toFixed(1) : Math.round(mm)} mm over the next 12 hours` : ""}`); }
     else if (peak >= 25) out.push(`A small chance of a shower (up to ${peak}%)`);
     else out.push("Dry for the next 12 hours");
     const hi = dy.temperature_2m_max?.[di];

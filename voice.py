@@ -149,6 +149,61 @@ def rain_line(p, when):
             else f" There's a {p} percent chance of rain.")
 
 
+def clock(h):
+    """Hour of the day as said aloud: 8am, midday, 3pm, midnight (clock() in app.html)."""
+    return "midnight" if h % 24 == 0 else "midday" if h == 12 else f"{h % 12}{'am' if h < 12 else 'pm'}"
+
+
+def rain_when(w, date, when, start=5):
+    """When the rain is due on a day, from the hourly forecast: " Rain is forecast from 8am to 10am."
+    None when no hour that day is likely to be wet (then the day's chance of rain is said instead).
+    rainWhen() in app.html."""
+    hr = w.get("hourly") or {}
+    times, probs, codes = hr.get("time") or [], hr.get("precipitation_probability") or [], hr.get("weather_code") or []
+    wet = [(int(t[11:13]), codes[k] if k < len(codes) else 0) for k, t in enumerate(times)
+           if t[:10] == date and int(t[11:13]) >= start and k < len(probs) and (probs[k] or 0) >= 50]
+    if not wet:
+        return None
+    spans = []  # runs of wet hours, a one-hour dry gap still counts as the same rain
+    for h, _ in wet:
+        if spans and h - spans[-1][1] <= 2:
+            spans[-1][1] = h
+        else:
+            spans.append([h, h])
+    what = "Storms are" if any(c >= 95 for _, c in wet) else "Rain is"
+    day = f" {when}" if when != "today" else ""
+    if len(wet) >= 14:
+        return f" {what} forecast most of the day{day}."
+    if len(spans) > 2:
+        return f" {what} forecast on and off{day}, from {clock(spans[0][0])} to {clock(spans[-1][1] + 1)}."
+    said = " and again ".join(f"from {clock(a)} to {clock(b + 1)}" for a, b in spans)
+    return f" {what} forecast{day} {said}."
+
+
+def rain_say(w, d, n, when):
+    """The rain line for a day: when it's due if the hours show it, else the day's chance of rain."""
+    t = rain_when(w, d["time"][n], when)
+    if t:
+        return t
+    p = (d.get("precipitation_probability_max") or [None] * (n + 1))[n]
+    if p is None or p < 20:
+        return ""
+    line = rain_line(p, when)
+    part = rain_part(w, d["time"][n])
+    return line[:-1] + f", most likely {part}." if part and line.endswith(".") else line
+
+
+def rain_part(w, date, start=5):
+    """The part of the day the rain is most likely: in the morning, in the afternoon, in the evening."""
+    hr = w.get("hourly") or {}
+    hrs = [(hr["precipitation_probability"][k] or 0, int(t[11:13])) for k, t in enumerate(hr.get("time") or [])
+           if t[:10] == date and int(t[11:13]) >= start and k < len(hr.get("precipitation_probability") or [])]
+    if not hrs:
+        return ""
+    peak, h = max(hrs)
+    return "" if peak < 20 else "in the morning" if h < 12 else "in the afternoon" if h < 18 else "in the evening"
+
+
 def opening(region, w):
     """The start of the 30-minute listen, from the forecast saved with the news."""
     d = w["daily"]
@@ -163,9 +218,7 @@ def opening(region, w):
     sky = WMO.get(d["weather_code"][k], "mixed weather")
     text = (f"{brand} for {day:%A} the {ordinal(day.day)} of {day:%B}. First, the weather in {city}. "
             f"Expect {sky} today, with a top of {round(d['temperature_2m_max'][k])} degrees and a low of {round(d['temperature_2m_min'][k])}.")
-    rain = d.get("precipitation_probability_max", [None] * (k + 1))[k]
-    if rain is not None and rain >= 20:
-        text += rain_line(rain, "today")
+    text += rain_say(w, d, k, "today")
     # Listening at night (6pm on), the opening gives tomorrow's weather instead.
     night = None
     if k + 1 < len(d["time"]):
@@ -173,16 +226,13 @@ def opening(region, w):
         night = (f"{brand} for {day:%A} the {ordinal(day.day)} of {day:%B}. First, tomorrow's weather in {city}. "
                  f"Expect {WMO.get(d['weather_code'][n], 'mixed weather')} tomorrow, with a top of {round(d['temperature_2m_max'][n])} degrees "
                  f"and a low of {round(d['temperature_2m_min'][n])}.")
-        rain = d.get("precipitation_probability_max", [None] * (n + 1))[n]
-        if rain is not None and rain >= 20:
-            night += rain_line(rain, "tomorrow")
+        night += rain_say(w, d, n, "tomorrow")
         # Listening just after midnight, before the morning update: tomorrow's own opening.
         nd = day + timedelta(days=1)
         nxt = (f"{brand} for {nd:%A} the {ordinal(nd.day)} of {nd:%B}. First, the weather in {city}. "
                f"Expect {WMO.get(d['weather_code'][n], 'mixed weather')} today, with a top of {round(d['temperature_2m_max'][n])} degrees "
                f"and a low of {round(d['temperature_2m_min'][n])}.")
-        if rain is not None and rain >= 20:
-            nxt += rain_line(rain, "today")
+        nxt += rain_say(w, d, n, "today")
         night = (night, {"day": nd.strftime("%Y-%m-%d"), "text": nxt})
     return today, text, night
 

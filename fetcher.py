@@ -162,8 +162,19 @@ LOGAN_NEWS = "https://www.logan.qld.gov.au/news"
 # Everything new on the council's website (news, media releases, events, projects, notices). The site
 # blocks feed readers, so its pages are found through a news search and each link is turned back into
 # the council's own address.
-LOGAN_SITE_SEARCH = "https://news.google.com/rss/search?" + urllib.parse.urlencode(
-    {"q": "site:logan.qld.gov.au when:21d", "hl": "en-AU", "gl": "AU", "ceid": "AU:en"})
+LOGAN_SITE_SEARCH = ["https://news.google.com/rss/search?" + urllib.parse.urlencode(
+    {"q": q, "hl": "en-AU", "gl": "AU", "ceid": "AU:en"}) for q in (
+    "site:logan.qld.gov.au when:21d", "site:logan.qld.gov.au media releases when:21d", "site:logan.qld.gov.au project when:21d")]
+# Only the council pages that are news about what council is doing: media releases, weekly news briefs,
+# projects and upgrades, and have-your-say consultations. Service pages, notices, grant records, jobs
+# and event listings are left out.
+LOGAN_SITE_NEWS = re.compile(r"/(media-releases|news|projects?|[a-z-]*upgrade[a-z-]*|have-your-say|consultations?|major-projects|"
+                             r"city-projects|planning-projects|priority-development-areas?)/", re.I)
+LOGAN_SITE_TITLE = re.compile(r"\b(news briefs?|statement|mayor|council (approves|adopts|endorses|announces|delivers|invests|welcomes)|"
+                              r"funding|upgrade|transformation|project|plan(s|ning)? for|invited to|have your say|new [a-z]+ (opens|open|for)|"
+                              r"budget|opens|launch(es|ed)?|boost|milestone|construction|works? (start|begin|complete))\b", re.I)
+LOGAN_SITE_SKIP = re.compile(r"/(careers|vacanc|rates|payments?|forms?|dashboard|sale-of-land|disclosure|grants-and-funding/.*cbf|"
+                             r"whats-on/events|events?/|bins?|waste-and-recycling/[a-z-]+$)", re.I)
 LOGAN_RSS = ["https://www.logan.qld.gov.au/rss/news", "http://www.logan.qld.gov.au/about-council/news-and-publications/connect/rss/feeds/latest-news"]
 # Logan's own local news, each with its pictures (and MyCity Logan's whole article in its feed).
 LOGAN_FEEDS = [("MyCity Logan", "https://mycitylogan.com.au/feed/"), ("Queensland Police", "https://mypolice.qld.gov.au/logan/feed/"),
@@ -386,11 +397,20 @@ def gnews_real_url(url):
     if not m:
         return url
     aid = m.group(1)
+    for go in range(2):  # Google sometimes turns a lookup away; one more try after a short wait
+        real = _gnews_lookup(aid)
+        if real:
+            return real
+        time.sleep(2)
+    return url
+
+
+def _gnews_lookup(aid):
     try:
         pg = get(f"https://news.google.com/rss/articles/{aid}", timeout=20).decode("utf-8", "replace")
         sig, ts = re.search(r'data-n-a-sg="([^"]+)"', pg), re.search(r'data-n-a-ts="([^"]+)"', pg)
         if not (sig and ts):
-            return url
+            return None
         rq = ["Fbv4je", '["garturlreq",[["X","X",["X","X"],null,null,1,1,"US:en",null,1,null,null,null,null,null,0,1],'
               f'"X","X",1,[1,1,1],1,1,null,0,0,null,0],"{aid}",{ts.group(1)},"{sig.group(1)}"]']
         body = ("f.req=" + urllib.parse.quote(json.dumps([[rq]]))).encode()
@@ -398,9 +418,9 @@ def gnews_real_url(url):
             "User-Agent": UA, "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"})
         out = urllib.request.urlopen(req, timeout=20).read().decode("utf-8", "replace")
         real = json.loads(json.loads(out.split("\n\n")[1])[0][2])[1]
-        return real if isinstance(real, str) and real.startswith("http") else url
+        return real if isinstance(real, str) and real.startswith("http") else None
     except Exception:
-        return url
+        return None
 
 
 def logan_council():
@@ -414,17 +434,24 @@ def logan_council():
                 break
         except Exception:
             pass
-    try:
-        found = parse_feed(LOGAN_SITE_SEARCH)
-    except Exception:
-        found = []
+    found, seen = [], set()
+    for u in LOGAN_SITE_SEARCH:
+        try:
+            for it in parse_feed(u):
+                if it["url"] not in seen:
+                    seen.add(it["url"])
+                    found.append(it)
+        except Exception:
+            pass
     for it in found:
         it["title"] = re.sub(r"(\s+[-\u2013|]\s+Logan(?: City Council)?)+\s*$", "", html.unescape(it["title"])).strip()
         it["summary"] = ""
     with cf.ThreadPoolExecutor(6) as ex:
-        for it, real in zip(found, ex.map(lambda i: gnews_real_url(i["url"]), found)):
+        for it, real in zip(found, ex.map(lambda i: gnews_real_url(i["url"]) or "", found)):
             it["url"] = real
-    return got + [it for it in found if "logan.qld.gov.au" in it["url"] or "news.google.com" in it["url"]]
+    news = [it for it in found if "logan.qld.gov.au" in it["url"] and not LOGAN_SITE_SKIP.search(it["url"])
+            and not re.match(r"CBF\d", it["title"]) and (LOGAN_SITE_NEWS.search(it["url"]) or LOGAN_SITE_TITLE.search(it["title"]))]
+    return got + news
 
 
 def is_sport(it):
