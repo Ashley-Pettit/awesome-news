@@ -469,6 +469,7 @@ body.beta-heads button.np-pos::after { content: ""; display: inline-block; width
 .hl-logo { width: 84px; height: 84px; border-radius: 21px; box-shadow: 0 18px 48px rgba(124, 92, 255, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.14); animation: hlPop 0.7s cubic-bezier(0.2, 0.9, 0.25, 1.2) both; }
 .hl-name { font-size: clamp(2.6rem, 12vw, 4.4rem); line-height: 1; letter-spacing: -0.04em; color: transparent; background: linear-gradient(100deg, #ffffff 30%, #cdbdff 50%, #ffffff 70%) 0 0 / 250% 100%; -webkit-background-clip: text; background-clip: text;
   animation: npIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.08s both, hlShine 1.6s ease-in-out 0.3s both; }
+.hl-for { margin-top: -4px; padding: 5px 14px; border-radius: 999px; font-family: var(--ui); font-size: 0.95rem; font-weight: 800; letter-spacing: 0.02em; color: #fff; background: linear-gradient(90deg, rgba(139, 108, 255, 0.5), rgba(255, 143, 177, 0.5)); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22); }
 .hl-date { font-family: var(--ui); font-size: 0.8rem; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255, 255, 255, 0.72); }
 .hl-line { width: 56px; height: 3px; border-radius: 3px; background: linear-gradient(90deg, #8b6cff, #ff8fb1); animation: hlLine 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s both; }
 @keyframes hlPop { from { opacity: 0; transform: scale(0.6) rotate(-8deg); } to { opacity: 1; transform: none; } }
@@ -1762,10 +1763,11 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   function npHello() {
     const cue = $("npCue"), np = $("np");
     $("npWx").hidden = true; cue.hidden = false; np.classList.add("calm");
-    if (cue.dataset.k === "open") return;
-    cue.dataset.k = "open";
+    const lg = L.scope === "logan", k = lg ? "open:logan" : "open";  // Logan news says so, under the title
+    if (cue.dataset.k === k) return;
+    cue.dataset.k = k;
     const date = new Intl.DateTimeFormat("en-AU", { timeZone: TZ, weekday: "long", day: "numeric", month: "long" }).format(new Date());
-    cue.innerHTML = `<div class="np-hello"><img class="hl-logo" src="${APP_ICON}" alt=""><span class="hl-name">Awesome News</span><span class="hl-date np-in" style="--i:3">${esc(date)}</span><span class="hl-line" aria-hidden="true"></span></div>`;
+    cue.innerHTML = `<div class="np-hello"><img class="hl-logo" src="${APP_ICON}" alt=""><span class="hl-name">Awesome News</span>${lg ? `<span class="hl-for np-in" style="--i:2">for Logan</span>` : ""}<span class="hl-date np-in" style="--i:3">${esc(date)}</span><span class="hl-line" aria-hidden="true"></span></div>`;
   }
   function npOpen() {
     $("npLogo").src = APP_ICON;
