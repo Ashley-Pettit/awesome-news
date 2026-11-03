@@ -320,6 +320,11 @@ body.playing .lb-ic svg { animation: pulse 1.2s ease-in-out infinite; }
 .tvs-sound svg { width: 20px; height: 20px; }
 .tvs-big { position: absolute; z-index: 1; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 72px; height: 72px; border-radius: 50%; display: grid; place-items: center; background: rgba(11, 10, 18, 0.7); color: #ffffff; pointer-events: none; }
 .tvs-big svg { width: 32px; height: 32px; margin-left: 4px; }
+.tvs-ad { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; justify-content: center; gap: 8px; padding: 18px 22px; background: #14112a; color: #ffffff; pointer-events: none; }
+.tvs-ad[hidden] { display: none; }
+.tvs-ad small { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #b6a3ff; }
+.tvs-ad b { font-family: var(--display); font-size: clamp(1.05rem, 4.2vw, 1.6rem); line-height: 1.18; text-wrap: balance; }
+.tvs-ad p { margin: 0; font-size: 0.92rem; line-height: 1.4; color: rgba(255, 255, 255, 0.78); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .tvs-prog { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; height: 3px; background: rgba(255, 255, 255, 0.18); pointer-events: none; }
 .tvs-prog i { display: block; height: 100%; width: 0; background: #b6a3ff; transition: width 1s linear; }
 .tvs-end { position: absolute; inset: 0; z-index: 3; display: grid; place-content: center; gap: 12px; text-align: center; background: rgba(11, 10, 18, 0.92); padding: 16px; }
@@ -1150,6 +1155,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     <button type="button" class="tvs-shield" id="tvsShield" aria-label="Pause or play"></button>
     <button type="button" class="tvs-sound" id="tvsSound" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>Tap for sound</button>
     <div class="tvs-big" id="tvsBig" hidden><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.8v14.4a1 1 0 0 0 1.5.86l11.2-7.2a1 1 0 0 0 0-1.72L8.5 3.94A1 1 0 0 0 7 4.8z"/></svg></div>
+    <div class="tvs-ad" id="tvsAd" role="status" hidden><small>While YouTube plays an ad (sound off)</small><b id="tvsAdT"></b><p id="tvsAdS"></p></div>
     <div class="tvs-prog"><i id="tvsProg"></i></div>
     <div class="tvs-end" id="tvsEnd" hidden><p><b>That's about 30 minutes of news.</b>Want to keep going?</p><button type="button" class="pill-btn" id="tvsMore">Keep watching</button></div></div>
   <div class="tvs-now"><div class="tvs-ch" id="tvsCh"></div><h2 class="tvs-t" id="tvsTitle"></h2><p class="tvs-s" id="tvsSum"></p></div>
@@ -3489,8 +3495,8 @@ const handle = async (m, post) => {
       const r = anew ? null : getResume(L.scope || "all"), base = L.queue.slice();
       let pool = base;
       if (r) { pool = [...base.filter(id => !r.queue.includes(id)), ...r.queue]; L.secOf = new Map([...(L.secOf || []), ...r.sec]); resumed = true; }
-      const fresh = [];
-      for (const id of pool) if ((anew || !seenish(id)) && !fresh.some(k => k === id || sameStory(k, id))) fresh.push(id);
+      const fresh = [], seen = seenLike();
+      for (const id of pool) if ((anew || !seen(id)) && !fresh.some(k => k === id || sameStory(k, id))) fresh.push(id);
       topUp(fresh, 24);
       const old = []; for (const id of pool) if (!fresh.includes(id) && !old.some(k => k === id || sameStory(k, id))) old.push(id);
       if (!fresh.length && !old.length) { toast("You've heard all the news for now. New stories come with the next update."); npClose(); return; }
@@ -3608,13 +3614,19 @@ const handle = async (m, post) => {
   const heardish = id => HEARD.has(id) || siblings(id).some(x => HEARD.has(x));
   // Heard in Listen, or read in the app.
   const seenish = id => heardish(id) || state.read.has(id) || siblings(id).some(x => state.read.has(x));
+  // Also the same story from another outlet, worded differently (you read 7NEWS's, Listen has ABC's): checked
+  // against the stories you've read or heard that are still in today's news.
+  function seenLike() {
+    const mine = [...new Set([...[...state.read].slice(-400), ...HEARD])].filter(id => findItem(id));
+    return id => seenish(id) || mine.some(r => sameStory(r, id));
+  }
   // Beta: more stories when the list runs low: anything Emma has read that hasn't been heard, newest first.
   function topUp(queue, want) {
     if (L.scope === "logan") return queue;  // Logan news stays about Logan
-    const have = new Set(queue), dep = i => i.text ? 2 : i.feed ? 1 : 0;
+    const have = new Set(queue), dep = i => i.text ? 2 : i.feed ? 1 : 0, seen = seenLike();
     for (const i of forYou().slice().sort((a, b) => dep(b) - dep(a))) {
       if (queue.length >= want) break;
-      if (have.has(i.id) || seenish(i.id) || (usePre() && !preReady(i)) || !listenable(i) || queue.some(k => sameStory(k, i.id))) continue;
+      if (have.has(i.id) || seen(i.id) || (usePre() && !preReady(i)) || !listenable(i) || queue.some(k => sameStory(k, i.id))) continue;
       queue.push(i.id); have.add(i.id); if (L.secOf && !L.secOf.has(i.id)) L.secOf.set(i.id, "more headlines");
     }
     return queue;
@@ -3816,8 +3828,8 @@ const handle = async (m, post) => {
   function tvAdsHTML() {
     if (state.mode === "claude") return "";  // TV here opens the website, which has its own copy of this setting
     return `<div class="group"><h2>Watch TV</h2><div class="card">
-      ${toggle("data-skipads", "1", S.skipAds, "Skip ads", "Jump to the next clip when an ad starts")}
-    </div><p class="hint">YouTube puts the ads in, so the app can't remove them. It skips to the next clip instead.</p></div>`;
+      ${toggle("data-skipads", "1", S.skipAds, "Hide ads", "Sound off and headlines on screen while an ad plays")}
+    </div><p class="hint">YouTube puts the ads in, so the app can't remove them. It mutes them and shows you the news until your clip starts.</p></div>`;
   }
   function listenHTML() {
     if (!canSpeak && !aiOK) return "";
@@ -5013,6 +5025,7 @@ const handle = async (m, post) => {
   }
   // Move to clip n (wrapping round to the start), stopping after about 30 minutes until asked for more.
   function tvGo(n) {
+    if (TV.adAt) adEnd();
     const p = TV.player; if (!p?.loadVideoById || $("tvs").hidden) return;
     if (!TV.items.length) return;
     if (n >= TV.items.length) n = 0;
@@ -5070,12 +5083,24 @@ const handle = async (m, post) => {
       const t = p.getCurrentTime() || 0;
       TV.frozen = Math.abs(t - (TV.lastT ?? -1)) < 0.05 ? (TV.frozen || 0) + 0.5 : 0;
       TV.lastT = t;
+      // An ad: skipping to the next clip just meant another ad, so instead the sound goes off and headlines
+      // cover it until the clip starts. A very long ad (over a minute) moves on after all.
       if ((vid && want && vid !== want) || TV.frozen >= 2) {
-        TV.frozen = 0; TV.adSkips = (TV.adSkips || 0) + 1;
-        toast("Ad skipped. On to the next clip.", 2200);
-        tvGo(TV.idx + 1);
-      }
+        if (!TV.adAt) { TV.adAt = Date.now(); TV.adWasMuted = !!p.isMuted?.(); p.mute?.(); TV.adCard = 0; adHeadline(); $("tvsAd").hidden = false; }
+        else if (Date.now() - TV.adAt > 60000) { adEnd(); tvGo(TV.idx + 1); }
+        else if (Date.now() - TV.adCard > 7000) adHeadline();
+      } else if (TV.adAt && vid === want) adEnd();
     } catch {}
+  }
+  function adHeadline() {
+    const list = forYou().filter(i => i.title).slice(0, 30); if (!list.length) return;
+    const i = list[(TV.adN = ((TV.adN || 0) + 1)) % list.length]; TV.adCard = Date.now();
+    $("tvsAdT").textContent = i.title; $("tvsAdS").textContent = String(i.summary || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 240);
+  }
+  function adEnd() {
+    if (!TV.adAt) return;
+    const p = TV.player; TV.adAt = 0; TV.frozen = 0; $("tvsAd").hidden = true;
+    try { if (!TV.adWasMuted) p.unMute?.(); } catch {}
   }
   function tvTick() {
     clearInterval(TV.tick); clearInterval(TV.adTick);

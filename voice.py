@@ -452,7 +452,9 @@ def make(a, data, vkey):
 
     # Make the rest, until the time runs out.
     made, secs = 0, 0.0
-    todo = [j for j in mine if j[0][:16] not in have]
+    # An open piece is still wanted when only a locked recording of the same words exists: phones without the
+    # passphrase can't play the locked one, so whole stories stayed unready for them.
+    todo = [j for j in mine if j[0][:16] not in have or (not j[2] and have.get(j[0][:16]) != 1)]
     if todo and time.time() - t0 < a.budget:
         import lameenc
         import numpy as np
@@ -466,7 +468,7 @@ def make(a, data, vkey):
             if time.time() - t0 > a.budget:
                 break
             h = k[:16]
-            if h in have:  # the same words were already made (open beats locked)
+            if h in have and (lock or have[h] == 1):  # the same words were already made (open beats locked)
                 continue
             say = text
             for pat, rep in SAY:
