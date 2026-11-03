@@ -1025,7 +1025,10 @@ def main():
                 if WARN_KIND.search(t) and area.search(t) and not re.search(r"\b(Final|Cancellation|Marine|Coastal Waters)\b", t, re.I):
                     got.append({"title": t, "url": it["url"], "issued": (it["published"] or now).strftime("%Y-%m-%dT%H:%M:%SZ"),
                                 "say": "Weather warning. " + re.sub(r"\s+-\s+", ", ", t).rstrip(".") + "."})
-            warnings[r] = got[:4]
+            # Storms and severe weather first, then floods and the rest; ones naming the area itself ahead of wider ones.
+            rank = lambda w: (0 if re.search(r"Thunderstorm|Severe Weather|Cyclone|Tsunami", w["title"], re.I) else 1,
+                              0 if re.search(r"Southeast Queensland|Brisbane|Logan", w["title"], re.I) else 1)
+            warnings[r] = sorted(got, key=rank)[:4]
         except Exception as e:
             errors.append(f"warnings {r}: {e}")
     if "qld" in warnings:
