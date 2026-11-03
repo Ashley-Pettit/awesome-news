@@ -4444,6 +4444,8 @@ const handle = async (m, post) => {
     const W = BS.W; if (!W.bris || !W.inv) return;
     const pl = typeof wxPlace === "function" ? wxPlace() : S.region, vic = ["vic", "inv"].includes(pl), lo = pl === "logan", mo = pl === "moo";
     W.bris.visible = !vic && !lo && !mo; if (W.logan) W.logan.visible = lo; if (W.moo) W.moo.visible = mo;
+    const B = BS.B; if (B) { if (!B.camHome) B.camHome = [B.camBase.clone(), B.camLook.clone()];  // Moorooka is seen from a little higher up, looking over the roundabout
+      if (mo) { B.camBase.set(0, 15, 46); B.camLook.set(0, 5, -60); } else { B.camBase.copy(B.camHome[0]); B.camLook.copy(B.camHome[1]); } }
     W.inv.visible = false; if (W.inv2) W.inv2.visible = vic;  // beta: the driftwood beach for Inverloch
   }
   function bsBuild(THREE) {
@@ -4642,104 +4644,136 @@ const handle = async (m, post) => {
     const llg = new THREE.BufferGeometry(); llg.setAttribute("position", new THREE.Float32BufferAttribute(lgLights, 3));
     W.loganLights = new THREE.PointsMaterial({ color: 0xffd9a0, size: 0.7, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: true });
     lgn.add(new THREE.Points(llg, W.loganLights));
-    // ---- Moorooka: a street of high-set Queenslanders under jacarandas, petals on the road, bins out (and an ibis on one),
-    // power poles and wires, the bushland of Toohey Forest at the end of the street, the city's towers peeking over ----
+    // ---- Moorooka, its landmarks in one view (seen from a little higher up): the Beaudesert Road roundabout with cars going
+    // round, "Little Africa" shops and Ethiopian restaurants up Beaudesert Road, the Magic Mile of Motors car yards with
+    // bunting and pylon signs, Queenslanders and jacarandas, Toohey Forest on the ridge, the city far off ----
     const moo = new THREE.Group(); moo.visible = false; scene.add(moo); W.moo = moo;
     const mooLights = [], mStd = (color, o) => new THREE.MeshStandardMaterial(Object.assign({ color, roughness: .9 }, o || {}));
     const mTex = (w, h, draw) => { const c = document.createElement("canvas"); c.width = w; c.height = h; draw(c.getContext("2d"), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; };
     const mBox = (w, h, d, mat, x, y, z, par) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); (par || moo).add(m); return m; };
-    const jacSeason = month >= 9 && month <= 11;
-    const mGrass = mStd(0x6f9a4f, { roughness: 1 });
+    const mText = (w, h, bg, fg, lines, opt) => mTex(w, h, (g, cw, ch) => { g.fillStyle = bg; g.fillRect(0, 0, cw, ch); if (opt?.border) { g.strokeStyle = fg; g.lineWidth = 6; g.strokeRect(5, 5, cw - 10, ch - 10); }
+      g.fillStyle = fg; g.textAlign = "center"; g.textBaseline = "middle"; const n = lines.length;
+      lines.forEach((t, k) => { let fs = ch / n * 0.62; g.font = `800 ${fs}px Arial, sans-serif`; while (g.measureText(t).width > cw * 0.9 && fs > 8) { fs -= 2; g.font = `800 ${fs}px Arial, sans-serif`; } g.fillText(t, cw / 2, ch * (k + 0.5) / n + 2); }); });
+    const jacSeason = month >= 9 && month <= 11, RZ = -2;  // RZ: the roundabout's centre
+    const mGrass = mStd(0x6f9a4f, { roughness: 1 }), asphalt = mStd(0x4a4d52, { roughness: .95 }), paveM = mStd(0xcfc9bc), whiteM = mStd(0xf2f2f2);
     mBox(900, 1, 700, mGrass, 0, 0.5, -200);  // covers the river: no water here
-    // the street runs away from you: road, kerbs, footpaths, mGrass verges
-    mBox(8, 0.2, 340, mStd(0x4a4d52, { roughness: .95 }), 0, 1.1, -130);
-    [-1, 1].forEach(sd => { mBox(0.4, 0.35, 340, mStd(0xa39c8c), sd * 4.2, 1.18, -130); mBox(1.4, 0.24, 340, mStd(0xcfc9bc), sd * 5.8, 1.12, -130); });
-    // jacaranda petals on the road and verges, in season
-    const petalM = new THREE.MeshStandardMaterial({ color: 0xa88cf0, transparent: true, opacity: jacSeason ? .8 : 0, depthWrite: false, roughness: 1, polygonOffset: true, polygonOffsetFactor: -2 });
-    // picket fences along the front of each yard
-    const picketT = mTex(128, 32, (g, w, h) => { g.clearRect(0, 0, w, h); g.fillStyle = "#f4f1ea"; for (let x = 2; x < w; x += 16) { g.fillRect(x, 6, 9, h - 6); g.beginPath(); g.moveTo(x, 6); g.lineTo(x + 4.5, 0); g.lineTo(x + 9, 6); g.fill(); } g.fillRect(0, 10, w, 3); g.fillRect(0, 24, w, 3); });
-    picketT.wrapS = THREE.RepeatWrapping; picketT.repeat.set(80, 1);
-    const picketM = new THREE.MeshStandardMaterial({ map: picketT, alphaTest: .5, side: THREE.DoubleSide, roughness: .9 });
-    [-1, 1].forEach(sd => { const f = new THREE.Mesh(new THREE.PlaneGeometry(300, 1.1), picketM); f.rotation.y = Math.PI / 2; f.position.set(sd * 9.6, 1.55, -115); moo.add(f); });
-    // the houses: high-set on stumps, battens underneath, a front verandah with white balustrade and stairs, hip roofs in red, silver and green
+    // Beaudesert Road (away from you, and back towards you) and the cross street, meeting at the roundabout
+    mBox(10, 0.2, 300, asphalt, 0, 1.1, RZ - 150); mBox(10, 0.2, 60, asphalt, 0, 1.1, RZ + 30); mBox(400, 0.2, 9, asphalt, 0, 1.1, RZ);
+    [-1, 1].forEach(sd => { mBox(3.6, 0.26, 300, paveM, sd * 7.1, 1.13, RZ - 165); mBox(400, 0.26, 3, paveM, 0, 1.13, RZ + sd * 6); });
+    const disc = new THREE.Mesh(new THREE.CylinderGeometry(14, 14, 0.2, 48), asphalt); disc.position.set(0, 1.12, RZ); moo.add(disc);
+    // the roundabout: kerbed island, garden mound, palms, a low MOOROOKA sign wall, give-way lines
+    const kerb = new THREE.Mesh(new THREE.CylinderGeometry(6.8, 6.8, 0.5, 40), mStd(0xd8d2c4)); kerb.position.set(0, 1.35, RZ); moo.add(kerb);
+    const isl = new THREE.Mesh(new THREE.CylinderGeometry(6.4, 6.4, 0.52, 40), mStd(0x5f8f45, { roughness: 1 })); isl.position.set(0, 1.4, RZ); moo.add(isl);
+    const mound = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 10), mStd(0x4f7d3a, { roughness: 1 })); mound.scale.set(4.6, 1.3, 4.6); mound.position.set(0, 1.5, RZ); moo.add(mound);
+    const bloom = [0xe74c3c, 0xf1c40f, 0xff7aa8, 0xffffff];
+    for (let k = 0; k < 22; k++) { const a = k / 22 * 6.28, f = new THREE.Mesh(new THREE.SphereGeometry(0.45, 6, 5), mStd(bloom[k % 4])); f.position.set(Math.cos(a) * 5.4, 1.85, RZ + Math.sin(a) * 5.4); moo.add(f); }
+    const frond = mStd(0x4f7d3a, { roughness: 1 }), palmT = mStd(0x8b8378);
+    const palm = (x, z, h) => { const t = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, h, 6), palmT); t.position.set(x, 1 + h / 2, z); moo.add(t);
+      for (let k = 0; k < 8; k++) { const f = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.08, 0.7), frond); const a = k / 8 * 6.28; f.position.set(x + Math.cos(a) * 1.6, 1 + h + 0.4, z + Math.sin(a) * 1.6); f.rotation.set(0, -a, -0.45); moo.add(f); } };
+    palm(-2.6, RZ - 2.4, 7.5); palm(2.4, RZ - 2.8, 9); palm(0, RZ - 3.6, 8);
+    const signWall = new THREE.Mesh(new THREE.BoxGeometry(9.6, 2.1, 0.7), [mStd(0xb5835a), mStd(0xb5835a), mStd(0xb5835a), mStd(0xb5835a),
+      new THREE.MeshStandardMaterial({ map: mText(512, 112, "#9c4a32", "#fff8ea", ["MOOROOKA"]), roughness: .8 }), mStd(0xb5835a)]); signWall.position.set(0, 2.5, RZ + 3.4); moo.add(signWall);
+    [[0, RZ + 14.5, 9, 0.5], [0, RZ - 14.5, 9, 0.5], [-14.5, RZ, 0.5, 8], [14.5, RZ, 0.5, 8]].forEach(([x, z, w, d]) => mBox(w, 0.22, d, whiteM, x, 1.22, z));
+    // cars going round (clockwise, as they do here)
+    const carCols = [0xc0392b, 0xf2f2ee, 0x2f6fb0, 0x2c3e50, 0xe67e22, 0x7f8c8d, 0x16a085, 0xf1c40f, 0x8e44ad, 0xbdc3c7];
+    const carM = carCols.map(c => mStd(c, { roughness: .35 })), cabM = mStd(0x22303c, { roughness: .2 }), tyreM = mStd(0x1e1e1e);
+    const car = (col, par) => { const g = new THREE.Group(); mBox(1.9, 0.85, 4.3, carM[col % carM.length], 0, 0.9, 0, g); mBox(1.75, 0.7, 2.4, cabM, 0, 1.65, -0.1, g);
+      for (const [wx, wz] of [[-.95, 1.4], [.95, 1.4], [-.95, -1.4], [.95, -1.4]]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.3, 10), tyreM); w.rotation.z = Math.PI / 2; w.position.set(wx, 0.42, wz); g.add(w); }
+      (par || moo).add(g); return g; };
+    const ring = new THREE.Group(); ring.position.set(0, 1.2, RZ); moo.add(ring); W.mooRing = ring;
+    [0, 2.3, 4.2].forEach((a, k) => { const c = car(k * 3 + 1, ring); const r = 10.2; c.position.set(Math.cos(a) * r, 0, Math.sin(a) * r); c.rotation.y = -a; });
+    // "Little Africa": shops up both sides of Beaudesert Road, Ethiopian and Eritrean restaurants with awnings in green, gold and red,
+    // and hanging signs you can read from the roundabout
+    const SHOPS = [["ETHIOPIAN RESTAURANT", "#f3c76b", "#5a2a1e", 1], ["AFRICAN GROCERIES", "#c86f4c", "#fff3d9", 0], ["ERITREAN CAFÉ", "#e9d8b4", "#2f5d50", 1], ["HALAL BUTCHER", "#d9b8c4", "#4b1f2e", 0],
+      ["INJERA & COFFEE", "#f1ead8", "#7a3b2e", 1], ["BARBER", "#8fae9a", "#ffffff", 0], ["ETHIOPIAN KITCHEN", "#e7a65a", "#3b1f12", 1], ["AFRICAN FASHION", "#c9b8e0", "#33204f", 0],
+      ["SOMALI RESTAURANT", "#a9c48d", "#24401c", 1], ["PHARMACY", "#b7cbd8", "#1d4f3a", 0], ["NEWSAGENT", "#e6e0cf", "#1f3b63", 0], ["HAIR BRAIDING", "#e9c3d3", "#5a1f3e", 0], ["BAKERY", "#f2d7a6", "#7a3b2e", 0], ["MONEY TRANSFER", "#9cc3d9", "#123a5a", 0]];
+    const flagT = mTex(64, 64, (g, w, h) => { ["#078930", "#fcdd09", "#da121a"].forEach((c, k) => { g.fillStyle = c; g.fillRect(0, k * h / 3, w, h / 3); }); });
+    const awnPlain = mStd(0x5d6b78, { roughness: .6 }), awnFlag = new THREE.MeshStandardMaterial({ map: flagT, roughness: .7 });
+    const goodsT = [0, 1, 2].map(v => mTex(128, 64, (g, cw, ch) => { g.fillStyle = "#2b3d4c"; g.fillRect(0, 0, cw, ch); g.fillStyle = "#18242d"; g.fillRect(cw / 2 - 12, 0, 24, ch);
+      for (let i = 0; i < 10; i++) { const x = 6 + rnd(v * 50 + i + 601) * (cw - 20); if (Math.abs(x - cw / 2) < 16) continue; g.fillStyle = ["#f5c400", "#e74c3c", "#27ae60", "#f39c12", "#ecf0f1"][i % 5]; g.fillRect(x, 26 + rnd(v * 90 + i) * 20, 7, 8 + rnd(i * 3 + v) * 12); } }));
+    W.mooGlow = goodsT.map(t => new THREE.MeshStandardMaterial({ map: t, emissive: 0x8a6a34, emissiveIntensity: 0, roughness: .3 }));
+    [-1, 1].forEach(sd => { let z = RZ - 16;
+      for (let k = 0; k < 13; k++) { const s = SHOPS[(k * 2 + (sd > 0 ? 1 : 0)) % SHOPS.length], w = 8 + rnd(k * 7 + sd + 611) * 3, h = k % 3 === 0 ? 8.5 : 5.8 + rnd(k + sd + 621) * 0.8, zc = z - w / 2, fx = sd * 9.0;
+        const col = mStd(new THREE.Color(s[1]).getHex());
+        const body = new THREE.Mesh(new THREE.BoxGeometry(10, h, w), col); body.position.set(sd * 14, 1 + h / 2, zc); moo.add(body);
+        if (k === 0) { const cn = new THREE.Mesh(new THREE.PlaneGeometry(9.4, 1.4), new THREE.MeshStandardMaterial({ map: mText(384, 58, s[1], s[2], [s[0]], { border: true }), roughness: .9 }));
+          cn.position.set(sd * 14, 1 + h - 1, zc + w / 2 + 0.02); moo.add(cn);
+          const cg = new THREE.Mesh(new THREE.PlaneGeometry(8.6, 2.7), W.mooGlow[0]); cg.position.set(sd * 14, 2.5, zc + w / 2 + 0.02); moo.add(cg);
+          mBox(10.4, 0.26, 2.8, s[3] ? awnFlag : awnPlain, sd * 14, 4.15, zc + w / 2 + 1.4); }
+        const nm = new THREE.Mesh(new THREE.PlaneGeometry(w - 0.8, 1.15), new THREE.MeshStandardMaterial({ map: mText(384, 56, s[1], s[2], [s[0]], { border: true }), roughness: .9 }));
+        nm.rotation.y = -sd * Math.PI / 2; nm.position.set(fx - sd * 0.02, 1 + h - 0.9, zc); moo.add(nm);
+        const gl = new THREE.Mesh(new THREE.PlaneGeometry(w - 0.8, 2.7), W.mooGlow[k % 3]); gl.rotation.y = -sd * Math.PI / 2; gl.position.set(fx - sd * 0.02, 2.5, zc); moo.add(gl);
+        mBox(2.8, 0.26, w, s[3] ? awnFlag : awnPlain, sd * 7.6, 4.15, zc);
+        mBox(0.12, 3, 0.12, awnPlain, sd * 6.3, 2.6, zc + w / 2 - 0.3);
+        // hanging sign under the awning, facing down the road towards the roundabout
+        const bl = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 0.95), new THREE.MeshStandardMaterial({ map: mText(256, 96, s[3] ? "#078930" : s[1], s[3] ? "#fcdd09" : s[2], s[0].split(" ").length > 2 ? [s[0].split(" ").slice(0, 2).join(" "), s[0].split(" ").slice(2).join(" ")] : s[0].split(" ")), roughness: .7, side: THREE.DoubleSide }));
+        bl.position.set(sd * 7.4, 3.3, zc + w / 2 - 0.6); moo.add(bl);
+        mooLights.push(sd * 8.7, 2.3, zc - w * .25, sd * 8.7, 2.3, zc + w * .25);
+        z -= w; } });
+    // the Magic Mile of Motors along Ipswich Road, behind the left-hand shops: car yards, bunting, a showroom and pylon signs
+    mBox(140, 0.16, 120, mStd(0x5a5d62, { roughness: .95 }), -95, 1.08, -95);
+    const yardCars = new THREE.InstancedMesh(new THREE.BoxGeometry(2, 0.9, 4.3), mStd(0xffffff, { roughness: .35 }), 96), yardCabs = new THREE.InstancedMesh(new THREE.BoxGeometry(1.8, 0.7, 2.4), cabM, 96);
+    const dm = new THREE.Object3D(), cc = new THREE.Color(); let ni = 0;
+    for (let r = 0; r < 8; r++) for (let c = 0; c < 12; c++) { const x = -38 - c * 4.2 - (r > 3 ? 64 : 0), z = -48 - (r % 4) * 9 - (r > 3 ? 0 : 0) - (r >= 4 ? 30 : 0);
+      if (ni >= 96) break; dm.position.set(x, 1.6, z); dm.rotation.set(0, 0, 0); dm.updateMatrix(); yardCars.setMatrixAt(ni, dm.matrix); yardCars.setColorAt(ni, cc.setHex(carCols[(r * 5 + c * 3) % carCols.length]));
+      dm.position.set(x, 2.35, z - 0.1); dm.updateMatrix(); yardCabs.setMatrixAt(ni, dm.matrix); ni++; }
+    moo.add(yardCars, yardCabs);
+    const flagCols = [0xe74c3c, 0xf1c40f, 0x2f6fb0, 0x27ae60, 0xffffff], bunt = new THREE.InstancedMesh(new THREE.ConeGeometry(0.32, 0.7, 3), mStd(0xffffff, { roughness: .8, side: THREE.DoubleSide }), 420);
+    let bi = 0; const yardPole = mStd(0xdfe3e6, { roughness: .5 });
+    for (let r = 0; r < 6; r++) { const z = -44 - r * 13, x0 = -34, x1 = -150; mBox(0.2, 7, 0.2, yardPole, x0, 4.5, z); mBox(0.2, 7, 0.2, yardPole, x1, 4.5, z); mBox(0.2, 7, 0.2, yardPole, (x0 + x1) / 2, 4.5, z);
+      for (let k = 0; k < 70 && bi < 420; k++) { const t = k / 69, x = x0 + (x1 - x0) * t, sag = Math.sin((t * 2 % 1) * Math.PI) * 0.9; dm.position.set(x, 7.6 - sag, z); dm.rotation.set(Math.PI, 0, 0); dm.updateMatrix(); bunt.setMatrixAt(bi, dm.matrix); bunt.setColorAt(bi, cc.setHex(flagCols[k % 5])); bi++; } }
+    bunt.count = bi; moo.add(bunt);
+    const show = new THREE.Mesh(new THREE.BoxGeometry(34, 7, 14), [mStd(0xdfe6ea), mStd(0xdfe6ea), mStd(0xeef2f4), mStd(0xdfe6ea),
+      new THREE.MeshStandardMaterial({ color: 0x3a5466, emissive: 0xfff0d0, emissiveIntensity: 0, roughness: .15, metalness: .3 }), mStd(0xdfe6ea)]); show.position.set(-62, 4.5, -128); moo.add(show); W.mooGlow.push(show.material[4]);
+    mBox(34.4, 1.6, 14.4, mStd(0x1f4e8c), -62, 8.6, -128);
+    const pylon = (x, z, h, lines, bg, fg) => { mBox(0.8, h, 0.8, mStd(0x9aa3aa, { roughness: .5 }), x, 1 + h / 2, z);
+      const sg = new THREE.Mesh(new THREE.BoxGeometry(15, 5.6, 0.6), [mStd(0x333333), mStd(0x333333), mStd(0x333333), mStd(0x333333), new THREE.MeshStandardMaterial({ map: mText(512, 196, bg, fg, lines, { border: true }), emissive: 0xffffff, emissiveIntensity: 0, emissiveMap: null, roughness: .5 }), mStd(0x333333)]);
+      sg.position.set(x, 1 + h + 2.8, z); moo.add(sg); W.mooGlow.push(sg.material[4]); sg.material[4].emissiveMap = sg.material[4].map; };
+    pylon(-27, -44, 17, ["MAGIC MILE", "OF MOTORS"], "#d62828", "#ffffff"); pylon(-58, -100, 21, ["CARS FOR SALE", "FINANCE AVAILABLE"], "#ffffff", "#1f4e8c"); pylon(-110, -70, 19, ["USED CARS", "BEST PRICES"], "#f5c400", "#222222");
+    // Queenslanders: high-set, battens under, white verandah railings, hip roofs in red, silver and green, among jacarandas
     const walls = ["#f3efe4", "#efe3c6", "#e3ecdf", "#dfe8ee", "#f2e2da", "#fbf6ec"], roofs = [0xa9443a, 0xb9c0c7, 0x4f6f55, 0xa9443a, 0xb9c0c7, 0x8a3a30];
-    const boardT = walls.map(c => mTex(128, 64, (g, w, h) => { g.fillStyle = c; g.fillRect(0, 0, w, h); g.fillStyle = "rgba(0,0,0,.07)"; for (let y = 4; y < h; y += 6) g.fillRect(0, y, w, 1); }));
-    const battenT = mTex(64, 32, (g, w, h) => { g.fillStyle = "#3b332c"; g.fillRect(0, 0, w, h); g.fillStyle = "#e9e4d8"; for (let x = 0; x < w; x += 8) g.fillRect(x, 0, 4, h); });
-    const balT = mTex(128, 32, (g, w, h) => { g.clearRect(0, 0, w, h); g.fillStyle = "#ffffff"; g.fillRect(0, 0, w, 4); g.fillRect(0, h - 4, w, 4); for (let x = 2; x < w; x += 7) g.fillRect(x, 0, 3, h); });
-    balT.wrapS = THREE.RepeatWrapping; balT.repeat.set(4, 1);
-    const balM = new THREE.MeshStandardMaterial({ map: balT, alphaTest: .5, side: THREE.DoubleSide, roughness: .8 }), trimM = mStd(0xf7f5ef), deckM = mStd(0x8a6a4a), underM = mStd(0x3b332c);
-    const battenM = new THREE.MeshStandardMaterial({ map: battenT, roughness: 1 });
-    W.mooGlow = [new THREE.MeshStandardMaterial({ color: 0x2e3c48, emissive: 0xffc77a, emissiveIntensity: 0, roughness: .2, metalness: .1 })];
-    const roofG = new THREE.ConeGeometry(7.6, 3.2, 4);
-    const house = (cx, z, k, flip) => {
-      const g = new THREE.Group(), stH = 2.1 + rnd(k + 501) * 0.8, wallM = new THREE.MeshStandardMaterial({ map: boardT[k % walls.length], roughness: .9 }), plain = mStd(new THREE.Color(walls[k % walls.length]).getHex());
-      const under = new THREE.Mesh(new THREE.BoxGeometry(8.4, stH, 9.4), [battenM, underM, underM, underM, underM, underM]); under.position.set(0, stH / 2, 0); g.add(under);
-      const body = new THREE.Mesh(new THREE.BoxGeometry(9, 3.4, 10), [wallM, plain, plain, plain, plain, plain]); body.position.set(0, stH + 1.7, 0); g.add(body);
-      for (const wz of [-2.7, 2.7]) { const wn = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.7), W.mooGlow[0]); wn.rotation.y = Math.PI / 2; wn.position.set(4.52, stH + 1.9, wz); g.add(wn);
-        mBox(0.06, 0.16, 1.8, trimM, 4.53, stH + 0.98, wz, g); }
+    const battenM = new THREE.MeshStandardMaterial({ map: mTex(64, 32, (g, w, h) => { g.fillStyle = "#3b332c"; g.fillRect(0, 0, w, h); g.fillStyle = "#e9e4d8"; for (let x = 0; x < w; x += 8) g.fillRect(x, 0, 4, h); }), roughness: 1 });
+    const balT = mTex(128, 32, (g, w, h) => { g.clearRect(0, 0, w, h); g.fillStyle = "#ffffff"; g.fillRect(0, 0, w, 4); g.fillRect(0, h - 4, w, 4); for (let x = 2; x < w; x += 7) g.fillRect(x, 0, 3, h); }); balT.wrapS = THREE.RepeatWrapping; balT.repeat.set(4, 1);
+    const balM = new THREE.MeshStandardMaterial({ map: balT, alphaTest: .5, side: THREE.DoubleSide, roughness: .8 }), trimM = mStd(0xf7f5ef), deckM = mStd(0x8a6a4a), underM = mStd(0x3b332c), roofG = new THREE.ConeGeometry(7.6, 3.2, 4);
+    const winM = new THREE.MeshStandardMaterial({ color: 0x2e3c48, emissive: 0xffc77a, emissiveIntensity: 0, roughness: .2 }); W.mooGlow.push(winM);
+    const house = (x, y, z, ry, k) => { const g = new THREE.Group(), stH = 2.1 + rnd(k + 631) * 0.8, wall = mStd(new THREE.Color(walls[k % walls.length]).getHex());
+      const under = new THREE.Mesh(new THREE.BoxGeometry(8.4, stH, 9.4), [battenM, underM, underM, underM, underM, underM]); under.position.y = stH / 2; g.add(under);
+      mBox(9, 3.4, 10, wall, 0, stH + 1.7, 0, g);
+      for (const wz of [-2.7, 2.7]) { const wn = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.7), winM); wn.rotation.y = Math.PI / 2; wn.position.set(4.52, stH + 1.9, wz); g.add(wn); }
       mBox(2.6, 0.25, 10, deckM, 5.8, stH, 0, g);
       const bal = new THREE.Mesh(new THREE.PlaneGeometry(10, 1.1), balM); bal.rotation.y = Math.PI / 2; bal.position.set(7.05, stH + 0.68, 0); g.add(bal);
-      for (const pz of [-4.9, -1.2, 1.2, 4.9]) mBox(0.2, 3.3, 0.2, trimM, 7.0, stH + 1.65, pz, g);
-      const run = 2.6, st = new THREE.Mesh(new THREE.BoxGeometry(Math.hypot(run, stH), 0.25, 1.6), deckM); st.position.set(7.1 + run / 2, stH / 2, 0); st.rotation.z = -Math.atan2(stH, run); g.add(st);
-      const roof = new THREE.Mesh(roofG, mStd(roofs[k % roofs.length], { roughness: .55, metalness: roofs[k % roofs.length] === 0xb9c0c7 ? .45 : 0 })); roof.scale.set(1.12, 1, 1); roof.rotation.y = Math.PI / 4; roof.position.set(1.3, stH + 3.4 + 1.6, 0); g.add(roof);
-      g.position.set(cx, 1, z); if (flip) g.rotation.y = Math.PI; moo.add(g);
-      const fx = flip ? -1 : 1; mooLights.push(cx + fx * 4.7, 1 + stH + 2.6, z + 0.001);  // the verandah light
-      // a letterbox at the gate
-      mBox(0.15, 1.1, 0.15, mStd(0x6b5a48), cx + fx * 11, 1.55, z + 2.2); mBox(0.5, 0.45, 0.4, mStd(k % 2 ? 0xc0392b : 0xf2f2f2), cx + fx * 11, 2.25, z + 2.2);
-    };
-    for (let k = 0; k < 13; k++) { const z = 26 - k * 17; house(-20.5, z, k, false); house(20.5, z - 8, k + 7, true); }
-    // jacarandas on the verges, wide and flat-topped, alternating sides; petals underneath
-    const jacM = mStd(jacSeason ? 0x9d82e6 : 0x4f7a42, { roughness: 1 }), jacM2 = mStd(jacSeason ? 0x8466cc : 0x456c3a, { roughness: 1 });
-    const jaca = (x, z, s) => { const g = new THREE.Group();
-      for (const [a, b] of [[0, .35], [.5, -.3], [-.6, -.1]]) { const t = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.38, 5.5, 6), trunkMat); t.position.set(a * 1.2, 2.6, b * 1.2); t.rotation.set(b * .5, 0, -a * .5); g.add(t); }
-      for (let k = 0; k < 9; k++) { const c = new THREE.Mesh(new THREE.SphereGeometry(2 + rnd(x * 3 + z + k) * 1.2, 10, 7), k % 2 ? jacM : jacM2); c.scale.y = 0.55;
-        const a = rnd(x + z * 7 + k) * 6.28, r = rnd(z + k * 11 + 3) * 3.6; c.position.set(Math.cos(a) * r, 5.6 + rnd(x + k * 5) * 1.4, Math.sin(a) * r); g.add(c); }
-      g.position.set(x, 1, z); g.scale.setScalar(s); moo.add(g);
-      const pd = new THREE.Mesh(new THREE.CircleGeometry(6.5 * s, 22), petalM); pd.rotation.x = -Math.PI / 2; pd.position.set(x * 0.85, 1.25, z); moo.add(pd); };
-    for (let k = 0; k < 9; k++) jaca(k % 2 ? 7.6 : -7.6, 8 - k * 26 - rnd(k + 521) * 6, 1.25 + rnd(k + 531) * 0.3);
-    // a mango tree and a couple of palms in the yards
-    const mango = mStd(0x2f5a2c, { roughness: 1 });
-    [[-31, -40], [30, -120]].forEach(([x, z]) => { const t = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.7, 4, 6), trunkMat); t.position.set(x, 3, z); moo.add(t);
-      const c = new THREE.Mesh(new THREE.SphereGeometry(5.5, 12, 9), mango); c.scale.y = 0.85; c.position.set(x, 8.2, z); moo.add(c); });
-    const frond = mStd(0x4f7d3a, { roughness: 1 });
-    [[13.5, -62], [-13.5, -150]].forEach(([x, z]) => { const t = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.28, 11, 6), mStd(0x8b8378)); t.position.set(x, 6.5, z); moo.add(t);
-      for (let k = 0; k < 8; k++) { const f = new THREE.Mesh(new THREE.BoxGeometry(4, 0.08, 0.7), frond); const a = k / 8 * 6.28; f.position.set(x + Math.cos(a) * 1.8, 11.6, z + Math.sin(a) * 1.8); f.rotation.set(0, -a, -0.45); moo.add(f); } });
-    // timber power poles down one side, wires, and street lights
-    const poleM = mStd(0x6b5848, { roughness: 1 }), wireM = new THREE.MeshBasicMaterial({ color: 0x2a2a2a }), lampM = mStd(0x8a9096, { roughness: .5 });
-    for (let k = 0; k < 9; k++) { const z = 30 - k * 32;
-      mBox(0.35, 10, 0.35, poleM, 7, 6, z); mBox(2.6, 0.22, 0.22, poleM, 7, 10.4, z);
-      if (k % 2 === 0) { mBox(2.2, 0.12, 0.2, lampM, 5.9, 8.4, z); mBox(0.7, 0.2, 0.4, lampM, 4.9, 8.3, z); mooLights.push(4.9, 8.1, z); } }
-    [6, 8].forEach(x => { const wr = mBox(0.05, 0.05, 260, wireM, x, 10.35, -98); });
-    // bins out on the kerb (green, red and yellow lids), and an ibis on one of them
-    const binG = mStd(0x2e6b3a, { roughness: .6 }), lids = [mStd(0xb83227, { roughness: .6 }), mStd(0xf2c200, { roughness: .6 })];
-    [[-5.2, 18], [-5.2, 16.9], [5.2, -6], [5.2, -7.1], [-5.2, -48], [5.2, -79], [5.2, -80.1], [-5.2, -116]].forEach(([x, z], k) => {
-      mBox(0.8, 1.15, 0.8, binG, x, 1.82, z); mBox(0.9, 0.12, 0.9, lids[k % 2], x, 2.45, z); });
-    const ibisW = mStd(0xf2f0ea, { roughness: .9 }), ibisB = mStd(0x1c1c1c, { roughness: .7 });
-    const ibis = (x, y, z, ry) => { const g = new THREE.Group(), b = new THREE.Mesh(new THREE.SphereGeometry(0.42, 10, 8), ibisW); b.scale.set(1.5, 0.85, 0.8); b.position.y = 0.8; g.add(b);
-      const n = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, 0.7, 6), ibisB); n.position.set(0.55, 1.1, 0); n.rotation.z = -0.6; g.add(n);
-      const h = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 6), ibisB); h.position.set(0.8, 1.38, 0); g.add(h);
-      const bk = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.05, 0.75, 5), ibisB); bk.position.set(1.05, 1.15, 0); bk.rotation.z = 0.9; g.add(bk);
-      for (const lz of [-.12, .12]) { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.6, 4), ibisB); l.position.set(0, 0.3, lz); g.add(l); }
-      g.position.set(x, y, z); g.rotation.y = ry; g.scale.setScalar(1.15); moo.add(g); return g; };
-    W.mooIbis = [ibis(5.2, 2.5, -6, 2.6), ibis(-6.3, 1.2, -50, -0.6)];
-    // parked: a white ute and a blue hatch
-    const car = (x, z, col, ute) => { const g = new THREE.Group(); mBox(1.9, 0.9, 4.6, mStd(col, { roughness: .35 }), 0, 0.95, 0, g);
-      mBox(1.8, 0.8, ute ? 1.9 : 2.6, mStd(0x2c3e50, { roughness: .2 }), 0, 1.8, ute ? 0.9 : 0.2, g);
-      for (const [wx, wz] of [[-.95, 1.5], [.95, 1.5], [-.95, -1.5], [.95, -1.5]]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.3, 12), mStd(0x222222)); w.rotation.z = Math.PI / 2; w.position.set(wx, 0.45, wz); g.add(w); }
-      g.position.set(x, 1.2, z); moo.add(g); };
-    car(2.9, -30, 0xf2f2ee, true); car(-2.9, -92, 0x2f6fb0, false);
-    // Toohey Forest closing off the end of the street: a ridge of dark gum bushland
-    const bush = mStd(0x3e5b38, { roughness: 1 }), bush2 = mStd(0x56774c, { roughness: 1 });
-    const ridge = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 12), bush); ridge.scale.set(260, 42, 60); ridge.position.set(10, -8, -300); moo.add(ridge);
-    for (let i = 0; i < 46; i++) { const c = new THREE.Mesh(new THREE.SphereGeometry(5 + rnd(i * 13 + 541) * 5, 8, 6), i % 3 ? bush : bush2); const x = -220 + rnd(i * 3 + 541) * 460;
-      c.position.set(x, 18 + 14 * Math.cos(x / 260 * 1.4) + rnd(i * 5 + 541) * 6, -262 - rnd(i * 7 + 541) * 30); moo.add(c); }
-    // gums and roofs along the street's far end, before the bush
-    for (let i = 0; i < 18; i++) { const c = new THREE.Mesh(new THREE.SphereGeometry(4 + rnd(i * 17 + 551) * 3, 8, 6), i % 2 ? bush2 : mango); const sd = i % 2 ? 1 : -1;
-      c.position.set(sd * (24 + rnd(i * 19 + 551) * 60), 7 + rnd(i + 553) * 5, -40 - rnd(i * 23 + 551) * 200); moo.add(c); }
-    // the city's towers, small, peeking over the ridge to the left
+      for (const pz of [-4.9, 0, 4.9]) mBox(0.2, 3.3, 0.2, trimM, 7.0, stH + 1.65, pz, g);
+      const st = new THREE.Mesh(new THREE.BoxGeometry(Math.hypot(2.6, stH), 0.25, 1.6), deckM); st.position.set(8.4, stH / 2, 0); st.rotation.z = -Math.atan2(stH, 2.6); g.add(st);
+      const rf = new THREE.Mesh(roofG, mStd(roofs[k % roofs.length], { roughness: .55, metalness: roofs[k % roofs.length] === 0xb9c0c7 ? .45 : 0 })); rf.scale.set(1.12, 1, 1); rf.rotation.y = Math.PI / 4; rf.position.set(1.3, stH + 5, 0); g.add(rf);
+      g.position.set(x, y, z); g.rotation.y = ry; moo.add(g); mooLights.push(x + 4.7 * Math.cos(ry), y + stH + 2.6, z - 4.7 * Math.sin(ry)); };
+    const hillY = (x, z) => 1 + Math.max(0, x - 24) * 0.1 + Math.max(0, -z - 60) * 0.05;  // the ground rises to the right, up towards Toohey Forest
+    let hk = 0;
+    for (let r = 0; r < 4; r++) for (let c = 0; c < 6; c++) { const x = 30 + c * 17 + rnd(hk + 641) * 4, z = -20 - r * 30 - rnd(hk + 651) * 6; house(x, hillY(x, z), z, Math.PI + (rnd(hk + 661) - 0.5) * 0.3, hk++); }
+    for (let c = 0; c < 5; c++) { const x = -48 - c * 17, z = RZ + 26 + rnd(c + 671) * 4; house(x, 1, z, -Math.PI / 2, hk++); }  // houses this side of the cross street, off to the sides
+    for (let c = 0; c < 4; c++) { const x = 50 + c * 17, z = RZ + 24 + rnd(c + 681) * 4; house(x, 1, z, -Math.PI / 2, hk++); }
+    // hills under the houses on the right
+    const rise = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 12), mGrass); rise.scale.set(150, 14, 120); rise.position.set(130, -4, -90); moo.add(rise);
+    // jacarandas (purple October to December), gums and a mango or two
+    const jacM = mStd(jacSeason ? 0x9d82e6 : 0x4f7a42, { roughness: 1 }), jacM2 = mStd(jacSeason ? 0x8466cc : 0x456c3a, { roughness: 1 }), gumM = mStd(0x56774c, { roughness: 1 }), gumM2 = mStd(0x46663f, { roughness: 1 });
+    const mTree = (x, y, z, s, a, b, flat) => { const g = new THREE.Group(), t = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.5, 4.5, 6), trunkMat); t.position.y = 2.25; g.add(t);
+      for (let k = 0; k < 7; k++) { const c = new THREE.Mesh(new THREE.SphereGeometry(1.7 + rnd(x * 3 + z + k) * 1.1, 9, 7), k % 2 ? a : b); if (flat) c.scale.y = 0.6; const an = rnd(x + z * 7 + k) * 6.28, rr = rnd(z + k * 11) * (flat ? 3.2 : 2.2);
+        c.position.set(Math.cos(an) * rr, 4.8 + rnd(x + k * 5) * 1.6, Math.sin(an) * rr); g.add(c); }
+      g.position.set(x, y, z); g.scale.setScalar(s); moo.add(g); };
+    for (let i = 0; i < 18; i++) { const x = 26 + rnd(i * 7 + 691) * 110, z = -10 - rnd(i * 11 + 693) * 130; mTree(x, hillY(x, z), z, 1.3, jacM, jacM2, true); }
+    [[-16, RZ + 13], [17, RZ + 13], [-20, RZ - 12]].forEach(([x, z]) => mTree(x, 1, z, 1.4, jacM, jacM2, true));
+    for (let i = 0; i < 20; i++) { const x = -40 + rnd(i * 13 + 695) * 200, z = -150 - rnd(i * 17 + 697) * 60; mTree(x, Math.max(1, hillY(x, z)), z, 1.6, gumM, gumM2, false); }
+    // Toohey Forest along the ridge to the right: dark gum bushland
+    const bush = mStd(0x3e5b38, { roughness: 1 });
+    const ridge = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 12), bush); ridge.scale.set(220, 46, 70); ridge.position.set(170, -6, -250); moo.add(ridge);
+    for (let i = 0; i < 40; i++) { const c = new THREE.Mesh(new THREE.SphereGeometry(5 + rnd(i * 13 + 701) * 5, 8, 6), i % 3 ? bush : gumM2); const x = 20 + rnd(i * 3 + 701) * 330;
+      c.position.set(x, 22 + 16 * Math.cos((x - 170) / 220 * 1.4) + rnd(i * 5 + 701) * 6, -215 - rnd(i * 7 + 701) * 40); moo.add(c); }
+    // the city's towers, small, far off to the left
     const cbd = mStd(0x8fa3bd, { roughness: .8 });
-    for (let i = 0; i < 12; i++) { const h = 30 + rnd(i * 3 + 561) * 40, b = new THREE.Mesh(new THREE.BoxGeometry(9, h, 9), cbd); b.position.set(-200 + i * 10 + rnd(i * 5 + 561) * 4, 10 + h / 2, -470); moo.add(b);
-      for (let k = 0; k < 5; k++) mooLights.push(b.position.x + (rnd(i * 7 + k) - 0.5) * 7, 14 + rnd(i * 11 + k) * (h - 4), -465.4); }
+    for (let i = 0; i < 14; i++) { const h = 30 + rnd(i * 3 + 711) * 46, b = new THREE.Mesh(new THREE.BoxGeometry(9, h, 9), cbd); b.position.set(-170 + i * 10 + rnd(i * 5 + 711) * 4, h / 2, -460); moo.add(b);
+      for (let k = 0; k < 5; k++) mooLights.push(b.position.x + (rnd(i * 7 + k) - 0.5) * 7, 4 + rnd(i * 11 + k) * (h - 4), -455.4); }
+    // street lights and the car yard floodlights
+    for (let z = RZ - 20; z > RZ - 140; z -= 24) [-1, 1].forEach(sd => { mBox(0.18, 6, 0.18, awnPlain, sd * 5.6, 4, z); mooLights.push(sd * 5.0, 6.9, z); });
+    for (let r = 0; r < 6; r++) mooLights.push(-34, 8.2, -44 - r * 13, -92, 8.2, -44 - r * 13, -150, 8.2, -44 - r * 13);
     const mlg = new THREE.BufferGeometry(); mlg.setAttribute("position", new THREE.Float32BufferAttribute(mooLights, 3));
     W.mooLights = new THREE.PointsMaterial({ color: 0xffd9a0, size: 0.75, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: true });
     moo.add(new THREE.Points(mlg, W.mooLights));
@@ -4882,6 +4916,7 @@ const handle = async (m, post) => {
     let cl = bsMix(bsMix(bsHex(0x2a3350), bsHex(0xffffff), day), bsHex(0xffc29a), dusk * 0.8), cs = bsMix(bsMix(bsHex(0x10162a), bsHex(0x98a4b8), day), bsHex(0xc27a78), dusk * 0.5);
     cl = bsMix(cl, bsMix(bsHex(0x0e1118), bsHex(0x6b7483), day), st.storm * 0.9); cs = bsMix(cs, bsMix(bsHex(0x05070b), bsHex(0x2c323d), day), st.storm * 0.9);
     const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (W.mooRing && !still && W.moo.visible) W.mooRing.rotation.y -= dt * 0.35;  // cars going round the roundabout
     W.cloudU.uLit.value.fromArray(cl); W.cloudU.uShade.value.fromArray(cs); W.cloudU.uCover.value = st.cover; W.cloudU.uWind.value = -(0.25 + st.wind * 0.03) * (still ? 0.3 : 1); W.cloudU.uTime.value = t;
     W.rainU.uAmount.value = st.rain; W.rainU.uSlant.value = -(0.04 + st.wind * 0.006); W.rainU.uTime.value = t;
     W.waterU.uTime.value = t; W.waterU.uRain.value = st.rain; W.waterU.uNight.value = night;
