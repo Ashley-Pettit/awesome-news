@@ -228,8 +228,10 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
 @media (max-width: 430px) { #np .np-brand span { display: none; } }  /* phone: the logo alone, so the buttons fit */
 #npWk { height: 38px; padding: 0 14px 0 12px; gap: 7px; font-size: 0.86rem; flex: none; background: rgba(255, 255, 255, 0.16); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24); }
 #npWk svg { width: 19px; height: 19px; }
-/* Phones: Personalise shows as its icon, so "Detailed weather" fits beside it */
-@media (max-width: 430px) { #npCust { width: 38px; height: 38px; padding: 0; justify-content: center; font-size: 0; gap: 0; flex: none; } #npCust svg { width: 17px; height: 17px; } }
+/* Customise sits beside Detailed, same size */
+#npCust { height: 38px; padding: 0 14px 0 12px; gap: 7px; font-size: 0.86rem; flex: none; }
+#npCust svg { width: 17px; height: 17px; }
+@media (max-width: 380px) { #npCust { padding: 0 11px 0 9px; gap: 5px; font-size: 0.76rem; } }
 @media (max-width: 380px) { #npWk { padding: 0 11px 0 9px; gap: 5px; font-size: 0.76rem; } }  /* small phones */
 /* No "Up next" bar under the player */
 #npUpNext { display: none !important; }
@@ -1107,8 +1109,8 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   <div class="np-pic"><img class="np-bg" id="npBg" alt=""><img id="npImg" alt=""><div class="np-mono" id="npMono"></div></div>
   <div class="np-top">
     <div class="np-brand"><img id="npLogo" alt=""><span>Awesome News</span></div>
-    <button type="button" class="np-wkbtn" id="npWk" aria-label="Detailed weather: hear the week ahead" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M8.5 3.5v1.6M3.6 8.4h1.6M5 5l1.1 1.1M13.4 5l-1.1 1.1"/><path d="M5.6 11.6a3.6 3.6 0 1 1 6.6-2.4"/><path d="M8 20.5h9.5a3.5 3.5 0 0 0 .3-7 5 5 0 0 0-9.5 1A3 3 0 0 0 8 20.5z"/></svg>Detailed weather</button>
-    <button type="button" class="np-cust" id="npCust" aria-label="Personalise your stories in Settings" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg>Personalise</button>
+    <button type="button" class="np-wkbtn" id="npWk" aria-label="Detailed weather: hear the week ahead" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M8.5 3.5v1.6M3.6 8.4h1.6M5 5l1.1 1.1M13.4 5l-1.1 1.1"/><path d="M5.6 11.6a3.6 3.6 0 1 1 6.6-2.4"/><path d="M8 20.5h9.5a3.5 3.5 0 0 0 .3-7 5 5 0 0 0-9.5 1A3 3 0 0 0 8 20.5z"/></svg>Detailed</button>
+    <button type="button" class="np-cust" id="npCust" aria-label="Customise your stories in Settings" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg>Customise</button>
     <button type="button" class="np-pos" id="npPos" aria-label="Show the headlines" aria-expanded="false"></button>
     <button type="button" class="np-btn mic" data-cmd aria-pressed="false" aria-label="Voice commands: say skip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
     <button type="button" class="np-btn" id="npMin" aria-label="Minimise"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
