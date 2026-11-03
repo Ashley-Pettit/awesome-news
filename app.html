@@ -5041,13 +5041,19 @@ const handle = async (m, post) => {
     tvWatch();
   }
   // If a clip hasn't started after a while, show the play button (some phones need a tap).
+  // Computers often won't start a video on their own either (it sits "unstarted"): ask the player again after a
+  // moment, and if it still hasn't started, show the play button straight away.
   function tvWatch() {
-    clearTimeout(TV.stall);
+    clearTimeout(TV.stall); clearTimeout(TV.kick);
+    const st = () => { try { return TV.player?.getPlayerState?.(); } catch { return null; } };
+    TV.kick = setTimeout(() => {
+      if ($("tvs").hidden) return;
+      const s = st(); if (s === -1 || s === 5 || s === 2) { try { if (!TV.sound) TV.player.mute(); TV.player.playVideo(); } catch {} }
+    }, 1500);
     TV.stall = setTimeout(() => {
-      const p = TV.player; if (!p?.getPlayerState || $("tvs").hidden) return;
-      const st = p.getPlayerState();
-      if (st !== 1 && st !== 3) $("tvsBig").hidden = false;
-    }, 8000);
+      if ($("tvs").hidden) return;
+      const s = st(); if (s !== 1 && s !== 3) $("tvsBig").hidden = false;
+    }, 3500);
   }
   function tvNow(k) {
     const i = TV.items[k]; if (!i) return;
