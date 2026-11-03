@@ -2036,6 +2036,37 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   // (the original is the fallback if the bigger one won't load).
   // Some publishers send huge pictures (7NEWS: 3840px PNGs) that phones only half draw. A free image service
   // resizes each one to what the card needs, as a JPEG; the publisher's own copy is the fallback.
+  // Pictures first: when the app opens, the pictures on screen load before anything else. Pictures further down
+  // (and the other top stories) wait with their address in data-wait, and the background work (Emma's audio list,
+  // saving articles for offline, the Listen button's picture, Logan's weather, your drive, the two-photo check)
+  // waits too, until the on-screen pictures have loaded, or 5 seconds. Each job has a name, so opening a tab again
+  // doesn't queue it twice. afterPics.now() starts everything at once (tapping Listen).
+  const onScreen = el => { const r = el.getBoundingClientRect(); return r.width && r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth; };
+  const unwait = im => { if (im.dataset.wait) { im.src = im.dataset.wait; im.removeAttribute("data-wait"); } };
+  const afterPics = (() => {
+    const q = new Map(); let gen = 0;
+    const run = () => { if (later.done) return; later.done = true; document.querySelectorAll("img[data-wait]").forEach(unwait); for (const f of q.values()) try { f(); } catch {} q.clear(); };
+    let backstop = 0;  // nothing ever watched (a sheet open from the start): run anyway after 8 seconds
+    const later = (name, f) => { if (later.done) { f(); return; } q.set(name, f); backstop = backstop || setTimeout(run, 8000); };
+    later.done = false;
+    later.now = run;
+    later.watch = () => {  // after each render: the newest page's pictures are the ones that count
+      if (later.done) return; const g = ++gen;
+      backstop = backstop || setTimeout(run, 8000);
+      requestAnimationFrame(() => {
+        if (g !== gen) return;
+        const seen = [...document.querySelectorAll(".pic img:not(.bgb)")].filter(im => onScreen(im.parentElement));
+        later.peek();
+        if (!seen.length) return;  // no stories on screen yet (or none with pictures): the next render, or the backstop
+        const ims = seen.filter(im => !im.complete);
+        const loaded = Promise.all(ims.map(im => new Promise(ok => { im.addEventListener("load", ok, { once: true }); im.addEventListener("error", ok, { once: true }); })));
+        Promise.race([loaded, new Promise(ok => setTimeout(ok, 5000))])
+          .then(() => { const go = () => { if (g === gen) run(); }; ("requestIdleCallback" in window) ? requestIdleCallback(go, { timeout: 1500 }) : setTimeout(go, 200); });
+      });
+    };
+    later.peek = () => { if (!later.done) document.querySelectorAll("img[data-wait]").forEach(im => { if (onScreen(im.parentElement)) unwait(im); }); };  // scrolled or swiped to it
+    return later;
+  })();
   const feedPic = (u, big) => {
     u = String(u || ""); if (!/^https?:/.test(u)) return u;
     const sbs = u.match(/assets\.sbs\.com\.au\/.*[?&]url=([^&]+)/);
@@ -2076,7 +2107,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
       }
     }, 4000);
   }
-  document.addEventListener("scroll", () => picRescue(), { passive: true, capture: true });
+  document.addEventListener("scroll", () => { afterPics.peek(); picRescue(); }, { passive: true, capture: true });
   let splitBusy = false;
   async function scanSplits() {
     if (splitBusy) return; splitBusy = true;
@@ -2085,7 +2116,9 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
       for (const u of urls) if (await checkSplit(u)) document.querySelectorAll("img[data-o]").forEach(im => { if (im.dataset.o === u) im.src = feedPic(u, im.dataset.b === "1"); });
     } finally { splitBusy = false; }
   }
-  const pic = (i, cls = "", big = false, whole = false) => `<div class="pic ${cls}">${i.image && whole ? `<img class="bgb" data-o="${esc(i.image)}" data-b="0" src="${esc(feedPic(i.image, false))}" alt="" aria-hidden="true" loading="eager" decoding="async" referrerpolicy="no-referrer">` : ""}${i.image ? `<img src="${esc(feedPic(i.image, big))}" data-o="${esc(i.image)}" data-b="${big ? 1 : 0}" data-s="${big ? esc(feedPic(i.image, false)) : ""}" onerror="if(this.dataset.o&&this.src!==this.dataset.o)this.src=this.dataset.o" alt="" loading="${cls || whole ? "eager" : "lazy"}" fetchpriority="${cls || whole ? "high" : "auto"}" decoding="async" referrerpolicy="no-referrer">` : ""}<span class="mono" aria-hidden="true"${i.image ? " hidden" : ""}>${esc(mono(i.source))}</span></div>`;
+  // Only the top story's picture loads straight away, first in line; the other top stories load as they come near
+  // (they used to all load at once, 20 pictures racing the one on screen). The blurred backdrop waits its turn.
+  const pic = (i, cls = "", big = false, whole = false) => { const key = !!cls, first = cls === "eager" || cls === "hero", at = key || afterPics.done ? "src" : "data-wait"; return `<div class="pic ${cls}">${i.image && whole ? `<img class="bgb" data-o="${esc(i.image)}" data-b="0" ${at}="${esc(feedPic(i.image, false))}" alt="" aria-hidden="true" loading="${key ? "eager" : "lazy"}" fetchpriority="low" decoding="async" referrerpolicy="no-referrer">` : ""}${i.image ? `<img ${at}="${esc(feedPic(i.image, big))}" data-o="${esc(i.image)}" data-b="${big ? 1 : 0}" data-s="${big ? esc(feedPic(i.image, false)) : ""}" onerror="if(this.dataset.o&&this.src!==this.dataset.o)this.src=this.dataset.o" alt="" loading="${key ? "eager" : "lazy"}" fetchpriority="${first ? "high" : "auto"}" decoding="async" referrerpolicy="no-referrer">` : ""}<span class="mono" aria-hidden="true"${i.image ? " hidden" : ""}>${esc(mono(i.source))}</span></div>`; };
   const secColour = i => colourOf(i._sid);
   const meta = (i, withSec) => `<div class="meta">${withSec && i._sec ? `<span class="sec" style="--sc:${secColour(i)}">${esc(i._sec)}</span><span class="sep"></span>` : ""}<span class="src">${esc(i.source)}</span><span class="sep"></span><time datetime="${esc(i.published)}">${esc(ago(i.published))}</time></div>`;
   const heroCard = (i, solo, withSec, eager) => `<article class="story hcard${solo ? " solo" : ""}${readCls(i)}" style="--hc:${secColour(i)}">
@@ -2293,7 +2326,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     // "From the start", as on the main card: once there's somewhere to carry on from, or stories already heard.
     const f = $("lbLoganFresh");
     if (f) { let show = !!n && ((L.on && L.scope === "logan") || !!getResume("logan") || ids.some(id => seenish(id))); f.hidden = !show; $("lbLgWrap").classList.toggle("has-fresh", show); }
-    if (n && !loganLine.warm) { loganLine.warm = true; loganWx(); }  // Logan's weather ready before it's needed
+    if (n && !loganLine.warm) { loganLine.warm = true; afterPics("loganWx", loganWx); }  // Logan's weather ready before it's needed
     return getResume("logan") ? "Pick up where you left off" : "News about the City of Logan";
   }
   function listenArt() {
@@ -2301,7 +2334,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     // A Bureau warning for your area, under the forecast (links to the Bureau's page).
     const ww = $("wxWarn"), w0 = Date.now() - Date.parse(state.status?.updatedAt || 0) < 6 * 3600000 ? state.status?.warnings?.[S.region]?.[0] : null;
     if (ww) { ww.hidden = !w0; if (w0) { ww.href = w0.url; ww.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17.5v.5"/></svg><span>${esc(w0.title)}</span>`; } }
-    if (commuteSet() && !L.on) commuteNow().then(driveLine);  // your drive, ready before Listen is tapped (kept 5 minutes)
+    if (commuteSet() && !L.on) afterPics("commute", () => commuteNow().then(driveLine));  // your drive, ready before Listen is tapped (kept 5 minutes)
     if (!(L.on && L.scope === "logan") && $("lbLoganT")) $("lbLoganT").textContent = loganLine();
     catchLine();
     if (!L.on) { const sp = $("lbListen")?.querySelector("span:last-child"); if (sp) sp.innerHTML = lbIdle(); }
@@ -2309,12 +2342,12 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
       const ids = driveList().ids; lbFresh(ids);
       const i = ids.map(findItem).find(x => x?.image);
       const src = i ? feedPic(i.image, false) : "";
-      if (src && img.dataset.s !== src) { img.dataset.s = src; img.onload = () => { img.hidden = false; }; img.onerror = () => { img.hidden = true; }; img.src = src; }
+      if (src && img.dataset.s !== src) { img.dataset.s = src; img.onload = () => { img.hidden = false; }; img.onerror = () => { img.hidden = true; }; afterPics("lbBg", () => { img.src = img.dataset.s; }); }
     } catch {}
   }
   function render(keepScroll) {
     renderHeader(); listenArt();
-    ("requestIdleCallback" in window ? requestIdleCallback : setTimeout)(() => scanSplits());  // beta: two-photo pictures
+    afterPics("splits", () => ("requestIdleCallback" in window ? requestIdleCallback : setTimeout)(() => scanSplits()));  // beta: two-photo pictures
     picRescue();
     renderTabs();
     if (!state.loaded) return;
@@ -2325,6 +2358,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
       : renderSection(cur);
     const v = $("view");
     v.innerHTML = `<div class="wrap">${body}</div>`;
+    afterPics.watch();
     if (keepScroll) { window.scrollTo(0, y); if ($("heroRail")) $("heroRail").scrollLeft = railX; }
     else { v.classList.remove("swap"); void v.offsetWidth; v.classList.add("swap"); }
     const rail = $("heroRail");
@@ -3375,6 +3409,7 @@ const handle = async (m, post) => {
     return out;
   }
   async function listenToggle(kind) {
+    afterPics.now();  // tapped before the pictures finished: get Emma's list now
     if (!canSpeak && !useAI() && !usePre() && !state.preP) { toast("Listening isn't available in this browser"); return; }
     if (useAI() || usePre() || state.preP || state.mode === "static") unlockAudio();  // inside the tap, before any waiting
     // Emma's list still loading (just opened the app): wait a moment for it rather than using the phone's voice.
@@ -5311,7 +5346,7 @@ const handle = async (m, post) => {
       }
       // Emma's audio list. Loaded on every open, not just when the news changed: opening the app a second time
       // (news unchanged) used to skip it, so Listen fell back to the phone's voice, which iPhones won't start.
-      if (changed || !PRE) loadPre(st.updatedAt);
+      if (changed || !PRE) { const at = st.updatedAt; afterPics("pre", () => loadPre(at)); }
       state.loaded = true;
       if (manual) { finishRefresh(changed); }
       else if (state.refreshing && changed) finishRefresh(true);
@@ -5319,7 +5354,7 @@ const handle = async (m, post) => {
       if (!openSheet) render(true);
       if (pendingStory) { const id = pendingStory; pendingStory = ""; history.replaceState(null, "", location.pathname); if (findItem(id)) openReader(id); }
       if (pendingTV) { pendingTV = false; try { history.replaceState(null, "", location.pathname); } catch {} openTV(); }
-      saveOffline();
+      afterPics("offline", saveOffline);
       if (!state.wx) loadWeather();
     } catch {
       state.loaded = true;
@@ -5354,7 +5389,7 @@ const handle = async (m, post) => {
     syncPicks();
     let first = 2;
     const arrived = () => {
-      if (--first <= 0) { state.loaded = true; saveOffline(); loadWeather(); }
+      if (--first <= 0) { state.loaded = true; afterPics("offline", saveOffline); loadWeather(); }
       if (!openSheet) render(true); else renderHeader();
     };
     db.collection("feeds").onSnapshot(snap => {
