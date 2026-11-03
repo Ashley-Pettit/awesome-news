@@ -1677,7 +1677,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     // Beta: kinds of stories you've said "more like this" to come round first.
     const likes = store.get("beta.likes", {}) || {}, likeOf = sc => likes[sc.id === "local" ? "local news" : sc.id === "headlines" ? "more headlines" : sc.label] || 0;
     const lanes = (logan ? [{ id: "logan", label: "Logan" }] : enabledSections()).slice().sort((a, b) => likeOf(b) - likeOf(a)).map(sc => ({ sc, list: items(sc.id).filter(i => listenable(i) && !(Number(S.negCut) && isNegative(i))).slice(0, 30)
-      .map((i, n) => { const d = depth(best(i) || i); return { i, k: logan && i.source === "Logan City Council" ? n - 1000 : n + (d === 2 ? 0 : d === 1 ? 10 : 60) }; }).sort((a, b) => a.k - b.k).map(x => x.i) }));
+      .map((i, n) => { const d = depth(best(i) || i); return { i, k: n + (d === 2 ? 0 : d === 1 ? 10 : 60) }; }).sort((a, b) => a.k - b.k).map(x => x.i) }));
     for (let r = 0; secs < target && r < 40; r++) for (const { sc, list } of lanes) { if (secs >= target) break; add(list[r], sc.id === "local" ? "local news" : sc.id === "headlines" ? "more headlines" : sc.label); }
     return { ids: out, secOf, secs };
   }

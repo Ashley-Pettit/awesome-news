@@ -859,9 +859,7 @@ def main():
             stt.add(t)
             items.append(st)
         # The council's own and fuller stories are kept ahead of headline-only search results.
-        # The council's own news first (newest first), then everything else: so it's recorded early and leads Logan news.
-        items = sorted(items, key=lambda x: x["published"], reverse=True)
-        sections["logan"] = ([x for x in items if x["source"] == "Logan City Council"] + [x for x in items if x["source"] != "Logan City Council"])[:PER_LOGAN]
+        sections["logan"] = sorted(items, key=lambda x: x["published"], reverse=True)[:PER_LOGAN]
 
     # Same story in several sections -> one shared object, so pictures and text are fetched once.
     unique = {}
