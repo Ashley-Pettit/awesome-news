@@ -4361,7 +4361,7 @@ const handle = async (m, post) => {
     return BS.three;
   }
   // Which place the 3D view shows: Inverloch for Victoria, Brisbane everywhere else.
-  function bsPlace() { const W = BS.W; if (!W.bris || !W.inv) return; const vic = ["vic", "inv"].includes(typeof wxPlace === "function" ? wxPlace() : S.region); W.bris.visible = !vic; W.inv.visible = vic; }
+  function bsPlace() { const W = BS.W; if (!W.bris || !W.inv) return; const vic = ["vic", "inv"].includes(typeof wxPlace === "function" ? wxPlace() : S.region); W.bris.visible = !vic; W.inv.visible = false; if (W.inv2) W.inv2.visible = vic; }  // beta: the driftwood beach for Inverloch
   function bsBuild(THREE) {
     const canvas = $("bsGl");
     let renderer;
@@ -4511,6 +4511,47 @@ const handle = async (m, post) => {
     const hl = new THREE.BufferGeometry(); hl.setAttribute("position", new THREE.Float32BufferAttribute(houseLights, 3));
     W.invLights = new THREE.PointsMaterial({ color: 0xffd9a0, size: 0.7, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: true });
     inv.add(new THREE.Points(hl, W.invLights));
+
+    // ---- Beta: Inverloch, on the sand at Anderson Inlet: a driftwood hut on the beach, the shallow
+    // turquoise inlet behind it, a sand spit and low green hills across the water.
+    const inv2 = new THREE.Group(); inv2.visible = false; scene.add(inv2); W.inv2 = inv2;
+    const sand2 = new THREE.MeshStandardMaterial({ color: 0xfff3d6, emissive: 0x2a2418, roughness: 1 });
+    const flat = new THREE.Mesh(new THREE.BoxGeometry(900, 1.2, 120), sand2); flat.position.set(0, 0.4, 2); inv2.add(flat);  // the beach you're standing on
+    const ripple = new THREE.Mesh(new THREE.BoxGeometry(900, 0.1, 6), new THREE.MeshStandardMaterial({ color: 0xd2c5a6, roughness: 1 })); ripple.position.set(0, 1.0, -56); inv2.add(ripple);
+    const shallows = new THREE.Mesh(new THREE.PlaneGeometry(900, 120), new THREE.MeshBasicMaterial({ color: 0x3fc4c4, transparent: true, opacity: 0.32, depthWrite: false }));
+    shallows.rotation.x = -Math.PI / 2; shallows.position.set(0, 0.06, -120); shallows.renderOrder = 3; inv2.add(shallows); W.inv2Water = shallows;
+    const spit = new THREE.Mesh(new THREE.BoxGeometry(260, 0.8, 10), sand2); spit.position.set(-60, 0.3, -168); inv2.add(spit);
+    const green = new THREE.MeshStandardMaterial({ color: 0x47703f, roughness: 1 });
+    for (let i = 0; i < 10; i++) { const h = new THREE.Mesh(new THREE.SphereGeometry(1, 18, 10), green);
+      h.scale.set(40 + rnd(i * 3 + 7) * 60, 5 + rnd(i * 5 + 7) * 6, 20 + rnd(i * 7 + 7) * 14); h.position.set(-320 + i * 70, 0, -200 - rnd(i * 9 + 7) * 30); inv2.add(h); }
+    // the driftwood hut: bleached branches leaning in to a rough dome, some poking out the top
+    const bleach = new THREE.MeshStandardMaterial({ color: 0xfff6e6, emissive: 0x3a332a, roughness: 1 }), grey = new THREE.MeshStandardMaterial({ color: 0xcdbfa8, emissive: 0x241f18, roughness: 1 });
+    const up = new THREE.Vector3(0, 1, 0), stick = (a, b, r, mat) => {
+      const d = new THREE.Vector3().subVectors(b, a), len = d.length(), m = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.6, r, len, 5), mat);
+      m.position.copy(a).addScaledVector(d, 0.5); m.quaternion.setFromUnitVectors(up, d.normalize()); inv2.add(m); };
+    const hx = 2, hz = -12;
+    for (let i = 0; i < 90; i++) {
+      const ang = rnd(i * 3 + 101) * Math.PI * 2, rx = 11 + rnd(i * 5 + 101) * 4, rz = 4 + rnd(i * 7 + 101) * 2.5;
+      if (Math.sin(ang) > 0.55 && rnd(i * 13 + 101) < 0.7) continue;  // a gap at the front: the doorway
+      const base = new THREE.Vector3(hx + Math.cos(ang) * rx, 0.9, hz + Math.sin(ang) * rz);
+      const tall = rnd(i * 11 + 101) < 0.18, h = tall ? 13 + rnd(i * 17 + 101) * 7 : 8 + rnd(i * 19 + 101) * 4;
+      const lean = 0.35 + rnd(i * 23 + 101) * 0.45, top = new THREE.Vector3(hx + (base.x - hx) * (1 - lean) + (rnd(i * 29 + 101) - 0.5) * 3, h, hz + (base.z - hz) * (1 - lean) + (rnd(i * 31 + 101) - 0.5) * 2);
+      if (tall) top.add(new THREE.Vector3((base.x - hx) * -0.4, 0, 0));
+      const mat = rnd(i * 41 + 101) < 0.3 ? grey : bleach;
+      stick(base, top, 0.12 + rnd(i * 37 + 101) * 0.14, mat);
+      if (rnd(i * 71 + 101) < 0.45) {  // a fork or two near the top, like real branches
+        const k = 0.55 + rnd(i * 73 + 101) * 0.3, at = new THREE.Vector3().lerpVectors(base, top, k);
+        stick(at, at.clone().add(new THREE.Vector3((rnd(i * 79 + 101) - 0.5) * 5, 1.5 + rnd(i * 83 + 101) * 3, (rnd(i * 89 + 101) - 0.5) * 2)), 0.07, mat);
+      }
+    }
+    for (let i = 0; i < 14; i++) {  // cross pieces, roughly level, tying it together
+      const y = 3 + rnd(i * 43 + 101) * 5, a = rnd(i * 47 + 101) * Math.PI * 2, w = 7 - y * 0.45;
+      stick(new THREE.Vector3(hx + Math.cos(a) * w, y, hz + Math.sin(a) * w * 0.5), new THREE.Vector3(hx + Math.cos(a + 1.6) * w, y + 0.6, hz + Math.sin(a + 1.6) * w * 0.5), 0.1, bleach);
+    }
+    stick(new THREE.Vector3(hx + 1.2, 0.9, hz + 2), new THREE.Vector3(hx + 1.0, 10.5, hz + 1.4), 0.26, grey);  // the one upright post
+    // bits of driftwood lying about on the sand
+    for (let i = 0; i < 9; i++) { const x = -40 + rnd(i * 53 + 101) * 80, z = -4 - rnd(i * 59 + 101) * 40, l = 2 + rnd(i * 61 + 101) * 4, a = rnd(i * 67 + 101) * 3;
+      stick(new THREE.Vector3(x, 1.05, z), new THREE.Vector3(x + Math.cos(a) * l, 1.1, z + Math.sin(a) * l), 0.12, bleach); }
     // clouds: one instanced billboard draw call
     const puffs = 240, cg = new THREE.InstancedBufferGeometry(), base = new THREE.PlaneGeometry(1, 1);
     cg.index = base.index; cg.setAttribute("position", base.attributes.position); cg.setAttribute("uv", base.attributes.uv);

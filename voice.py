@@ -59,9 +59,11 @@ SAY = [(r"\b7NEWS\b", "Seven News"), (r"\b9News\b", "Nine News"), (r"\b10 News\b
        (r"€\s?(\d[\d,]*(?:\.\d+)?)(\s(?:thousand|million|billion|trillion))?", r"\1\2 euros")]
 # Words no spelling gets right: once the text is turned into sounds, theirs are swapped in.
 # Logan the Aussie way, "Loh-gn" (lˈoʊɡən). Bump SOUNDSV when this changes, to remake the pieces with them.
-SOUNDS = [(re.compile(r"\bLogan"), re.compile(r"(?<![^\s.,;:!?\"“”‘’'(—–-])lˈəʊɡən"), "lˈoʊɡən")]
+SOUNDS = [(re.compile(r"\bLogan"), re.compile(r"(?<![^\s.,;:!?\"“”‘’'(—–-])lˈəʊɡən"), "lˈoʊɡən"),
+          # Inverloch the local way, "in-ver-LOCK"
+          (re.compile(r"\bInverloch"), re.compile(r"(?<![^\s.,;:!?\"“”‘’'(—–-])ɪnvˈɜːlɒk"), "ɪnvəlˈɒk")]
 SOUNDSV = 1
-SOUNDW = re.compile(r"\bLogan")
+SOUNDW = re.compile(r"\b(Logan|Inverloch)")
 # Pieces with these words were made before the pronunciation above was fixed: remake them once.
 # Bump SAYV (and add the words) whenever another pronunciation fix is added.
 SAYV, RESAY = 3, re.compile(r"Logan|Queensland|\bQld\b|\bSEQ\b|[$£€]|\b(?:AI|EVs?|ASX|RBA|CEO|LNP|SBS|ABC|BBC|EFF|iTnews)\b")
