@@ -2,7 +2,7 @@
   "id": "./",
   "name": "Awesome News",
   "short_name": "Awesome News",
-  "description": "Local, politics, finance, tech and AI news from free, full-article sources. No paywalls, no sport.",
+  "description": "News that's all about you and what you're interested in. Customise your news feed, full articles, TV and listen modes. Optionally decrease negative news.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

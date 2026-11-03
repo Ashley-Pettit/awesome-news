@@ -23,7 +23,7 @@ title = m.group(1) if m else "Awesome News"
 repo = os.environ.get("GITHUB_REPOSITORY", "Ashley-Pettit/awesome-news")
 owner, name = repo.split("/", 1)
 site_url = os.environ.get("SITE_URL", f"https://{owner.lower()}.github.io/{name}/")
-desc = "Local, politics, finance, tech and AI news from free, full-article sources. No paywalls, no sport."
+desc = "News that's all about you and what you're interested in. Customise your news feed, full articles, TV and listen modes. Optionally decrease negative news."
 body = re.sub(r"<title>.*?</title>\s*", "", app, count=1)
 body = re.sub(r'<meta name="claude:[^"]+"[^>]*>\s*', "", body)
 body = re.sub(r'<meta name="theme-color"[^>]*>\s*', "", body)  # the head sets light and dark colours
@@ -41,14 +41,14 @@ head = f"""<!doctype html>
 <meta property="og:title" content="{title}">
 <meta property="og:description" content="{desc}">
 <meta property="og:url" content="{site_url}">
-<meta property="og:image" content="{site_url}icons/share-card.png?v=2">
+<meta property="og:image" content="{site_url}icons/share-card.png?v=3">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Awesome News app icon and name">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{title}">
 <meta name="twitter:description" content="{desc}">
-<meta name="twitter:image" content="{site_url}icons/share-card.png?v=2">
+<meta name="twitter:image" content="{site_url}icons/share-card.png?v=3">
 <meta name="theme-color" content="#f6f5fa" media="(prefers-color-scheme: light)">
 <meta name="format-detection" content="telephone=no">
 <meta name="theme-color" content="#0e0d16" media="(prefers-color-scheme: dark)">
