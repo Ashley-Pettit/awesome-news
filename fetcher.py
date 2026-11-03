@@ -108,11 +108,11 @@ REGIONS = {
     "act": ("Canberra", [], r"Canberra|Australian Capital Territory", r"ACT"),
     "nt": ("Northern Territory", [], r"Darwin|Northern Territory|Alice Springs|Katherine|Arnhem|Tiwi|Wadeye", r"NT"),
     # A town, not a state: Inverloch and the Bass Coast, from the local paper (the South Gippsland Sentinel-Times).
-    "inv": ("Inverloch and Melbourne", [("Sentinel-Times", "https://www.sgst.com.au/feed/")],
+    "inv": ("Inverloch", [("Sentinel-Times", "https://www.sgst.com.au/feed/")],
             r"Inverloch|Bass Coast|Wonthaggi|Leongatha|San Remo|Phillip Island|Cowes|Cape Paterson|Venus Bay|Tarwin|Korumburra|"
             r"Kilcunda|Anderson Inlet|Bunurong|Mirboo North|South Gippsland", r"(?!x)x"),
     # A suburb: Moorooka and the suburbs around it first, then the rest of Brisbane.
-    "moo": ("Moorooka and Brisbane", [],
+    "moo": ("Moorooka", [],
             r"Moorooka|Yeronga|Yeerongpilly|Tarragindi|Annerley|Salisbury|Rocklea|Coopers Plains|Tennyson|Fairfield|Nathan|"
             r"Holland Park|Toohey Forest|Beaudesert Road|Ipswich Road|Archerfield|Acacia Ridge|Moorvale", r"(?!x)x"),
 }
@@ -1119,6 +1119,11 @@ def main():
             errors.append(f"warnings {r}: {e}")
     if "qld" in warnings:
         warnings.setdefault("logan", warnings["qld"])
+
+    # A suburb or town with no forecast of its own this time borrows its city's (Moorooka from Brisbane, Inverloch from Melbourne).
+    for r, city in (("moo", "qld"), ("inv", "vic")):
+        if r in areas and r not in weather and city in weather:
+            weather[r] = dict(weather[city], borrowed=city)
 
     # 6c. Archive: every story seen in the last ARCHIVE_DAYS, so search reaches past today.
     # Carried on from the previously published copy and topped up with today's stories.

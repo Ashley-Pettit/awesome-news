@@ -215,7 +215,7 @@ def opening(region, w):
         return None, None
     k = d["time"].index(today)
     day = datetime.strptime(today, "%Y-%m-%d")
-    city = fetcher.CITIES[region][0]
+    city = fetcher.CITIES[w.get("borrowed") or region][0]  # a suburb using its city's forecast says the city
     brand = "This is Logan news, from Awesome News," if region == "logan" else "This is Awesome News"  # Logan news has its own opening
     sky = WMO.get(d["weather_code"][k], "mixed weather")
     text = (f"{brand} for {day:%A} the {ordinal(day.day)} of {day:%B}. First, the weather in {city}. "
