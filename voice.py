@@ -50,6 +50,8 @@ SAY = [(r"\b7NEWS\b", "Seven News"), (r"\b9News\b", "Nine News"), (r"\b10 News\b
        # Letters read as letters without full stops ("A.I." made her pause: "A. I."); plain caps already read right.
        # Said the Aussie way, "Queens-lend" (kwˈiːnzlɛnd), not "Queens-land".
        (r"\bQueensland(er|ers)?\b", r"Queenzlend\1"),
+       # Logan said "Low-gan" (lˈəʊɡan), with its suburbs Loganholme ("Low-gan home") and Loganlea ("Low-gan lee").
+       (r"\bLoganholme\b", "Lowgann home"), (r"\bLoganlea\b", "Lowgann lee"), (r"\bLogan\b", "Lowgann"),
        # Money read in plain order: "$400 million" is "400 million dollars" (the voice otherwise says "dollar 400 million").
        (r"\b(?:A|AU|US|NZ)?\$\s?(\d[\d,]*(?:\.\d+)?)(\s(?:thousand|million|billion|trillion))?", r"\1\2 dollars"),
        (r"(?<![\w])\$\s?(\d[\d,]*(?:\.\d+)?)(\s(?:thousand|million|billion|trillion))?", r"\1\2 dollars"),
@@ -57,7 +59,7 @@ SAY = [(r"\b7NEWS\b", "Seven News"), (r"\b9News\b", "Nine News"), (r"\b10 News\b
        (r"€\s?(\d[\d,]*(?:\.\d+)?)(\s(?:thousand|million|billion|trillion))?", r"\1\2 euros")]
 # Pieces with these words were made before the pronunciation above was fixed: remake them once.
 # Bump SAYV (and add the words) whenever another pronunciation fix is added.
-SAYV, RESAY = 3, re.compile(r"Queensland|\bQld\b|\bSEQ\b|[$£€]|\b(?:AI|EVs?|ASX|RBA|CEO|LNP|SBS|ABC|BBC|EFF|iTnews)\b")
+SAYV, RESAY = 3, re.compile(r"Logan|Queensland|\bQld\b|\bSEQ\b|[$£€]|\b(?:AI|EVs?|ASX|RBA|CEO|LNP|SBS|ABC|BBC|EFF|iTnews)\b")
 # Read as "Expect ... today": "Expect light drizzle today", "Expect clear skies today".
 WMO = {0: "clear skies", 1: "mostly sunny skies", 2: "partly cloudy skies", 3: "cloudy skies", 45: "fog", 48: "fog", 51: "light drizzle", 53: "some drizzle",
        55: "heavy drizzle", 56: "freezing drizzle", 57: "freezing drizzle", 61: "light rain", 63: "rain", 65: "heavy rain", 80: "a few showers", 81: "showers",
