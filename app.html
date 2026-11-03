@@ -786,7 +786,12 @@ body.locked .player { z-index: 45; bottom: calc(env(safe-area-inset-bottom, 0px)
 .pchip[aria-pressed="true"] .ck { background: var(--pc); color: var(--bg); }
 .field.col > .seg { display: flex; flex-wrap: nowrap; }
 .field.col > .seg button { flex: 1 1 0; padding-inline: 4px; }
-.srcpick { display: flex; flex-wrap: wrap; gap: 8px; }
+.srcpick { display: flex; flex-wrap: wrap; gap: 8px; padding: 4px 14px 14px; }
+.srcdet > summary { list-style: none; cursor: pointer; border-bottom: 0; }
+.srcdet > summary::-webkit-details-marker { display: none; }
+.srcdet .chev { flex: none; width: 20px; height: 20px; color: var(--muted); transition: transform 0.2s ease; }
+.srcdet[open] .chev { transform: rotate(180deg); }
+.srcdet[open] > summary { border-bottom: 1px solid var(--line); margin-bottom: 10px; }
 .srcpick .pchip { font-size: 0.88rem; padding: 7px 12px 7px 7px; }
 .srcpick .pchip .ck { width: 22px; height: 22px; }
 .srcpick .pchip[aria-pressed="false"] { color: var(--muted); }
@@ -1253,7 +1258,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   const PUBLISHERS = [
     { id: "ABC", label: "ABC News" }, { id: "SBS", label: "SBS News" }, { id: "BBC", label: "BBC" }, { id: "The Guardian", label: "The Guardian" }, { id: "7NEWS", label: "7NEWS" },
     { id: "The Conversation", label: "The Conversation" }, { id: "360info", label: "360info" }, { id: "Global Voices", label: "Global Voices" },
-    { id: "NASA", label: "NASA" }, { id: "EFF", label: "EFF" }, { id: "Mongabay", label: "Mongabay" }, { id: "KFF Health News", label: "KFF Health News" }, { id: "Ars", label: "Ars Technica" }, { id: "TechCrunch", label: "TechCrunch" },
+    { id: "NASA", label: "NASA" }, { id: "EFF", label: "EFF" }, { id: "Mongabay", label: "Mongabay" }, { id: "KFF Health News", label: "KFF Health News" }, { id: "MyCity Logan", label: "MyCity Logan" }, { id: "Queensland Police", label: "Queensland Police" }, { id: "Jimboomba Times", label: "Jimboomba Times" }, { id: "Logan City Council", label: "Logan City Council" }, { id: "Sentinel-Times", label: "Sentinel-Times" }, { id: "Ars", label: "Ars Technica" }, { id: "TechCrunch", label: "TechCrunch" },
     { id: "iTnews", label: "iTnews" }, { id: "Engadget", label: "Engadget" }, { id: "SmartCompany", label: "SmartCompany" },
     { id: "Startup Daily", label: "Startup Daily" }, { id: "ScienceAlert", label: "ScienceAlert" }, { id: "New Atlas", label: "New Atlas" },
     { id: "Knowable", label: "Knowable Magazine" }, { id: "Space.com", label: "Space.com" }, { id: "PC Gamer", label: "PC Gamer" },
@@ -1267,7 +1272,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     { id: "sa", label: "South Australia" }, { id: "tas", label: "Tasmania" }, { id: "act", label: "Canberra" }, { id: "nt", label: "Northern Territory" }, { id: "inv", label: "Inverloch" }];
   const FOR_YOU_PER_SECTION = 7;
   const FEATURE_EVERY = 6;
-  const MONO = { "ABC": "ABC", "SBS": "SBS", "BBC": "BBC", "M365": "365", "Microsoft": "MS", "Office 365": "IT", "Windows Central": "WC", "Ars": "Ars", "360info": "360", "Global Voices": "GV", "NASA": "NASA", "EFF": "EFF", "Mongabay": "MB", "Logan City Council": "LCC", "MyCity Logan": "ML", "Queensland Police": "QPS", "Jimboomba Times": "JT", "KFF": "KFF", "TechCrunch": "TC", "iTnews": "iT", "The Conversation": "C", "The Guardian": "G", "7NEWS": "7" };
+  const MONO = { "ABC": "ABC", "SBS": "SBS", "BBC": "BBC", "M365": "365", "Microsoft": "MS", "Office 365": "IT", "Windows Central": "WC", "Ars": "Ars", "360info": "360", "Global Voices": "GV", "NASA": "NASA", "EFF": "EFF", "Mongabay": "MB", "Logan City Council": "LCC", "MyCity Logan": "ML", "Queensland Police": "QPS", "Jimboomba Times": "JT", "Sentinel-Times": "ST", "KFF": "KFF", "TechCrunch": "TC", "iTnews": "iT", "The Conversation": "C", "The Guardian": "G", "7NEWS": "7" };
   const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || "Australia/Brisbane";
   const SIZES = { s: "1rem", m: "1.12rem", l: "1.24rem", xl: "1.38rem" };
 
@@ -2654,7 +2659,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     catch { if (input) { input.focus(); input.select(); } toast("Link selected. Copy it from the box."); }
   }
 
-  const BASE_STABS = [["news", "News"], ["filters", "Sources"], ["reading", "Reading"], ["listen", "Listen"], ["app", "App"]];
+  const BASE_STABS = [["news", "News"], ["reading", "Reading"], ["listen", "Listen"], ["app", "App"]];  // sources, mute words and negative news live in News
   let STABS = BASE_STABS;
   state.sTab = store.get("brief.sTab", "news");
   // Full articles: a passphrase plus a personal-use confirmation unlocks the locked text on this device.
@@ -2700,9 +2705,11 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
       <div class="group"><h2>Your interests</h2><div class="card">
         <button class="field" type="button" data-open-interests><span class="lbl">Choose what you see<span class="sub clamp">${esc(enabledSections().map(s => s.id === "local" ? `Local (${regionLabel()})` : s.label).join(", "))}</span></span><span class="chev" aria-hidden="true">›</span></button>
       </div><p class="hint">Each interest gets its own tab, and For you mixes them all.</p></div>`,
-      filters: `<div class="group"><h2>Sources</h2><div class="pick srcpick">
+      filters: `<div class="group"><h2>Sources</h2><details class="card srcdet"${state.srcOpen ? " open" : ""}>
+        <summary class="field"><span class="lbl">Choose your sources<span class="sub">${PUBLISHERS.length - PUBLISHERS.filter(p => S.hiddenSources.includes(p.id)).length} of ${PUBLISHERS.length} on</span></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
+        <div class="pick srcpick">
         ${PUBLISHERS.map(p => `<button class="pchip" type="button" data-source="${esc(p.id)}" aria-pressed="${!S.hiddenSources.includes(p.id)}" style="--pc:var(--accent)"><span class="ck">${tickSmall}</span>${esc(p.label)}</button>`).join("")}
-      </div><p class="hint">Tap a source to hide its stories. Ticked sources show in your feeds.</p></div>
+      </div></details><p class="hint">Tap a source to hide its stories. Ticked sources show in your feeds.</p></div>
       <div class="group"><h2>Mute words</h2><div class="card">
         ${tokens("muted", S.muted)}
         <form class="add" data-add="muted"><input type="text" id="addMuted" placeholder="Hide stories that mention…" maxlength="30" aria-label="Add a word to mute"><button type="submit">Mute</button></form>
@@ -2741,7 +2748,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
       </button>
       <p class="ai-set-msg" id="aiSetMsg" role="status" hidden>This feature isn't available yet. It's coming soon.</p>
       <div class="stabs" role="tablist" aria-label="Settings sections">${STABS.map(([id, label]) => `<button type="button" role="tab" data-stab="${id}" aria-selected="${id === tab}">${label}</button>`).join("")}</div>
-      <div role="tabpanel">${panes[tab]}</div>`;
+      <div role="tabpanel">${tab === "news" ? panes.news + panes.filters : panes[tab]}</div>`;
     // Size the A buttons so they read as small to large.
     document.querySelectorAll('[data-seg="textSize"]').forEach((b, n) => { b.style.fontSize = ["0.78rem", "0.9rem", "1.02rem", "1.16rem"][n]; });
     drawQR();
@@ -2773,6 +2780,8 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     showSheet("interests");
   }
 
+  // Sources in Settings, News: stays open while you tick and untick (the pane is redrawn each time).
+  document.addEventListener("toggle", e => { if (e.target.classList?.contains("srcdet")) state.srcOpen = e.target.open; }, true);
   function openSettings() {
     S.welcomed = true; saveSettings();
     renderSettings();
