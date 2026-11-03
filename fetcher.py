@@ -167,6 +167,10 @@ INTERESTS = [
                                                  ("Smithsonian", "https://www.smithsonianmag.com/rss/science-nature/"),
                                                  ("The Dodo", "https://www.youtube.com/feeds/videos.xml?channel_id=UCINb0wqPz-A0dV9nARjJlOQ")],
      r"wildlife|species|animals?|birds?|koalas?|kangaroos?|reefs?|whales?|sharks?|crocs?|crocodiles?|turtles?|conservation|endangered|extinct\w*|insects?|bees?|forests?|national parks?"),
+    ("truecrime", "True crime", "news", [("7NEWS", SEVEN.format("news/crime")), ("news.com.au", "https://www.news.com.au/national/crime/feed"),
+                                         ("The Guardian", GU.format("australia-news/crime")), ("CrimeReads", "https://crimereads.com/category/true-crime/feed/"),
+                                         ("Oxygen", "https://www.oxygen.com/feeds/crime-news"), ("Defrosting Cold Cases", "https://defrostingcoldcases.com/feed/")],
+     r"true crime|murder\w*|homicide|cold case|unsolved|killers?|serial killer|detectives?|manhunt|missing (?:person|woman|man|girl|boy|teen)|disappear\w*|heist|kidnap\w*|inquest|forensic\w*|convicted|sentenced|jury|court hears|charged with"),
 ]
 # Logan: the council's own news, a news search, and any story from any feed that's about the City of Logan.
 LOGAN_RE = re.compile(r"\b(Logan (City|Council|councill?ors?|Hospital|Central|Village|Reserve|Motorway|River|region|mayor|residents?|police|area|community|families|schools?)|"
@@ -208,7 +212,7 @@ PER_LOGAN = 60
 
 INTEREST_GROUPS = [("news", "News"), ("tech", "Tech & science"), ("life", "Life"), ("culture", "Culture"), ("planet", "Planet")]
 PER_INTEREST = 30
-PER_INTEREST_MORE = {"wildlife": 50}  # interests with lots of good sources keep more
+PER_INTEREST_MORE = {"wildlife": 50, "truecrime": 50}  # interests with lots of good sources keep more
 NO_MINE = {"PC Gamer", "Kotaku", "Startup Daily", "Good News Network", "Positive News"}  # too niche to lend stories to other interests
 MAX_AGE_INTEREST = timedelta(days=10)  # niche feeds publish less often
 
