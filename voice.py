@@ -35,6 +35,8 @@ MORE = "There's more on that one in the app."
 SAMPLE = "This is Awesome News. Here's your briefing, read in a natural voice."
 CORE_LABELS = ["Politics", "Finance", "Tech", "AI"]  # SECTIONS in app.html, after Local and Headlines
 LEAD = ["local-qld", "headlines", "politics", "finance", "tech", "ai", "copilot"]
+# "Update now" in the app, after someone picks something new (wildlife, another area's news): those go first.
+FOCUS = [x for x in re.split(r"[,\s]+", os.environ.get("FOCUS", "")) if re.fullmatch(r"[a-z0-9-]{2,30}", x)]
 # How a new section is introduced, taking turns so it doesn't always start "Now, ..." (CUE_WAYS in app.html).
 CUE_WAYS = ["Now, {}.", "Next, {}.", "On to {}.", "Moving on to {}.", "Over to {}."]
 CUE = re.compile(r"^(Now, .*|Next, .*|On to .*|Moving on to .*|Over to .*|Here are the top stories\.|Story \d+\.)$")
@@ -361,10 +363,11 @@ def plan(data, vkey):
 
     # Main sections go deepest, other interests about half as deep, other states' local news last.
     ranked = []
+    lead = FOCUS + [x for x in LEAD if x not in FOCUS]
     for s, items in feeds.items():
-        w = 1 if s in LEAD else 4 if s.startswith("local-") else 2
+        w = 1 if s in lead else 4 if s.startswith("local-") else 2
         for r, i in enumerate(items[:30]):
-            ranked.append((r * w + (w - 1), LEAD.index(s) if s in LEAD else 99, r, i))
+            ranked.append((r * w + (w - 1) - (60 if s in FOCUS else 0), lead.index(s) if s in lead else 99, r, i))
     ranked.sort(key=lambda x: x[:3])
     rounds = [[x[3] for x in ranked[n:n + 25]] for n in range(0, len(ranked), 25)]
     later = []  # second versions, for phones without the passphrase

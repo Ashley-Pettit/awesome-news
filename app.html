@@ -206,6 +206,14 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
 .lb-logan b { display: block; font-family: var(--display); font-size: 1rem; letter-spacing: -0.01em; }
 .lb-logan small { display: block; font-size: 0.76rem; color: var(--muted); margin-top: 1px; }
 .lb-lgwrap { position: relative; }
+.lb-catch { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin-top: 8px; padding: 12px 14px; border-radius: 16px; background: color-mix(in srgb, var(--accent, #5b3fd0) 9%, transparent); border: 1px solid color-mix(in srgb, var(--accent, #5b3fd0) 22%, transparent); }
+.lb-catch[hidden] { display: none; }
+.lb-catch .lc-t { flex: 1 1 220px; min-width: 0; }
+.lb-catch .lc-t b { display: block; font-size: 15px; }
+.lb-catch .lc-t small { display: block; margin-top: 2px; font-size: 13px; line-height: 1.35; opacity: .8; }
+.lb-catch .lc-b { display: flex; gap: 8px; }
+.lb-catch button { font: inherit; font-size: 14px; font-weight: 700; padding: 9px 14px; border-radius: 999px; cursor: pointer; border: 1px solid color-mix(in srgb, var(--accent, #5b3fd0) 35%, transparent); background: transparent; color: inherit; min-height: 40px; }
+.lb-catch .lc-up { background: var(--accent, #5b3fd0); color: #fff; border-color: transparent; }
 .lb-lgwrap.has-fresh .lb-logan { padding-right: 138px; }
 .lb-fresh.lg { top: 50%; bottom: auto; transform: translateY(-50%); margin-top: 4px; color: var(--accent); background: transparent; box-shadow: inset 0 0 0 1.5px var(--accent); }
 .lb-fresh.lg:active { transform: translateY(-50%) scale(0.95); }
@@ -1073,6 +1081,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
         <button class="lb-fresh" type="button" data-listen="fresh" id="lbFresh" aria-label="Listen from the start, as if new" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3.5 4v5h5"/></svg>From the start</button>
         <button class="lb-tv" type="button" data-open-tv id="lbTV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Watch</button>
       </div>
+      <div class="lb-catch" id="lbCatch" role="status" hidden></div>
       <div class="lb-lgwrap" id="lbLgWrap"><button class="lb-logan" type="button" data-listen="logan" id="lbLogan" hidden><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg></span><span><b>Logan news</b><small id="lbLoganT">News about the City of Logan</small></span></button><button class="lb-fresh lg" type="button" data-listen="loganfresh" id="lbLoganFresh" aria-label="Logan news from the start, as if new" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3.5 4v5h5"/></svg>From the start</button></div>
       <button class="topsearch" type="button" data-open-search aria-label="Search all news">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
@@ -1295,7 +1304,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   const S = Object.assign({}, defaults, saved || {}, { tabs: Object.assign({}, defaults.tabs, (saved || {}).tabs) });
   S.topics = [];  // "Your topics" is gone: interests (and suggesting a new one) cover it
   if (!saved && DEFAULT_NAME) S.welcomed = true;
-  const saveSettings = () => { store.set("brief.settings", S); syncPicks(); };
+  const saveSettings = () => { store.set("brief.settings", S); syncPicks(); try { notePicks(); } catch {} };
   // Admin (hidden): the website's full text is published locked. A passphrase entered here
   // unlocks it on this device, and the app then reads like the private Claude copy.
   const A = Object.assign({ unlocked: false, full: true }, store.get("brief.admin", {}));
@@ -2215,6 +2224,57 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     if (!show) { try { show = !!getResume() || (ids || []).some(id => seenish(id)); } catch {} }
     b.hidden = !show;
   }
+  // New picks (an interest or an area just switched on): Emma may not have read those stories yet, so a card under
+  // Listen says how far she's got, with "Update now" (the update reads them first) and "Listen now" (without them).
+  const LEAD_FEEDS = ["local-qld", "headlines", "politics", "finance", "tech", "ai", "copilot"];  // read first on every update (LEAD in voice.py)
+  function notePicks() {
+    if (!state.status) return;
+    const on = enabledSections().map(sc => sectionKey(sc.id)), was = store.get("brief.picksSig", null);
+    store.set("brief.picksSig", on);
+    if (!Array.isArray(was)) return;
+    const added = on.filter(k => !was.includes(k) && !LEAD_FEEDS.includes(k));
+    if (!added.length) return;
+    const np = store.get("brief.newPicks", null), ids = [...new Set([...(np?.ids || []), ...added])];
+    store.set("brief.newPicks", { at: Date.now(), ids });
+  }
+  function catchInfo() {
+    const np = store.get("brief.newPicks", null);
+    if (!np || !state.loaded || !usePre() || L.on) return null;
+    if (Date.now() - np.at > 36 * 3600e3) { store.set("brief.newPicks", null); return null; }
+    const rows = [];
+    for (const k of np.ids) {
+      const sc = allSections().find(s => sectionKey(s.id) === k);
+      if (!sc || !isOn(sc)) continue;
+      const list = items(sc.id).filter(listenable).slice(0, 20), ready = list.filter(i => preReady(i)).length;
+      if (list.length && ready >= list.length * 0.8) continue;
+      rows.push({ label: sc.id === "local" ? regionLabel() : sc.label, ready, total: list.length });
+    }
+    if (!rows.length) { store.set("brief.newPicks", null); return null; }
+    return rows;
+  }
+  function catchLine() {
+    const box = $("lbCatch"); if (!box) return;
+    if (state.status && !Array.isArray(store.get("brief.picksSig", null))) notePicks();  // what you had before any change
+    let rows = null; try { rows = catchInfo(); } catch {}
+    box.hidden = !rows;
+    if (!rows) return;
+    const say = rows.map(r => r.total ? `${r.ready} of ${r.total} ${esc(r.label)} stories` : `no ${esc(r.label)} stories yet`).join(" and ");
+    const can = state.mode === "static" && !!store.get("brief.ghToken", "") && !A.ghBad, busy = !!(state.refreshing && store.get("brief.newPicks", null)?.asked);
+    box.innerHTML = `<div class="lc-t"><b>${busy ? "Updating your new picks" : "Your new picks aren't all ready"}</b><small>Emma has read ${say} so far. ${busy ? "She's reading them first now, about 15 minutes. You can listen in the meantime." : can ? "Update now to have her read them first, or listen now without them." : "They'll be ready after the next update (every 2 hours). You can listen now without them."}</small></div>`
+      + `<div class="lc-b">${can && !busy ? `<button class="lc-up" type="button" data-catch-update>Update now</button>` : ""}<button class="lc-go" type="button" data-listen="drive">Listen now</button></div>`;
+  }
+  async function catchUpdate() {
+    const np = store.get("brief.newPicks", null), tok = store.get("brief.ghToken", "");
+    if (!np || !tok || state.refreshing) return;
+    try {
+      const r = await fetch(GH_DISPATCH, { method: "POST", headers: { Authorization: `Bearer ${tok}`, Accept: "application/vnd.github+json" }, body: JSON.stringify({ ref: "main", inputs: { focus: np.ids.join(",") } }) });
+      if (!r.ok) { if ([401, 403, 404].includes(r.status)) { A.ghBad = true; saveAdmin(); } toast("The update couldn't start. Your picks will be ready after the next scheduled update.", 6000); catchLine(); return; }
+      store.set("brief.newPicks", { ...np, asked: Date.now() });
+      state.refreshing = true; renderHeader(); catchLine();
+      toast("Updating. Emma reads your new picks first, about 15 minutes. Your news keeps working meanwhile.", 6000);
+      setTimeout(() => finishRefresh(false), 25 * 60000);
+    } catch { toast("The update couldn't start. Check your connection.", 5000); }
+  }
   function loganLine() {
     const ids = driveList("logan").ids, n = ids.length;
     const b = $("lbLogan"); if (b) b.hidden = !n;
@@ -2222,7 +2282,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     const f = $("lbLoganFresh");
     if (f) { let show = !!n && ((L.on && L.scope === "logan") || !!getResume("logan") || ids.some(id => seenish(id))); f.hidden = !show; $("lbLgWrap").classList.toggle("has-fresh", show); }
     if (n && !loganLine.warm) { loganLine.warm = true; loganWx(); }  // Logan's weather ready before it's needed
-    return getResume("logan") ? "Pick up where you left off" : "News about the City of Logan and its council";
+    return getResume("logan") ? "Pick up where you left off" : "News about the City of Logan";
   }
   function listenArt() {
     const img = $("lbBg"); if (!img || !state.loaded) return;
@@ -2230,6 +2290,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     const ww = $("wxWarn"), w0 = Date.now() - Date.parse(state.status?.updatedAt || 0) < 6 * 3600000 ? state.status?.warnings?.[S.region]?.[0] : null;
     if (ww) { ww.hidden = !w0; if (w0) { ww.href = w0.url; ww.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17.5v.5"/></svg><span>${esc(w0.title)}</span>`; } }
     if (!(L.on && L.scope === "logan") && $("lbLoganT")) $("lbLoganT").textContent = loganLine();
+    catchLine();
     if (!L.on) { const sp = $("lbListen")?.querySelector("span:last-child"); if (sp) sp.innerHTML = lbIdle(); }
     try {
       const ids = driveList().ids; lbFresh(ids);
@@ -3002,7 +3063,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   function loadPre(v) {
     if (state.mode !== "static") return;
     state.preP = fetch(`data/voice/index.json?v=${encodeURIComponent(v || "")}`).then(r => r.ok ? r.json() : null)
-      .then(d => { PRE = d && d.c && Object.keys(d.c).length ? d : null; if (openSheet === "settings") renderSettings(); listenWarm(); }).catch(() => {})
+      .then(d => { PRE = d && d.c && Object.keys(d.c).length ? d : null; if (openSheet === "settings") renderSettings(); listenWarm(); try { catchLine(); } catch {} }).catch(() => {})
       .finally(() => { state.preP = null; });
   }
   // Get Listen ready in the background once the app has opened: the opening, the first story's start,
@@ -3758,6 +3819,7 @@ const handle = async (m, post) => {
     if (t.closest("[data-open-settings]") || t.closest("#settingsBtn")) { openSettings(); return; }
     if (t.closest("[data-ai-settings]")) { const m = $("aiSetMsg"); if (m) m.hidden = false; toast("AI settings aren't available yet. Coming soon."); return; }
     if (t.closest("[data-open-interests]")) { openInterests(); return; }
+    if (t.closest("[data-catch-update]")) { catchUpdate(); return; }
     if (t.closest("[data-open-weather]")) { openWeather(); return; }
     const pk = t.closest("[data-pick]");
     if (pk) {
