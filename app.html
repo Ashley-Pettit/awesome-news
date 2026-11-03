@@ -4350,8 +4350,8 @@ const handle = async (m, post) => {
   // Which place the 3D view shows: Logan for Logan news, Inverloch for Victoria, Brisbane everywhere else.
   function bsPlace() {
     const W = BS.W; if (!W.bris || !W.inv) return;
-    const pl = typeof wxPlace === "function" ? wxPlace() : S.region, vic = ["vic", "inv"].includes(pl), lo = pl === "logan";
-    W.bris.visible = !vic && !lo; if (W.logan) W.logan.visible = lo;
+    const pl = typeof wxPlace === "function" ? wxPlace() : S.region, vic = ["vic", "inv"].includes(pl), lo = pl === "logan", mo = pl === "moo";
+    W.bris.visible = !vic && !lo && !mo; if (W.logan) W.logan.visible = lo; if (W.moo) W.moo.visible = mo;
     W.inv.visible = vic;
   }
   function bsBuild(THREE) {
@@ -4550,6 +4550,54 @@ const handle = async (m, post) => {
     const llg = new THREE.BufferGeometry(); llg.setAttribute("position", new THREE.Float32BufferAttribute(lgLights, 3));
     W.loganLights = new THREE.PointsMaterial({ color: 0xffd9a0, size: 0.7, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: true });
     lgn.add(new THREE.Points(llg, W.loganLights));
+    // ---- Moorooka (shown when your area is Moorooka): a park in front, Beaudesert Road's shops with their
+    // awnings, the Beenleigh line with a train going by, Queenslanders on stumps with tin roofs and
+    // jacarandas, Toohey Forest on the hill, and the city's towers small in the distance.
+    const moo = new THREE.Group(); moo.visible = false; scene.add(moo); W.moo = moo;
+    const park = new THREE.MeshStandardMaterial({ color: 0x6a9a4e, roughness: 1 });
+    const ground = new THREE.Mesh(new THREE.BoxGeometry(900, 1, 600), park); ground.position.set(0, 0.5, -150); moo.add(ground);  // covers the water: no river here
+    const road = new THREE.Mesh(new THREE.BoxGeometry(900, 0.12, 9), new THREE.MeshStandardMaterial({ color: 0x3a3d42, roughness: .9 })); road.position.set(0, 1.06, -46); moo.add(road);
+    const lines = new THREE.Mesh(new THREE.BoxGeometry(900, 0.13, 0.3), new THREE.MeshBasicMaterial({ color: 0xf2f2f2 })); lines.position.set(0, 1.08, -46); moo.add(lines);
+    // the shops along Beaudesert Road: one and two storeys, coloured fronts, awnings
+    const fronts = [0xe8d3b0, 0xc9785b, 0xf0ece4, 0x9db7c4, 0xe3c46d, 0xd5a6a0], awn = new THREE.MeshStandardMaterial({ color: 0x5d6b78, roughness: .7 }), mooLights = [];
+    for (let i = 0; i < 14; i++) { const w = 7 + rnd(i * 3 + 301) * 4, h = 5 + (i % 3 === 0 ? 4 : 0), x = -60 + i * 9.5;
+      const shop = new THREE.Mesh(new THREE.BoxGeometry(w, h, 8), new THREE.MeshStandardMaterial({ color: fronts[i % fronts.length], roughness: .9 })); shop.position.set(x, 1 + h / 2, -56); moo.add(shop);
+      const a = new THREE.Mesh(new THREE.BoxGeometry(w, 0.25, 2.6), awn); a.position.set(x, 4.2, -51.4); moo.add(a);
+      mooLights.push(x - 1.5, 2.6, -51.9, x + 1.5, 2.6, -51.9); }
+    // the railway: two tracks on a low embankment, and a train going by
+    const bed = new THREE.Mesh(new THREE.BoxGeometry(900, 1.2, 8), new THREE.MeshStandardMaterial({ color: 0x8b7f72, roughness: 1 })); bed.position.set(0, 1.6, -72); moo.add(bed);
+    const rail = new THREE.MeshStandardMaterial({ color: 0x5a5a5a, roughness: .5, metalness: .6 });
+    [-73.8, -72.6, -71.4, -70.2].forEach(z => { const r = new THREE.Mesh(new THREE.BoxGeometry(900, 0.2, 0.15), rail); r.position.set(0, 2.3, z); moo.add(r); });
+    const train = new THREE.Group(), carMat = new THREE.MeshStandardMaterial({ color: 0xe9eef2, roughness: .5 }), stripe = new THREE.MeshStandardMaterial({ color: 0xf28c28, roughness: .6 });
+    for (let k = 0; k < 6; k++) { const car = new THREE.Mesh(new THREE.BoxGeometry(19, 3.6, 3), carMat); car.position.set(k * 19.6, 4.2, 0); train.add(car);
+      const st = new THREE.Mesh(new THREE.BoxGeometry(19, 0.5, 3.05), stripe); st.position.set(k * 19.6, 3.0, 0); train.add(st);
+      const win = new THREE.Mesh(new THREE.BoxGeometry(16, 1.1, 3.08), new THREE.MeshStandardMaterial({ color: 0x2a3440, roughness: .2 })); win.position.set(k * 19.6, 4.9, 0); train.add(win); }
+    train.position.set(-200, 0, -71); moo.add(train); W.mooTrain = train;
+    // Queenslanders on the slopes: on stumps, verandahs, tin roofs; jacarandas between them
+    const timber = [0xf3efe6, 0xe9e1cc, 0xd9e4e8, 0xf0e2d2], tinR = new THREE.MeshStandardMaterial({ color: 0xb9c0c7, roughness: .45, metalness: .45 }), redR = new THREE.MeshStandardMaterial({ color: 0x8d3f33, roughness: .7 });
+    for (let i = 0; i < 40; i++) { const x = -190 + rnd(i * 7 + 311) * 380, z = -90 - rnd(i * 11 + 311) * 80, base = 1 + Math.max(0, (-z - 90) * 0.12);
+      const hs = new THREE.Group();
+      const body = new THREE.Mesh(new THREE.BoxGeometry(8, 3.2, 7), new THREE.MeshStandardMaterial({ color: timber[i % timber.length], roughness: .9 })); body.position.y = 3.4; hs.add(body);
+      for (const sx of [-3.6, 3.6]) for (const sz of [-3, 3]) { const stump = new THREE.Mesh(new THREE.BoxGeometry(0.3, 1.8, 0.3), new THREE.MeshStandardMaterial({ color: 0x6b6158 })); stump.position.set(sx, 0.9, sz); hs.add(stump); }
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(6.6, 2.8, 4), i % 4 === 0 ? redR : tinR); roof.position.y = 6.4; roof.rotation.y = Math.PI / 4; hs.add(roof);
+      const ver = new THREE.Mesh(new THREE.BoxGeometry(8.4, 0.25, 2), new THREE.MeshStandardMaterial({ color: 0xdedbd2 })); ver.position.set(0, 1.9, 4.4); hs.add(ver);
+      hs.position.set(x, base, z); hs.rotation.y = (rnd(i * 13 + 311) - 0.5) * 0.4; moo.add(hs); mooLights.push(x, base + 3.4, z + 3.55); }
+    for (let i = 0; i < 6; i++) { const h = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 10), park); h.scale.set(70 + rnd(i * 5 + 321) * 40, 8 + rnd(i * 7 + 321) * 6, 40); h.position.set(-260 + i * 100, 0, -150 - rnd(i * 3 + 321) * 20); moo.add(h); }
+    const jac = new THREE.MeshStandardMaterial({ color: month >= 9 && month <= 11 ? 0x9d82e6 : 0x4f7a42, roughness: 1 });
+    for (let i = 0; i < 9; i++) { const g = new THREE.Group(), t = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.5, 4.5, 6), trunkMat); t.position.y = 2.25; g.add(t);
+      for (let k = 0; k < 5; k++) { const c = new THREE.Mesh(new THREE.SphereGeometry(1.6 + rnd(i * 9 + k) * 1.1, 9, 7), jac); c.position.set((rnd(i * 3 + k + 331) - 0.5) * 4, 4.6 + rnd(i * 5 + k + 331) * 2, (rnd(i * 7 + k + 331) - 0.5) * 3); g.add(c); }
+      g.position.set(-80 + i * 22 + rnd(i * 11 + 331) * 6, 1, i % 2 ? -40 : -80); g.scale.setScalar(1.2); moo.add(g); }
+    // Toohey Forest on the hill to the east: dark gum bushland
+    const bush = new THREE.MeshStandardMaterial({ color: 0x3e5b38, roughness: 1 });
+    const hill = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 12), bush); hill.scale.set(130, 34, 60); hill.position.set(150, -6, -170); moo.add(hill);
+    for (let i = 0; i < 26; i++) { const c = new THREE.Mesh(new THREE.SphereGeometry(4 + rnd(i * 13 + 341) * 3, 8, 6), bush); c.position.set(70 + rnd(i * 3 + 341) * 150, 18 + rnd(i * 5 + 341) * 10, -150 - rnd(i * 7 + 341) * 40); moo.add(c); }
+    // the CBD, small on the horizon to the north
+    const cbd = new THREE.MeshStandardMaterial({ color: 0x7d8ba3, roughness: .8 });
+    for (let i = 0; i < 16; i++) { const h = 14 + rnd(i * 3 + 351) * 38, b = new THREE.Mesh(new THREE.BoxGeometry(7, h, 7), cbd); b.position.set(-90 + i * 7 + rnd(i * 5 + 351) * 4, h / 2, -380); moo.add(b);
+      for (let k = 0; k < 6; k++) mooLights.push(b.position.x + (rnd(i * 7 + k) - 0.5) * 6, 2 + rnd(i * 11 + k) * (h - 3), -376.4); }
+    const mlg = new THREE.BufferGeometry(); mlg.setAttribute("position", new THREE.Float32BufferAttribute(mooLights, 3));
+    W.mooLights = new THREE.PointsMaterial({ color: 0xffd9a0, size: 0.75, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: true });
+    moo.add(new THREE.Points(mlg, W.mooLights));
     // clouds: one instanced billboard draw call
     const puffs = 240, cg = new THREE.InstancedBufferGeometry(), base = new THREE.PlaneGeometry(1, 1);
     cg.index = base.index; cg.setAttribute("position", base.attributes.position); cg.setAttribute("uv", base.attributes.uv);
@@ -4643,7 +4691,7 @@ const handle = async (m, post) => {
     B.scene.fog.color.setRGB(hor[0], hor[1], hor[2]).convertSRGBToLinear(); B.scene.fog.far = 470 - 260 * st.rain - 110 * st.storm; B.scene.fog.near = 40;
     // city lights come on with the dark
     const lit = bsClamp(night * 0.95 + dusk * 0.35, 0, 1) * (0.85 + 0.15 * Math.sin(t * 0.7));
-    W.winMat.opacity = lit; W.bridgeMat.opacity = lit; W.wheelMat.opacity = lit; if (W.invLights) W.invLights.opacity = lit; if (W.loganLights) W.loganLights.opacity = lit; W.bridgeMat.color.setHSL((t * 0.01) % 1, 0.6, 0.7);
+    W.winMat.opacity = lit; W.bridgeMat.opacity = lit; W.wheelMat.opacity = lit; if (W.invLights) W.invLights.opacity = lit; if (W.loganLights) W.loganLights.opacity = lit; if (W.mooLights) W.mooLights.opacity = lit; W.bridgeMat.color.setHSL((t * 0.01) % 1, 0.6, 0.7);
     // clouds and rain
     let cl = bsMix(bsMix(bsHex(0x2a3350), bsHex(0xffffff), day), bsHex(0xffc29a), dusk * 0.8), cs = bsMix(bsMix(bsHex(0x10162a), bsHex(0x98a4b8), day), bsHex(0xc27a78), dusk * 0.5);
     cl = bsMix(cl, bsMix(bsHex(0x0e1118), bsHex(0x6b7483), day), st.storm * 0.9); cs = bsMix(cs, bsMix(bsHex(0x05070b), bsHex(0x2c323d), day), st.storm * 0.9);
@@ -4664,7 +4712,8 @@ const handle = async (m, post) => {
     W.wheel.rotation.z += dt * (still ? 0.04 : 0.12);
     if (W.invFlags && !still) W.invFlags.forEach((f, i) => { f.rotation.y = Math.sin(t * 2.2 + i) * 0.35 + (st.wind || 15) / 60; });
     if (W.invFoam) W.invFoam.position.z = -32.5 + Math.sin(t * 0.8) * 0.9;
-    if (W.koala && !still) W.koala.rotation.y = Math.sin(t * 0.3) * 0.4;  // the koala looks about, slowly
+    if (W.koala && !still) W.koala.rotation.y = Math.sin(t * 0.3) * 0.4;
+    if (W.mooTrain && !still) { W.mooTrain.position.x += dt * 9; if (W.mooTrain.position.x > 260) W.mooTrain.position.x = -420; }  // a train every so often  // the koala looks about, slowly
     r.render(B.scene, cam);
   }
   function renderWeather() {
