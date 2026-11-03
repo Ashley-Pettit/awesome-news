@@ -3,3 +3,7 @@ out/
 __pycache__/
 *.pyc
 index.html
+council/council-news-state.json
+council/council-news-log.txt
+council/council-news-console.txt
+council/awesome-news/

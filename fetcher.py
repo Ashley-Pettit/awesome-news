@@ -423,6 +423,28 @@ def _gnews_lookup(aid):
         return None
 
 
+# Council news sent from Ash's work PC (council_news.py there reads the council website politely, which the
+# news update can't, and pushes council/council-news.json here). Pictures come with it, in council/img.
+COUNCIL_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "council", "council-news.json")
+SITE_URL = "https://ashley-pettit.github.io/awesome-news/"
+
+
+def council_file():
+    try:
+        d = json.load(open(COUNCIL_FILE, encoding="utf-8"))
+    except Exception:
+        return []
+    out = []
+    for c in d.get("items", []):
+        img = c.get("image") or ""
+        if img and not img.startswith("http"):
+            img = SITE_URL + img.lstrip("/")
+        out.append({"title": c.get("title", ""), "url": c.get("url", ""), "summary": c.get("summary") or "",
+                    "published": parse_date(c.get("published") or ""), "image": img, "content": "", "cats": [],
+                    "paras": [p for p in c.get("paras") or [] if p]})
+    return out
+
+
 def logan_council():
     """Everything new on the council's website: its newsroom feed where it has one, plus every recent
     page the news search has found on logan.qld.gov.au (media releases, events, projects, notices)."""
@@ -825,9 +847,10 @@ def main():
     if a.interests == "all":
         lg = []
         try:
-            lg += [("Logan City Council", it) for it in logan_council()]
+            lg += [("Logan City Council", it) for it in council_file()]  # the full council stories first, so they win over the search's headlines
         except Exception as e:
-            errors.append(f"{LOGAN_NEWS}: {e}")
+            errors.append(f"council file: {e}")
+        # (The council's headlines from the news search are left out until its full stories come from the work PC.)
         # Logan's local papers and police: everything they publish. (A news search was tried, but it only
         # gives headlines with no picture or story.)
         for src, u in LOGAN_FEEDS:
@@ -852,6 +875,8 @@ def main():
             st = to_story(it, src, now, MAX_AGE_LOGAN)
             if not st or LOGAN_NOT.search(st["title"]):
                 continue
+            if it.get("paras"):
+                st["_text"] = {"paras": it["paras"], "author": "Logan City Council"}
             k, t = url_key(st["url"]), title_key(st["title"])
             if k in su or t in stt:
                 continue
@@ -873,7 +898,11 @@ def main():
     if a.text == "none":
         for st in unique.values():
             st.pop("_text", None)
-    texts = {st["id"]: dict(st["_text"], cc=False) for st in unique.values() if st.get("_text")}
+    texts = {}
+    for st in unique.values():
+        if st.get("_text"):
+            lic = CC_SOURCES.get(st["source"])
+            texts[st["id"]] = dict(st["_text"], cc=bool(lic), licence=lic[0] if lic else "", licenceUrl=lic[1] if lic else "")
     # (News search results link through news.google.com, which has no article or picture of its own to read.)
     todo = [st for st in unique.values() if not st.get("_text") and (wants_text(st) or not st["_img"]) and "news.google.com" not in st["url"]]
     with cf.ThreadPoolExecutor(12) as ex:

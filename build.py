@@ -99,5 +99,8 @@ if os.path.exists(beta_src):
 shutil.copytree(os.path.join(here, "icons"), os.path.join(site, "icons"), dirs_exist_ok=True)
 shutil.copy(os.path.join(here, "manifest.webmanifest"), site)
 shutil.copy(os.path.join(here, "sw.js"), site)
+# Council news pictures sent from the work PC (council_news.py), served next to the app.
+if os.path.isdir(os.path.join(here, "council", "img")):
+    shutil.copytree(os.path.join(here, "council", "img"), os.path.join(site, "council", "img"), dirs_exist_ok=True)
 open(os.path.join(site, ".nojekyll"), "w").close()
 print(f"Built {site}/index.html")
