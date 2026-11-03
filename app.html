@@ -1254,7 +1254,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     { id: "sa", label: "South Australia" }, { id: "tas", label: "Tasmania" }, { id: "act", label: "Canberra" }, { id: "nt", label: "Northern Territory" }];
   const FOR_YOU_PER_SECTION = 7;
   const FEATURE_EVERY = 6;
-  const MONO = { "ABC": "ABC", "SBS": "SBS", "BBC": "BBC", "M365": "365", "Microsoft": "MS", "Office 365": "IT", "Windows Central": "WC", "Ars": "Ars", "360info": "360", "Global Voices": "GV", "NASA": "NASA", "EFF": "EFF", "Mongabay": "MB", "KFF": "KFF", "TechCrunch": "TC", "iTnews": "iT", "The Conversation": "C", "The Guardian": "G", "7NEWS": "7" };
+  const MONO = { "ABC": "ABC", "SBS": "SBS", "BBC": "BBC", "M365": "365", "Microsoft": "MS", "Office 365": "IT", "Windows Central": "WC", "Ars": "Ars", "360info": "360", "Global Voices": "GV", "NASA": "NASA", "EFF": "EFF", "Mongabay": "MB", "Logan City Council": "LCC", "MyCity Logan": "ML", "Queensland Police": "QPS", "Jimboomba Times": "JT", "KFF": "KFF", "TechCrunch": "TC", "iTnews": "iT", "The Conversation": "C", "The Guardian": "G", "7NEWS": "7" };
   const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || "Australia/Brisbane";
   const SIZES = { s: "1rem", m: "1.12rem", l: "1.24rem", xl: "1.38rem" };
 
@@ -1677,7 +1677,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     // Beta: kinds of stories you've said "more like this" to come round first.
     const likes = store.get("beta.likes", {}) || {}, likeOf = sc => likes[sc.id === "local" ? "local news" : sc.id === "headlines" ? "more headlines" : sc.label] || 0;
     const lanes = (logan ? [{ id: "logan", label: "Logan" }] : enabledSections()).slice().sort((a, b) => likeOf(b) - likeOf(a)).map(sc => ({ sc, list: items(sc.id).filter(i => listenable(i) && !(Number(S.negCut) && isNegative(i))).slice(0, 30)
-      .map((i, n) => { const d = depth(best(i) || i); return { i, k: n + (d === 2 ? 0 : d === 1 ? 10 : 60) }; }).sort((a, b) => a.k - b.k).map(x => x.i) }));
+      .map((i, n) => { const d = depth(best(i) || i); return { i, k: logan && i.source === "Logan City Council" ? n - 1000 : n + (d === 2 ? 0 : d === 1 ? 10 : 60) }; }).sort((a, b) => a.k - b.k).map(x => x.i) }));
     for (let r = 0; secs < target && r < 40; r++) for (const { sc, list } of lanes) { if (secs >= target) break; add(list[r], sc.id === "local" ? "local news" : sc.id === "headlines" ? "more headlines" : sc.label); }
     return { ids: out, secOf, secs };
   }
