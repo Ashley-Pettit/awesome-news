@@ -160,8 +160,9 @@ LOGAN_RE = re.compile(r"\b(Logan (City|Council|councill?ors?|Hospital|Central|Vi
 LOGAN_NOT = re.compile(r"\b(Utah|Cache Valley|Herald Journal|KSL|Deseret|Mark Anderson|USU|Aggies|Logan Paul|Logan Roy|Logan Sargeant|Logan Lerman|Logan Henderson|Wolverine|Ohio|West Virginia)\b", re.I)
 LOGAN_NEWS = "https://www.logan.qld.gov.au/news"
 LOGAN_RSS = ["https://www.logan.qld.gov.au/rss/news", "http://www.logan.qld.gov.au/about-council/news-and-publications/connect/rss/feeds/latest-news"]
-LOGAN_SEARCH = "https://news.google.com/rss/search?q=" + urllib.parse.quote_plus(
-    '("Logan City Council" OR "City of Logan" OR "Logan mayor" OR "Logan Hospital" OR "Logan police" OR Beenleigh OR Jimboomba OR Woodridge OR Loganholme OR "Browns Plains" OR "Logan Central" OR "Logan Village" OR Yarrabilba OR "Shailer Park" OR "Slacks Creek") when:21d') + "&hl=en-AU&gl=AU&ceid=AU:en"
+# Logan's own local news, each with its pictures (and MyCity Logan's whole article in its feed).
+LOGAN_FEEDS = [("MyCity Logan", "https://mycitylogan.com.au/feed/"), ("Queensland Police", "https://mypolice.qld.gov.au/logan/feed/"),
+               ("Jimboomba Times", "https://www.jimboombatimes.com.au/rss.xml")]
 MAX_AGE_LOGAN = timedelta(days=21)
 PER_LOGAN = 40
 
@@ -660,7 +661,7 @@ def main():
     now = datetime.now(timezone.utc)
 
     # 1. Fetch every feed once.
-    urls = {u for _, _, u, _ in SECTION_FEEDS} | {u for _, u in REGION_MINE}
+    urls = {u for _, _, u, _ in SECTION_FEEDS} | {u for _, u in REGION_MINE} | ({u for _, u in LOGAN_FEEDS} if a.interests == "all" else set())
     interests = INTERESTS if a.interests == "all" else []
     for _, _, _, ifeeds, _ in interests:
         urls |= {u for _, u in ifeeds}
@@ -760,19 +761,15 @@ def main():
             lg += [("Logan City Council", it) for it in logan_council()]
         except Exception as e:
             errors.append(f"{LOGAN_NEWS}: {e}")
-        try:
-            for it in parse_feed(LOGAN_SEARCH):
-                m = re.match(r"^(.*\S)\s+-\s+([^-]{2,60})$", it["title"])  # "Headline - Publisher"
-                if m:
-                    it["title"] = m.group(1)
-                if not (LOGAN_RE.search(it["title"]) or re.search(r"\bLogan\b", it["title"])) or LOGAN_NOT.search(f"{it['title']} {m.group(2) if m else ''}"):
-                    continue
-                lg.append((m.group(2).strip() if m else "News search", dict(it, summary="", content="")))
-        except Exception as e:
-            errors.append(f"news search: {e}")
+        # Logan's local papers and police: everything they publish. (A news search was tried, but it only
+        # gives headlines with no picture or story.)
+        for src, u in LOGAN_FEEDS:
+            lg += [(src, it) for it in raw.get(u, [])]
         mined = {}
+        own = {u for _, u in LOGAN_FEEDS}
         for u in raw:
-            mined.setdefault(u, feed_source.get(u))
+            if u not in own:
+                mined.setdefault(u, feed_source.get(u))
         for r in REGIONS.values():
             for src, u in r[1]:
                 mined[u] = mined.get(u) or src

@@ -227,8 +227,13 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
 .np-wkbtn[hidden] { display: none; }
 /* Weather: round icon button, so the top bar stays tidy */
 @media (max-width: 430px) { #np .np-brand span { display: none; } }  /* phone: the logo alone, so the buttons fit */
-#npWk { width: 34px; height: 34px; padding: 0; justify-content: center; font-size: 0; gap: 0; flex: none; }
-#npWk svg { width: 16px; height: 16px; }
+#npWk { height: 38px; padding: 0 14px 0 12px; gap: 7px; font-size: 0.86rem; flex: none; background: rgba(255, 255, 255, 0.16); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24); }
+#npWk svg { width: 19px; height: 19px; }
+/* Phones: Personalise shows as its icon, so "Detailed weather" fits beside it */
+@media (max-width: 430px) { #npCust { width: 38px; height: 38px; padding: 0; justify-content: center; font-size: 0; gap: 0; flex: none; } #npCust svg { width: 17px; height: 17px; } }
+@media (max-width: 380px) { #npWk { padding: 0 11px 0 9px; gap: 5px; font-size: 0.76rem; } }  /* small phones */
+/* No "Up next" bar under the player */
+#npUpNext { display: none !important; }
 /* Beta: while listening, steer things: more like this, read along, save; and what's up next */
 .np-acts { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
 .np-acts[hidden] { display: none; }
@@ -1092,7 +1097,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   <div class="np-pic"><img class="np-bg" id="npBg" alt=""><img id="npImg" alt=""><div class="np-mono" id="npMono"></div></div>
   <div class="np-top">
     <div class="np-brand"><img id="npLogo" alt=""><span>Awesome News</span></div>
-    <button type="button" class="np-wkbtn" id="npWk" aria-label="Hear the week's weather" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M8.5 3.5v1.6M3.6 8.4h1.6M5 5l1.1 1.1M13.4 5l-1.1 1.1"/><path d="M5.6 11.6a3.6 3.6 0 1 1 6.6-2.4"/><path d="M8 20.5h9.5a3.5 3.5 0 0 0 .3-7 5 5 0 0 0-9.5 1A3 3 0 0 0 8 20.5z"/></svg>Weather</button>
+    <button type="button" class="np-wkbtn" id="npWk" aria-label="Detailed weather: hear the week ahead" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M8.5 3.5v1.6M3.6 8.4h1.6M5 5l1.1 1.1M13.4 5l-1.1 1.1"/><path d="M5.6 11.6a3.6 3.6 0 1 1 6.6-2.4"/><path d="M8 20.5h9.5a3.5 3.5 0 0 0 .3-7 5 5 0 0 0-9.5 1A3 3 0 0 0 8 20.5z"/></svg>Detailed weather</button>
     <button type="button" class="np-cust" id="npCust" aria-label="Personalise your stories in Settings" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg>Personalise</button>
     <button type="button" class="np-pos" id="npPos" aria-label="Show the headlines" aria-expanded="false"></button>
     <button type="button" class="np-btn mic" data-cmd aria-pressed="false" aria-label="Voice commands: say skip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
@@ -4647,6 +4652,22 @@ const handle = async (m, post) => {
     if (changed) toast("Fresh stories are in");
   }
 
+  // The page's build (stamped by build.py) against the latest on the site. Never mid-listen: it waits until you stop.
+  let newBuild = false;
+  async function checkBuild() {
+    const mine = document.querySelector('meta[name="an-build"]')?.content;
+    if (!mine || state.mode !== "static") return;
+    try {
+      const v = await (await fetch(new URL("version.json", location.href).href + `?t=${Date.now()}`, { cache: "no-store" })).json();
+      if (v?.build && v.build !== mine) newBuild = v.build;
+    } catch {}
+    if (!newBuild || L.on || openSheet) return;
+    // Once per new version (so a stale copy somewhere can't loop), with the build in the address so it's fetched fresh.
+    let tried = ""; try { tried = sessionStorage.getItem("an.reloadFor") || ""; } catch {}
+    if (tried === newBuild) return;
+    try { sessionStorage.setItem("an.reloadFor", newBuild); } catch {}
+    location.replace(location.pathname + "?b=" + newBuild);
+  }
   // ---- Static files (GitHub Pages) ----
   async function loadStatic(manual) {
     try {
@@ -4732,7 +4753,7 @@ const handle = async (m, post) => {
     if (state.refreshing) return;
     state.refreshing = true;
     renderHeader();
-    if (state.mode === "static") { loadStatic(true); return; }
+    if (state.mode === "static") { checkBuild(); loadStatic(true); return; }
     try {
       if (!state.mcp) throw { code: "server_not_connected" };
       await state.mcp.callTool("Claude Code Remote", "fire_trigger", { trigger_id: state.status.triggerId }, { cache: false });
@@ -4770,6 +4791,11 @@ const handle = async (m, post) => {
     if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
     loadStatic(false);
     loadWeather();
+    // A new version of the app: reload to it. Phones that keep the app open on the home screen never
+    // reload by themselves (and pulling down only fetches news), so check whenever it comes back into view.
+    checkBuild();
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) checkBuild(); });
+    setInterval(() => { if (!document.hidden) checkBuild(); }, 10 * 60000);
     setInterval(() => { if (!document.hidden) loadWeather(); }, 15 * 60000);
     // Pick up new stories while the app stays open.
     setInterval(() => { if (!document.hidden) loadStatic(false); }, 10 * 60000);

@@ -6,6 +6,8 @@ artifact). This adds the document head, home-screen icon and manifest.
 
 Usage: python3 build.py SITE_DIR
 """
+import hashlib
+import json
 import os
 import re
 import shutil
@@ -67,9 +69,18 @@ img{{max-width:100%}}
 <body>
 """
 
+# A build stamp: the app checks version.json against it and reloads itself when the site has a newer app
+# (phones keep a home-screen app open for days without reloading).
+def stamped(hd, bd, folder):
+    build = hashlib.sha1((hd + bd).encode()).hexdigest()[:12]
+    with open(os.path.join(folder, "version.json"), "w") as f:
+        json.dump({"build": build}, f)
+    return hd.replace("<head>\n", f'<head>\n<meta name="an-build" content="{build}">\n', 1)
+
+
 os.makedirs(site, exist_ok=True)
 with open(os.path.join(site, "index.html"), "w", encoding="utf-8") as f:
-    f.write(head + body.strip() + "\n</body>\n</html>\n")
+    f.write(stamped(head, body, site) + body.strip() + "\n</body>\n</html>\n")
 
 # The beta: beta/app.html, at /beta/, sharing the same news, voice and icons (everything resolves from the main folder).
 beta_src = os.path.join(here, "beta", "app.html")
@@ -83,7 +94,7 @@ if os.path.exists(beta_src):
                  .replace('<link rel="canonical"', '<meta name="robots" content="noindex">\n<link rel="canonical"'))
     os.makedirs(os.path.join(site, "beta"), exist_ok=True)
     with open(os.path.join(site, "beta", "index.html"), "w", encoding="utf-8") as f:
-        f.write(bhead + bbody.strip() + "\n</body>\n</html>\n")
+        f.write(stamped(bhead, bbody, os.path.join(site, "beta")) + bbody.strip() + "\n</body>\n</html>\n")
     print(f"Built {site}/beta/index.html")
 shutil.copytree(os.path.join(here, "icons"), os.path.join(site, "icons"), dirs_exist_ok=True)
 shutil.copy(os.path.join(here, "manifest.webmanifest"), site)
