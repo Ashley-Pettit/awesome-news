@@ -159,12 +159,17 @@ LOGAN_RE = re.compile(r"\b(Logan (City|Council|councill?ors?|Hospital|Central|Vi
                       r"Jimboomba|Shailer Park|Daisy Hill|Yarrabilba|Eagleby|Crestmead|Edens Landing|Holmview|Kingston Butter Factory|Jon Raven)\b", re.I)
 LOGAN_NOT = re.compile(r"\b(Utah|Cache Valley|Herald Journal|KSL|Deseret|Mark Anderson|USU|Aggies|Logan Paul|Logan Roy|Logan Sargeant|Logan Lerman|Logan Henderson|Wolverine|Ohio|West Virginia)\b", re.I)
 LOGAN_NEWS = "https://www.logan.qld.gov.au/news"
+# Everything new on the council's website (news, media releases, events, projects, notices). The site
+# blocks feed readers, so its pages are found through a news search and each link is turned back into
+# the council's own address.
+LOGAN_SITE_SEARCH = "https://news.google.com/rss/search?" + urllib.parse.urlencode(
+    {"q": "site:logan.qld.gov.au when:21d", "hl": "en-AU", "gl": "AU", "ceid": "AU:en"})
 LOGAN_RSS = ["https://www.logan.qld.gov.au/rss/news", "http://www.logan.qld.gov.au/about-council/news-and-publications/connect/rss/feeds/latest-news"]
 # Logan's own local news, each with its pictures (and MyCity Logan's whole article in its feed).
 LOGAN_FEEDS = [("MyCity Logan", "https://mycitylogan.com.au/feed/"), ("Queensland Police", "https://mypolice.qld.gov.au/logan/feed/"),
                ("Jimboomba Times", "https://www.jimboombatimes.com.au/rss.xml")]
 MAX_AGE_LOGAN = timedelta(days=21)
-PER_LOGAN = 40
+PER_LOGAN = 60
 
 INTEREST_GROUPS = [("news", "News"), ("tech", "Tech & science"), ("life", "Life"), ("culture", "Culture"), ("planet", "Planet")]
 PER_INTEREST = 30
@@ -375,16 +380,51 @@ def parse_feed(url):
     return out
 
 
+def gnews_real_url(url):
+    """A news.google.com link -> the page it points to (or the same link if that can't be worked out)."""
+    m = re.search(r"/articles/([^?/]+)", url)
+    if not m:
+        return url
+    aid = m.group(1)
+    try:
+        pg = get(f"https://news.google.com/rss/articles/{aid}", timeout=20).decode("utf-8", "replace")
+        sig, ts = re.search(r'data-n-a-sg="([^"]+)"', pg), re.search(r'data-n-a-ts="([^"]+)"', pg)
+        if not (sig and ts):
+            return url
+        rq = ["Fbv4je", '["garturlreq",[["X","X",["X","X"],null,null,1,1,"US:en",null,1,null,null,null,null,null,0,1],'
+              f'"X","X",1,[1,1,1],1,1,null,0,0,null,0],"{aid}",{ts.group(1)},"{sig.group(1)}"]']
+        body = ("f.req=" + urllib.parse.quote(json.dumps([[rq]]))).encode()
+        req = urllib.request.Request("https://news.google.com/_/DotsSplashUi/data/batchexecute", data=body, headers={
+            "User-Agent": UA, "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"})
+        out = urllib.request.urlopen(req, timeout=20).read().decode("utf-8", "replace")
+        real = json.loads(json.loads(out.split("\n\n")[1])[0][2])[1]
+        return real if isinstance(real, str) and real.startswith("http") else url
+    except Exception:
+        return url
+
+
 def logan_council():
-    """The council's newsroom feed, where it has one (its stories also come through the news search)."""
+    """Everything new on the council's website: its newsroom feed where it has one, plus every recent
+    page the news search has found on logan.qld.gov.au (media releases, events, projects, notices)."""
+    got = []
     for u in LOGAN_RSS:
         try:
             got = parse_feed(u)
             if got:
-                return got
+                break
         except Exception:
             pass
-    return []
+    try:
+        found = parse_feed(LOGAN_SITE_SEARCH)
+    except Exception:
+        found = []
+    for it in found:
+        it["title"] = re.sub(r"(\s+[-\u2013|]\s+Logan(?: City Council)?)+\s*$", "", html.unescape(it["title"])).strip()
+        it["summary"] = ""
+    with cf.ThreadPoolExecutor(6) as ex:
+        for it, real in zip(found, ex.map(lambda i: gnews_real_url(i["url"]), found)):
+            it["url"] = real
+    return got + [it for it in found if "logan.qld.gov.au" in it["url"] or "news.google.com" in it["url"]]
 
 
 def is_sport(it):
