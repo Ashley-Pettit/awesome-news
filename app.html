@@ -2687,9 +2687,15 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     $("rBody").innerHTML = readerHTML(i, body);
     if (L.on && L.queue[L.at] === id) highlightPara(L.curPara);
   }
+  // Read: by id, and by publisher and headline too, so a story whose link the publisher changed (a new id after
+  // an update) is still the one you've read.
+  const READ_T = new Set(store.get("brief.readT", []));
+  const readKey = i => i ? `${i.source || ""}|${String(i.title || "").toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 80)}` : "";
+  const readByTitle = id => { const i = findItem(id); return !!i && READ_T.has(readKey(i)); };
   function markRead(id) {
     state.read.add(id);
     store.set("brief.read", [...state.read].slice(-1500));
+    const k = readKey(findItem(id)); if (k && !READ_T.has(k)) { READ_T.add(k); store.set("brief.readT", [...READ_T].slice(-1500)); }
   }
 
   // ======================================================================
@@ -3613,7 +3619,7 @@ const handle = async (m, post) => {
   }
   const heardish = id => HEARD.has(id) || siblings(id).some(x => HEARD.has(x));
   // Heard in Listen, or read in the app.
-  const seenish = id => heardish(id) || state.read.has(id) || siblings(id).some(x => state.read.has(x));
+  const seenish = id => heardish(id) || state.read.has(id) || siblings(id).some(x => state.read.has(x)) || readByTitle(id);
   // Also the same story from another outlet, worded differently (you read 7NEWS's, Listen has ABC's): checked
   // against the stories you've read or heard that are still in today's news.
   function seenLike() {
@@ -4043,7 +4049,7 @@ const handle = async (m, post) => {
     const rm = t.closest("[data-remove]");
     if (rm) { S[rm.dataset.remove].splice(Number(rm.dataset.n), 1); saveSettings(); renderSettings(); return; }
     const cr = t.closest("#clearRead");
-    if (cr) { confirmTap(cr, "read", "Tap again to clear read history", () => { state.read.clear(); store.set("brief.read", []); renderSettings(); toast("Read history cleared"); }); return; }
+    if (cr) { confirmTap(cr, "read", "Tap again to clear read history", () => { state.read.clear(); store.set("brief.read", []); READ_T.clear(); store.set("brief.readT", []); renderSettings(); toast("Read history cleared"); }); return; }
     const cs = t.closest("#clearSaved");
     if (cs) { confirmTap(cs, "saved", "Tap again to clear saved stories", () => { state.saved = []; store.set("brief.saved", []); renderSettings(); renderHeader(); toast("Saved stories cleared"); }); return; }
   });

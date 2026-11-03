@@ -619,6 +619,41 @@ def title_key(title):
 NOT_NEWS_CATS = {"jobs", "job", "careers", "real estate", "property listings", "digital editions", "classifieds", "advertising", "sponsored"}
 
 
+# Ids that last. A story keeps its id from earlier updates even when the publisher edits the link (ABC fixes a typo
+# in the address, a news search link becomes the real one), so what you've read or heard stays read.
+ID_KEEP = {"key": {}, "title": {}}
+
+
+def stable_key(url):
+    if "news.google.com" in url:
+        return None
+    m = re.search(r"^https?://(?:www\.)?([^/]+)/.*?(?:/|-c-)(\d{6,})/?(?:[?#].*)?$", url)
+    return f"{m.group(1)}#{m.group(2)}" if m else url_key(url)
+
+
+def story_id(url, source, title, pub):
+    new = hashlib.sha1(url_key(url).encode()).hexdigest()[:12]
+    k = stable_key(url)
+    if k and k in ID_KEEP["key"]:
+        return ID_KEEP["key"][k]
+    old = ID_KEEP["title"].get((source, title_key(title)))
+    if old and abs((pub - old[1]).total_seconds()) < 4 * 86400:
+        return old[0]
+    return new
+
+
+def remember_ids(items):
+    """Earlier stories (the published archive) -> the ids new copies of them should keep."""
+    for it in sorted(items, key=lambda x: x.get("p", "")):
+        k = stable_key(it.get("u") or "")
+        if k:
+            ID_KEEP["key"].setdefault(k, it["id"])
+        try:
+            ID_KEEP["title"].setdefault((it.get("src"), title_key(it.get("t") or "")), (it["id"], datetime.strptime(it["p"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)))
+        except Exception:
+            pass
+
+
 def to_story(it, source, now, max_age=MAX_AGE):
     """Feed entry -> story dict, or None when it should be skipped."""
     url, title = it["url"], it["title"]
@@ -632,7 +667,7 @@ def to_story(it, source, now, max_age=MAX_AGE):
     if now - pub > max_age:
         return None
     return {
-        "id": hashlib.sha1(url_key(url).encode()).hexdigest()[:12],
+        "id": story_id(url, source, title, pub),
         "title": title,
         "url": url,
         "source": source,
@@ -918,6 +953,22 @@ def main():
                 raw[futs[f]] = f.result()
             except Exception as e:  # one dead feed never stops the run
                 errors.append(f"{futs[f]}: {e}")
+
+    # 1b. The published archive: earlier stories' ids, kept when a link changes (and carried on below).
+    archive = {}
+    if a.archive_from:
+        base = a.archive_from.rstrip("/") + "/data/"
+        try:
+            prev = json.loads(get(base + f"status.json?v={int(now.timestamp())}", timeout=20))
+            for ref in (prev.get("archive") or {}).get("chunks", []):
+                try:
+                    for it in json.loads(get(base + f"archive/{ref}.json", timeout=30)).get("items", []):
+                        archive[it["id"]] = it
+                except Exception as e:
+                    errors.append(f"archive {ref}: {e}"[:160])
+        except Exception as e:
+            errors.append(f"archive: {e}"[:160])
+    remember_ids(archive.values())
 
     # 2. Topic sections, deduped across sections in priority order.
     buckets = {s: [] for s in SECTION_ORDER}
@@ -1236,20 +1287,7 @@ def main():
             weather[r] = dict(weather[city], borrowed=city)
 
     # 6c. Archive: every story seen in the last ARCHIVE_DAYS, so search reaches past today.
-    # Carried on from the previously published copy and topped up with today's stories.
-    archive = {}
-    if a.archive_from:
-        base = a.archive_from.rstrip("/") + "/data/"
-        try:
-            prev = json.loads(get(base + f"status.json?v={int(now.timestamp())}", timeout=20))
-            for ref in (prev.get("archive") or {}).get("chunks", []):
-                try:
-                    for it in json.loads(get(base + f"archive/{ref}.json", timeout=30)).get("items", []):
-                        archive[it["id"]] = it
-                except Exception as e:
-                    errors.append(f"archive {ref}: {e}"[:160])
-        except Exception as e:
-            errors.append(f"archive: {e}"[:160])
+    # Carried on from the previously published copy (loaded at the start) and topped up with today's stories.
     first_sec = {}
     for name, items in sections.items():
         for st in items:
