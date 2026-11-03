@@ -1128,7 +1128,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
 
 </main>
 
-<nav class="dock" aria-label="Main">
+<nav class="dock" id="dock" aria-label="Main">
   <div class="dock-in">
     <button type="button" id="dockToday" aria-current="page">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path class="f" d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5z"/><path class="ln" d="M8 9h8M8 13h8M8 17h5" stroke-linecap="round"/></svg>Today</button>
@@ -5345,6 +5345,27 @@ const handle = async (m, post) => {
     const b = e.target.closest?.("[data-commute-clear]"); if (!b) return;
     const c = CM(); delete c[b.dataset.commuteClear]; saveCommute(c); renderSettings();
   });
+  // iPhone home-screen apps sometimes leave the bottom bar stranded part way up the screen (after the keyboard,
+  // a video or a full-screen view closes). Whenever that happens, it's put back on the bottom edge.
+  (() => {
+    let pend = 0;
+    const fix = () => { pend = 0;
+      if (document.activeElement?.matches?.("input, textarea, select, [contenteditable]")) return;  // the keyboard's up: leave it
+      const vv = window.visualViewport, edge = vv ? vv.offsetTop + vv.height : innerHeight;
+      for (const el of [$("dock"), $("player")]) {
+        if (!el || el.hidden) continue;
+        el.style.translate = "";
+        const want = edge - (parseFloat(getComputedStyle(el).bottom) || 0), gap = want - el.getBoundingClientRect().bottom;
+        if (Math.abs(gap) > 2) el.style.translate = `0 ${Math.round(gap)}px`;
+      }
+    };
+    const soon = () => { if (!pend) pend = requestAnimationFrame(fix); };
+    addEventListener("scroll", soon, { passive: true }); addEventListener("resize", soon); addEventListener("pageshow", soon);
+    window.visualViewport?.addEventListener("resize", soon); window.visualViewport?.addEventListener("scroll", soon);
+    document.addEventListener("focusout", () => setTimeout(soon, 350));
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) setTimeout(soon, 300); });
+    setInterval(soon, 2000);
+  })();
   // The page's build (stamped by build.py) against the latest on the site. Never mid-listen: it waits until you stop.
   let newBuild = false;
   async function checkBuild() {
