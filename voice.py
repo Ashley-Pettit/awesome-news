@@ -311,6 +311,10 @@ def plan(data, vkey):
                     want(it["text"])
         except Exception:
             pass
+    # Weather warnings from the Bureau (said straight after the weather), recorded before any story.
+    for ws in (status.get("warnings") or {}).values():
+        for w in ws:
+            want(w["say"])
     # No section cues ("Next, tech.") any more: the app goes straight from one headline to the next.
     for t in ["Welcome back. Picking up where you left off.", "Welcome back. Here's what's new.", SAMPLE, MORE]:
         want(t)

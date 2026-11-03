@@ -176,6 +176,12 @@ LOGAN_SITE_TITLE = re.compile(r"\b(news briefs?|statement|mayor|council (approve
 LOGAN_SITE_SKIP = re.compile(r"/(careers|vacanc|rates|payments?|forms?|dashboard|sale-of-land|disclosure|grants-and-funding/.*cbf|"
                              r"whats-on/events|events?/|bins?|waste-and-recycling/[a-z-]+$)", re.I)
 LOGAN_RSS = ["https://www.logan.qld.gov.au/rss/news", "http://www.logan.qld.gov.au/about-council/news-and-publications/connect/rss/feeds/latest-news"]
+# Bureau of Meteorology warnings (public feeds), kept to the ones for each area: severe thunderstorms,
+# severe weather, heatwaves, fire weather, and floods on the area's own rivers.
+WARN_KIND = re.compile(r"\b(Severe Thunderstorm|Severe Weather|Heatwave|Fire Weather|Flood Warning|Tropical Cyclone|Tsunami)\b", re.I)
+SEQ = re.compile(r"\b(Southeast Queensland|South East Queensland|Brisbane|Logan|Ipswich|Moreton|Gold Coast|Redland|Scenic Rim|Bremer|"
+                 r"Lockyer|Southeast Coast|Queensland\)?$|\(QLD\)$)", re.I)
+WARN_FEEDS = {"qld": ("https://www.bom.gov.au/fwo/IDZ00056.warnings_qld.xml", SEQ)}
 # Logan's own local news, each with its pictures (and MyCity Logan's whole article in its feed).
 LOGAN_FEEDS = [("MyCity Logan", "https://mycitylogan.com.au/feed/"), ("Queensland Police", "https://mypolice.qld.gov.au/logan/feed/"),
                ("Jimboomba Times", "https://www.jimboombatimes.com.au/rss.xml")]
@@ -1006,6 +1012,25 @@ def main():
         except Exception:
             pass
 
+    # 6b2. Bureau of Meteorology warnings for each area that has a feed (severe storms, floods on local
+    # rivers, heatwaves, fire weather), so the weather in Listen says when one's out.
+    warnings = {}
+    for r, (feed, area) in WARN_FEEDS.items():
+        if r not in weather and r != "logan":
+            continue
+        try:
+            got = []
+            for it in parse_feed(feed):
+                t = re.sub(r"^\d{2}/\d{2}:\d{2} [A-Z]{3,4}\s+", "", it["title"]).strip()
+                if WARN_KIND.search(t) and area.search(t) and not re.search(r"\b(Final|Cancellation|Marine|Coastal Waters)\b", t, re.I):
+                    got.append({"title": t, "url": it["url"], "issued": (it["published"] or now).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                                "say": "Weather warning. " + re.sub(r"\s+-\s+", ", ", t).rstrip(".") + "."})
+            warnings[r] = got[:4]
+        except Exception as e:
+            errors.append(f"warnings {r}: {e}")
+    if "qld" in warnings:
+        warnings.setdefault("logan", warnings["qld"])
+
     # 6c. Archive: every story seen in the last ARCHIVE_DAYS, so search reaches past today.
     # Carried on from the previously published copy and topped up with today's stories.
     archive = {}
@@ -1122,6 +1147,7 @@ def main():
         "interests": [{"id": "copilot", "label": "Microsoft Copilot", "group": "tech"}] + [{"id": i[0], "label": i[1], "group": i[2]} for i in interests]
                      + ([{"id": "logan", "label": "Logan", "group": "news"}] if "logan" in sections else []),
         "weather": weather,
+        "warnings": warnings,
         "groups": [{"id": g, "label": l} for g, l in INTEREST_GROUPS],
         "fullSources": sorted(CC_SOURCES),
         "sections": list(sections),
