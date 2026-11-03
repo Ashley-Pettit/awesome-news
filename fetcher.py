@@ -124,6 +124,14 @@ REGION_MINE = [("ABC News", ABC_JUST_IN), ("ABC News", ABC_TOP), ("SBS News", SB
 
 # Interests people can switch on. Each takes its own feeds plus any story, from any feed,
 # whose headline matches its keywords. Groups set the colour and where it sits in the picker.
+# eBird (the Cornell Lab of Ornithology) has no news feed, so its news page is read directly (ebird_news()).
+EBIRD_NEWS = "https://ebird.org/news"
+# Birds: not the footy teams (Eagles, Hawks, Swans, Magpies, Crows) or building cranes.
+BIRD_WORDS = (r"birds?|birdlife|bird-?watch\w*|birders?|birding|eBird|Audubon|owls?|parrots?|cockatoos?|galahs?|lorikeets?|kookaburras?|"
+              r"emus?|cassowar(?:y|ies)|penguins?|pelicans?|ibis(?:es)?|herons?|egrets?|finch(?:es)?|honeyeaters?|fairy-?wrens?|"
+              r"migratory|songbirds?|seabirds?|shorebirds?|waders?|raptors?|birds? of prey|hummingbirds?|flamingos?|albatross(?:es)?|"
+              r"plovers?|curlews?|lyrebirds?|bowerbirds?|black cockatoos?|wedge-tailed|budgies?|budgerigars?|nesting|swoop\w*|"
+              r"magpies? (?:season|swoop\w*|attacks?)|fledglings?|hatchlings?")
 INTERESTS = [
     # id, label, group, [(source, url)], headline keywords (or None)
     ("world", "World", "news", [("SBS News", "https://www.sbs.com.au/news/topic/world/feed"), ("BBC World", "https://feeds.bbci.co.uk/news/world/rss.xml"),
@@ -167,6 +175,11 @@ INTERESTS = [
                                                  ("Smithsonian", "https://www.smithsonianmag.com/rss/science-nature/"),
                                                  ("The Dodo", "https://www.youtube.com/feeds/videos.xml?channel_id=UCINb0wqPz-A0dV9nARjJlOQ")],
      r"wildlife|species|animals?|birds?|koalas?|kangaroos?|reefs?|whales?|sharks?|crocs?|crocodiles?|turtles?|conservation|endangered|extinct\w*|insects?|bees?|forests?|national parks?"),
+    ("birds", "Birds", "planet", [("eBird", EBIRD_NEWS), ("The Dodo", "https://www.youtube.com/feeds/videos.xml?channel_id=UCINb0wqPz-A0dV9nARjJlOQ"),
+                                  ("BirdLife Australia", "https://birdlife.org.au/news/feed/"), ("All About Birds", "https://www.allaboutbirds.org/news/feed/"),
+                                  ("Birds in Backyards", "https://www.birdsinbackyards.net/news/rss.xml"), ("Australian Geographic", "https://www.australiangeographic.com.au/feed/"),
+                                  ("The Guardian", "https://www.theguardian.com/environment/birds/rss")],
+     BIRD_WORDS),
     ("truecrime", "True crime", "news", [("7NEWS", SEVEN.format("news/crime")), ("CrimeReads", "https://crimereads.com/category/true-crime/feed/"),
                                          ("Oxygen", "https://www.oxygen.com/feeds/crime-news"), ("Defrosting Cold Cases", "https://defrostingcoldcases.com/feed/"),
                                          ("CrimeOnline", "https://www.crimeonline.com/feed/"), ("Law&Crime", "https://lawandcrime.com/feed")],
@@ -213,7 +226,15 @@ PER_LOGAN = 60
 INTEREST_GROUPS = [("news", "News"), ("tech", "Tech & science"), ("life", "Life"), ("culture", "Culture"), ("planet", "Planet")]
 PER_INTEREST = 30
 PER_INTEREST_MORE = {"wildlife": 50, "truecrime": 50}  # interests with lots of good sources keep more
-PER_SOURCE_MOST = {"truecrime": 0.32}  # no one source takes more than this share (7NEWS posts crime all day)
+PER_SOURCE_MOST = {"truecrime": 0.32}
+# Some sources file stories loosely (a 7NEWS "crime" story about a Lego store, a dog video in birds), so their stories
+# only go in a topic when the story itself is about it: its headline or summary matches the topic's words.
+LOOSE_SOURCES = {"7NEWS", "7NEWS Brisbane", "The Guardian", "The Conversation", "The Dodo", "Law&Crime", "Oxygen", "CrimeOnline",
+                 "BBC Science", "BBC Health", "BBC Entertainment", "BBC World", "SBS News", "ABC News", "Ars Technica", "TechCrunch",
+                 "New Scientist", "Smithsonian", "ScienceDaily", "Australian Geographic", "ScienceAlert", "New Atlas"}
+# Sources whose stories go first in a topic.
+PRIORITY = {"birds": ["The Dodo", "eBird"], "wildlife": ["The Dodo"]}
+TRUSTED_IN = {("wildlife", "The Dodo")}  # animal rescue videos: all of them belong in Wildlife & nature  # no one source takes more than this share (7NEWS posts crime all day)
 NO_MINE = {"PC Gamer", "Kotaku", "Startup Daily", "Good News Network", "Positive News"}  # too niche to lend stories to other interests
 MAX_AGE_INTEREST = timedelta(days=10)  # niche feeds publish less often
 
@@ -258,6 +279,11 @@ KEYWORDS = {
                           r"house prices|property market|mortgages?|shares|stocks?|market|investors?|superannuation|super funds?|"
                           r"profit|earnings|dollar|Treasury|Chalmers|tax|wages|unemployment|jobs data|banks?|"
                           r"ACCC|ASIC|cost of living|tariffs?|recession|budget)\b", re.I),
+    "tech": re.compile(r"\b(tech\w*|apps?|software|AI|artificial intelligence|phones?|smartphones?|iPhones?|iPad|Android|Apple|Google|Microsoft|"
+                       r"Samsung|Meta|Facebook|Instagram|TikTok|YouTube|WhatsApp|Twitter|internet|online|cyber\w*|hack\w*|computers?|laptops?|"
+                       r"chips?|semiconductors?|robots?|robotics|data|gadgets?|gaming|video games?|streaming|Netflix|social media|EVs?|electric|"
+                       r"batter(?:y|ies)|satellites?|5G|NBN|crypto\w*|bitcoin|start-?ups?|digital|scams?|platforms?|Tesla|Amazon|Starlink|"
+                       r"SpaceX|Nvidia|OpenAI|ChatGPT|devices?|wearables?|drones?|quantum|outage|passwords?|privacy|encryption|cloud)\b", re.I),
 }
 SKIP_TITLE = re.compile(r"^(video|watch|listen|podcast|quiz|crossword|photos?)\b|[–-] (video|podcast|audio|in pictures)$|"
                         r"\b(sponsored|partner content|paid post|deal of the day|promo code|discount code|"
@@ -393,6 +419,8 @@ def parse_xml(raw):
 
 
 def parse_feed(url):
+    if url == EBIRD_NEWS:
+        return ebird_news()
     root = parse_xml(get(url, timeout=25))
     out = []
     for it in root.findall(".//item"):
@@ -515,6 +543,47 @@ def logan_council():
     news = [it for it in found if "logan.qld.gov.au" in it["url"] and not LOGAN_SITE_SKIP.search(it["url"])
             and not re.match(r"CBF\d", it["title"]) and (LOGAN_SITE_NEWS.search(it["url"]) or LOGAN_SITE_TITLE.search(it["title"]))]
     return got + news
+
+
+MONTHS = "January|February|March|April|May|June|July|August|September|October|November|December"
+
+
+def ebird_news():
+    """eBird's news page (no feed): the newest articles, each read once for its title, summary, picture and date."""
+    pg = get(EBIRD_NEWS, timeout=25).decode("utf-8", "replace")
+    links = []
+    for m in re.finditer(r'href="((?:https://ebird\.org)?/news/([a-z0-9][a-z0-9-]{6,}))(?:\?[^"]*)?"', pg):
+        u = m.group(1) if m.group(1).startswith("http") else "https://ebird.org" + m.group(1)
+        if u not in links and not re.search(r"/news/(page|tag|category|archive)", u):
+            links.append(u)
+    out = []
+    for u in links[:12]:
+        try:
+            a = get(u, timeout=20).decode("utf-8", "replace")
+        except Exception:
+            continue
+        meta = lambda k: (re.search(rf'<meta[^>]+(?:property|name)="{k}"[^>]+content="([^"]*)"', a) or re.search(rf'<meta[^>]+content="([^"]*)"[^>]+(?:property|name)="{k}"', a))
+        t, d, im = meta("og:title"), meta("og:description") or meta("description"), meta("og:image")
+        when = meta("article:published_time")
+        when = parse_date(when.group(1)) if when else None
+        if not when:
+            tm = re.search(r'<time[^>]+datetime="([^"]+)"', a)
+            when = parse_date(tm.group(1)) if tm else None
+        if not when:
+            dm = re.search(rf"\b(\d{{1,2}}) ({MONTHS}) (20\d\d)\b", a) or re.search(rf"\b({MONTHS}) (\d{{1,2}}), (20\d\d)\b", a)
+            if dm:
+                g = dm.groups()
+                day, mon, yr = (g[0], g[1], g[2]) if g[0].isdigit() else (g[1], g[0], g[2])
+                try:
+                    when = datetime.strptime(f"{day} {mon} {yr}", "%d %B %Y").replace(tzinfo=timezone.utc)
+                except Exception:
+                    when = None
+        if not (t and when):
+            continue  # no date, no way to tell new from old
+        out.append({"title": clean(html.unescape(re.sub(r"\s*[-|\u2013]\s*eBird\s*$", "", t.group(1)))), "url": u,
+                    "summary": html.unescape(d.group(1)) if d else "", "published": when, "image": html.unescape(im.group(1)) if im else "",
+                    "content": "", "cats": []})
+    return out
 
 
 def is_sport(it):
@@ -855,10 +924,19 @@ def main():
                 roadmap_left -= 1
             elif keep != "all" and not KEYWORDS[keep].search(f"{st['title']} {st['summary']}"):
                 continue
+            # A general news site's politics, business or tech feed sometimes carries stories that aren't (a court case
+            # in "politics", say): checked against what the story says, and moved or left out.
+            target_fix = None
+            if keep == "all" and source in LOOSE_SOURCES and section in ("politics", "finance", "tech"):
+                body = f"{st['title']} {clean(st['summary'] or '')}"
+                if not KEYWORDS[section].search(body):
+                    target_fix = next((x for x in ("politics", "finance", "tech") if x != section and KEYWORDS[x].search(st["title"])), "")
+                    if not target_fix:
+                        continue
             # AI topic feeds also carry stories that only touch on AI (a US midterms piece, say): keep the ones about it.
             if section == "ai" and not (AI_RE.search(f"{st['title']} {st['summary']}") or AI_MORE.search(f"{st['title']} {st['summary']}")):
                 continue
-            target = section
+            target = target_fix or section
             if is_m365_copilot(st["title"]):
                 target = "copilot"  # Microsoft 365 Copilot news from any feed goes to its own tab
             elif section in ("tech", "headlines", "finance") and AI_RE.search(st["title"]):
@@ -915,6 +993,8 @@ def main():
                 st = to_story(it, source, now, MAX_AGE_INTEREST)
                 if not st or (url not in own and not kw.search(st["title"])):
                     continue
+                if url in own and kw and source in LOOSE_SOURCES and (iid, source) not in TRUSTED_IN and not kw.search(f"{st['title']} {clean(st['summary'] or '')}"):
+                    continue  # filed under this topic by its source, but not about it
                 k, t = url_key(st["url"]), title_key(st["title"])
                 if k in su or t in stt:
                     continue
@@ -922,7 +1002,8 @@ def main():
                 stt.add(t)
                 items.append(st)
         most, cap = PER_INTEREST_MORE.get(iid, PER_INTEREST), PER_SOURCE_MOST.get(iid)
-        ordered = sorted(items, key=lambda x: x["published"], reverse=True)
+        pri = PRIORITY.get(iid, [])
+        ordered = sorted(sorted(items, key=lambda x: x["published"], reverse=True), key=lambda x: x["source"] not in pri)  # newest first, priority sources ahead
         if cap:
             per, kept = {}, []
             for st in ordered:
@@ -1214,6 +1295,8 @@ def main():
                 d["mins"] = max(1, round(words / 230))
             if st["id"] in feed_ref:
                 d["feed"] = feed_ref[st["id"]]  # the publisher's own feed text: open to everyone
+            if st["source"] in PRIORITY.get(name, ()):
+                d["pri"] = 1  # the app keeps these first in this topic
             out_items.append(d)
         doc = {"section": name, "updatedAt": stamp, "items": out_items}
         for it in reversed(out_items):  # stay under the database document limit
