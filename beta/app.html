@@ -195,6 +195,10 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
 .lb-logan .lb-ic { width: 40px; height: 40px; background: #4b33a8; color: #ffffff; }
 .lb-logan b { display: block; font-family: var(--display); font-size: 1rem; letter-spacing: -0.01em; }
 .lb-logan small { display: block; font-size: 0.76rem; color: var(--muted); margin-top: 1px; }
+.lb-lgwrap { position: relative; }
+.lb-lgwrap.has-fresh .lb-logan { padding-right: 138px; }
+.lb-fresh.lg { top: 50%; bottom: auto; transform: translateY(-50%); margin-top: 4px; color: var(--accent); background: transparent; box-shadow: inset 0 0 0 1.5px var(--accent); }
+.lb-fresh.lg:active { transform: translateY(-50%) scale(0.95); }
 .lb-listen { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 10px 14px 10px 10px; border-radius: 16px; text-align: left;
   background: linear-gradient(135deg, #6a4fd8, #4b33a8); color: #ffffff; box-shadow: 0 8px 22px rgba(90, 62, 194, 0.32); }
 .lb-listen:active, .lb-tv:active { transform: scale(0.98); }
@@ -1032,7 +1036,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
         <button class="lb-fresh" type="button" data-listen="fresh" id="lbFresh" aria-label="Listen from the start, as if new" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3.5 4v5h5"/></svg>From the start</button>
         <button class="lb-tv" type="button" data-open-tv id="lbTV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Watch</button>
       </div>
-      <button class="lb-logan" type="button" data-listen="logan" id="lbLogan" hidden><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg></span><span><b>Logan news</b><small id="lbLoganT">News about the City of Logan</small></span></button>
+      <div class="lb-lgwrap" id="lbLgWrap"><button class="lb-logan" type="button" data-listen="logan" id="lbLogan" hidden><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg></span><span><b>Logan news</b><small id="lbLoganT">News about the City of Logan</small></span></button><button class="lb-fresh lg" type="button" data-listen="loganfresh" id="lbLoganFresh" aria-label="Logan news from the start, as if new" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3.5 4v5h5"/></svg>From the start</button></div>
       <button class="topsearch" type="button" data-open-search aria-label="Search all news">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
         <span id="topSearchHint">Search all news</span><kbd>/</kbd></button>
@@ -1899,7 +1903,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
         wx = ` First, the weather in ${state.wx.city}. It's ${Math.round(v.cur.temperature_2m)} degrees ${wxSay(v.cur.weather_code, v.cur.is_day)}. ${wxSummary(v).replace(/°/g, " degrees").replace(/\((\d+)%\)/g, ", $1 percent").replace(/\((\d+)\)/g, "$1")}`;
       }
     } catch {}
-    return `${greeting()}. This is Awesome News.${wx}`;
+    return `${greeting()}. ${L.scope === "logan" ? "This is Logan news, from Awesome News." : "This is Awesome News."}${wx}`;
   }
   function briefingHTML(picks) {
     if (picks.length < 3) { state.briefIds = []; return ""; }
@@ -2118,13 +2122,17 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   // "From the start" shows when Listen would otherwise carry on, or skip stories you've already heard or read.
   function lbFresh(ids) {
     const b = $("lbFresh"); if (!b || !state.loaded) return;
-    let show = L.on && L.kind === "drive";
+    let show = L.on && L.kind === "drive" && L.scope !== "logan";
     if (!show) { try { show = !!getResume() || (ids || []).some(id => seenish(id)); } catch {} }
     b.hidden = !show;
   }
   function loganLine() {
-    const n = driveList("logan").ids.length;
+    const ids = driveList("logan").ids, n = ids.length;
     const b = $("lbLogan"); if (b) b.hidden = !n;
+    // "From the start", as on the main card: once there's somewhere to carry on from, or stories already heard.
+    const f = $("lbLoganFresh");
+    if (f) { let show = !!n && ((L.on && L.scope === "logan") || !!getResume("logan") || ids.some(id => seenish(id))); f.hidden = !show; $("lbLgWrap").classList.toggle("has-fresh", show); }
+    if (n && !loganLine.warm) { loganLine.warm = true; loganWx(); }  // Logan's weather ready before it's needed
     return getResume("logan") ? "Pick up where you left off" : "News about the City of Logan and its council";
   }
   function listenArt() {
@@ -3063,7 +3071,7 @@ const handle = async (m, post) => {
     if (ps[0]) chunks(ps[0][0], 0).slice(0, 2).forEach(c => preBlob(c.text));
   }
   const preOpening = () => {
-    const o = PRE?.open?.[S.region];
+    const o = PRE?.open?.[wxPlace()];
     const today = new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new Date());
     if (o?.next?.day === today && o.day !== today) return o.next.text;  // after midnight, before the morning update
     if (!o || o.day !== today) return "";
@@ -3180,20 +3188,22 @@ const handle = async (m, post) => {
       return startListen(list, "story");
     }
     // From the start: the whole news again with the weather, as if you hadn't heard any of it.
-    if (kind === "fresh") {
-      if (L.on) stopListen();
-      store.set("brief.resume", null);
-      L.fresh = true; kind = "drive"; L.scope = "all";
-    }
     // Logan news: the same Listen, only stories about the City of Logan.
     let scope = "all";
-    if (kind === "logan") { scope = "logan"; kind = "drive"; }
+    if (kind === "logan" || kind === "loganfresh") { scope = "logan"; kind = kind === "logan" ? "drive" : "fresh"; }
+    if (kind === "fresh") {
+      if (L.on) stopListen();
+      if ((store.get("brief.resume", null)?.scope || "all") === scope) store.set("brief.resume", null);
+      L.fresh = true; kind = "drive";
+    }
     if (kind === "drive" && L.on && L.kind === "drive" && (L.scope || "all") !== scope) stopListen();
     if (kind === "drive") {
       if (L.on && L.kind === "drive") { npOpen(); npStory(findItem(L.queue[L.at])); npPart(L.part); if (L.paused) resumeListen(); return; }
       const d = driveList(scope);
       if (!d.ids.length) { toast(scope === "logan" ? "No Logan stories yet. They come with the next update." : "There's nothing to read out yet"); return; }
       L.scope = scope; L.secOf = d.secOf; L.driveSecs = d.secs;
+      // Logan news uses Logan's weather while it plays (your own comes back when it stops).
+      if (scope === "logan") { const lw = await Promise.race([loganWx(), new Promise(r => setTimeout(r, 2500))]); if (lw) { state.wxHome = state.wxHome || state.wx; state.wx = lw; } }
       document.body.classList.add("npstart"); $("npCue").dataset.k = ""; npHello();
       npOpen();
       setTimeout(() => document.body.classList.remove("npstart"), 1500);
@@ -3302,7 +3312,7 @@ const handle = async (m, post) => {
   // stepping through each day as it's read. Then on to the stories.
   function weekItems() {
     const today = new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new Date());
-    const w = PRE?.open?.[S.region]?.week;
+    const w = PRE?.open?.[wxPlace()]?.week;
     if (w && w.day === today && w.items?.length) return w.items;  // the same words Emma recorded
     if (!state.wx) return [];
     const { dy, di } = wxView(state.wx), out = [];
@@ -3480,6 +3490,7 @@ const handle = async (m, post) => {
     saveResume();  // beta: come back within the hour to pick up here
     wxListenOff(); $("npCust").hidden = true; $("npWk").hidden = true;
     L.on = false; L.paused = false; L.token++; L.sid++; L.aiWait = false;
+    if (state.wxHome) { state.wx = state.wxHome; state.wxHome = null; renderWxChip(); }  // back to your own weather after Logan news
     hush(); npClose();
     if ($("tvs").hidden) cmdStop();
     highlightPara(-1);
@@ -3518,6 +3529,7 @@ const handle = async (m, post) => {
     $("player").hidden = true;  // no mini player bar: the Listen card on the home page brings the player back
     const lb = $("lbListen");
     const lgOn = L.on && L.kind === "drive" && L.scope === "logan";
+    if (lgOn && $("lbLoganFresh")) { $("lbLoganFresh").hidden = false; $("lbLgWrap").classList.add("has-fresh"); }
     if ($("lbLoganT")) $("lbLoganT").textContent = lgOn ? `Story ${L.at + 1} of ${L.queue.length}${L.paused ? ", paused" : ", playing now"}` : loganLine();
     if (lb) lb.querySelector("span:last-child").innerHTML = L.on && L.kind === "drive" && !lgOn
       ? `<b>${L.paused ? "Carry on listening" : "Back to the news"}</b><small>Story ${L.at + 1} of ${L.queue.length}${L.paused ? ", paused" : ", playing now"}</small>`
@@ -3817,7 +3829,10 @@ const handle = async (m, post) => {
   // Weather for your local area (public site; free Open-Meteo forecast, no key)
   // ======================================================================
   const CITY = { qld: ["Brisbane", -27.47, 153.03], nsw: ["Sydney", -33.87, 151.21], vic: ["Melbourne", -37.81, 144.96], wa: ["Perth", -31.95, 115.86],
-    sa: ["Adelaide", -34.93, 138.6], tas: ["Hobart", -42.88, 147.33], act: ["Canberra", -35.28, 149.13], nt: ["Darwin", -12.46, 130.84] };
+    sa: ["Adelaide", -34.93, 138.6], tas: ["Hobart", -42.88, 147.33], act: ["Canberra", -35.28, 149.13], nt: ["Darwin", -12.46, 130.84],
+    logan: ["Logan", -27.64, 153.11] };  // Logan news: its own weather
+  // Whose weather the listen is using: Logan's during Logan news, otherwise your local area's.
+  const wxPlace = () => L.scope === "logan" && L.on ? "logan" : S.region;
   const WX = c => c === 0 ? ["Sunny", "sun"] : c <= 2 ? ["Partly cloudy", "partly"] : c === 3 ? ["Cloudy", "cloud"] : c <= 48 ? ["Foggy", "fog"]
     : c <= 57 ? ["Drizzle", "rain"] : c <= 67 ? ["Rain", "rain"] : c <= 77 ? ["Snow", "cloud"] : c <= 82 ? ["Showers", "rain"] : c <= 86 ? ["Snow showers", "cloud"] : ["Storms", "storm"];
   const cloudTop = `<path d="M7 14h10a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6 1.5A3.3 3.3 0 0 0 7 14z"/>`;
@@ -3831,6 +3846,26 @@ const handle = async (m, post) => {
     fog: `<path d="M4 9h16M6 13h12M4 17h16"/>`,
   }).map(([k, d]) => [k, `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`]));
   // Live forecast where the app can reach Open-Meteo; otherwise the snapshot that came with the news.
+  // Logan's forecast for Logan news: live where the app can reach Open-Meteo, else the snapshot from the update.
+  async function loganWx() {
+    const c = CITY.logan, key = "brief.wx3.logan";
+    let w = store.get(key, null);
+    if (!w || Date.now() - w.at > 30 * 60000) {
+      try {
+        const u = `https://api.open-meteo.com/v1/forecast?latitude=${c[1]}&longitude=${c[2]}&timezone=auto&forecast_days=7`
+          + "&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,is_day,uv_index,precipitation,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m"
+          + "&hourly=temperature_2m,apparent_temperature,weather_code,precipitation_probability,precipitation,is_day,uv_index,wind_speed_10m,wind_direction_10m,wind_gusts_10m,relative_humidity_2m,cloud_cover"
+          + "&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,precipitation_probability_max,precipitation_sum,precipitation_hours,uv_index_max,sunrise,sunset,daylight_duration,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant";
+        const d = await withTimeout(fetch(u).then(r => r.json()), 6000);
+        if (!d.current) throw new Error("no forecast");
+        w = { at: Date.now(), d }; store.set(key, w);
+      } catch {
+        const snap = state.status?.weather?.logan;
+        if (snap?.current) w = { at: Date.parse(snap.fetchedAt) || Date.now(), d: snap, snapshot: true };
+      }
+    }
+    return w?.d?.current ? { city: c[0], ...w } : null;
+  }
   async function loadWeather() {
     const c = CITY[S.region];
     if (!c) { state.wx = null; renderWxChip(); return; }
@@ -3853,7 +3888,9 @@ const handle = async (m, post) => {
         if (snap?.current) w = { at: Date.parse(snap.fetchedAt) || Date.now(), d: snap, snapshot: true };
       }
     }
-    state.wx = w?.d?.current ? { city: c[0], ...w } : null;
+    const mine = w?.d?.current ? { city: c[0], ...w } : null;
+    if (L.on && L.scope === "logan") { state.wxHome = mine; return; }  // Logan news is playing: keep its weather until it stops
+    state.wx = mine;
     renderWxChip();
     if (openSheet === "weather") renderWeather();
   }
@@ -4021,7 +4058,7 @@ const handle = async (m, post) => {
 
   // ---- the forecast, from Open-Meteo ----
   function bsData() {
-    const w = state.wx, v = wxView(w), { cur, hr, dy, di } = v, c = CITY[S.region] || CITY.qld;
+    const w = state.wx, v = wxView(w), { cur, hr, dy, di } = v, c = CITY[wxPlace()] || CITY.qld;
     const days = dy.time.slice(di).map((date, k) => {
       const n = di + k, code = dy.weather_code[n], p = dy.precipitation_probability_max?.[n] ?? 0, mm = dy.precipitation_sum?.[n] ?? 0, g = dy.wind_gusts_10m_max?.[n] ?? 0;
       const [yy, mo, dd] = date.split("-").map(Number), hi = dy.temperature_2m_max[n];

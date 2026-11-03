@@ -152,8 +152,9 @@ def opening(region, w):
     k = d["time"].index(today)
     day = datetime.strptime(today, "%Y-%m-%d")
     city = fetcher.CITIES[region][0]
+    brand = "This is Logan news, from Awesome News," if region == "logan" else "This is Awesome News"  # Logan news has its own opening
     sky = WMO.get(d["weather_code"][k], "mixed weather")
-    text = (f"This is Awesome News for {day:%A} the {ordinal(day.day)} of {day:%B}. First, the weather in {city}. "
+    text = (f"{brand} for {day:%A} the {ordinal(day.day)} of {day:%B}. First, the weather in {city}. "
             f"Expect {sky} today, with a top of {round(d['temperature_2m_max'][k])} degrees and a low of {round(d['temperature_2m_min'][k])}.")
     rain = d.get("precipitation_probability_max", [None] * (k + 1))[k]
     if rain is not None and rain >= 20:
@@ -162,7 +163,7 @@ def opening(region, w):
     night = None
     if k + 1 < len(d["time"]):
         n = k + 1
-        night = (f"This is Awesome News for {day:%A} the {ordinal(day.day)} of {day:%B}. First, tomorrow's weather in {city}. "
+        night = (f"{brand} for {day:%A} the {ordinal(day.day)} of {day:%B}. First, tomorrow's weather in {city}. "
                  f"Expect {WMO.get(d['weather_code'][n], 'mixed weather')} tomorrow, with a top of {round(d['temperature_2m_max'][n])} degrees "
                  f"and a low of {round(d['temperature_2m_min'][n])}.")
         rain = d.get("precipitation_probability_max", [None] * (n + 1))[n]
@@ -170,7 +171,7 @@ def opening(region, w):
             night += rain_line(rain, "tomorrow")
         # Listening just after midnight, before the morning update: tomorrow's own opening.
         nd = day + timedelta(days=1)
-        nxt = (f"This is Awesome News for {nd:%A} the {ordinal(nd.day)} of {nd:%B}. First, the weather in {city}. "
+        nxt = (f"{brand} for {nd:%A} the {ordinal(nd.day)} of {nd:%B}. First, the weather in {city}. "
                f"Expect {WMO.get(d['weather_code'][n], 'mixed weather')} today, with a top of {round(d['temperature_2m_max'][n])} degrees "
                f"and a low of {round(d['temperature_2m_min'][n])}.")
         if rain is not None and rain >= 20:

@@ -170,7 +170,7 @@ PER_INTEREST = 30
 NO_MINE = {"PC Gamer", "Kotaku", "Startup Daily", "Good News Network", "Positive News"}  # too niche to lend stories to other interests
 MAX_AGE_INTEREST = timedelta(days=10)  # niche feeds publish less often
 
-CITIES = {"qld": ("Brisbane", -27.47, 153.03), "nsw": ("Sydney", -33.87, 151.21), "vic": ("Melbourne", -37.81, 144.96),
+CITIES = {"logan": ("Logan", -27.64, 153.11), "qld": ("Brisbane", -27.47, 153.03), "nsw": ("Sydney", -33.87, 151.21), "vic": ("Melbourne", -37.81, 144.96),
           "wa": ("Perth", -31.95, 115.86), "sa": ("Adelaide", -34.93, 138.6), "tas": ("Hobart", -42.88, 147.33),
           "act": ("Canberra", -35.28, 149.13), "nt": ("Darwin", -12.46, 130.84)}
 SECTION_ORDER = ["copilot", "politics", "finance", "ai", "tech", "headlines"]
@@ -890,8 +890,9 @@ def main():
                 if go == 2:
                     raise
                 time.sleep(4 * (go + 1))
+    areas = [r for r in regions if r in CITIES] + (["logan"] if "logan" in sections else [])  # Logan news has its own weather
     with cf.ThreadPoolExecutor(2) as ex:
-        for fut in [ex.submit(get_weather, r) for r in regions if r in CITIES]:  # gentle on the free service
+        for fut in [ex.submit(get_weather, r) for r in areas]:  # gentle on the free service
             try:
                 r, w = fut.result()
                 w["fetchedAt"] = now.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -900,7 +901,7 @@ def main():
                 pass  # no weather is fine; the app hides it
     # Any area still missing: keep the forecast from the last update (under a day old), so the weather and
     # Emma's opening don't vanish when the weather service is busy.
-    missing = [r for r in regions if r in CITIES and r not in weather]
+    missing = [r for r in areas if r not in weather]
     if missing and a.archive_from:
         try:
             old = json.loads(get(a.archive_from.rstrip("/") + f"/data/status.json?v={int(now.timestamp())}", timeout=20)).get("weather", {})
