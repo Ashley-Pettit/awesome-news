@@ -1517,6 +1517,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   const negCache = new Map();
   const hits = (re, t) => (t.match(re) || []).length;
   function negScore(i) {
+    if (typeof i.neg === "number") return i.neg;  // rated by Claude with the news update, 0 to 10
     if (negCache.has(i.id)) return negCache.get(i.id);
     const t = i.title || "", s = String(i.summary || "").replace(/<[^>]+>/g, " ");
     const n = 2 * (2 * hits(NEG_STRONG, t) + hits(NEG_MILD, t)) + 2 * hits(NEG_STRONG, s) + hits(NEG_MILD, s);
@@ -1525,7 +1526,9 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   }
   // The higher the dial, the less it takes to count as negative: at 100% even one worrying word in the headline does.
   const negAt = () => { const c = Number(S.negCut) || 0; return c >= 90 ? 2 : c >= 60 ? 3 : NEG_AT; };
-  const isNegative = i => negScore(i) >= negAt();
+  // Stories Claude has rated (0 uplifting to 10 tragic): negative from 6, or from 5 and 4 as the dial goes up.
+  const negRatedAt = () => { const c = Number(S.negCut) || 0; return c >= 90 ? 4 : c >= 60 ? 5 : 6; };
+  const isNegative = i => typeof i.neg === "number" ? i.neg >= negRatedAt() : negScore(i) >= negAt();
   function calmer(list) {
     const cut = Number(S.negCut) || 0;
     if (!cut) return list;

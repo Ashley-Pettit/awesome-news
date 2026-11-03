@@ -225,7 +225,9 @@ ROADMAP_MAX = 20  # the roadmap changes in bulk; keep it from crowding out artic
 
 
 def is_m365_copilot(text):
-    return bool(COPILOT_RE.search(text) and not GITHUB_RE.search(text))
+    # Capital-C Copilot, not a plane's copilot.
+    return bool(re.search(r"\bCopilot\b", text) and not GITHUB_RE.search(text)
+                and not re.search(r"\b(plane|crash\w*|pilots?|flight|aircraft|airline|cockpit|helicopter)\b", text, re.I))
 
 
 KEYWORDS = {
@@ -927,6 +929,17 @@ def main():
             items.append(st)
         # The council's own and fuller stories are kept ahead of headline-only search results.
         sections["logan"] = sorted(items, key=lambda x: x["published"], reverse=True)[:PER_LOGAN]
+
+    # How negative each story is, 0 (uplifting) to 10 (tragic), as rated by Claude (the "Awesome News: rate
+    # headlines" scheduled task writes ratings/neg.json). The app's "less negative news" dial uses it.
+    try:
+        neg = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "ratings", "neg.json"), encoding="utf-8")).get("ratings", {})
+    except Exception:
+        neg = {}
+    for items in sections.values():
+        for st in items:
+            if st["id"] in neg:
+                st["neg"] = neg[st["id"]]
 
     # Same story in several sections -> one shared object, so pictures and text are fetched once.
     unique = {}
