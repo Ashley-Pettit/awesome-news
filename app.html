@@ -4779,6 +4779,49 @@ const handle = async (m, post) => {
     W.inv.visible = vic && !dr;
   }
   function bsBuild(THREE) {
+    // Busy scenes (Moorooka, the bowls club) are hundreds of small boxes, and each one is its own draw call, which made
+    // them laggy on phones. Once a scene is built, everything that doesn't move is baked into one mesh per look
+    // (same colour and finish, or same picture), so the phone draws a few dozen things instead of hundreds.
+    const mergeStatic = (root, skip, keepMats) => {
+      root.updateMatrixWorld(true);
+      const inv = new THREE.Matrix4().copy(root.matrixWorld).invert(), buckets = new Map();
+      const keyOf = m => (m.map || keepMats.has(m) || !m.isMeshStandardMaterial || m.vertexColors) ? m.uuid
+        : ["s", m.color.getHex(), m.emissive.getHex(), m.emissiveIntensity, m.roughness, m.metalness, m.transparent, m.opacity, m.side, m.flatShading, m.fog].join("|");
+      root.traverse(o => {
+        if (!o.isMesh || o.isInstancedMesh || Array.isArray(o.material) || !o.visible) return;
+        for (let a = o; a && a !== root; a = a.parent) if (skip.has(a) || !a.visible) return;
+        const g = o.geometry; if (!g.attributes.position || !g.attributes.normal || g.attributes.color) return;
+        const k = keyOf(o.material); if (!buckets.has(k)) buckets.set(k, { mat: o.material, list: [] });
+        buckets.get(k).list.push(o);
+      });
+      let saved = 0;
+      for (const { mat, list } of buckets.values()) {
+        if (list.length < 2) continue;
+        const uv = !!mat.map && list.every(o => o.geometry.attributes.uv);
+        const parts = list.map(o => { const g = (o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone()); g.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld)); return g; });
+        const n = parts.reduce((t, g) => t + g.attributes.position.count, 0), pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), uvs = uv ? new Float32Array(n * 2) : null;
+        let at = 0; for (const g of parts) { pos.set(g.attributes.position.array, at * 3); nor.set(g.attributes.normal.array, at * 3); if (uvs) uvs.set(g.attributes.uv.array, at * 2); at += g.attributes.position.count; g.dispose(); }
+        const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(pos, 3)); geo.setAttribute("normal", new THREE.BufferAttribute(nor, 3)); if (uvs) geo.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
+        geo.computeBoundingSphere();
+        const mesh = new THREE.Mesh(geo, mat); mesh.renderOrder = list[0].renderOrder; root.add(mesh);
+        for (const o of list) o.parent.remove(o);
+        saved += list.length - 1;
+      }
+      return saved;
+    };
+    // People (several parts each, legs swinging) drawn as one instanced mesh per body part across everyone: a handful of
+    // draw calls for the whole crowd. The people themselves still move as before; their parts are just copied across.
+    const instancePeople = (root, people) => {
+      const buckets = new Map(), M = new THREE.Matrix4(), inv = new THREE.Matrix4(), Z = new THREE.Matrix4().makeScale(0, 0, 0);
+      people.forEach(p => { let i = 0; p.traverse(o => { if (!o.isMesh) return;
+        const key = (i++) + "|" + o.geometry.type + JSON.stringify(o.geometry.parameters || {}) + "|" + o.material.side;
+        if (!buckets.has(key)) buckets.set(key, []); buckets.get(key).push(o); o.visible = false; }); });
+      const sets = [...buckets.values()].map(list => { const src = list[0], mat = src.material.clone(); mat.color = new THREE.Color(0xffffff);
+        const im = new THREE.InstancedMesh(src.geometry, mat, list.length); list.forEach((o, k) => im.setColorAt(k, o.material.color));
+        im.frustumCulled = false; root.add(im); return { im, list }; });
+      return () => { root.updateMatrixWorld(); inv.copy(root.matrixWorld).invert();
+        for (const { im, list } of sets) { list.forEach((o, k) => im.setMatrixAt(k, o.parent.visible ? M.multiplyMatrices(inv, o.matrixWorld) : Z)); im.instanceMatrix.needsUpdate = true; } };
+    };
     const canvas = $("bsGl");
     let renderer;
     try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" }); } catch { return false; }
@@ -5362,6 +5405,8 @@ const handle = async (m, post) => {
       for (let i = 0; i < 16; i++) { const h = 40 + brnd() * 60, b = new THREE.Mesh(new THREE.BoxGeometry(12, h, 12), cbdM); b.position.set(-420 + i * 15 + brnd() * 6, h / 2, -560); bowls.add(b); }
 
 
+      W.bowlFolkSync = instancePeople(bowls, bowlFolk.map(f => f.p));
+      mergeStatic(bowls, new Set([...bowlFolk.map(f => f.p), ...rolls.map(r => r.roll)]), new Set(glowMats.map(g => g[0])));
       W.bowlsTick = (dt, lit, still, rain = 0) => {
         glowMats.forEach(([mat, on, base]) => { mat.emissiveIntensity = (base || 0) + on * lit; });
         const wet = W.bowlsWet = rain > 0.25 ? true : rain < 0.12 ? false : !!W.bowlsWet;
@@ -5593,6 +5638,8 @@ const handle = async (m, post) => {
     const mlg = new THREE.BufferGeometry(); mlg.setAttribute("position", new THREE.Float32BufferAttribute(mooLights, 3));
     W.mooLights = new THREE.PointsMaterial({ color: 0xffd9a0, size: 0.75, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: true });
     moo.add(new THREE.Points(mlg, W.mooLights));
+    W.mooFolkSync = instancePeople(moo, mooFolk.map(f => f.p));
+    mergeStatic(moo, new Set([W.mooRing, W.mooTraffic, ...mooFolk.map(f => f.p)]), new Set(W.mooGlow || []));
     // clouds: one instanced billboard draw call
     const puffs = 240, cg = new THREE.InstancedBufferGeometry(), base = new THREE.PlaneGeometry(1, 1);
     cg.index = base.index; cg.setAttribute("position", base.attributes.position); cg.setAttribute("uv", base.attributes.uv);
@@ -5709,8 +5756,8 @@ const handle = async (m, post) => {
     if (W.drive?.visible) W.driveTick(dt, lit, still);  // traffic on the motorway
     if (W.mooTraffic?.visible) W.mooTrafficTick(dt, still);  // Ash's drive: traffic on Beaudesert Road
     if (W.driveInv?.visible) W.driveInvTick(dt, lit, still);  // traffic on the road into Inverloch
-    if (W.mooBowls?.visible) W.bowlsTick(dt, lit, still, st.rain);
-    if (W.moo?.visible && W.mooTick) W.mooTick(dt, st.rain, still);  // people run for cover when it rains  // bowls rolling down the rinks, lights on at night
+    if (W.mooBowls?.visible) { W.bowlsTick(dt, lit, still, st.rain); W.bowlFolkSync?.(); }
+    if (W.moo?.visible && W.mooTick) { W.mooTick(dt, st.rain, still); W.mooFolkSync?.(); }  // people run for cover when it rains  // bowls rolling down the rinks, lights on at night
     W.cloudU.uLit.value.fromArray(cl); W.cloudU.uShade.value.fromArray(cs); W.cloudU.uCover.value = st.cover; // The clouds' drift is added up frame by frame: before, the drift was wind x time since the page opened, so any change
     // in the wind (every few frames in the quick run) threw every cloud sideways at once.
     BS.cloudX = (BS.cloudX || 0) + -(0.25 + st.wind * 0.03) * (still ? 0.3 : fast ? 0.6 : 1) * dt;
