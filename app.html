@@ -870,7 +870,18 @@ body.wxdrive #weather .bs-now, body.wxdrive #weather .bs-rain, body.wxdrive #wea
 .dv-top p { margin: 5px 0 0; font-size: 0.8rem; color: var(--bs-dim); }
 .dv-now { margin-top: 10px; text-shadow: 0 1px 2px rgba(0, 0, 0, .55), 0 2px 18px rgba(0, 0, 0, .45); }
 .dv-big { display: flex; align-items: flex-end; gap: 14px; }
-.dv-big .bs-temp sup { font-size: 0.26em; top: 0.3em; margin-left: 0.08em; }
+.dv-big .bs-temp { white-space: nowrap; }
+.dv-big .bs-temp small { font-size: 0.3em; font-weight: 700; letter-spacing: -0.01em; margin-left: 0.14em; }  /* "7 min", on the number's baseline with a clear gap */
+.dv-big .bs-hilo { min-width: 0; }
+.dv-route { list-style: none; margin: 12px 0 0; padding: 10px 12px; display: grid; gap: 10px; position: relative; align-self: flex-start; max-width: 100%; box-sizing: border-box;
+  border-radius: 18px; background: rgba(8, 12, 28, 0.42); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: inset 0 0 0 1px var(--bs-line); }
+.dv-route::before { content: ""; position: absolute; left: 22.5px; top: 30px; bottom: 30px; border-left: 2px dotted rgba(255, 255, 255, 0.55); }  /* the way from A to B */
+.dv-route li { display: flex; align-items: center; gap: 8px; min-width: 0; font-family: var(--ui); }
+.dv-route span { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--bs-faint); width: 3.5em; flex: none; }
+.dv-route b { font-size: 1rem; font-weight: 750; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dv-pin { position: relative; z-index: 1; flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 0.72rem; font-weight: 800;
+  background: #f4f6fb; color: #16203a; }
+.dv-pin.dv-b { background: #5bd38a; color: #08281a; }
 .dv-what { display: inline-flex; align-items: center; gap: 8px; }
 .dv-what i { width: 10px; height: 10px; border-radius: 50%; background: var(--dv-c, #5bd38a); box-shadow: 0 0 12px var(--dv-c, #5bd38a); flex: none; }
 .dv-meter { margin-top: auto; align-self: flex-end; width: min(300px, 74%); box-sizing: border-box; display: grid; gap: 7px; padding: 12px 14px 11px; border-radius: 22px;
@@ -3337,7 +3348,7 @@ const handle = async (m, post) => {
   // Phones only allow sound that starts from a tap. Playing a short silent clip during the tap
   // unlocks this player, so the voice can start once it's ready.
   let SILENT = "";
-  // Between stories when Listen moves on by itself: "Simple Whoosh" by DRAGON-STUDIO (Pixabay Content Licence, free to use).
+  // At the front of each story in Listen: "Simple Whoosh" by DRAGON-STUDIO (Pixabay Content Licence, free to use).
   const WHOOSH = "data:audio/mpeg;base64,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";
   function unlockAudio() {
     // Tell Safari this is media playback, like a podcast: it plays with the silent switch on and keeps
@@ -3646,8 +3657,7 @@ const handle = async (m, post) => {
     if (!i) { nextStory(); return; }
     markRead(id);
     const intro = L.kind === "brief" ? [{ text: `Story ${L.at + 1}.`, para: -1, kind: "title" }] : [];
-    const pre = [], sweep = L.auto && L.kind === "drive" && L.opened; L.auto = false;
-    if (sweep) pre.push({ text: "", sfx: WHOOSH, para: -1, kind: "sfx", opt: true });
+    const pre = [];
     if (L.kind === "drive") {
       const sec = L.secOf?.get(id);
       if (L.resumed) {  // beta: back within the hour, straight in with a quick welcome back (skipped if not recorded yet)
@@ -3661,6 +3671,9 @@ const handle = async (m, post) => {
         pre.push(...warnParts());  // any Bureau weather warning, straight after the weather
         pre.push(...trafficParts());  // your drive, straight after the weather
       }
+      // A whoosh at the front of every story, however you got there (on by itself, skip or back), and between your
+      // drive and the first story. Skip in the opening lands on it too, as it isn't part of the weather or the drive.
+      pre.push({ text: "", sfx: WHOOSH, para: -1, kind: "sfx", opt: true });
       // No "Next, tech." between sections: straight from one headline to the next.
       L.skipped = false;
       L.lastSec = sec;
@@ -3835,7 +3848,6 @@ const handle = async (m, post) => {
     updateBar();
   }
   function nextStory() {
-    L.auto = !L.skipped;  // moved on by itself (not skip, swipe or "skip"): a whoosh between stories
     L.done?.add(L.queue[L.at]);
     // After a story picked from the headlines, go back to where you were; stories already heard are skipped.
     if (L.back != null) { L.at = L.back; L.back = null; } else L.at++;
@@ -4652,11 +4664,13 @@ const handle = async (m, post) => {
     const W = BS.W; if (!W.bris || !W.inv) return;
     const pl = typeof wxPlace === "function" ? wxPlace() : S.region, vic = ["vic", "inv"].includes(pl), lo = pl === "logan", mo = pl === "moo";
     const dr = !!(BS.drive && W.drive);  // the traffic part of Listen: the motorway instead of the place
+    if (BS.orbit && !BS.orbit.on) { BS.orbit.ty = 0; BS.orbit.tp = 0; }  // a new place starts from the usual view
+    const di = dr && !!W.driveInv && !!BS.driveVic;  // a drive in Victoria: the road into Inverloch
     const mb = mo && !dr && !!W.mooBowls && !!BS.mooAlt;  // Moorooka: half the time the bowls club instead of the landmarks
-    W.bris.visible = !vic && !lo && !mo && !dr; if (W.logan) W.logan.visible = lo && !dr; if (W.moo) W.moo.visible = mo && !dr && !mb; if (W.drive) W.drive.visible = dr;
+    W.bris.visible = !vic && !lo && !mo && !dr; if (W.logan) W.logan.visible = lo && !dr; if (W.moo) W.moo.visible = mo && !dr && !mb; if (W.drive) W.drive.visible = dr && !di; if (W.driveInv) W.driveInv.visible = di;
     if (W.mooBowls) W.mooBowls.visible = mb;
     const B = BS.B; if (B) { if (!B.camHome) B.camHome = [B.camBase.clone(), B.camLook.clone()];  // Moorooka is seen from a little higher up, looking over the roundabout
-      if (dr) { B.camBase.set(7.6, 13, 50); B.camLook.set(7.6, 2, -90); } else if (mb) { B.camBase.set(-38, 26, 78); B.camLook.set(-4, 2, -12); } else if (mo) { B.camBase.set(0, 15, 46); B.camLook.set(0, 5, -60); } else { B.camBase.copy(B.camHome[0]); B.camLook.copy(B.camHome[1]); } }
+      if (di) { B.camBase.set(-1.75, 8.5, 44); B.camLook.set(-1.75, 3, -110); } else if (dr) { B.camBase.set(7.6, 13, 50); B.camLook.set(7.6, 2, -90); } else if (mb) { B.camBase.set(-38, 26, 78); B.camLook.set(-4, 2, -12); } else if (mo) { B.camBase.set(0, 15, 46); B.camLook.set(0, 5, -60); } else { B.camBase.copy(B.camHome[0]); B.camLook.copy(B.camHome[1]); } }
     W.inv.visible = vic && !dr;
   }
   function bsBuild(THREE) {
@@ -4931,6 +4945,9 @@ const handle = async (m, post) => {
         const note = !c ? "" : c.events.some(e => e.type === "Crash") ? "Crash ahead" : c.events.some(e => e.type === "Congestion") ? "Heavy traffic" : c.events.some(e => e.type === "Flooding") ? "Flooding reported" : c.events.some(e => e.type === "Roadworks") ? "Roadworks" : "";
         const cc = CM();
         W.driveSign(c?.toWork === false ? cc.home?.sign || "Moorooka" : cc.work?.sign || "Logan Central", c ? c.est : "--", note);
+        const vicPt = p => !!p && p.lat < -33.9 && p.lat > -39.3 && p.lon > 140.9 && p.lon < 150;
+        BS.driveVic = vicPt(cc.home) || vicPt(cc.work);  // Rod's drive: the road into Inverloch instead of the motorway
+        if (W.driveInvSign) W.driveInvSign(c?.toWork === false ? cc.home?.sign || "Home" : cc.work?.sign || "Inverloch", c ? c.est : "--", note);
       };
       const m4 = new THREE.Object3D(), gone = new THREE.Matrix4().makeTranslation(0, -60, 0);
       W.driveTick = (dt, lit, still) => {
@@ -4956,6 +4973,117 @@ const handle = async (m, post) => {
         tailM.color.setRGB(1, 0.15 + 0.1 * lit, 0.15).multiplyScalar(0.7 + 0.3 * Math.max(lit, busy)); headM.color.setRGB(0.6 + 0.4 * lit, 0.6 + 0.4 * lit, 0.55 + 0.35 * lit);
         W.driveLights.opacity = lit; sign.material.emissiveIntensity = 0.05 + 0.5 * lit;
         if (W.driveFlash) W.driveFlash.material = (performance.now() / 350 | 0) % 2 ? flashR : flashB;
+      };
+    }
+    // ---- Rod's drive in Inverloch (shown instead of the motorway when the drive is in Victoria): a two-lane coastal road
+    // into town, one lane each way and keep left, gravel verges, tea-tree and banksia, timber power poles, houses on big
+    // blocks, then the shops with their verandahs and the Norfolk pines on the foreshore, Anderson Inlet off to the right ----
+    {
+      const iv = new THREE.Group(); iv.visible = false; scene.add(iv); W.driveInv = iv;
+      const std = (color, o) => new THREE.MeshStandardMaterial(Object.assign({ color, roughness: .9 }, o || {}));
+      const tex = (w, h, draw) => { const c = document.createElement("canvas"); c.width = w; c.height = h; draw(c.getContext("2d"), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; };
+      const box = (w, h, d, m, x, y, z, ry) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); if (ry) o.rotation.y = ry; iv.add(o); return o; };
+      // ground: paddocks and yards on the left, a strip of land for the right-hand side, then the foreshore sand and the inlet
+      const grassM = std(0x7d9c55, { roughness: 1 }), sandM = std(0xd8c7a0, { roughness: 1 });
+      box(420, 1, 900, grassM, -203, 0.5, -370); box(26, 1, 900, grassM, 17, 0.5, -370); box(16, 0.7, 900, sandM, 38, 0.35, -370);
+      for (let i = 0; i < 6; i++) { const h = new THREE.Mesh(new THREE.SphereGeometry(1, 18, 10), std(0x5f7f4a, { roughness: 1 }));  // the far shore of the inlet
+        h.scale.set(70 + rnd(i * 3 + 951) * 60, 8 + rnd(i * 3 + 952) * 10, 30); h.position.set(150 + i * 70, -1, -260 - rnd(i * 7 + 953) * 200); iv.add(h); }
+      // the road: two lanes, a dashed centre line, edge lines, gravel shoulders
+      const roadM = std(0x45484d, { roughness: .95 });
+      box(7.6, 0.2, 900, roadM, 0, 1.1, -370);
+      const dashT = tex(32, 256, (g, w, h) => { g.fillStyle = "#45484d"; g.fillRect(0, 0, w, h); g.fillStyle = "#f2f2f2"; g.fillRect(w / 2 - 3, 0, 6, h * 0.35); }); dashT.wrapT = THREE.RepeatWrapping; dashT.repeat.set(1, 80);
+      const dash = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 900), new THREE.MeshStandardMaterial({ map: dashT, roughness: .95 })); dash.rotation.x = -Math.PI / 2; dash.position.set(0, 1.215, -370); iv.add(dash);
+      for (const s of [-1, 1]) { box(0.18, 0.22, 900, std(0xf2f2f2), s * 3.5, 1.11, -370); box(2.2, 0.12, 900, std(0xb5a37c, { roughness: 1 }), s * 4.9, 1.04, -370); }
+      // trees: squat tea-tree, taller banksia and the odd gum, kept off the house blocks and out of town
+      const tea = [std(0x5d6e45), std(0x4f6340), std(0x6b7a4c)], trunk = std(0x5a4a3c, { roughness: 1 });
+      const treeAt = (x, z, k) => { const g = new THREE.Group(), tall = rnd(k + 961) > 0.7, ht = tall ? 4.5 : 1.6;
+        const t = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.3, ht, 5), trunk); t.position.y = ht / 2; g.add(t);
+        for (let j = 0; j < (tall ? 4 : 3); j++) { const r = (tall ? 1.6 : 1.4) + rnd(k * 3 + j + 963) * 0.9, c = new THREE.Mesh(new THREE.SphereGeometry(r, 7, 5), tea[(k + j) % 3]);
+          c.scale.y = tall ? 0.9 : 0.6; c.position.set((rnd(k * 5 + j + 965) - .5) * 2.6, ht + rnd(k + j * 3 + 967) * 0.8, (rnd(k * 9 + j + 969) - .5) * 2.6); g.add(c); }
+        g.position.set(x, 1, z); iv.add(g); };
+      // houses on big blocks along the first stretch, a letterbox at each gate
+      const wallMs = [std(0xece4d6), std(0xd9cdb6), std(0xc9d3d6), std(0xb8876a)], roofMs = [std(0x3e4650, { roughness: .7 }), std(0x8a3b2e, { roughness: .8 }), std(0x6d7a72, { roughness: .7 })];
+      const homes = [];
+      for (const s of [-1, 1]) for (let k = 0; k < 5; k++) { const z = 10 - k * 30 - rnd(k * 7 + s + 971) * 8, x = s * (15 + rnd(k + s * 5 + 973) * 4); homes.push([x, z]);
+        const w = 9 + rnd(k + 975) * 4, d = 7 + rnd(k + 977) * 2, wm = wallMs[(k + (s > 0 ? 2 : 0)) % 4];
+        box(d, 3, w, wm, x, 2.5, z);
+        const roof = new THREE.Mesh(new THREE.ConeGeometry(Math.max(w, d) * 0.72, 2, 4), roofMs[k % 3]); roof.position.set(x, 5, z); roof.rotation.y = Math.PI / 4; roof.scale.set(d / Math.max(w, d), 1, w / Math.max(w, d)); iv.add(roof);
+        box(0.12, 1.1, 0.12, trunk, s * 6.4, 1.55, z + 3); box(0.5, 0.4, 0.7, std(0xb0362b), s * 6.4, 2.2, z + 3); }
+      let tk = 0;
+      for (const s of [-1, 1]) for (let z = 30; z > -140; z -= 4 + rnd(tk + 979) * 5) { tk++;
+        const x = s * (7.5 + rnd(tk * 3 + 981) * 26);
+        if (homes.some(([hx, hz]) => Math.abs(hx - x) < 8 && Math.abs(hz - z) < 9) || (s > 0 && x > 29)) continue; treeAt(x, z, tk); }
+      // timber power poles down the left, with the wires sagging between them
+      const poleM = std(0x6b5a48, { roughness: 1 }), wire = [];
+      for (let k = 0; k < 16; k++) { const z = 25 - k * 38; box(0.35, 10, 0.35, poleM, -6.6, 6, z); box(2.6, 0.2, 0.2, poleM, -6.6, 10.4, z);
+        if (k) for (const dx of [-1.1, 0, 1.1]) for (let q = 0; q < 8; q++) { const a = q / 8, b = (q + 1) / 8, sag = t => 10.6 - Math.sin(t * Math.PI) * 0.9;
+          wire.push(-6.6 + dx, sag(a), z + 38 - a * 38, -6.6 + dx, sag(b), z + 38 - b * 38); } }
+      const wg = new THREE.BufferGeometry(); wg.setAttribute("position", new THREE.Float32BufferAttribute(wire, 3)); iv.add(new THREE.LineSegments(wg, new THREE.LineBasicMaterial({ color: 0x2a2a2a })));
+      // signs: the 60 zone, and the green one with where you're going and how long it'll take
+      const sixty = tex(128, 128, (g) => { g.fillStyle = "#fff"; g.fillRect(0, 0, 128, 128); g.strokeStyle = "#d22"; g.lineWidth = 14; g.beginPath(); g.arc(64, 64, 52, 0, 7); g.stroke(); g.fillStyle = "#111"; g.font = "800 52px Arial"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("60", 64, 68); });
+      const sp = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.6), new THREE.MeshStandardMaterial({ map: sixty })); sp.position.set(-6.2, 3.6, -30); iv.add(sp); box(0.12, 3, 0.12, std(0x9aa2a8), -6.2, 2.2, -30.1);
+      const sC = document.createElement("canvas"); sC.width = 640; sC.height = 256;
+      const sT = new THREE.CanvasTexture(sC); sT.colorSpace = THREE.SRGBColorSpace; sT.anisotropy = 4;
+      const sign = new THREE.Mesh(new THREE.PlaneGeometry(7.5, 3), new THREE.MeshStandardMaterial({ map: sT, emissive: 0xffffff, emissiveMap: sT, emissiveIntensity: 0.05, roughness: .6 }));
+      sign.position.set(-9.4, 4.6, -75); sign.rotation.y = 0.25; iv.add(sign);
+      for (const dx of [-2.6, 2.6]) box(0.2, 4.6, 0.2, std(0x9aa2a8), -9.4 + dx * Math.cos(0.25), 2.3, -75.1 + dx * Math.sin(-0.25));
+      W.driveInvSign = (dest, mins, note) => { const g = sC.getContext("2d"), w = 640, h = 256;
+        g.fillStyle = "#0f6b3a"; g.fillRect(0, 0, w, h); g.strokeStyle = "#fff"; g.lineWidth = 8; g.strokeRect(10, 10, w - 20, h - 20);
+        g.fillStyle = "#fff"; g.textBaseline = "middle"; g.textAlign = "left"; let f = 70; g.font = `700 ${f}px Arial, sans-serif`;
+        while (g.measureText(dest).width > w - 250 && f > 30) { f -= 4; g.font = `700 ${f}px Arial, sans-serif`; } g.fillText(dest, 36, 92);
+        g.textAlign = "right"; g.font = "800 84px Arial, sans-serif"; g.fillText(`${mins}`, w - 100, 92); g.font = "700 36px Arial, sans-serif"; g.fillText("min", w - 34, 106);
+        g.textAlign = "left"; g.font = "600 38px Arial, sans-serif"; g.fillStyle = note ? "#ffd84d" : "#d8f0e0"; g.fillText(note || "Drive safely", 36, 188);
+        sT.needsUpdate = true; };
+      W.driveInvSign("Inverloch", "--", "");
+      // town: shops both sides with verandahs over the footpath, windows that light up at night, cars nosed in at the kerb
+      const pathM = std(0xcdc8bb), shopMs = [std(0xf1ead8), std(0xcfe0e6), std(0xe9d3b0), std(0xf6f4ef), std(0xd8e4cf)], verM = std(0x7b8790, { metalness: .3, roughness: .6 });
+      W.driveInvWin = new THREE.MeshStandardMaterial({ color: 0x24303a, emissive: 0xffd9a0, emissiveIntensity: 0, roughness: .3 });
+      const lampPts = [], parkCols = [0xf2f2ee, 0x2f6fb0, 0x7f8c8d, 0xc0392b, 0x1e1e1e, 0x16a085];
+      for (const s of [-1, 1]) {
+        box(4, 0.3, 280, pathM, s * 7.6, 1.15, -290);
+        let z = -152, k = 0;
+        while (z > -425) { const len = 9 + rnd(k * 5 + s + 991) * 7, hgt = 4.5 + rnd(k * 3 + s + 993) * 3, cz = z - len / 2, x = s * (9.6 + 6);
+          box(12, hgt, len - 0.4, shopMs[(k + (s > 0 ? 2 : 0)) % 5], x, 1 + hgt / 2, cz);
+          box(0.15, 1.8, len - 2.4, W.driveInvWin, s * 9.55, 2.6, cz);  // shop window
+          box(3.2, 0.18, len - 0.2, verM, s * 8.1, 4.4, cz); box(0.12, 3.2, 0.12, verM, s * 6.6, 2.8, cz + len / 2 - 0.4); box(0.12, 3.2, 0.12, verM, s * 6.6, 2.8, cz - len / 2 + 0.4);
+          if (rnd(k * 7 + s + 995) > 0.35) { const pc = new THREE.Group(), body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.1, 4.2), std(parkCols[(k + (s > 0 ? 3 : 0)) % parkCols.length], { roughness: .35 }));
+            const cab = new THREE.Mesh(new THREE.BoxGeometry(1.65, 0.7, 2.2), std(0x22303c, { roughness: .2 })); cab.position.y = 0.9; pc.add(body, cab);
+            pc.position.set(s * 4.9, 1.75, cz); pc.rotation.y = s * 0.9; iv.add(pc); }
+          lampPts.push(s * 5.9, 6.2, cz); box(0.15, 5.4, 0.15, std(0x3a4046), s * 5.9, 3.7, cz);
+          z -= len; k++; }
+      }
+      // Norfolk Island pines along the foreshore, and one standing at the end of the street
+      const pineM = std(0x2b4a30, { roughness: 1 });
+      const pineAt = (x, z, ht) => { const g = new THREE.Group(), t = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.6, ht, 6), trunk); t.position.y = ht / 2; g.add(t);
+        for (let k = 0; k < 9; k++) { const tier = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 2.8 - k * 0.24, 1, 7), pineM); tier.position.y = ht * 0.25 + k * (ht * 0.08); g.add(tier); }
+        g.position.set(x, 1, z); iv.add(g); };
+      for (let k = 0; k < 9; k++) pineAt(34 + rnd(k + 997) * 6, -90 - k * 40, 20 + rnd(k * 3 + 999) * 7);
+      pineAt(-14, -460, 26); pineAt(12, -480, 24);
+      const lg = new THREE.BufferGeometry(); lg.setAttribute("position", new THREE.Float32BufferAttribute(lampPts, 3));
+      W.driveInvLights = new THREE.PointsMaterial({ color: 0xffd9a0, size: 0.9, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: true });
+      iv.add(new THREE.Points(lg, W.driveInvLights));
+      // traffic: one lane each way, keep left (heading away from you on the left, coming towards you on the right)
+      const N = 26, cars = new THREE.InstancedMesh(new THREE.BoxGeometry(1.8, 1.15, 4.3), std(0xffffff, { roughness: .35 }), N), cabs = new THREE.InstancedMesh(new THREE.BoxGeometry(1.65, 0.72, 2.3), std(0x22303c, { roughness: .2 }), N);
+      const tailM = new THREE.MeshBasicMaterial({ color: 0xff2a2a }), headM = new THREE.MeshBasicMaterial({ color: 0xfff4d6 });
+      const tails = new THREE.InstancedMesh(new THREE.BoxGeometry(1.5, 0.2, 0.1), tailM, N), heads = new THREE.InstancedMesh(new THREE.BoxGeometry(1.5, 0.2, 0.1), headM, N);
+      const cols = [0xf2f2ee, 0xc0392b, 0x2f6fb0, 0x7f8c8d, 0x2c3e50, 0x16a085, 0xbdc3c7, 0xe67e22, 0x1e1e1e], cc = new THREE.Color(), car = [];
+      for (let i = 0; i < N; i++) { car.push({ away: i % 2 === 0, z: 40 - rnd(i * 3 + 1001) * 640, v: 0 }); cars.setColorAt(i, cc.setHex(cols[i % cols.length])); }
+      iv.add(cars, cabs, tails, heads);
+      const m4 = new THREE.Object3D(), gone = new THREE.Matrix4().makeTranslation(0, -60, 0);
+      W.driveInvTick = (dt, lit, still) => {
+        const busy = W.driveBusy ?? 0.3, gapMin = 8 + (1 - busy) * 18, top = 17 - busy * 11, n = Math.round(8 + busy * (N - 8));
+        for (let i = 0; i < N; i++) { const cr = car[i], on = i < n;
+          if (on && !still) { let gap = 999; for (let j = 0; j < n; j++) { const o = car[j]; if (j === i || o.away !== cr.away) continue; const d = cr.away ? cr.z - o.z : o.z - cr.z; if (d > 0 && d < gap) gap = d; }
+            const want = gap < gapMin ? Math.max(0, top * (gap - 6) / gapMin) : top * (0.85 + (i % 5) * 0.05);
+            cr.v += (want - cr.v) * Math.min(1, dt * 1.5); cr.z += (cr.away ? -1 : 1) * cr.v * dt;
+            if (cr.away && cr.z < -620) cr.z = 60; if (!cr.away && cr.z > 60) cr.z = -620; }
+          const x = cr.away ? -1.75 : 1.75, y = on ? 1.8 : -50;
+          m4.position.set(x, y, cr.z); m4.rotation.set(0, cr.away ? 0 : Math.PI, 0); m4.updateMatrix(); cars.setMatrixAt(i, m4.matrix);
+          m4.position.set(x, y + 0.92, cr.z + (cr.away ? 0.2 : -0.2)); m4.updateMatrix(); cabs.setMatrixAt(i, m4.matrix);
+          m4.position.set(x, y + 0.05, cr.z + (cr.away ? 2.2 : -2.2)); m4.updateMatrix(); tails.setMatrixAt(i, cr.away ? m4.matrix : gone); heads.setMatrixAt(i, cr.away ? gone : m4.matrix); }
+        cars.instanceMatrix.needsUpdate = cabs.instanceMatrix.needsUpdate = tails.instanceMatrix.needsUpdate = heads.instanceMatrix.needsUpdate = true;
+        tailM.color.setRGB(1, 0.15 + 0.1 * lit, 0.15).multiplyScalar(0.7 + 0.3 * Math.max(lit, busy)); headM.color.setRGB(0.6 + 0.4 * lit, 0.6 + 0.4 * lit, 0.55 + 0.35 * lit);
+        W.driveInvLights.opacity = lit; W.driveInvWin.emissiveIntensity = lit * 1.3; sign.material.emissiveIntensity = 0.05 + 0.5 * lit;
       };
     }
     // ---- Moorooka, the other view (half the time): the Clubhouse Moorooka, the council-built 1968 bowls club, its two greens
@@ -5290,7 +5418,17 @@ const handle = async (m, post) => {
     W.waterU = waterU; W.strikeAt = 0; bsPlace();
     // Look around: move the pointer, or drag on the sky.
     let last = null;
-    canvas.addEventListener("pointermove", e => { if (e.pointerType === "mouse") { BS.ptr.tx = (e.clientX / innerWidth - 0.5) * 2; BS.ptr.ty = (e.clientY / innerHeight - 0.5) * 2; } });
+    // On a computer, hold both mouse buttons and drag to fly round the scene; double-click puts the view back.
+    // (Pressing the second button while the first is down arrives as a pointermove, so it's all handled there.)
+    const O = BS.orbit = { yaw: 0, pitch: 0, ty: 0, tp: 0, on: false };
+    canvas.addEventListener("pointermove", e => { if (e.pointerType !== "mouse") return;
+      if ((e.buttons & 3) === 3) { if (!O.on) { O.on = true; try { canvas.setPointerCapture(e.pointerId); } catch {} canvas.style.cursor = "grabbing"; }
+        O.ty -= e.movementX * 0.006; O.tp = bsClamp(O.tp + e.movementY * 0.004, -0.5, 0.9); e.preventDefault(); return; }
+      if (O.on) { O.on = false; canvas.style.cursor = ""; }
+      BS.ptr.tx = (e.clientX / innerWidth - 0.5) * 2; BS.ptr.ty = (e.clientY / innerHeight - 0.5) * 2; });
+    canvas.addEventListener("pointerup", e => { if (O.on && (e.buttons & 3) !== 3) { O.on = false; canvas.style.cursor = ""; } });
+    canvas.addEventListener("contextmenu", e => e.preventDefault());  // the right button is half of the orbit
+    canvas.addEventListener("dblclick", () => { O.ty = 0; O.tp = 0; });
     canvas.addEventListener("touchstart", e => { last = e.touches[0]; }, { passive: true });
     canvas.addEventListener("touchmove", e => { const t = e.touches[0]; if (last) { BS.ptr.tx = bsClamp(BS.ptr.tx - (t.clientX - last.clientX) / 160, -1.2, 1.2); BS.ptr.ty = bsClamp(BS.ptr.ty - (t.clientY - last.clientY) / 200, -1, 1); } last = t; }, { passive: true });
     return true;
@@ -5355,6 +5493,7 @@ const handle = async (m, post) => {
     const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (W.mooRing && !still && W.moo.visible) W.mooRing.rotation.y -= dt * 0.35;  // cars going round the roundabout
     if (W.drive?.visible) W.driveTick(dt, lit, still);  // traffic on the motorway
+    if (W.driveInv?.visible) W.driveInvTick(dt, lit, still);  // traffic on the road into Inverloch
     if (W.mooBowls?.visible) W.bowlsTick(dt, lit, still);  // bowls rolling down the rinks, lights on at night
     W.cloudU.uLit.value.fromArray(cl); W.cloudU.uShade.value.fromArray(cs); W.cloudU.uCover.value = st.cover; W.cloudU.uWind.value = -(0.25 + st.wind * 0.03) * (still ? 0.3 : 1); W.cloudU.uTime.value = t;
     W.rainU.uAmount.value = st.rain; W.rainU.uSlant.value = -(0.04 + st.wind * 0.006); W.rainU.uTime.value = t;
@@ -5367,8 +5506,17 @@ const handle = async (m, post) => {
     // camera drift and look-around
     const P = BS.ptr; P.x += (P.tx - P.x) * 0.05; P.y += (P.ty - P.y) * 0.05;
     const sway = still ? 0 : Math.sin(t * 0.09) * 1.6;
-    cam.position.set(B.camBase.x + P.x * 7 + sway, B.camBase.y - P.y * 2.2, B.camBase.z);
-    cam.lookAt(B.camLook.x + P.x * 14 + sway * 0.5, B.camLook.y - P.y * 6, B.camLook.z);
+    const px = BS.orbit?.on ? 0 : P.x, py = BS.orbit?.on ? 0 : P.y;
+    cam.position.set(B.camBase.x + px * 7 + sway, B.camBase.y - py * 2.2, B.camBase.z);
+    const look = B.look || (B.look = new B.THREE.Vector3()); look.set(B.camLook.x + px * 14 + sway * 0.5, B.camLook.y - py * 6, B.camLook.z);
+    // flying round: turn the camera and where it looks about a point on the ground in front, kept above the ground
+    const O = BS.orbit; if (O) { O.yaw += (O.ty - O.yaw) * 0.18; O.pitch += (O.tp - O.pitch) * 0.18;
+      if (Math.abs(O.yaw) > 1e-4 || Math.abs(O.pitch) > 1e-4) {
+        const piv = B.piv || (B.piv = new B.THREE.Vector3()), off = B.off || (B.off = new B.THREE.Vector3()), sph = B.sph || (B.sph = new B.THREE.Spherical());
+        piv.lerpVectors(B.camBase, B.camLook, 0.4); piv.y = 2;
+        off.subVectors(cam.position, piv); sph.setFromVector3(off); sph.theta += O.yaw; sph.phi = bsClamp(sph.phi - O.pitch, 0.12, 1.5); off.setFromSpherical(sph); cam.position.copy(piv).add(off);
+        look.sub(piv).applyAxisAngle(B.up || (B.up = new B.THREE.Vector3(0, 1, 0)), O.yaw); look.y = piv.y + (look.y - piv.y) * Math.cos(O.pitch); look.add(piv); } }
+    cam.lookAt(look);
     W.wheel.rotation.z += dt * (still ? 0.04 : 0.12);
     if (W.invFlags && !still) W.invFlags.forEach((f, i) => { f.rotation.y = Math.sin(t * 2.2 + i) * 0.35 + (st.wind || 15) / 60; });
     if (W.invFoam) W.invFoam.position.z = -32.5 + Math.sin(t * 0.8) * 0.9;
@@ -5800,10 +5948,13 @@ const handle = async (m, post) => {
     const delay = Math.max(0, c.est - DOOR - c.base);
     const tag = t => t === "Crash" || t === "Flooding" ? "hot" : t === "Congestion" || t === "Hazard" ? "warm" : "";
     box.innerHTML = `
-      <div class="dv-top"><h1>${esc(driveName(c))}</h1><p>${esc(c.from || "Home")} to ${esc(c.to || "Work")}</p></div>
+      <div class="dv-top"><h1>${esc(driveName(c))}</h1></div>
+      <ol class="dv-route" aria-label="From ${esc(c.from || "Home")} to ${esc(c.to || "Work")}">
+        <li><i class="dv-pin">A</i><span>From</span><b>${esc(c.from || "Home")}</b></li>
+        <li><i class="dv-pin dv-b">B</i><span>To</span><b>${esc(c.to || "Work")}</b></li></ol>
       <section class="dv-now">
         <div class="bs-when">${leaveText(c) ? `${esc(leaveText(c))} · ${esc(c.leaveAt)}` : `As of ${esc(c.leaveAt)}`}</div>
-        <div class="dv-big"><div class="bs-temp" aria-label="About ${c.est} minutes to get to ${esc(c.to || "work")}">${c.est}<sup>min</sup></div>
+        <div class="dv-big"><div class="bs-temp" aria-label="About ${c.est} minutes to get to ${esc(c.to || "work")}">${c.est}<small>min</small></div>
           <div class="bs-hilo"><span>Arrive <b>${esc(c.arriveAt)}</b></span><span>Empty roads <b>${c.base} min</b></span></div></div>
         <div class="bs-what dv-what" style="--dv-c:${col}"><i aria-hidden="true"></i>${esc(what)}</div>
         <div class="bs-chips"><span class="bs-chip">Distance <b>${c.km} km</b></span><span class="bs-chip">Traffic adds <b>${delay} min</b></span>${c.noInc ? "" : `<span class="bs-chip">Reported <b>${c.events.length + (c.more || 0)}</b></span>`}</div>
