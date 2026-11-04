@@ -141,6 +141,16 @@ jobs:
           path: _site/data/voice
           merge-multiple: true
 
+      # Always publish the newest app: a quick publish may have put out a newer page while this run was busy,
+      # and this run mustn't put the older one back.
+      - name: Use the newest app
+        continue-on-error: true
+        run: |
+          git fetch -q --depth=1 origin main
+          git checkout FETCH_HEAD -- app.html build.py
+          git checkout FETCH_HEAD -- beta sw.js icons manifest.webmanifest 2>/dev/null || true
+          python build.py _site
+
       - name: Join the audio lists
         continue-on-error: true
         env:

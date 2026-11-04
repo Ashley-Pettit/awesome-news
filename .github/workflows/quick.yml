@@ -46,5 +46,18 @@ jobs:
         with:
           path: _site
 
+      # If the full news run is publishing at the same moment, GitHub refuses a second one: wait and try again.
+      - id: d1
+        continue-on-error: true
+        uses: actions/deploy-pages@v4
+      - if: steps.d1.outcome == 'failure'
+        run: sleep 90
+      - id: d2
+        if: steps.d1.outcome == 'failure'
+        continue-on-error: true
+        uses: actions/deploy-pages@v4
+      - if: steps.d1.outcome == 'failure' && steps.d2.outcome == 'failure'
+        run: sleep 150
       - id: deployment
+        if: steps.d1.outcome == 'failure' && steps.d2.outcome == 'failure'
         uses: actions/deploy-pages@v4
