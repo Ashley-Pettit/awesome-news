@@ -823,6 +823,14 @@ body.locked .player { z-index: 45; bottom: calc(env(safe-area-inset-bottom, 0px)
 .pick { display: flex; flex-wrap: wrap; gap: 10px; }
 .pchip { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px 8px 8px; border-radius: 999px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); font-weight: 650; font-size: 0.94rem; color: var(--ink); transition: box-shadow 0.2s ease, transform 0.15s ease; }
 .pchip:active { transform: scale(0.96); }
+.card.beta { padding: 12px 14px 14px; display: grid; gap: 12px; }
+.beta-row { display: grid; gap: 6px; }
+.beta-l { font-size: 0.78rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.beta-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.bchip { padding: 7px 12px; border-radius: 999px; font: inherit; font-size: 0.86rem; font-weight: 650; color: var(--ink); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); min-height: 36px; }
+.bchip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); box-shadow: none; }
+.beta-go { justify-self: start; }
+.ver { cursor: pointer; }
 .pchip .ck { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; box-shadow: inset 0 0 0 2px var(--pc); color: transparent; transition: background-color 0.2s ease, color 0.2s ease; flex: none; }
 .pchip .ck svg { width: 14px; height: 14px; }
 .pchip[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--pc); }
@@ -2529,6 +2537,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   function hideSheet(id, fromPop) {
     const el = $(id);
     if (id === "weather" && document.body.classList.contains("wxlisten")) { wxListenOff(); return; }
+    if (id === "weather") previewEnd();
     if (!el.classList.contains("open")) return;
     el.classList.remove("open");
     setTimeout(() => { if (!el.classList.contains("open")) el.hidden = true; }, 320);
@@ -3011,7 +3020,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
       <div class="group"><h2>Beta</h2><div class="card">
         ${toggle("data-betaheads", "1", !!store.get("brief.betaHeads", false), "Headlines list while listening", "After the weather, see the stories and tap one to hear it next")}
       </div><p class="hint">Still being tried out, so it may change.</p></div>`,
-      app: `${getAppHTML()}
+      app: `${betaHTML()}${getAppHTML()}
       ${shareHTML()}
       <p class="about">Awesome News pulls from free sources only: ABC, SBS, BBC, The Guardian, 7NEWS, The Conversation, 360info, Global Voices, NASA, EFF, Ars Technica, TechCrunch, iTnews and more. ${privateMode() ? "Stories open in full right here." : "Stories marked Full are free to republish, so they open in full right here."} No paywalls, no sport.${state.status?.updatedAt ? `<br>Stories last updated ${esc(longDate(state.status.updatedAt))}.` : ""}</p>
 `,
@@ -4174,6 +4183,10 @@ const handle = async (m, post) => {
     // Customise: the news keeps playing; Settings opens over it, and the Listen card brings the player back.
     if (t.closest("#npCust")) { npClose(); state.sTab = "news"; openSettings(); return; }  // the News tab: your interests and local area
     if (t.closest("#bsSkip")) { skipWeather(); return; }
+    const pk2 = t.closest("[data-prev-k]");
+    if (pk2) { state.prevSel[pk2.dataset.prevK] = pk2.dataset.prevV; pk2.parentElement.querySelectorAll(".bchip").forEach(b => b.setAttribute("aria-pressed", String(b === pk2))); return; }
+    if (t.closest("[data-prev-go]")) { previewGo(); return; }
+    if (t.closest("#appVer")) { state.sTab = "app"; store.set("brief.sTab", "app"); openSettings(); return; }  // the version tag opens Try it out
     if (t.closest("#bsWeekBtn")) { weekBrief(); return; }
     if (t.closest("#bsStop")) { stopListen(); return; }
     if (t.closest("#npPos")) { $("npList").hidden ? npListShow(false) : npListHide(); return; }
@@ -4662,7 +4675,7 @@ const handle = async (m, post) => {
   // Which place the 3D view shows: Logan for Logan news, Inverloch for Victoria, Brisbane everywhere else.
   function bsPlace() {
     const W = BS.W; if (!W.bris || !W.inv) return;
-    const pl = typeof wxPlace === "function" ? wxPlace() : S.region, vic = ["vic", "inv"].includes(pl), lo = pl === "logan", mo = pl === "moo";
+    const pl = BS.prev?.place || (typeof wxPlace === "function" ? wxPlace() : S.region), vic = ["vic", "inv"].includes(pl), lo = pl === "logan", mo = pl === "moo";
     const dr = !!(BS.drive && W.drive);  // the traffic part of Listen: the motorway instead of the place
     if (BS.orbit && !BS.orbit.on) { BS.orbit.ty = 0; BS.orbit.tp = 0; }  // a new place starts from the usual view
     const di = dr && !!W.driveInv && !!BS.driveVic;  // a drive in Victoria: the road into Inverloch
@@ -5570,6 +5583,7 @@ const handle = async (m, post) => {
     const w = r.domElement.clientWidth, h = r.domElement.clientHeight;
     if (r.domElement.width !== Math.floor(w * r.getPixelRatio()) || r.domElement.height !== Math.floor(h * r.getPixelRatio())) { r.setSize(w, h, false); cam.aspect = w / h; cam.fov = w / h < 0.8 ? 76 : 60; cam.updateProjectionMatrix(); }
     const k = 1 - Math.pow(0.03, dt); ["cover", "rain", "storm", "wind"].forEach(n => { st[n] += (tg[n] - st[n]) * k; });
+    if (BS.prev && PREV_SKY[BS.prev.sky]) Object.assign(st, PREV_SKY[BS.prev.sky]);  // Try it out: the weather you picked
     // sun, moon and the light they leave
     const ms = v.ms, sp = bsSun(ms), mp = bsMoon(ms), alt = sp.alt / bsRad, sd = bsDir(sp), md = bsDir(mp);
     const day = bsSmooth(-6, 9, alt), night = 1 - bsSmooth(-13, -1, alt), dusk = Math.exp(-Math.pow((alt - 1.5) / 6.5, 2));
@@ -6135,6 +6149,49 @@ const handle = async (m, post) => {
     setInterval(soon, 2000);
   })();
   // A small version number for Rod and Ash (when their name is in Settings): when this copy was built, and its build id.
+  // ---- Try it out (beta), for Ash and Rod: see the 3D scenes in any place, weather and time, and the drive views ----
+  const isTester = () => /^(rod|rodney|ash|ashley)$/i.test((S.name || "").trim());
+  state.prevSel = { place: "moo", sky: "rain", hour: "11", drive: "off" };
+  const PREV_OPTS = {
+    place: [["moo", "Moorooka streets"], ["bowls", "Moorooka bowls club"], ["qld", "Brisbane"], ["logan", "Logan"], ["inv", "Inverloch"]],
+    sky: [["auto", "As forecast"], ["sun", "Sunny"], ["cloud", "Cloudy"], ["rain", "Rain"], ["storm", "Storm"]],
+    hour: [["now", "Now"], ["6", "6am"], ["11", "Midday"], ["18", "Sunset"], ["21", "Night"]],
+    drive: [["off", "No drive"], ["mooClear", "Beaudesert Rd, clear"], ["mooHeavy", "Beaudesert Rd, heavy"], ["motorway", "Motorway"], ["inv", "Into Inverloch"]] };
+  const PREV_SKY = { sun: { rain: 0, cover: .08, storm: 0 }, cloud: { rain: 0, cover: .85, storm: 0 }, rain: { rain: 1, cover: .95, storm: .3 }, storm: { rain: 1, cover: 1, storm: 1 } };
+  function betaHTML() {
+    if (!isTester()) return "";
+    const row = (k, label) => `<div class="beta-row"><span class="beta-l">${label}</span><div class="beta-chips">${PREV_OPTS[k].map(([v, t]) =>
+      `<button type="button" class="bchip" data-prev-k="${k}" data-prev-v="${v}" aria-pressed="${state.prevSel[k] === v}">${t}</button>`).join("")}</div></div>`;
+    return `<div class="group"><h2>Try it out (beta)</h2><div class="card beta">
+      ${row("place", "Place")}${row("sky", "Weather")}${row("hour", "Time")}${row("drive", "Drive")}
+      <button type="button" class="pill-btn beta-go" data-prev-go>Show it</button>
+    </div><p class="hint">Only for Ash and Rod. Opens the 3D weather with these settings; close it to come back here. Your real weather and drive aren't changed.</p></div>`;
+  }
+  function previewGo() {
+    const p = state.prevSel;
+    BS.prev = { place: p.place === "bowls" ? "moo" : p.place, sky: p.sky };
+    openWeather(); if ($("weather").hidden) { BS.prev = null; return; }
+    BS.mooAlt = p.place === "bowls";
+    if (p.hour !== "now") { const d = new Date(); d.setHours(+p.hour, 0, 0, 0); BS.view = { mode: "day", ms: d.getTime(), play: false, day: BS.D ? bsKey(d.getTime()) : null }; }
+    const now = Date.now(), fake = {
+      mooClear: { toWork: true, base: 21, est: 23, extra: 0, planned: true, leaveMs: now + 20 * 60000, leaveAt: "7:45am", arriveAt: "8:08am", km: 19, from: "Moorooka", to: "Logan City Council", events: [], more: 0 },
+      mooHeavy: { toWork: true, base: 21, est: 41, extra: 8, planned: true, leaveMs: now + 20 * 60000, leaveAt: "7:45am", arriveAt: "8:26am", km: 19, from: "Moorooka", to: "Logan City Council",
+        events: [{ type: "Crash", road: "Logan Motorway", place: "Loganlea", impact: "Lane closed", delay: "", what: "Multi-vehicle" }, { type: "Congestion", road: "Beaudesert Road", place: "Acacia Ridge", impact: "", delay: "", what: "Heavy traffic" }], more: 0 },
+      motorway: { toWork: false, base: 21, est: 30, extra: 3, planned: false, leaveMs: now, leaveAt: "5:10pm", arriveAt: "5:40pm", km: 19.9, from: "Logan City Council", to: "Home", events: [{ type: "Roadworks", road: "Pacific Motorway", place: "Eight Mile Plains", impact: "", delay: "", what: "Lane works" }], more: 0 },
+      inv: { toWork: true, base: 4, est: 6, extra: 0, planned: true, leaveMs: now + 10 * 60000, leaveAt: "7:45am", arriveAt: "7:51am", km: 2.3, from: "Norman Road", to: "Inverloch town centre", events: [], more: 0, noInc: true } }[p.drive];
+    if (!fake) { bsPlace(); return; }
+    let tries = 0; const go = setInterval(() => {  // once the 3D view has been built
+      if (!BS.prev || $("weather").hidden || ++tries > 60) { clearInterval(go); return; }
+      if (!BS.W.drive) return; clearInterval(go);
+      BS.drive = true; BS.W.driveSet(fake); BS.driveMoo = p.drive.startsWith("moo"); BS.driveVic = p.drive === "inv";
+      bsPlace(); document.body.classList.add("wxdrive"); driveHUD(fake);
+    }, 200);
+  }
+  function previewEnd() {
+    if (!BS.prev) return; BS.prev = null;
+    if (BS.drive && !L.on) { BS.drive = false; document.body.classList.remove("wxdrive"); }
+    setTimeout(() => { try { bsPlace(); } catch {} }, 400);
+  }
   function showVersion() {
     const el = $("appVer"); if (!el) return;
     const me = /^(rod|rodney|ash|ashley)$/i.test((S.name || "").trim());
