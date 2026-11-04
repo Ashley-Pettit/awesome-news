@@ -4666,11 +4666,12 @@ const handle = async (m, post) => {
     const dr = !!(BS.drive && W.drive);  // the traffic part of Listen: the motorway instead of the place
     if (BS.orbit && !BS.orbit.on) { BS.orbit.ty = 0; BS.orbit.tp = 0; }  // a new place starts from the usual view
     const di = dr && !!W.driveInv && !!BS.driveVic;  // a drive in Victoria: the road into Inverloch
+    const dm = dr && !di && !!W.moo && !!W.mooTraffic && !!BS.driveMoo;  // a drive from Moorooka: Beaudesert Road with its traffic
     const mb = mo && !dr && !!W.mooBowls && !!BS.mooAlt;  // Moorooka: half the time the bowls club instead of the landmarks
-    W.bris.visible = !vic && !lo && !mo && !dr; if (W.logan) W.logan.visible = lo && !dr; if (W.moo) W.moo.visible = mo && !dr && !mb; if (W.drive) W.drive.visible = dr && !di; if (W.driveInv) W.driveInv.visible = di;
+    W.bris.visible = !vic && !lo && !mo && !dr; if (W.logan) W.logan.visible = lo && !dr; if (W.moo) W.moo.visible = (mo && !dr && !mb) || dm; if (W.mooTraffic) W.mooTraffic.visible = dm; if (W.drive) W.drive.visible = dr && !di && !dm; if (W.driveInv) W.driveInv.visible = di;
     if (W.mooBowls) W.mooBowls.visible = mb;
     const B = BS.B; if (B) { if (!B.camHome) B.camHome = [B.camBase.clone(), B.camLook.clone()];  // Moorooka is seen from a little higher up, looking over the roundabout
-      if (di) { B.camBase.set(-1.75, 8.5, 44); B.camLook.set(-1.75, 3, -110); } else if (dr) { B.camBase.set(7.6, 13, 50); B.camLook.set(7.6, 2, -90); } else if (mb) { B.camBase.set(-38, 26, 78); B.camLook.set(-4, 2, -12); } else if (mo) { B.camBase.set(0, 15, 46); B.camLook.set(0, 5, -60); } else { B.camBase.copy(B.camHome[0]); B.camLook.copy(B.camHome[1]); } }
+      if (di) { B.camBase.set(-1.75, 8.5, 44); B.camLook.set(-1.75, 3, -110); } else if (dm) { B.camBase.set(0, 17, 22); B.camLook.set(0, 1, -110); } else if (dr) { B.camBase.set(7.6, 13, 50); B.camLook.set(7.6, 2, -90); } else if (mb) { B.camBase.set(-38, 26, 78); B.camLook.set(-4, 2, -12); } else if (mo) { B.camBase.set(0, 15, 46); B.camLook.set(0, 5, -60); } else { B.camBase.copy(B.camHome[0]); B.camLook.copy(B.camHome[1]); } }
     W.inv.visible = vic && !dr;
   }
   function bsBuild(THREE) {
@@ -4947,6 +4948,8 @@ const handle = async (m, post) => {
         W.driveSign(c?.toWork === false ? cc.home?.sign || "Moorooka" : cc.work?.sign || "Logan Central", c ? c.est : "--", note);
         const vicPt = p => !!p && p.lat < -33.9 && p.lat > -39.3 && p.lon > 140.9 && p.lon < 150;
         BS.driveVic = vicPt(cc.home) || vicPt(cc.work);  // Rod's drive: the road into Inverloch instead of the motorway
+        const mooPt = p => !!p && Math.abs(p.lat + 27.535) < 0.03 && Math.abs(p.lon - 153.024) < 0.03;
+        BS.driveMoo = mooPt(cc.home) || mooPt(cc.work);  // Ash's drive: Beaudesert Road, Moorooka, instead of the motorway
         if (W.driveInvSign) W.driveInvSign(c?.toWork === false ? cc.home?.sign || "Home" : cc.work?.sign || "Inverloch", c ? c.est : "--", note);
       };
       const m4 = new THREE.Object3D(), gone = new THREE.Matrix4().makeTranslation(0, -60, 0);
@@ -5440,6 +5443,28 @@ const handle = async (m, post) => {
         f.p.children[2].rotation.x = run ? .3 : 0;  // leaning into the run
       });
     };
+    // Ash's drive: traffic up and down Beaudesert Road past the shops (shown in the traffic part of Listen, not with the weather).
+    // Busier and slower when the drive is; cars drive on the left and keep a gap to the car ahead.
+    { const tr = new THREE.Group(); tr.visible = false; moo.add(tr); W.mooTraffic = tr;
+      const TN = 44, tCars = new THREE.InstancedMesh(new THREE.BoxGeometry(2, 0.9, 4.3), mStd(0xffffff, { roughness: .35 }), TN), tCabs = new THREE.InstancedMesh(new THREE.BoxGeometry(1.8, 0.7, 2.4), cabM, TN);
+      const tc = new THREE.Color(); for (let i = 0; i < TN; i++) tCars.setColorAt(i, tc.setHex(carCols[(i * 7) % carCols.length]));
+      tr.add(tCars, tCabs);
+      const Z0 = RZ - 17, Z1 = RZ - 300, cars = Array.from({ length: TN }, (_, i) => ({ away: i % 2 === 0, z: Z0 - rnd(i * 23 + 951) * (Z0 - Z1), v: 8 }));
+      const m4 = new THREE.Object3D();
+      W.mooTrafficTick = (dt, still) => {
+        const busy = W.driveBusy ?? 0.3, n = Math.round(14 + busy * (TN - 14)), gapMin = 8 + (1 - busy) * 18, top = 17 - busy * 12;
+        for (let i = 0; i < TN; i++) { const c = cars[i], on = i < n;
+          if (on && !still) {
+            let gap = 999; for (let j = 0; j < n; j++) { const o = cars[j]; if (j === i || o.away !== c.away) continue; const d = c.away ? c.z - o.z : o.z - c.z; if (d > 0 && d < gap) gap = d; }
+            const want = gap < gapMin ? Math.max(0, top * (gap - 5.5) / gapMin) : top * (0.85 + (i % 5) * 0.05);
+            c.v += (want - c.v) * Math.min(1, dt * 1.5); c.z += (c.away ? -1 : 1) * c.v * dt;
+            if (c.away && c.z < Z1) c.z = Z0; if (!c.away && c.z > Z0) c.z = Z1;
+          }
+          const x = c.away ? -2.5 : 2.5, y = on ? 1.75 : -50;
+          m4.position.set(x, y, c.z); m4.rotation.set(0, c.away ? 0 : Math.PI, 0); m4.updateMatrix(); tCars.setMatrixAt(i, m4.matrix);
+          m4.position.set(x, y + 0.8, c.z + (c.away ? 0.2 : -0.2)); m4.updateMatrix(); tCabs.setMatrixAt(i, m4.matrix); }
+        tCars.instanceMatrix.needsUpdate = true; tCabs.instanceMatrix.needsUpdate = true; };
+    }
     // street lights and the car yard floodlights
     for (let z = RZ - 20; z > RZ - 140; z -= 24) [-1, 1].forEach(sd => { mBox(0.18, 6, 0.18, awnPlain, sd * 5.6, 4, z); mooLights.push(sd * 5.0, 6.9, z); });
     for (let r = 0; r < 6; r++) mooLights.push(-34, 8.2, -44 - r * 13, -92, 8.2, -44 - r * 13, -150, 8.2, -44 - r * 13);
@@ -5556,6 +5581,7 @@ const handle = async (m, post) => {
     const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (W.mooRing && !still && W.moo.visible) W.mooRing.rotation.y -= dt * 0.35;  // cars going round the roundabout
     if (W.drive?.visible) W.driveTick(dt, lit, still);  // traffic on the motorway
+    if (W.mooTraffic?.visible) W.mooTrafficTick(dt, still);  // Ash's drive: traffic on Beaudesert Road
     if (W.driveInv?.visible) W.driveInvTick(dt, lit, still);  // traffic on the road into Inverloch
     if (W.mooBowls?.visible) W.bowlsTick(dt, lit, still, st.rain);
     if (W.moo?.visible && W.mooTick) W.mooTick(dt, st.rain, still);  // people run for cover when it rains  // bowls rolling down the rinks, lights on at night
