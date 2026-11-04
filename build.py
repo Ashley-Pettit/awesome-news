@@ -75,7 +75,9 @@ def stamped(hd, bd, folder):
     build = hashlib.sha1((hd + bd).encode()).hexdigest()[:12]
     with open(os.path.join(folder, "version.json"), "w") as f:
         json.dump({"build": build}, f)
-    return hd.replace("<head>\n", f'<head>\n<meta name="an-build" content="{build}">\n', 1)
+    from datetime import datetime, timedelta, timezone
+    built = datetime.now(timezone(timedelta(hours=10))).strftime("%-d %b %H:%M")  # Brisbane time, shown to Rod and Ash
+    return hd.replace("<head>\n", f'<head>\n<meta name="an-build" content="{build}">\n<meta name="an-built" content="{built}">\n', 1)
 
 
 os.makedirs(site, exist_ok=True)

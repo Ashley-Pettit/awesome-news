@@ -88,6 +88,8 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
 .hsub #eyebrow { font-weight: 700; flex: none; }
 .hsub .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--faint); flex: none; }
 .hsub .stamp { font-size: inherit; min-width: 0; overflow: hidden; }
+.hsub .ver { flex: none; margin-left: 6px; padding: 1px 6px; border-radius: 6px; font-size: 0.68rem; font-weight: 700; color: var(--muted); background: var(--raise); font-variant-numeric: tabular-nums; }
+.hsub .ver[hidden] { display: none; }
 .hsub #stamp { overflow: hidden; text-overflow: ellipsis; }
 .brandline { display: flex; align-items: center; gap: 8px; min-width: 0; font-family: var(--display); font-size: 0.98rem; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; }
 .brandmark { width: 38px; height: 38px; border-radius: 10px; flex: none; max-width: 100%; }
@@ -1101,7 +1103,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
         <img class="brandmark" id="brandmark" alt="Awesome News">
         <div class="hgroup">
           <h1 class="title" id="title">Awesome News</h1>
-          <div class="hsub"><span id="eyebrow">Today</span><span class="dot" aria-hidden="true"></span><button type="button" class="stamp" id="refreshBtn" aria-label="Check for new stories"><span class="live stale" id="live"></span><span id="stamp">Loading the latest stories</span><span class="newcount" id="newCount" hidden></span><svg class="rf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button></div>
+          <div class="hsub"><span id="eyebrow">Today</span><span class="dot" aria-hidden="true"></span><button type="button" class="stamp" id="refreshBtn" aria-label="Check for new stories"><span class="live stale" id="live"></span><span id="stamp">Loading the latest stories</span><span class="newcount" id="newCount" hidden></span><svg class="rf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button><span class="ver" id="appVer" hidden></span></div>
         </div>
         <button class="wx" type="button" id="wx" data-open-weather aria-label="Open the full forecast" hidden></button>
       </div>
@@ -1933,6 +1935,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   function wxListenIntro() {
     if (!state.wx || document.body.classList.contains("wxlisten") || !$("weather").hidden) return;
     document.body.classList.add("wxlisten", "wxintro");
+    BS.mooAlt = Math.random() < 0.5;
     // The day from 4:45am in 5-minute steps, one every 0.2 seconds for the sky; the words update every 2 seconds (50 minutes).
     // In the morning and afternoon it's today; from 6pm it's tomorrow.
     BS.D = bsData(); bsPlace();
@@ -2260,6 +2263,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   window.addEventListener("resize", () => { inkAt = null; placeInk(); });
   document.fonts?.ready.then(() => { inkAt = null; placeInk(); });
   function renderHeader() {
+    showVersion();
     $("eyebrow").textContent = state.showSaved ? "Saved" : greeting();
     $("title").textContent = APP_NAME;
     const s = state.status, live = $("live");
@@ -4098,7 +4102,7 @@ const handle = async (m, post) => {
     if (e.target.id === "setRegion") { S.region = e.target.value; saveSettings(); renderSettings(); loadWeather(); toast(state.mode === "claude" && !(state.status?.regions || []).some(r => r.id === S.region) ? `${regionLabel()} news arrives with the next update` : `Local news: ${regionLabel()}`); }
   });
   document.addEventListener("input", e => {
-    if (e.target.id === "setName") { S.name = e.target.value.slice(0, 30); saveSettings(); renderHeader(); }
+    if (e.target.id === "setName") { S.name = e.target.value.slice(0, 30); saveSettings(); renderHeader(); showVersion(); }
     if (e.target.id === "negCut") {
       S.negCut = Number(e.target.value) || 0; saveSettings();
       $("negVal").textContent = S.negCut ? S.negCut + "% less" : "Off";
@@ -4498,9 +4502,11 @@ const handle = async (m, post) => {
     const W = BS.W; if (!W.bris || !W.inv) return;
     const pl = typeof wxPlace === "function" ? wxPlace() : S.region, vic = ["vic", "inv"].includes(pl), lo = pl === "logan", mo = pl === "moo";
     const dr = !!(BS.drive && W.drive);  // the traffic part of Listen: the motorway instead of the place
-    W.bris.visible = !vic && !lo && !mo && !dr; if (W.logan) W.logan.visible = lo && !dr; if (W.moo) W.moo.visible = mo && !dr; if (W.drive) W.drive.visible = dr;
+    const mb = mo && !dr && !!W.mooBowls && !!BS.mooAlt;  // Moorooka: half the time the bowls club instead of the landmarks
+    W.bris.visible = !vic && !lo && !mo && !dr; if (W.logan) W.logan.visible = lo && !dr; if (W.moo) W.moo.visible = mo && !dr && !mb; if (W.drive) W.drive.visible = dr;
+    if (W.mooBowls) W.mooBowls.visible = mb;
     const B = BS.B; if (B) { if (!B.camHome) B.camHome = [B.camBase.clone(), B.camLook.clone()];  // Moorooka is seen from a little higher up, looking over the roundabout
-      if (dr) { B.camBase.set(7.6, 13, 50); B.camLook.set(7.6, 2, -90); } else if (mo) { B.camBase.set(0, 15, 46); B.camLook.set(0, 5, -60); } else { B.camBase.copy(B.camHome[0]); B.camLook.copy(B.camHome[1]); } }
+      if (dr) { B.camBase.set(7.6, 13, 50); B.camLook.set(7.6, 2, -90); } else if (mb) { B.camBase.set(-38, 26, 78); B.camLook.set(-4, 2, -12); } else if (mo) { B.camBase.set(0, 15, 46); B.camLook.set(0, 5, -60); } else { B.camBase.copy(B.camHome[0]); B.camLook.copy(B.camHome[1]); } }
     W.inv.visible = vic && !dr;
   }
   function bsBuild(THREE) {
@@ -4801,6 +4807,170 @@ const handle = async (m, post) => {
         if (W.driveFlash) W.driveFlash.material = (performance.now() / 350 | 0) % 2 ? flashR : flashB;
       };
     }
+    // ---- Moorooka, the other view (half the time): the Clubhouse Moorooka, the council-built 1968 bowls club, its two greens
+    // and bowlers, the verandah with festoon lights, Queenslanders over the back fence, Toohey Forest on the ridge ----
+    {
+      const bowls = new THREE.Group(); bowls.visible = false; bowls.position.y = 1; scene.add(bowls); W.mooBowls = bowls;
+      // ---- helpers ----
+      let bSeed = 11; const brnd = () => (bSeed = (bSeed * 9301 + 49297) % 233280) / 233280;
+      const std = (c, o) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: .9 }, o || {}));
+      const tex = (w, h, draw) => { const c = document.createElement("canvas"); c.width = w; c.height = h; draw(c.getContext("2d"), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
+      const textTex = (w, h, bg, fg, lines, font) => tex(w, h, (g, cw, ch) => { g.fillStyle = bg; g.fillRect(0, 0, cw, ch); g.fillStyle = fg; g.textAlign = "center"; g.textBaseline = "middle";
+        lines.forEach((t, k) => { let fs = ch / lines.length * .64; g.font = `800 ${fs}px ${font || "Barlow Condensed, Arial Narrow, Arial"}`; while (g.measureText(t).width > cw * .9 && fs > 8) { fs -= 2; g.font = `800 ${fs}px ${font || "Barlow Condensed, Arial Narrow, Arial"}`; } g.fillText(t, cw / 2, ch * (k + .5) / lines.length + 2); }); });
+      const box = (w, h, d, m, x, y, z, par, shadow = true) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.castShadow = shadow; o.receiveShadow = true; (par || bowls).add(o); return o; };
+      const glowMats = [];
+      // ---- ground, paths, car park ----
+      const lawn = std(0x6c9a4c, { roughness: 1 });
+      const ground = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1400), lawn); ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; bowls.add(ground);
+      const concrete = std(0xcdc8bb), asphalt = std(0x4a4d52, { roughness: .95 });
+      box(104, .12, 4, concrete, 0, .06, -20.5, null, false);  // the path along the verandah
+      box(104, .12, 3, concrete, 0, .06, 22.5, null, false);
+      [-50.5, 0, 50.5].forEach(x => box(3, .12, 46, concrete, x, .06, 1, null, false));
+      box(150, .14, 22, asphalt, 0, .07, 44, null, false);  // car park
+      const bay = std(0xf1f1ee);
+      for (let k = -11; k <= 11; k++) box(.2, .16, 7, bay, k * 6.2, .08, 37.5, null, false);
+      box(150, .16, 12, asphalt, 0, .08, 64, null, false);  // the street
+      for (let k = -12; k <= 12; k++) box(4, .18, .3, bay, k * 9, .09, 64, null, false);
+
+      // ---- the two greens: mowing stripes, ditch, bank, rink numbers ----
+      const stripeT = tex(512, 512, (g, w, h) => { for (let k = 0; k < 12; k++) { g.fillStyle = k % 2 ? "#5f9f45" : "#6aad4e"; g.fillRect(0, k * h / 12, w, h / 12 + 1); }
+        g.fillStyle = "rgba(255,255,255,.035)"; for (let i = 0; i < 1600; i++) g.fillRect(Math.random() * w, Math.random() * h, 2, 2); });
+      const greenM = new THREE.MeshStandardMaterial({ map: stripeT, roughness: .82 }), ditchM = std(0xc9b48a, { roughness: 1 }), bankM = std(0xe9e6dc);
+      const greenAt = (cx, cz, rot) => {
+        const g = new THREE.Group(); g.position.set(cx, 0, cz); bowls.add(g);
+        const s = new THREE.Mesh(new THREE.BoxGeometry(38, .3, 38), greenM); s.position.y = .15; s.rotation.y = rot; s.receiveShadow = true; g.add(s);
+        [[0, 19.6, 39.6, .9], [0, -19.6, 39.6, .9], [19.6, 0, .9, 39.6], [-19.6, 0, .9, 39.6]].forEach(([x, z, w, d]) => { box(w, .1, d, ditchM, x, .05, z, g, false); });
+        [[0, 20.4, 41.6, .8], [0, -20.4, 41.6, .8], [20.4, 0, .8, 41.6], [-20.4, 0, .8, 41.6]].forEach(([x, z, w, d]) => box(w, .55, d, bankM, x, .27, z, g));
+        // rink number boards on the bank, and white boundary pegs
+        for (let r = 0; r < 6; r++) { const x = -15.8 + r * 6.33;
+          const nb = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 1.1), new THREE.MeshStandardMaterial({ map: textTex(64, 64, "#1f6b3a", "#ffffff", [String(r + 1)]) })); nb.position.set(x, .9, 20.85); g.add(nb);
+          box(.06, .08, .06, bay, x + 3.16, .34, 19, g, false); box(.06, .08, .06, bay, x + 3.16, .34, -19, g, false); }
+        return g; };
+      const gA = greenAt(-25.2, 1, 0), gB = greenAt(25.2, 1, Math.PI / 2);
+
+      // shade roof over the right-hand green: a shallow white arch on steel posts
+      { const R = 42.5, th = Math.asin(21 / R), len = 44;
+        const geo = new THREE.CylinderGeometry(R, R, len, 48, 1, true, -th, th * 2); geo.rotateX(-Math.PI / 2);
+        const roof = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0xf4f4f0, side: THREE.DoubleSide, roughness: .6, transparent: true, opacity: .45, depthWrite: false }));
+        roof.position.set(25.2, 7.2 - R * Math.cos(th), 1); roof.castShadow = true; roof.receiveShadow = true; bowls.add(roof);
+        const steel = std(0x9aa2a8, { roughness: .4, metalness: .5 });
+        for (let z = -20; z <= 22; z += 7) [-21, 21].forEach(dx => box(.4, 7.2, .4, steel, 25.2 + dx, 3.6, z, null));
+        [-21, 21].forEach(dx => box(.35, .35, 44, steel, 25.2 + dx, 7.1, 1)); }
+
+      // ---- the clubhouse: a long, low 1968 brick building, deep eaves, a verandah onto the greens ----
+      const brickT = tex(256, 128, (g, w, h) => { g.fillStyle = "#d9c7a5"; g.fillRect(0, 0, w, h); for (let y = 0; y < h; y += 8) for (let x = (y / 8) % 2 ? -12 : 0; x < w; x += 24) {
+        const v = 200 + Math.floor(Math.random() * 30); g.fillStyle = `rgb(${v + 20},${v},${v - 40})`; g.fillRect(x + 1, y + 1, 22, 6); } });
+      brickT.wrapS = brickT.wrapT = THREE.RepeatWrapping; brickT.repeat.set(10, 2);
+      const brick = new THREE.MeshStandardMaterial({ map: brickT, roughness: .95 }), trim = std(0xf6f4ee), roofM = std(0x6f7b82, { roughness: .5, metalness: .4 });
+      const club = new THREE.Group(); club.position.set(0, 0, -33); bowls.add(club);
+      box(70, 5, 16, brick, 0, 2.5, 0, club);
+      // the roof: a low gable with deep eaves
+      { const pitch = .16, half = 11.5, rise = half * Math.tan(pitch);
+        [-1, 1].forEach(sd => { const p = box(73, .3, half / Math.cos(pitch) + .2, roofM, 0, 5.15 + rise / 2, sd * half / 2, club); p.rotation.x = sd * pitch; });
+        const gable = new THREE.Shape(); gable.moveTo(-half + 3.5, 0); gable.lineTo(0, rise); gable.lineTo(half - 3.5, 0); gable.lineTo(-half + 3.5, 0);
+        [-35, 35].forEach(x => { const gm = new THREE.Mesh(new THREE.ShapeGeometry(gable), trim); gm.position.set(x * 1.0, 5, 0); gm.rotation.y = x < 0 ? -Math.PI / 2 : Math.PI / 2; club.add(gm); }); }
+      // glass sliding doors and windows onto the verandah (they glow at night)
+      const glass = new THREE.MeshStandardMaterial({ color: 0x2b3c48, roughness: .12, metalness: .3, emissive: 0xffd08a, emissiveIntensity: 0 }); glowMats.push([glass, 1.1]);
+      for (let k = 0; k < 9; k++) { const x = -30 + k * 7.5, w = k % 3 === 1 ? 5.2 : 4.2, h = k % 3 === 1 ? 3.6 : 2.2, y = k % 3 === 1 ? 1.9 : 2.7;
+        const p = new THREE.Mesh(new THREE.PlaneGeometry(w, h), glass); p.position.set(x, y, 8.02); club.add(p); box(w + .3, .18, .25, trim, x, y - h / 2 - .05, 8.05, club, false); }
+      // fascia sign and the gable-end name
+      const fascia = box(40, 1.5, .3, std(0x1f6b3a), 0, 6.1, 11.3, club);
+      const sign = new THREE.Mesh(new THREE.PlaneGeometry(38, 1.4), new THREE.MeshStandardMaterial({ map: textTex(1024, 40, "#1f6b3a", "#f7f2df", ["THE CLUBHOUSE  ·  MOOROOKA"]), emissive: 0xffffff, emissiveIntensity: 0 }));
+      sign.material.emissiveMap = sign.material.map; glowMats.push([sign.material, .55]); sign.position.set(0, 6.1, 11.47); club.add(sign);
+      const endSign = new THREE.Mesh(new THREE.PlaneGeometry(9, 2.1), new THREE.MeshStandardMaterial({ map: textTex(512, 120, "#f6f4ee", "#1f6b3a", ["MOOROOKA", "BOWLS CLUB 1968"]) }));
+      endSign.position.set(35.05, 3.3, 0); endSign.rotation.y = Math.PI / 2; club.add(endSign);
+      // the verandah: a skillion on posts, festoon lights, tables and umbrellas
+      { const v = box(72, .25, 7.5, std(0xe9e7e0, { roughness: .6 }), 0, 4.75, 11.5, club); v.rotation.x = -.06;
+        for (let x = -34; x <= 34; x += 8.5) box(.3, 4.6, .3, std(0x2f3a33), x, 2.3, 15, club);
+        box(72, .12, 7.5, concrete, 0, .1, 11.5, club, false);
+        const tableM = std(0xb8875a), umbCols = [0x1f6b3a, 0xf3efe2, 0xc8962b];
+        for (let k = 0; k < 7; k++) { const x = -27 + k * 9;
+          box(3.4, .15, 1.6, tableM, x, 1.05, 12.2, club); [-1.3, 1.3].forEach(dx => box(.15, 1, .15, tableM, x + dx, .5, 12.2, club, false));
+          [-1, 1].forEach(sd => box(3.2, .12, .55, tableM, x, .62, 12.2 + sd * 1.3, club, false));
+          if (k % 2 === 0) { const pole = box(.1, 3, .1, trim, x, 1.6, 12.2, club, false);
+            const u = new THREE.Mesh(new THREE.ConeGeometry(2.1, .9, 8), std(umbCols[(k / 2) % 3], { roughness: .7, side: THREE.DoubleSide })); u.position.set(x, 3.3, 12.2); u.castShadow = true; club.add(u); } } }
+      // festoon lights strung along the verandah edge and out to the green
+      const bulbM = new THREE.MeshStandardMaterial({ color: 0xfff2d0, emissive: 0xffcf7a, emissiveIntensity: .15 }); glowMats.push([bulbM, 2.4, .15]);
+      const bulbs = new THREE.InstancedMesh(new THREE.SphereGeometry(.16, 8, 6), bulbM, 400); let bn = 0; const dm = new THREE.Object3D();
+      const string = (a, b, sag, n) => { for (let i = 0; i <= n && bn < 400; i++) { const t = i / n; dm.position.set(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t - Math.sin(t * Math.PI) * sag, a.z + (b.z - a.z) * t); dm.updateMatrix(); bulbs.setMatrixAt(bn++, dm.matrix); } };
+      for (let x = -34; x < 34; x += 8.5) string(new THREE.Vector3(x, 4.3, -18), new THREE.Vector3(x + 8.5, 4.3, -18), .5, 10);
+      [-30, -15, 0, 15, 30].forEach(x => string(new THREE.Vector3(x, 4.3, -18), new THREE.Vector3(x * .6, 4.6, -21.6 + 4), .3, 6));
+      bulbs.count = bn; bowls.add(bulbs);
+
+      // ---- bowlers: whites and barefoot-bowls colours, bowls and a jack on the rinks ----
+      const skin = [0x5b3a29, 0x8d5a3b, 0xc8946e, 0xe0b48f, 0x3d2618], shirts = [0xffffff, 0xffffff, 0xffffff, 0xe74c3c, 0x2f6fb0, 0xf1c40f, 0x16a085, 0xffffff], pants = [0xf4f4f0, 0x2c3e50, 0xf4f4f0, 0x6b7c8a];
+      const person = (x, z, ry, k, bend) => { const p = new THREE.Group();
+        const legs = new THREE.Mesh(new THREE.CylinderGeometry(.22, .2, .9, 8), std(pants[k % pants.length])); legs.position.y = .45; p.add(legs);
+        const torso = new THREE.Mesh(new THREE.CylinderGeometry(.32, .27, .85, 8), std(shirts[k % shirts.length])); torso.position.set(0, 1.3, bend ? .25 : 0); torso.rotation.x = bend ? .6 : 0; p.add(torso);
+        const head = new THREE.Mesh(new THREE.SphereGeometry(.22, 10, 8), std(skin[k % skin.length])); head.position.set(0, 1.92, bend ? .62 : 0); p.add(head);
+        const hat = new THREE.Mesh(new THREE.CylinderGeometry(.3, .34, .14, 10), std(k % 3 ? 0xf6f4ee : 0x1f6b3a)); hat.position.set(0, 2.08, bend ? .64 : 0); p.add(hat);
+        p.traverse(o => { if (o.isMesh) o.castShadow = true; }); p.position.set(x, .3, z); p.rotation.y = ry; p.scale.setScalar(1.25); bowls.add(p); return p; };
+      const bowlM = std(0x2b2b2b, { roughness: .35 }), bowlM2 = std(0x7a2e2e, { roughness: .35 }), jackM = std(0xf7f7f2, { roughness: .3 }), matM = std(0x22402c);
+      const rinkPlay = (cx, cz, k) => { // a mat and bowler at one end, bowls clustered round the jack at the other
+        box(.8, .04, 1.4, matM, cx, .32, cz + 15, null, false); person(cx, cz + 15.5, Math.PI, k, true);
+        person(cx + 1.2, cz + 17.6, Math.PI, k + 1, false); person(cx - .5, cz - 16.5, 0, k + 2, false);
+        const jx = cx + (brnd() - .5) * 2, jz = cz - 12 + brnd() * 2; const j = new THREE.Mesh(new THREE.SphereGeometry(.13, 12, 10), jackM); j.position.set(jx, .43, jz); bowls.add(j);
+        for (let i = 0; i < 6; i++) { const b = new THREE.Mesh(new THREE.SphereGeometry(.26, 14, 10), i % 2 ? bowlM : bowlM2); b.scale.set(1, .85, 1); b.position.set(jx + (brnd() - .5) * 3, .52, jz + (brnd() - .5) * 3.2); b.castShadow = true; bowls.add(b); }
+        // one bowl rolling down the rink
+        const roll = new THREE.Mesh(new THREE.SphereGeometry(.26, 14, 10), bowlM); roll.scale.set(1, .85, 1); roll.position.set(cx, .52, cz + 13); roll.castShadow = true; bowls.add(roll);
+        return { roll, x0: cx, z0: cz + 13, z1: jz + 1.2, sway: (brnd() > .5 ? 1 : -1) * 1.4 }; };
+      const rolls = [rinkPlay(-25.2 - 9.5, 1, 0), rinkPlay(-25.2 + 3.2, 1, 3), rinkPlay(25.2 - 6.3, 1, 1), rinkPlay(25.2 + 9.5, 1, 4)];
+      // people on the verandah and the path
+      [[-20, -15.5, 2], [-6, -16.4, 5], [9, -15.2, 6], [21, -16, 7], [-36, 21.6, 3], [40, 23, 4]].forEach(([x, z, k]) => person(x, z, Math.PI * (z < 0 ? 0 : 1), k, false));
+
+      // scoreboard and a sandwich board
+      { const sb = new THREE.Mesh(new THREE.PlaneGeometry(5, 2.2), new THREE.MeshStandardMaterial({ map: tex(256, 112, (g, w, h) => { g.fillStyle = "#14321f"; g.fillRect(0, 0, w, h); g.fillStyle = "#f7f2df"; g.font = "700 22px Barlow Condensed, Arial";
+          g.textAlign = "left"; ["RINK 1   12 – 9", "RINK 2    7 – 14", "RINK 3   18 – 16"].forEach((t, k) => g.fillText(t, 18, 32 + k * 30)); }) }));
+        sb.position.set(-25.2, 2.4, 22.4); sb.rotation.y = Math.PI; bowls.add(sb); box(.2, 2.4, .2, std(0x2f3a33), -27.4, 1.2, 22.5); box(.2, 2.4, .2, std(0x2f3a33), -23, 1.2, 22.5);
+        const ab = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 2.3), new THREE.MeshStandardMaterial({ map: textTex(128, 164, "#f7f2df", "#1f6b3a", ["BAREFOOT", "BOWLS", "ALL WELCOME"]), side: THREE.DoubleSide }));
+        ab.position.set(-4, 1.2, 25.4); ab.rotation.x = -.2; bowls.add(ab); }
+
+      // floodlight towers at the corners of the greens
+      const lampM = new THREE.MeshStandardMaterial({ color: 0xe8e8e0, emissive: 0xfff6dd, emissiveIntensity: 0 }); glowMats.push([lampM, 3]);
+      [[-46, -19], [-4.5, -19], [-46, 21], [-4.5, 21], [46, 21], [4.5, 21]].forEach(([x, z]) => { box(.35, 11, .35, std(0x8c949a, { metalness: .4, roughness: .5 }), x, 5.5, z);
+        const h = box(1.6, .6, .9, lampM, x, 11.1, z, null, false); h.lookAt(x * .5, 0, 1); });
+
+      // ---- trees: jacarandas (purple in spring), poincianas, gums, a palm by the door ----
+      const trunk = std(0x4a3a30, { roughness: 1 }), month = new Date().getMonth(), jacOn = month >= 9 && month <= 11;
+      const jac = [std(jacOn ? 0x9d82e6 : 0x4f7a42), std(jacOn ? 0x8466cc : 0x456c3a)], poin = [std(month >= 10 || month <= 1 ? 0xd8432f : 0x4f7a42), std(0x3f6b34)], gum = [std(0x5c7c50), std(0x48683f)];
+      const tree = (x, z, s, mats, flat) => { const g = new THREE.Group(), t = new THREE.Mesh(new THREE.CylinderGeometry(.35, .55, 5, 7), trunk); t.position.y = 2.5; t.castShadow = true; g.add(t);
+        for (let k = 0; k < 8; k++) { const c = new THREE.Mesh(new THREE.SphereGeometry(1.8 + brnd() * 1.2, 10, 8), mats[k % 2]); if (flat) c.scale.y = .6; const a = brnd() * 6.28, r = brnd() * (flat ? 3.4 : 2.2);
+          c.position.set(Math.cos(a) * r, 5.4 + brnd() * 1.6, Math.sin(a) * r); c.castShadow = true; g.add(c); }
+        g.position.set(x, 0, z); g.scale.setScalar(s); bowls.add(g); };
+      [[-62, -12], [-62, 14], [62, -14], [62, 12], [-45, 32], [48, 31], [-14, 31], [16, 31]].forEach(([x, z], k) => tree(x, z, 1.3 + brnd() * .3, k % 3 === 2 ? poin : jac, true));
+      for (let i = 0; i < 26; i++) { const a = brnd() * 6.28, r = 85 + brnd() * 60; tree(Math.cos(a) * r, Math.sin(a) * r * .8 - 20, 1.6 + brnd() * .6, gum, false); }
+      { const pt = std(0x8b8378), fr = std(0x4f7d3a); [[-38, -22], [38, -22]].forEach(([x, z]) => { const t = new THREE.Mesh(new THREE.CylinderGeometry(.25, .35, 10, 6), pt); t.position.set(x, 5, z); t.castShadow = true; bowls.add(t);
+        for (let k = 0; k < 9; k++) { const f = new THREE.Mesh(new THREE.BoxGeometry(4, .08, .8), fr); const a = k / 9 * 6.28; f.position.set(x + Math.cos(a) * 1.7, 10.1, z + Math.sin(a) * 1.7); f.rotation.set(0, -a, -.45); f.castShadow = true; bowls.add(f); } }); }
+
+      // ---- cars in the car park, Queenslanders over the back fence ----
+      const carCols = [0xc0392b, 0xf2f2ee, 0x2f6fb0, 0x7f8c8d, 0x16a085, 0x2c3e50, 0xe67e22];
+      for (let k = 0; k < 13; k++) { if (brnd() < .3) continue; const c = new THREE.Group(), x = -68 + k * 12.4 + 3;
+        box(2, .9, 4.4, std(carCols[k % carCols.length], { roughness: .35 }), 0, .9, 0, c); box(1.8, .75, 2.4, std(0x22303c, { roughness: .2 }), 0, 1.7, .2, c);
+        c.position.set(x, 0, 38); bowls.add(c); }
+      const qWalls = [0xf3efe4, 0xefe3c6, 0xe3ecdf, 0xdfe8ee], qRoofs = [0xa9443a, 0xb9c0c7, 0x4f6f55, 0xa9443a];
+      for (let k = 0; k < 9; k++) { const g = new THREE.Group(), x = -80 + k * 20, z = -64 - brnd() * 6;
+        box(8.4, 2.2, 9, std(0x3b332c), 0, 1.1, 0, g); box(9, 3.4, 10, std(qWalls[k % 4]), 0, 3.9, 0, g);
+        box(10.2, .25, 2.4, std(0x8a6a4a), 0, 2.3, 6, g); box(10.2, 1, .12, std(0xffffff), 0, 2.9, 7.1, g);
+        const r = new THREE.Mesh(new THREE.ConeGeometry(7.8, 3.2, 4), std(qRoofs[k % 4], { roughness: .55, metalness: k % 4 === 1 ? .45 : 0 })); r.rotation.y = Math.PI / 4; r.scale.set(1, 1, 1.1); r.position.set(0, 7.2, 1); r.castShadow = true; g.add(r);
+        g.position.set(x, 0, z); g.rotation.y = Math.PI + (brnd() - .5) * .2; bowls.add(g); }
+      box(150, 1.6, .15, std(0xd9d4c6), 0, .8, -56, null, false);  // the back fence
+
+      // ---- Toohey Forest along the ridge, the city far off ----
+      const bush = std(0x3e5b38, { roughness: 1 });
+      const ridge = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 16), bush); ridge.scale.set(420, 60, 90); ridge.position.set(80, -18, -330); bowls.add(ridge);
+      for (let i = 0; i < 70; i++) { const c = new THREE.Mesh(new THREE.SphereGeometry(7 + brnd() * 7, 8, 6), i % 3 ? bush : gum[1]); const x = -300 + brnd() * 700;
+        c.position.set(x, 24 + 18 * Math.cos((x - 80) / 420 * 1.4) + brnd() * 8, -270 - brnd() * 50); bowls.add(c); }
+      const cbdM = std(0x9fb2c8, { roughness: .8 });
+      for (let i = 0; i < 16; i++) { const h = 40 + brnd() * 60, b = new THREE.Mesh(new THREE.BoxGeometry(12, h, 12), cbdM); b.position.set(-420 + i * 15 + brnd() * 6, h / 2, -560); bowls.add(b); }
+
+
+      W.bowlsTick = (dt, lit, still) => {
+        glowMats.forEach(([mat, on, base]) => { mat.emissiveIntensity = (base || 0) + on * lit; });
+        if (still) return;
+    rolls.forEach((r, i) => { r.t = ((r.t ?? i * .27) + dt * .12) % 1.15; const t = Math.min(1, r.t), e = 1 - Math.pow(1 - t, 2.2);
+          r.roll.position.set(r.x0 + Math.sin(e * Math.PI) * r.sway, .52, r.z0 + (r.z1 - r.z0) * e); r.roll.rotation.x -= dt * (1 - t) * 6; });
+      };
+    }
     // ---- Moorooka, its landmarks in one view (seen from a little higher up): the Beaudesert Road roundabout with cars going
     // round, "Little Africa" shops and Ethiopian restaurants up Beaudesert Road, the Magic Mile of Motors car yards with
     // bunting and pylon signs, Queenslanders and jacarandas, Toohey Forest on the ridge, the city far off ----
@@ -5034,6 +5204,7 @@ const handle = async (m, post) => {
     const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (W.mooRing && !still && W.moo.visible) W.mooRing.rotation.y -= dt * 0.35;  // cars going round the roundabout
     if (W.drive?.visible) W.driveTick(dt, lit, still);  // traffic on the motorway
+    if (W.mooBowls?.visible) W.bowlsTick(dt, lit, still);  // bowls rolling down the rinks, lights on at night
     W.cloudU.uLit.value.fromArray(cl); W.cloudU.uShade.value.fromArray(cs); W.cloudU.uCover.value = st.cover; W.cloudU.uWind.value = -(0.25 + st.wind * 0.03) * (still ? 0.3 : 1); W.cloudU.uTime.value = t;
     W.rainU.uAmount.value = st.rain; W.rainU.uSlant.value = -(0.04 + st.wind * 0.006); W.rainU.uTime.value = t;
     W.waterU.uTime.value = t; W.waterU.uRain.value = st.rain; W.waterU.uNight.value = night;
@@ -5065,6 +5236,7 @@ const handle = async (m, post) => {
   function openWeather() {
     if (!state.wx) { toast("The weather isn't available right now"); return; }
     BS.view = { mode: "live", ms: Date.now(), play: true, day: null };  // plays on from now each time it opens
+    BS.mooAlt = Math.random() < 0.5;  // Moorooka: the landmarks or the bowls club, half the time each
     if (!BS.tick) BS.tick = setInterval(() => { if (!$("weather").hidden) bsTick(); }, 1000);
     renderWeather();
     showSheet("weather");
@@ -5495,6 +5667,17 @@ const handle = async (m, post) => {
     document.addEventListener("visibilitychange", () => { if (!document.hidden) setTimeout(soon, 300); });
     setInterval(soon, 2000);
   })();
+  // A small version number for Rod and Ash (when their name is in Settings): when this copy was built, and its build id.
+  function showVersion() {
+    const el = $("appVer"); if (!el) return;
+    const me = /^(rod|rodney|ash|ashley)$/i.test((S.name || "").trim());
+    el.hidden = !me; if (!me) return;
+    const built = document.querySelector('meta[name="an-built"]')?.content || "", id = (document.querySelector('meta[name="an-build"]')?.content || "").slice(0, 6);
+    const today = new Intl.DateTimeFormat("en-AU", { day: "numeric", month: "short", timeZone: "Australia/Brisbane" }).format(new Date());
+    const [d, m, hm] = built.split(" ");  // "4 Nov 11:41": just the time on the day it was built
+    el.textContent = !built ? "v dev" : `${d} ${m}` === today ? `v ${hm}` : `v ${d} ${m}`;
+    el.title = `Version built ${built || "here"}${id ? " (" + id + ")" : ""}`;
+  }
   // The page's build (stamped by build.py) against the latest on the site. Never mid-listen: it waits until you stop.
   let newBuild = false;
   async function checkBuild() {
