@@ -856,10 +856,38 @@ body.wxlisten #weather .bs-skip { display: inline-flex; }
 body.wxweek #weather .bs-weekbtn { display: none; }  /* already hearing it */
 /* Listen intro: the weather blurred behind the title, then it sharpens and comes forward */
 #weather .bs-hud { transition: opacity 0.8s ease; }
+/* Your drive, laid out like the weather: where you're going on top, the minutes big, chips, a traffic meter and what's reported */
 #bsDrive { display: none; }
-body.wxdrive #bsDrive { display: block; position: absolute; z-index: 3; left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(18px + env(safe-area-inset-bottom, 0px));
-  max-width: 560px; margin: 0 auto; background: rgba(8, 12, 28, 0.6); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+body.wxdrive #bsDrive { display: flex; flex-direction: column; gap: 10px; position: absolute; inset: 0; z-index: 2; pointer-events: none; box-sizing: border-box; color: var(--bs-ink);
+  padding: calc(env(safe-area-inset-top, 0px) + 22px) max(16px, env(safe-area-inset-right, 0px)) max(14px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
 body.wxdrive #weather .bs-now, body.wxdrive #weather .bs-rain, body.wxdrive #weather .bs-panel, body.wxdrive #weather .bs-place { visibility: hidden; }
+.dv-top { min-height: 40px; display: flex; flex-direction: column; justify-content: center; padding-right: 120px; }
+.dv-top h1 { margin: 0; font-family: var(--display); font-weight: 800; font-size: 1.7rem; line-height: 1; letter-spacing: -0.02em; text-shadow: 0 1px 12px rgba(0, 0, 0, .35); }
+.dv-top p { margin: 5px 0 0; font-size: 0.8rem; color: var(--bs-dim); }
+.dv-now { margin-top: 10px; text-shadow: 0 1px 2px rgba(0, 0, 0, .55), 0 2px 18px rgba(0, 0, 0, .45); }
+.dv-big { display: flex; align-items: flex-end; gap: 14px; }
+.dv-big .bs-temp sup { font-size: 0.26em; top: 0.3em; margin-left: 0.08em; }
+.dv-what { display: inline-flex; align-items: center; gap: 8px; }
+.dv-what i { width: 10px; height: 10px; border-radius: 50%; background: var(--dv-c, #5bd38a); box-shadow: 0 0 12px var(--dv-c, #5bd38a); flex: none; }
+.dv-meter { margin-top: auto; align-self: flex-end; width: min(300px, 74%); box-sizing: border-box; display: grid; gap: 7px; padding: 12px 14px 11px; border-radius: 22px;
+  background: rgba(8, 12, 28, 0.5); -webkit-backdrop-filter: blur(16px) saturate(1.3); backdrop-filter: blur(16px) saturate(1.3); box-shadow: inset 0 0 0 1px var(--bs-line); }
+.dv-meter .br-top b { white-space: nowrap; }
+.dv-bars { display: flex; gap: 3px; height: 10px; }
+.dv-bars i { flex: 1; border-radius: 3px; background: rgba(255, 255, 255, 0.12); }
+.dv-bars i.on { background: var(--c); box-shadow: 0 0 8px var(--c); }
+.dv-scale { display: flex; justify-content: space-between; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--bs-faint); }
+.dv-panel { display: grid; gap: 8px; padding: 12px 14px; border-radius: 22px; background: rgba(8, 12, 28, 0.55); -webkit-backdrop-filter: blur(18px) saturate(1.3); backdrop-filter: blur(18px) saturate(1.3);
+  box-shadow: inset 0 0 0 1px var(--bs-line); max-width: 640px; width: 100%; box-sizing: border-box; align-self: center; }
+.dv-panel h2 { margin: 0; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--bs-faint); }
+.dv-panel ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.dv-panel li { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; font-size: 0.9rem; line-height: 1.35; }
+.dv-panel li i { font-style: normal; font-size: 0.64rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 7px; border-radius: 6px; background: rgba(255, 255, 255, 0.16); }
+.dv-panel li i.hot { background: #e5484d; } .dv-panel li i.warm { background: #e08a1e; }
+.dv-panel li small { display: block; color: var(--bs-dim); font-size: 0.8rem; }
+.dv-ok { display: flex; align-items: center; gap: 8px; font-weight: 650; }
+.dv-ok svg { width: 20px; height: 20px; color: #5bd38a; flex: none; }
+.dv-src { margin: 0; font-size: 0.68rem; color: var(--bs-faint); }
+@media (min-width: 900px) { .dv-panel { align-self: flex-start; } }
 #bsGl { transition: filter 1s ease, transform 1s ease; }
 body.wxintro #weather, body.wxreveal #weather { z-index: 54; }
 body.wxintro #weather { opacity: 1; transition: none; }
@@ -1275,7 +1303,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     <symbol id="i-storm" viewBox="0 0 24 24"><path d="M7 14.5h10.3a4 4 0 0 0 .7-7.94A5.6 5.6 0 0 0 7.2 5.3 4.6 4.6 0 0 0 7 14.5z" fill="currentColor"/><path d="M13 13l-3.2 5h2.6l-1.2 4.5 4.2-6h-2.7L14.2 13z" fill="#ffd166"/></symbol>
   </defs></svg>
   <canvas id="bsGl" aria-label="Animated 3D view of the sky over the Brisbane River, matching the time and weather shown" role="img"></canvas>
-  <div class="np-traffic bs-drive" id="bsDrive"></div>
+  <div class="bs-drive" id="bsDrive"></div>
   <div id="bsNoGl" hidden><p>The 3D sky can't draw on this device, but the forecast below still works.</p></div>
   <main class="bs-hud" id="wBody"></main>
 </section>
@@ -5609,7 +5637,40 @@ const handle = async (m, post) => {
       ${c.events.length ? `<ul>${c.events.map(e => `<li><i class="${hot(e.type) ? "hot" : ""}">${esc(e.type === "Congestion" ? "Traffic" : e.type)}</i><span>${esc(e.road || "On your way")}${e.place ? `, ${esc(e.place)}` : ""}<small>${esc([e.what, e.impact, e.delay].filter(x => x && x !== e.type).join(" · "))}</small></span></li>`).join("")}</ul>${c.more ? `<p class="tr-ok">And ${c.more} more.</p>` : ""}`
         : `<p class="tr-ok">Nothing reported on your way right now.</p>`}
       <p class="tr-src">An estimate: OSRM drive time (OpenStreetMap) with the usual peak-hour slowdown. Incidents: QLDTraffic.</p>`;
-    if ($("bsDrive")) $("bsDrive").innerHTML = $("npTraffic").innerHTML;
+    driveHUD(c);
+  }
+  // The 3D drive view's words, laid out like the weather page.
+  function driveHUD(c) {
+    const box = $("bsDrive"); if (!box || !c) return;
+    const ratio = c.est / Math.max(1, c.base), hot = c.events.filter(e => ["Crash", "Congestion", "Flooding"].includes(e.type));
+    const busy = Math.max(0, Math.min(1, (ratio - 1.05) / 0.5 + (hot.length ? 0.35 : 0)));
+    const crash = c.events.find(e => e.type === "Crash"), flood = c.events.find(e => e.type === "Flooding");
+    const what = crash ? `Crash on ${crash.road || "the way"}` : flood ? `Flooding on ${flood.road || "the way"}` : busy > 0.66 ? "Heavy traffic" : busy > 0.33 ? "A bit slow" : "Clear run";
+    const col = crash || flood || busy > 0.66 ? "#ff5a5f" : busy > 0.33 ? "#ffb347" : "#5bd38a";
+    const level = busy > 0.66 ? "Heavy" : busy > 0.33 ? "Moderate" : "Light", n = 14, on = Math.max(1, Math.round(busy * n));
+    const barCol = k => k / n < 0.34 ? "#5bd38a" : k / n < 0.67 ? "#ffb347" : "#ff5a5f";
+    const delay = Math.max(0, c.est - c.base);
+    const tag = t => t === "Crash" || t === "Flooding" ? "hot" : t === "Congestion" || t === "Hazard" ? "warm" : "";
+    box.innerHTML = `
+      <div class="dv-top"><h1>${c.toWork ? "Drive to work" : "Drive home"}</h1><p>${esc(c.from || "Home")} to ${esc(c.to || "Work")}</p></div>
+      <section class="dv-now">
+        <div class="bs-when">Leave ${esc(c.leaveAt)}${c.planned ? "" : " (now)"}</div>
+        <div class="dv-big"><div class="bs-temp" aria-label="About ${c.est} minutes">${c.est}<sup>min</sup></div>
+          <div class="bs-hilo"><span>Arrive <b>${esc(c.arriveAt)}</b></span><span>Empty roads <b>${c.base} min</b></span></div></div>
+        <div class="bs-what dv-what" style="--dv-c:${col}"><i aria-hidden="true"></i>${esc(what)}</div>
+        <div class="bs-chips"><span class="bs-chip">Distance <b>${c.km} km</b></span><span class="bs-chip">Traffic adds <b>${delay} min</b></span><span class="bs-chip">Reported <b>${c.events.length + (c.more || 0)}</b></span></div>
+      </section>
+      <aside class="dv-meter" aria-label="Traffic: ${level}">
+        <div class="br-top"><b>Traffic</b><span class="pc">${level}</span></div>
+        <div class="dv-bars">${Array.from({ length: n }, (_, k) => `<i class="${k < on ? "on" : ""}" style="--c:${barCol(k)}"></i>`).join("")}</div>
+        <div class="dv-scale"><span>Light</span><span>Moderate</span><span>Heavy</span></div>
+      </aside>
+      <section class="dv-panel">
+        <h2>On your way</h2>
+        ${c.events.length ? `<ul>${c.events.map(e => `<li><i class="${tag(e.type)}">${esc(e.type === "Congestion" ? "Traffic" : e.type)}</i><span>${esc(e.road || "On your way")}${e.place ? `, ${esc(e.place)}` : ""}<small>${esc([e.what, e.impact, e.delay].filter(x => x && x !== e.type).join(" · "))}</small></span></li>`).join("")}</ul>${c.more ? `<p class="dv-src">And ${c.more} more.</p>` : ""}`
+          : `<div class="dv-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.6 2.6L16 9.5"/></svg>Nothing reported on your way</div>`}
+        <p class="dv-src">An estimate: OSRM drive time (OpenStreetMap) with the usual peak-hour slowdown. Incidents: QLDTraffic.</p>
+      </section>`;
   }
   // On the home page, under Listen: the drive at a glance.
   function driveLine(c) {
