@@ -2518,7 +2518,8 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
       + `<div class="lc-b"><button class="lc-go" type="button" data-listen="drive">Listen now</button></div>`;
   }
   function loganLine() {
-    const ids = driveList("logan").ids, n = ids.length;
+    // Logan news is just for Ash (the name in Settings)
+    const ids = /^ash(ley)?$/i.test((S.name || "").trim()) ? driveList("logan").ids : [], n = ids.length;
     const b = $("lbLogan"); if (b) b.hidden = !n;
     // "From the start", as on the main card: once there's somewhere to carry on from, or stories already heard.
     const f = $("lbLoganFresh");
