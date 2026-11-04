@@ -854,6 +854,10 @@ body.wxlisten #weather .bs-skip { display: inline-flex; }
 body.wxweek #weather .bs-weekbtn { display: none; }  /* already hearing it */
 /* Listen intro: the weather blurred behind the title, then it sharpens and comes forward */
 #weather .bs-hud { transition: opacity 0.8s ease; }
+#bsDrive { display: none; }
+body.wxdrive #bsDrive { display: block; position: absolute; z-index: 3; left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  max-width: 560px; margin: 0 auto; background: rgba(8, 12, 28, 0.6); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+body.wxdrive #weather .bs-now, body.wxdrive #weather .bs-rain, body.wxdrive #weather .bs-panel, body.wxdrive #weather .bs-place { visibility: hidden; }
 #bsGl { transition: filter 1s ease, transform 1s ease; }
 body.wxintro #weather, body.wxreveal #weather { z-index: 54; }
 body.wxintro #weather { opacity: 1; transition: none; }
@@ -1269,6 +1273,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     <symbol id="i-storm" viewBox="0 0 24 24"><path d="M7 14.5h10.3a4 4 0 0 0 .7-7.94A5.6 5.6 0 0 0 7.2 5.3 4.6 4.6 0 0 0 7 14.5z" fill="currentColor"/><path d="M13 13l-3.2 5h2.6l-1.2 4.5 4.2-6h-2.7L14.2 13z" fill="#ffd166"/></symbol>
   </defs></svg>
   <canvas id="bsGl" aria-label="Animated 3D view of the sky over the Brisbane River, matching the time and weather shown" role="img"></canvas>
+  <div class="np-traffic bs-drive" id="bsDrive"></div>
   <div id="bsNoGl" hidden><p>The 3D sky can't draw on this device, but the forecast below still works.</p></div>
   <main class="bs-hud" id="wBody"></main>
 </section>
@@ -1895,6 +1900,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     if (L.kind === "story" || $("np").hidden) return;
     const p = L.parts[k]; if (!p) return;
     const wx = $("npWx"), cue = $("npCue"), np = $("np");
+    if (p.kind !== "traffic" && BS.drive) { BS.drive = false; document.body.classList.remove("wxdrive"); bsPlace(); }
     const was = wx.hidden ? (cue.hidden ? "" : "cue:" + cue.dataset.k) : "open";
     // The opening starts on a quick "Awesome News" title; once it gets to the weather, the full 3D weather page takes over.
     // Section cues ("Next, AI.") are just said, over the story's own picture and headline: no big header screen.
@@ -1905,10 +1911,11 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     if (p.kind === "open") npHello();
     if (p.kind === "wk") wxShowDay(p.date);  // the week ahead: the weather steps through each day as it's read
     else if (p.kind === "warn") wxListenOn();  // weather warnings: still on the weather screen
+    else if (p.kind === "traffic" && state.wx && BS.W.drive) { BS.drive = true; BS.W.driveSet(L.commute); bsPlace(); document.body.classList.add("wxdrive"); wxListenOn(); }  // your drive: the 3D motorway
     else if (p.kind !== "open") wxListenOff();
     const bw = $("bsWarn"); if (bw) { bw.hidden = p.kind !== "warn"; if (p.kind === "warn") bw.innerHTML = `<b>Weather warning</b>${esc(p.text.replace(/^Weather warning\.\s*/, ""))}`; }
     // Once a story itself is being read (not just its headline), it counts as heard.
-    if (L.kind === "drive" && !["open", "cue", "title", "wk", "warn", "traffic"].includes(p.kind)) heardAdd(L.queue[L.at]);
+    if (L.kind === "drive" && !["open", "cue", "title", "wk", "warn", "traffic", "sfx"].includes(p.kind)) heardAdd(L.queue[L.at]);
     // Straight after the weather: the headlines, so you can jump to one (and a tip about Settings).
     if (p.kind !== "open" && p.kind !== "wk" && L.kind === "drive" && L.opened && !L.listShown) {
       L.listShown = true;
@@ -1964,6 +1971,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   }
   function wxListenOff() {
     clearInterval(L.wxT); L.wxT = 0; clearTimeout(L.wxR);
+    if (BS.drive) { BS.drive = false; document.body.classList.remove("wxdrive"); setTimeout(bsPlace, 700); }  // back to the place once it's faded
     if (!document.body.classList.contains("wxlisten")) return;
     const el = $("weather"); el.classList.remove("open");  // fades out
     setTimeout(() => { if (!el.classList.contains("open")) { el.hidden = true; document.body.classList.remove("wxlisten", "wxintro", "wxreveal", "wxweek"); } }, 700);
@@ -3227,6 +3235,8 @@ const handle = async (m, post) => {
   // Phones only allow sound that starts from a tap. Playing a short silent clip during the tap
   // unlocks this player, so the voice can start once it's ready.
   let SILENT = "";
+  // Between stories when Listen moves on by itself: "Simple Whoosh" by DRAGON-STUDIO (Pixabay Content Licence, free to use).
+  const WHOOSH = "data:audio/mpeg;base64,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";
   function unlockAudio() {
     // Tell Safari this is media playback, like a podcast: it plays with the silent switch on and keeps
     // going with the screen locked (otherwise iPhones can mute it).
@@ -3249,7 +3259,7 @@ const handle = async (m, post) => {
   function clip(k) {
     const p = L.parts[k]; if (!p) return null;
     const key = L.sid + ":" + k;
-    if (!clips.has(key)) { const pr = usePre() ? preSay(p.text) : AI.say(p.text, L.sid); pr.then(u => ready.set(key, u)).catch(() => {}); clips.set(key, pr); }
+    if (!clips.has(key)) { const pr = p.sfx ? Promise.resolve(p.sfx) : usePre() ? preSay(p.text) : AI.say(p.text, L.sid); pr.then(u => ready.set(key, u)).catch(() => {}); clips.set(key, pr); }
     return clips.get(key);
   }
   function dropClips(keepSid) {
@@ -3524,7 +3534,8 @@ const handle = async (m, post) => {
     if (!i) { nextStory(); return; }
     markRead(id);
     const intro = L.kind === "brief" ? [{ text: `Story ${L.at + 1}.`, para: -1, kind: "title" }] : [];
-    const pre = [];
+    const pre = [], sweep = L.auto && L.kind === "drive" && L.opened; L.auto = false;
+    if (sweep) pre.push({ text: "", sfx: WHOOSH, para: -1, kind: "sfx", opt: true });
     if (L.kind === "drive") {
       const sec = L.secOf?.get(id);
       if (L.resumed) {  // beta: back within the hour, straight in with a quick welcome back (skipped if not recorded yet)
@@ -3665,6 +3676,7 @@ const handle = async (m, post) => {
     speakDevice(tk);
   }
   function speakDevice(tk) {
+    if (L.parts[L.part]?.sfx) { L.part++; speakNext(tk); return; }  // the whoosh is only with Emma's voice
     const p = L.parts[L.part], u = new SpeechSynthesisUtterance(p.text), v = pickVoice();
     u.rate = L.rate; u.lang = v?.lang || "en-AU"; if (v) u.voice = v;
     u.onend = () => { if (tk !== L.token) return; L.fails = 0; L.part++; updateBar(); speakNext(tk); };
@@ -3683,6 +3695,7 @@ const handle = async (m, post) => {
     updateBar();
   }
   function nextStory() {
+    L.auto = !L.skipped;  // moved on by itself (not skip, swipe or "skip"): a whoosh between stories
     L.done?.add(L.queue[L.at]);
     // After a story picked from the headlines, go back to where you were; stories already heard are skipped.
     if (L.back != null) { L.at = L.back; L.back = null; } else L.at++;
@@ -4484,10 +4497,11 @@ const handle = async (m, post) => {
   function bsPlace() {
     const W = BS.W; if (!W.bris || !W.inv) return;
     const pl = typeof wxPlace === "function" ? wxPlace() : S.region, vic = ["vic", "inv"].includes(pl), lo = pl === "logan", mo = pl === "moo";
-    W.bris.visible = !vic && !lo && !mo; if (W.logan) W.logan.visible = lo; if (W.moo) W.moo.visible = mo;
+    const dr = !!(BS.drive && W.drive);  // the traffic part of Listen: the motorway instead of the place
+    W.bris.visible = !vic && !lo && !mo && !dr; if (W.logan) W.logan.visible = lo && !dr; if (W.moo) W.moo.visible = mo && !dr; if (W.drive) W.drive.visible = dr;
     const B = BS.B; if (B) { if (!B.camHome) B.camHome = [B.camBase.clone(), B.camLook.clone()];  // Moorooka is seen from a little higher up, looking over the roundabout
-      if (mo) { B.camBase.set(0, 15, 46); B.camLook.set(0, 5, -60); } else { B.camBase.copy(B.camHome[0]); B.camLook.copy(B.camHome[1]); } }
-    W.inv.visible = vic;
+      if (dr) { B.camBase.set(7.6, 13, 50); B.camLook.set(7.6, 2, -90); } else if (mo) { B.camBase.set(0, 15, 46); B.camLook.set(0, 5, -60); } else { B.camBase.copy(B.camHome[0]); B.camLook.copy(B.camHome[1]); } }
+    W.inv.visible = vic && !dr;
   }
   function bsBuild(THREE) {
     const canvas = $("bsGl");
@@ -4685,6 +4699,108 @@ const handle = async (m, post) => {
     const llg = new THREE.BufferGeometry(); llg.setAttribute("position", new THREE.Float32BufferAttribute(lgLights, 3));
     W.loganLights = new THREE.PointsMaterial({ color: 0xffd9a0, size: 0.7, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: true });
     lgn.add(new THREE.Points(llg, W.loganLights));
+    // ---- Your drive (shown during the traffic part of Listen): the motorway from just above it, cars as busy
+    // as the traffic is, the overhead sign with your time, and any crash or roadworks on the way. Same sky, time and weather. ----
+    {
+      const drv = new THREE.Group(); drv.visible = false; scene.add(drv); W.drive = drv;
+      const dStd = (color, o) => new THREE.MeshStandardMaterial(Object.assign({ color, roughness: .9 }, o || {}));
+      const dTex = (w, h, draw) => { const c = document.createElement("canvas"); c.width = w; c.height = h; draw(c.getContext("2d"), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; };
+      const dBox = (w, h, d, m, x, y, z) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); drv.add(o); return o; };
+      dBox(900, 1, 900, dStd(0x6f9a4f, { roughness: 1 }), 0, 0.5, -300);  // covers the river
+      // two carriageways of three lanes, a concrete median, shoulders
+      const laneT = dTex(64, 256, (g, w, h) => { g.fillStyle = "#3f4247"; g.fillRect(0, 0, w, h); g.fillStyle = "#f2f2f2"; g.fillRect(w / 2 - 2, 0, 4, h * 0.4); }); laneT.wrapT = THREE.RepeatWrapping; laneT.repeat.set(1, 60);
+      const plainRoad = dStd(0x3f4247, { roughness: .95 }), laneM = new THREE.MeshStandardMaterial({ map: laneT, roughness: .95 });
+      for (const side of [-1, 1]) {
+        const cx = side * 7.6;  // each carriageway 13.2 wide
+        dBox(13.2, 0.2, 1000, plainRoad, cx, 1.1, -460);
+        for (const off of [-2.2, 2.2]) { const l = new THREE.Mesh(new THREE.PlaneGeometry(0.25, 1000), laneM); l.rotation.x = -Math.PI / 2; l.position.set(cx + off, 1.215, -460); drv.add(l); }
+        dBox(0.25, 0.22, 1000, dStd(0xf2f2f2), cx + side * 6.3, 1.21, -460);  // edge line
+      }
+      dBox(1.1, 1.0, 1000, dStd(0xc9c4b8), 0, 1.5, -460);  // the median barrier
+      // gums and light poles along both sides
+      const gumM = [dStd(0x56774c), dStd(0x46663f), dStd(0x6a8a5a)];
+      for (const side of [-1, 1]) {
+        for (let k = 0; k < 46; k++) { const g = new THREE.Group(), z = 30 - k * 20 - rnd(k * 7 + side * 3 + 901) * 8, x = side * (19 + rnd(k * 3 + side + 903) * 8);
+          const t = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.45, 6, 6), trunkMat); t.position.y = 3; g.add(t);
+          for (let j = 0; j < 4; j++) { const c = new THREE.Mesh(new THREE.SphereGeometry(1.8 + rnd(k + j + 905) * 1.2, 8, 6), gumM[(k + j) % 3]); c.position.set((rnd(k * 5 + j) - .5) * 3, 6.5 + rnd(k + j * 3) * 2, (rnd(k * 9 + j) - .5) * 3); g.add(c); }
+          g.position.set(x, 1, z); drv.add(g); }
+      }
+      const poleM = dStd(0x8c949a, { roughness: .5, metalness: .4 }), lampPts = [];
+      for (let k = 0; k < 24; k++) { const z = 20 - k * 40; dBox(0.25, 10, 0.25, poleM, 0, 6, z); dBox(5.2, 0.2, 0.3, poleM, 0, 11, z); lampPts.push(-2.5, 10.8, z, 2.5, 10.8, z); }
+      // the overhead sign: where you're going and how long it'll take
+      const signC = document.createElement("canvas"); signC.width = 768; signC.height = 256;
+      const signT = new THREE.CanvasTexture(signC); signT.colorSpace = THREE.SRGBColorSpace; signT.anisotropy = 4;
+      const sign = new THREE.Mesh(new THREE.PlaneGeometry(13, 4.33), new THREE.MeshStandardMaterial({ map: signT, emissive: 0xffffff, emissiveMap: signT, emissiveIntensity: 0.05, roughness: .6 }));
+      sign.position.set(7.6, 10.2, -95); drv.add(sign);
+      dBox(13.4, 4.6, 0.3, dStd(0x6b7378, { metalness: .4, roughness: .5 }), 7.6, 10.2, -95.2);
+      for (const x of [-0.4, 15.4]) dBox(0.5, 10, 0.5, poleM, x, 6, -95.3);
+      dBox(16.4, 0.5, 0.5, poleM, 7.5, 12.6, -95.3);
+      W.driveSign = (dest, mins, note) => { const g = signC.getContext("2d"), w = 768, h = 256;
+        g.fillStyle = "#0f6b3a"; g.fillRect(0, 0, w, h); g.strokeStyle = "#ffffff"; g.lineWidth = 8; g.strokeRect(10, 10, w - 20, h - 20);
+        g.fillStyle = "#ffffff"; g.textBaseline = "middle"; g.font = "700 74px Arial, sans-serif"; g.textAlign = "left";
+        let f = 74; while (g.measureText(dest).width > w - 300 && f > 30) { f -= 4; g.font = `700 ${f}px Arial, sans-serif`; } g.fillText(dest, 40, 92);
+        g.font = "800 92px Arial, sans-serif"; g.textAlign = "right"; g.fillText(`${mins}`, w - 110, 92); g.font = "700 40px Arial, sans-serif"; g.fillText("min", w - 40, 106);
+        g.font = "600 40px Arial, sans-serif"; g.textAlign = "left"; g.fillStyle = note ? "#ffd84d" : "#d8f0e0"; g.fillText(note || "Drive safely", 40, 188);
+        signT.needsUpdate = true; };
+      W.driveSign("Logan Central", "--", "");
+      // traffic: cars in our three lanes heading away, and the other way across the median
+      const N = 90, carG = new THREE.BoxGeometry(1.9, 1.2, 4.4), cabG = new THREE.BoxGeometry(1.75, 0.75, 2.4);
+      const cars = new THREE.InstancedMesh(carG, dStd(0xffffff, { roughness: .35 }), N), cabs = new THREE.InstancedMesh(cabG, dStd(0x22303c, { roughness: .2 }), N);
+      const tailM = new THREE.MeshBasicMaterial({ color: 0xff2a2a }), headM = new THREE.MeshBasicMaterial({ color: 0xfff4d6 });
+      const tails = new THREE.InstancedMesh(new THREE.BoxGeometry(1.6, 0.22, 0.1), tailM, N), heads = new THREE.InstancedMesh(new THREE.BoxGeometry(1.6, 0.22, 0.1), headM, N);
+      const cols = [0xf2f2ee, 0xc0392b, 0x2f6fb0, 0x7f8c8d, 0x2c3e50, 0x16a085, 0xbdc3c7, 0xe67e22, 0x1e1e1e], cc = new THREE.Color();
+      const car = []; for (let i = 0; i < N; i++) { const away = i < N * 0.62; car.push({ away, lane: Math.floor(rnd(i + 911) * 3), z: 30 - rnd(i * 3 + 913) * 700, v: 0, col: cols[i % cols.length] }); cars.setColorAt(i, cc.setHex(car[i].col)); }
+      drv.add(cars, cabs, tails, heads);
+      // what's reported on the way: a crash with flashing lights, or roadworks with cones and an arrow board
+      const coneM = dStd(0xff7a1a), flashR = new THREE.MeshBasicMaterial({ color: 0xff2020 }), flashB = new THREE.MeshBasicMaterial({ color: 0x2060ff });
+      const crash = new THREE.Group(); crash.visible = false; drv.add(crash);
+      for (let k = 0; k < 8; k++) { const c = new THREE.Mesh(new THREE.ConeGeometry(0.35, 1, 10), coneM); c.position.set(13.6 - k * 0.6, 1.7, -230 + k * 3); crash.add(c); }
+      const pol = new THREE.Group(); pol.add(new THREE.Mesh(new THREE.BoxGeometry(2, 1.3, 4.6), dStd(0xf4f4f0))); const bar = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.25, 0.5), flashR); bar.position.y = 0.8; pol.add(bar);
+      pol.position.set(12.4, 1.85, -245); crash.add(pol); W.driveFlash = bar;
+      const wreck = new THREE.Mesh(new THREE.BoxGeometry(1.9, 1.2, 4.4), dStd(0x7a1f1f)); wreck.position.set(11.6, 1.8, -258); wreck.rotation.y = 0.5; crash.add(wreck);
+      const works = new THREE.Group(); works.visible = false; drv.add(works);
+      for (let k = 0; k < 10; k++) { const c = new THREE.Mesh(new THREE.ConeGeometry(0.35, 1, 10), coneM); c.position.set(3.4 + k * 0.5, 1.7, -160 - k * 4); works.add(c); }
+      const arrowT = dTex(128, 96, (g, w, h) => { g.fillStyle = "#111"; g.fillRect(0, 0, w, h); g.fillStyle = "#ffcc00"; for (let k = 0; k < 7; k++) { g.beginPath(); g.arc(20 + k * 14, 48, 5, 0, 7); g.fill(); } g.beginPath(); g.moveTo(112, 48); g.lineTo(96, 30); g.lineTo(96, 66); g.fill(); });
+      const arrow = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2), new THREE.MeshBasicMaterial({ map: arrowT })); arrow.position.set(3.4, 4, -150); works.add(arrow);
+      const ute = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.6, 3), dStd(0xf2c200)); ute.position.set(3.4, 1.9, -153); works.add(ute);
+      const lampG = new THREE.BufferGeometry(); lampG.setAttribute("position", new THREE.Float32BufferAttribute(lampPts, 3));
+      W.driveLights = new THREE.PointsMaterial({ color: 0xffd9a0, size: 0.9, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: true });
+      drv.add(new THREE.Points(lampG, W.driveLights));
+      // how busy: 0 empty road to 1 crawling (from the drive estimate and what's reported)
+      W.driveSet = c => {
+        const busy = c ? Math.max(0, Math.min(1, (c.est / Math.max(1, c.base) - 1.05) / 0.5 + (c.events.some(e => ["Crash", "Congestion"].includes(e.type)) ? 0.35 : 0))) : 0.3;
+        W.driveBusy = busy;
+        crash.visible = !!c?.events.some(e => e.type === "Crash" || e.type === "Hazard");
+        works.visible = !!c?.events.some(e => e.type === "Roadworks");
+        const note = !c ? "" : c.events.some(e => e.type === "Crash") ? "Crash ahead" : c.events.some(e => e.type === "Congestion") ? "Heavy traffic" : c.events.some(e => e.type === "Flooding") ? "Flooding reported" : c.events.some(e => e.type === "Roadworks") ? "Roadworks" : "";
+        W.driveSign(c?.toWork === false ? "Moorooka" : "Logan Central", c ? c.est : "--", note);
+      };
+      const m4 = new THREE.Object3D(), gone = new THREE.Matrix4().makeTranslation(0, -60, 0);
+      W.driveTick = (dt, lit, still) => {
+        const busy = W.driveBusy ?? 0.3, gapMin = 9 + (1 - busy) * 26, top = 26 - busy * 20, n = Math.round(30 + busy * (N - 30));
+        for (let i = 0; i < N; i++) {
+          const cr = car[i], on = i < n;
+          if (on && !still) {
+            // follow the car ahead in the same lane at a safe gap
+            let gap = 999; for (let j = 0; j < n; j++) { const o = car[j]; if (j === i || o.away !== cr.away || o.lane !== cr.lane) continue; const d = cr.away ? cr.z - o.z : o.z - cr.z; if (d > 0 && d < gap) gap = d; }
+            const want = gap < gapMin ? Math.max(0, top * (gap - 6) / gapMin) : top * (0.85 + (i % 5) * 0.05);
+            cr.v += (want - cr.v) * Math.min(1, dt * 1.5); cr.z += (cr.away ? -1 : 1) * cr.v * dt;
+            if (cr.away && cr.z < -700) cr.z = 60; if (!cr.away && cr.z > 60) cr.z = -700;
+            cr.brake = want < cr.v - 0.5 || cr.v < 3;
+          }
+          const x = (cr.away ? 1 : -1) * (7.6 + (cr.lane - 1) * 4.4), y = on ? 1.85 : -50;
+          m4.position.set(x, y, cr.z); m4.rotation.set(0, cr.away ? 0 : Math.PI, 0); m4.updateMatrix(); cars.setMatrixAt(i, m4.matrix);
+          m4.position.set(x, y + 0.95, cr.z + (cr.away ? 0.2 : -0.2)); m4.updateMatrix(); cabs.setMatrixAt(i, m4.matrix);
+          // tail lights face you on cars heading away; headlights on cars coming the other way
+          m4.position.set(x, y + 0.05, cr.z + (cr.away ? 2.25 : -2.25)); m4.updateMatrix();
+          tails.setMatrixAt(i, cr.away ? m4.matrix : gone); heads.setMatrixAt(i, cr.away ? gone : m4.matrix);
+        }
+        cars.instanceMatrix.needsUpdate = cabs.instanceMatrix.needsUpdate = tails.instanceMatrix.needsUpdate = heads.instanceMatrix.needsUpdate = true;
+        tailM.color.setRGB(1, 0.15 + 0.1 * lit, 0.15).multiplyScalar(0.7 + 0.3 * Math.max(lit, busy)); headM.color.setRGB(0.6 + 0.4 * lit, 0.6 + 0.4 * lit, 0.55 + 0.35 * lit);
+        W.driveLights.opacity = lit; sign.material.emissiveIntensity = 0.05 + 0.5 * lit;
+        if (W.driveFlash) W.driveFlash.material = (performance.now() / 350 | 0) % 2 ? flashR : flashB;
+      };
+    }
     // ---- Moorooka, its landmarks in one view (seen from a little higher up): the Beaudesert Road roundabout with cars going
     // round, "Little Africa" shops and Ethiopian restaurants up Beaudesert Road, the Magic Mile of Motors car yards with
     // bunting and pylon signs, Queenslanders and jacarandas, Toohey Forest on the ridge, the city far off ----
@@ -4917,6 +5033,7 @@ const handle = async (m, post) => {
     cl = bsMix(cl, bsMix(bsHex(0x0e1118), bsHex(0x6b7483), day), st.storm * 0.9); cs = bsMix(cs, bsMix(bsHex(0x05070b), bsHex(0x2c323d), day), st.storm * 0.9);
     const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (W.mooRing && !still && W.moo.visible) W.mooRing.rotation.y -= dt * 0.35;  // cars going round the roundabout
+    if (W.drive?.visible) W.driveTick(dt, lit, still);  // traffic on the motorway
     W.cloudU.uLit.value.fromArray(cl); W.cloudU.uShade.value.fromArray(cs); W.cloudU.uCover.value = st.cover; W.cloudU.uWind.value = -(0.25 + st.wind * 0.03) * (still ? 0.3 : 1); W.cloudU.uTime.value = t;
     W.rainU.uAmount.value = st.rain; W.rainU.uSlant.value = -(0.04 + st.wind * 0.006); W.rainU.uTime.value = t;
     W.waterU.uTime.value = t; W.waterU.uRain.value = st.rain; W.waterU.uNight.value = night;
@@ -5320,6 +5437,7 @@ const handle = async (m, post) => {
       ${c.events.length ? `<ul>${c.events.map(e => `<li><i class="${hot(e.type) ? "hot" : ""}">${esc(e.type === "Congestion" ? "Traffic" : e.type)}</i><span>${esc(e.road || "On your way")}${e.place ? `, ${esc(e.place)}` : ""}<small>${esc([e.what, e.impact, e.delay].filter(x => x && x !== e.type).join(" · "))}</small></span></li>`).join("")}</ul>${c.more ? `<p class="tr-ok">And ${c.more} more.</p>` : ""}`
         : `<p class="tr-ok">Nothing reported on your way right now.</p>`}
       <p class="tr-src">An estimate: OSRM drive time (OpenStreetMap) with the usual peak-hour slowdown. Incidents: QLDTraffic.</p>`;
+    if ($("bsDrive")) $("bsDrive").innerHTML = $("npTraffic").innerHTML;
   }
   // On the home page, under Listen: the drive at a glance.
   function driveLine(c) {
