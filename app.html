@@ -2035,9 +2035,10 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   }
   // Beta (Settings, App): an ABC story with its own video plays that video, muted, in place of the photo while Emma reads.
   // Only the ABC's own clips (fetcher.py abc_video): never YouTube, and the ABC has no ads.
+  const vidOK = i => !!i?.video?.url && /^https:\/\/mediacore-live-production\.akamaized\.net\//.test(i.video.url);
   function npVideo(i) {
     const v = $("npVid"); if (!v) return;
-    const url = S.beta && L.kind !== "story" && i?.video?.url && /^https:\/\/mediacore-live-production\.akamaized\.net\//.test(i.video.url) ? i.video.url : "";
+    const url = S.beta && L.kind !== "story" && vidOK(i) ? i.video.url : "";
     if (!url) { if (!v.hidden) { v.pause(); v.removeAttribute("src"); v.load(); v.hidden = true; } document.body.classList.remove("npvid"); return; }
     if (v.getAttribute("src") !== url) { v.src = url; }
     v.hidden = false; v.muted = true; document.body.classList.add("npvid");
@@ -3552,7 +3553,8 @@ const handle = async (m, post) => {
   }
   // Stop whatever's playing, but never the silent unlock clip from this tap, or iPhones refuse what comes next.
   // (The phone's own voice is only reset when it's talking: resetting it when it isn't can leave iPhones silent.)
-  function hush() { try { if (tts && (tts.speaking || tts.pending)) tts.cancel(); } catch {} try { if (!L.unlockP) aud.pause(); } catch {} }
+  function hush() { try { if (tts && (tts.speaking || tts.pending)) tts.cancel(); } catch {} try { if (!L.unlockP) aud.pause(); } catch {}
+    try { const v = $("npVid"); if (v && !v.muted) { v.pause(); v.onended = null; v.onerror = null; } } catch {} }
   function bindClip(tk, k) {
     aud.ontimeupdate = () => { if (!isSilent() && aud.currentTime > 0.15) L.heard = true; };
     aud.onended = () => { if (tk !== L.token) return; L.part++; updateBar(); speakNext(tk); };
@@ -3785,6 +3787,10 @@ const handle = async (m, post) => {
     }
     // The headline, then straight into the story (the publisher is already on screen, so it isn't read out).
     L.parts = [...pre, ...intro, { text: `${clean(i.title)}.`, para: -1, kind: "title" }];
+    // Beta: now and then (at most one story in four), a story with a short ABC video of its own is told by the video,
+    // sound on, instead of Emma. Only the ABC's own clips: no YouTube, no ads.
+    const vidTurn = S.beta && L.kind === "drive" && vidOK(i) && (i.video.dur || 0) >= 20 && (i.video.dur || 0) <= 150 && (L.lastVid == null || L.at - L.lastVid >= 4);
+    if (vidTurn) { L.lastVid = L.at; L.parts.push({ text: `Video from ${publisherOf(i.source)}`, para: -1, kind: "vid" }); }
     if (L.kind !== "story") { npStory(i); npActs(); }
     // Listen to the news: the full weather page shows straight away while the opening reads the weather, then steps aside.
     if (L.kind === "drive" && !L.opened) { L.opened = true; wxListenIntro(); wxListenSoon(); } else wxListenOff();
@@ -3795,7 +3801,7 @@ const handle = async (m, post) => {
     if (useAI() || usePre()) { if (useAI()) AI.skip(sid); dropClips(sid); }
     updatePlayer();
     speakNext(tk);  // starts at once with the headline, so phones treat it as part of the tap
-    const paras = await storyParas(i, L.kind === "drive" || (usePre() && !L.dev));
+    const paras = vidTurn ? [] : await storyParas(i, L.kind === "drive" || (usePre() && !L.dev));
     if (sid !== L.sid) return;
     paras.forEach(([p, n]) => L.parts.push(...chunks(p, n)));
     L.loading = false;
@@ -3920,9 +3926,29 @@ const handle = async (m, post) => {
   }
   const WELCOME_BACK = "Welcome back. Picking up where you left off.";  // voice.py records both
   const WELCOME_NEW = "Welcome back. Here's what's new.";
+  // A video part (beta): the story's own clip plays with its sound in the picture area, then Listen carries on.
+  function playVid(tk) {
+    const v = $("npVid"), i = findItem(L.queue[L.at]), k = L.part;
+    if (!v || !vidOK(i)) { L.part++; speakNext(tk); return; }
+    npPart(k);
+    const next = () => { if (tk !== L.token || L.part !== k) return; v.loop = true; v.muted = true; L.part++; updateBar(); speakNext(tk); };
+    if (v.getAttribute("src") !== i.video.url) v.src = i.video.url;
+    v.hidden = false; document.body.classList.add("npvid");
+    if (L.vidK !== L.at) { L.vidK = L.at; v.currentTime = 0; }  // a new video starts from the beginning; after a pause it carries on
+    v.loop = false; v.muted = false; v.onended = next; v.onerror = next;
+    v.play().then(() => { L.heard = true; }).catch(() => {
+      // The phone wouldn't play it with sound (some iPhones need a tap for that): Emma reads the story after all,
+      // with the clip playing quietly as the picture.
+      if (tk !== L.token || L.part !== k) return;
+      v.onended = null; v.onerror = null; v.loop = true; v.muted = true; v.play().catch(() => {});
+      storyParas(i, true).then(paras => { if (tk !== L.token || L.part !== k) return;
+        const add = []; paras.forEach(([p, n]) => add.push(...chunks(p, n))); L.parts.splice(k + 1, 0, ...add); L.part++; speakNext(tk); });
+    });
+  }
   function speakNext(tk) {
     if (tk !== L.token || !L.on || L.paused) return;
     const sp = L.parts[L.part];
+    if (sp?.kind === "vid") { playVid(tk); return; }
     if (sp?.silent) {
       const k = L.part; npPart(k);
       setTimeout(() => { if (tk === L.token && L.part === k) wxListenOn(); }, 1200);
