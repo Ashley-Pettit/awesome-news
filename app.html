@@ -5183,7 +5183,11 @@ const handle = async (m, post) => {
         const torso = new THREE.Mesh(new THREE.CylinderGeometry(.32, .27, .85, 8), std(shirts[k % shirts.length])); torso.position.set(0, 1.3, bend ? .25 : 0); torso.rotation.x = bend ? .6 : 0; p.add(torso);
         const head = new THREE.Mesh(new THREE.SphereGeometry(.22, 10, 8), std(skin[k % skin.length])); head.position.set(0, 1.92, bend ? .62 : 0); p.add(head);
         const hat = new THREE.Mesh(new THREE.CylinderGeometry(.3, .34, .14, 10), std(k % 3 ? 0xf6f4ee : 0x1f6b3a)); hat.position.set(0, 2.08, bend ? .64 : 0); p.add(hat);
-        p.traverse(o => { if (o.isMesh) o.castShadow = true; }); p.position.set(x, .3, z); p.rotation.y = ry; p.scale.setScalar(1.25); bowls.add(p); return p; };
+        p.traverse(o => { if (o.isMesh) o.castShadow = true; }); p.position.set(x, .3, z); p.rotation.y = ry; p.scale.setScalar(1.25); bowls.add(p);
+        // in the rain everyone runs for the verandah (those already on it stay put)
+        const n = bowlFolk.length, cover = z < -14 ? [x, z] : [Math.max(-30, Math.min(30, x)) + ((n % 3) - 1) * .9, -16.9 - (n % 2) * 1.1];
+        bowlFolk.push({ p, home: [x, z], ry, cover, ph: n }); return p; };
+      const bowlFolk = [];
       const bowlM = std(0x2b2b2b, { roughness: .35 }), bowlM2 = std(0x7a2e2e, { roughness: .35 }), jackM = std(0xf7f7f2, { roughness: .3 }), matM = std(0x22402c);
       const rinkPlay = (cx, cz, k) => { // a mat and bowler at one end, bowls clustered round the jack at the other
         box(.8, .04, 1.4, matM, cx, .32, cz + 15, null, false); person(cx, cz + 15.5, Math.PI, k, true);
@@ -5243,9 +5247,17 @@ const handle = async (m, post) => {
       for (let i = 0; i < 16; i++) { const h = 40 + brnd() * 60, b = new THREE.Mesh(new THREE.BoxGeometry(12, h, 12), cbdM); b.position.set(-420 + i * 15 + brnd() * 6, h / 2, -560); bowls.add(b); }
 
 
-      W.bowlsTick = (dt, lit, still) => {
+      W.bowlsTick = (dt, lit, still, rain = 0) => {
         glowMats.forEach(([mat, on, base]) => { mat.emissiveIntensity = (base || 0) + on * lit; });
-        if (still) return;
+        const wet = W.bowlsWet = rain > 0.25 ? true : rain < 0.12 ? false : !!W.bowlsWet;
+        const goTo = (p, tx, tz, sp, dt) => { const dx = tx - p.position.x, dz = tz - p.position.z, d = Math.hypot(dx, dz); if (d < 0.08) return true;
+        const m = Math.min(d, sp * dt); p.position.x += dx / d * m; p.position.z += dz / d * m; p.rotation.y = Math.atan2(dx, dz); return false; };
+        bowlFolk.forEach(f => { const [tx, tz] = wet ? f.cover : f.home;
+          if (still) { f.p.position.x = tx; f.p.position.z = tz; f.p.rotation.y = wet ? 0 : f.ry; return; }
+          const there = goTo(f.p, tx, tz, wet ? 7 : 2.2, dt);
+          f.ph += dt * (wet ? 15 : 8); f.p.position.y = .3 + (there ? 0 : Math.abs(Math.sin(f.ph)) * (wet ? .22 : .07));
+          if (there) f.p.rotation.y = wet ? 0 : f.ry; });
+        if (still || wet) return;  // no bowls in the rain
     rolls.forEach((r, i) => { r.t = ((r.t ?? i * .27) + dt * .12) % 1.15; const t = Math.min(1, r.t), e = 1 - Math.pow(1 - t, 2.2);
           r.roll.position.set(r.x0 + Math.sin(e * Math.PI) * r.sway, .52, r.z0 + (r.z1 - r.z0) * e); r.roll.rotation.x -= dt * (1 - t) * 6; });
       };
@@ -5377,6 +5389,57 @@ const handle = async (m, post) => {
     const cbd = mStd(0x8fa3bd, { roughness: .8 });
     for (let i = 0; i < 14; i++) { const h = 30 + rnd(i * 3 + 711) * 46, b = new THREE.Mesh(new THREE.BoxGeometry(9, h, 9), cbd); b.position.set(-170 + i * 10 + rnd(i * 5 + 711) * 4, h / 2, -460); moo.add(b);
       for (let k = 0; k < 5; k++) mooLights.push(b.position.x + (rnd(i * 7 + k) - 0.5) * 7, 4 + rnd(i * 11 + k) * (h - 4), -455.4); }
+    // People out and about: walking the Beaudesert Road footpaths, waiting at the roundabout, browsing under the awnings.
+    // When it rains they run in under the shop awnings and wait it out; when it clears they wander back out.
+    const mooFolk = [];
+    { const skin = [0x5b3a29, 0x8d5a3b, 0xc8946e, 0xe0b48f, 0x3d2618], tops = [0xe74c3c, 0x2f6fb0, 0xf1c40f, 0x16a085, 0xffffff, 0x8e44ad, 0xe67e22, 0x2c3e50],
+        bottoms = [0x2c3e50, 0x34495e, 0x6b4f3a, 0x1d2731, 0x7f8c8d];
+      const folk = (k, x, z, ry, walk) => { const p = new THREE.Group(), legs = [];
+        [-1, 1].forEach(sx => { const hip = new THREE.Group(); hip.position.set(sx * .13, .85, 0);
+          const l = new THREE.Mesh(new THREE.CylinderGeometry(.11, .09, .85, 6), mStd(bottoms[k % bottoms.length])); l.position.y = -.42; hip.add(l); p.add(hip); legs.push(hip); });
+        const body = new THREE.Mesh(new THREE.CylinderGeometry(.3, .25, .85, 8), mStd(tops[k % tops.length])); body.position.y = 1.27; p.add(body);
+        const head = new THREE.Mesh(new THREE.SphereGeometry(.2, 10, 8), mStd(skin[k % skin.length])); head.position.y = 1.87; p.add(head);
+        p.position.set(x, 1.26, z); p.rotation.y = ry; p.scale.setScalar(1.15); moo.add(p);
+        mooFolk.push({ p, legs, k, sd: Math.sign(x) || 1, home: [x, z], ry, walk, ph: k * 1.7 }); };
+      // walkers up and down both footpaths
+      for (let k = 0; k < 12; k++) { const sd = k % 2 ? 1 : -1; folk(k, sd * 5.75, RZ - 20 - rnd(k * 13 + 901) * 100, 0, { dir: rnd(k * 17 + 903) > .5 ? 1 : -1, speed: 1.1 + rnd(k * 19 + 905) * .6 }); }
+      // waiting at the roundabout, on the cross street's footpaths
+      [[-13, RZ + 6.4], [-17, RZ + 6.2], [-24, RZ - 6.3], [15, RZ + 6.3], [22, RZ - 6.4], [27, RZ + 6.2], [-30, RZ + 6.4]].forEach(([x, z], j) => folk(12 + j, x, z, z > RZ ? Math.PI : 0, null));
+      // browsing the shopfronts, already under cover
+      [[-8.4, RZ - 34], [8.4, RZ - 52], [-8.4, RZ - 77], [8.4, RZ - 96]].forEach(([x, z], j) => folk(20 + j, x, z, x > 0 ? -Math.PI / 2 : Math.PI / 2, null));
+    }
+    W.mooTick = (dt, rain, still) => {
+      const wet = rain > 0.25 ? true : rain < 0.12 ? false : !!W.mooWet;
+      if (wet !== !!W.mooWet) { W.mooWet = wet;  // just started or stopped: everyone picks where to go
+        let n = 0; mooFolk.forEach(f => { const z = f.p.position.z;
+          f.cover = Math.abs(f.home[0]) > 8 && Math.abs(f.home[0]) < 9 ? f.home : f.walk ? [f.sd * 8.35, Math.max(RZ - 135, Math.min(RZ - 19, z))] : [f.sd * 8.35, RZ - 19.5 - (n++ % 4) * 1.3];
+          f.back = !wet; }); }
+      const goTo = (p, tx, tz, sp, dt) => { const dx = tx - p.position.x, dz = tz - p.position.z, d = Math.hypot(dx, dz); if (d < 0.08) return true;
+        const m = Math.min(d, sp * dt); p.position.x += dx / d * m; p.position.z += dz / d * m; p.rotation.y = Math.atan2(dx, dz); return false; };
+      const face = f => f.sd > 0 ? -Math.PI / 2 : Math.PI / 2;  // under an awning, looking out at the rain
+      mooFolk.forEach(f => {
+        let moving = false, run = false;
+        if (wet) {
+          if (still) { f.p.position.x = f.cover[0]; f.p.position.z = f.cover[1]; f.p.rotation.y = face(f); }
+          else { moving = !goTo(f.p, f.cover[0], f.cover[1], 6.5, dt); run = moving; if (!moving) f.p.rotation.y = face(f); }
+        } else if (f.back) {  // out again: walkers step back to the kerb side and carry on, the rest go back to where they were
+          const tx = f.walk ? f.sd * 5.75 : f.home[0], tz = f.walk ? f.p.position.z : f.home[1];
+          if (still) { f.p.position.x = tx; f.p.position.z = tz; f.back = false; }
+          else if (goTo(f.p, tx, tz, 2, dt)) f.back = false; else moving = true;
+          if (!f.back && !f.walk) f.p.rotation.y = f.ry;
+        } else if (f.walk && !still) {
+          const w = f.walk; f.p.position.z += w.dir * w.speed * dt;
+          if (f.p.position.z > RZ - 18) w.dir = -1; if (f.p.position.z < RZ - 125) w.dir = 1;
+          f.p.rotation.y = w.dir > 0 ? 0 : Math.PI; moving = true;
+        }
+        if (still) return;
+        f.ph += dt * (run ? 15 : 7);
+        const sw = moving ? Math.sin(f.ph) * (run ? .95 : .45) : 0;
+        f.legs[0].rotation.x = sw; f.legs[1].rotation.x = -sw;
+        f.p.position.y = 1.26 + (moving ? Math.abs(Math.sin(f.ph)) * (run ? .2 : .05) : 0);
+        f.p.children[2].rotation.x = run ? .3 : 0;  // leaning into the run
+      });
+    };
     // street lights and the car yard floodlights
     for (let z = RZ - 20; z > RZ - 140; z -= 24) [-1, 1].forEach(sd => { mBox(0.18, 6, 0.18, awnPlain, sd * 5.6, 4, z); mooLights.push(sd * 5.0, 6.9, z); });
     for (let r = 0; r < 6; r++) mooLights.push(-34, 8.2, -44 - r * 13, -92, 8.2, -44 - r * 13, -150, 8.2, -44 - r * 13);
@@ -5494,7 +5557,8 @@ const handle = async (m, post) => {
     if (W.mooRing && !still && W.moo.visible) W.mooRing.rotation.y -= dt * 0.35;  // cars going round the roundabout
     if (W.drive?.visible) W.driveTick(dt, lit, still);  // traffic on the motorway
     if (W.driveInv?.visible) W.driveInvTick(dt, lit, still);  // traffic on the road into Inverloch
-    if (W.mooBowls?.visible) W.bowlsTick(dt, lit, still);  // bowls rolling down the rinks, lights on at night
+    if (W.mooBowls?.visible) W.bowlsTick(dt, lit, still, st.rain);
+    if (W.moo?.visible && W.mooTick) W.mooTick(dt, st.rain, still);  // people run for cover when it rains  // bowls rolling down the rinks, lights on at night
     W.cloudU.uLit.value.fromArray(cl); W.cloudU.uShade.value.fromArray(cs); W.cloudU.uCover.value = st.cover; W.cloudU.uWind.value = -(0.25 + st.wind * 0.03) * (still ? 0.3 : 1); W.cloudU.uTime.value = t;
     W.rainU.uAmount.value = st.rain; W.rainU.uSlant.value = -(0.04 + st.wind * 0.006); W.rainU.uTime.value = t;
     W.waterU.uTime.value = t; W.waterU.uRain.value = st.rain; W.waterU.uNight.value = night;
