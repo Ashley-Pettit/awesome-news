@@ -1596,7 +1596,11 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   }
 
   const rawHash = location.hash.slice(1);
-  let pendingStory = rawHash.startsWith("story=") ? decodeURIComponent(rawHash.slice(6)) : "";  // link from the home screen widget
+  // A link straight to a story: from the home screen widget (#story=ID) or a shared link (#story=ID&u=…&t=…&s=…, which
+  // carries the story's link, title and outlet so it still opens if it has dropped out of today's news).
+  const linkQ = rawHash.startsWith("story=") ? new URLSearchParams(rawHash) : null;
+  let pendingStory = linkQ?.get("story") || "";
+  const sharedStory = linkQ && /^https?:\/\//.test(linkQ.get("u") || "") ? { id: pendingStory, url: linkQ.get("u"), title: linkQ.get("t") || "A shared story", source: linkQ.get("s") || "", summary: "", published: !isNaN(Date.parse(linkQ.get("d") || "")) ? linkQ.get("d") : new Date().toISOString() } : null;
   let pendingTV = rawHash === "tv";  // link from the Claude copy's TV button
   const hash = pendingStory || pendingTV ? "" : rawHash;
   const state = {
@@ -1843,7 +1847,18 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     return out.sort((a, b) => b.published.localeCompare(a.published));
   }
   const ARCH = { items: [], byId: new Map(), at: "", loading: null };
-  const findItem = id => everything().find(i => i.id === id) || ARCH.byId.get(id) || state.saved.find(i => i.id === id);
+  const findItem = id => everything().find(i => i.id === id) || ARCH.byId.get(id) || state.saved.find(i => i.id === id) || (sharedStory?.id === id ? sharedStory : null);
+  // Share a story: a link that opens it right here in Awesome News (the public site), for anyone.
+  const storyLink = i => `${PUBLIC_URL}#story=${encodeURIComponent(i.id)}&u=${encodeURIComponent(i.url)}&t=${encodeURIComponent(i.title).slice(0, 300)}&s=${encodeURIComponent(i.source || "")}&d=${encodeURIComponent(i.published || "")}`;
+  async function shareStory(i) {
+    if (!i) return;
+    const url = storyLink(i), text = `${i.title} (on ${APP_NAME})`;
+    if (navigator.share) { try { await navigator.share({ title: i.title, text, url }); return; } catch (e) { if (e && e.name === "AbortError") return; } }
+    try { await navigator.clipboard.writeText(url); toast("Link copied. It opens this story in Awesome News."); }
+    catch {  // older browsers: copy through a hidden text box
+      const ta = document.createElement("textarea"); ta.value = url; ta.setAttribute("readonly", ""); ta.style.cssText = "position:fixed;opacity:0"; document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); toast("Link copied. It opens this story in Awesome News."); } catch { toast("Couldn't copy the link here"); } ta.remove(); }
+  }
 
   // For you: the freshest few from each tab you've switched on, taken in turns
   // so no single topic floods the top. Stories matching your topics go first.
@@ -2872,7 +2887,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     $("reader").style.setProperty("--rc", secColour(i));
     $("rProg").style.width = "0";
     $("rSave").setAttribute("aria-pressed", String(isSaved(id)));
-    $("rShare").hidden = !(state.mode === "static" && navigator.share);
+    $("rShare").hidden = false;
     const pub = publisherOf(i.source);
     // Under the link to the original: a small "Developer?" for people who work on the app (opens the passphrase in Settings).
     const dev = state.mode === "static" && state.status?.vault && !vaultKey ? `<button class="devlink" type="button" data-dev-unlock>Developer?</button>` : "";
@@ -4217,7 +4232,7 @@ const handle = async (m, post) => {
     if (t.closest("#copyLink")) { copyLink(); return; }
     if (t.closest("#shareApp")) { navigator.share({ title: APP_NAME, text: "News that's all about you and what you're interested in. Customise your feed, full articles, TV and listen modes, and less negative news if you like.", url: shareUrl() }).catch(() => {}); return; }
     if (t.closest("#installBtn") && installEvent) { installEvent.prompt(); installEvent.userChoice.finally(() => { installEvent = null; renderSettings(); }); return; }
-    if (t.closest("#rShare")) { const i = findItem(state.readerId); if (i) navigator.share({ title: i.title, url: i.url }).catch(() => {}); return; }
+    if (t.closest("#rShare")) { shareStory(findItem(state.readerId)); return; }
     const sv = t.closest("[data-save]");
     if (sv) { toggleSave(sv.dataset.save); if (!openSheet) render(true); else sv.setAttribute("aria-pressed", String(isSaved(sv.dataset.save))); return; }
     const open = t.closest("[data-open]");
@@ -6427,7 +6442,7 @@ const handle = async (m, post) => {
       else if (state.refreshing && changed) finishRefresh(true);
       bgRefresh();
       if (!openSheet) render(true);
-      if (pendingStory) { const id = pendingStory; pendingStory = ""; history.replaceState(null, "", location.pathname); if (findItem(id)) openReader(id); }
+      if (pendingStory) { const id = pendingStory; pendingStory = ""; history.replaceState(null, "", location.pathname); if (findItem(id)) openReader(id); else toast("That story isn't in the news here any more"); }
       if (pendingTV) { pendingTV = false; try { history.replaceState(null, "", location.pathname); } catch {} openTV(); }
       afterPics("offline", saveOffline);
       if (!state.wx) loadWeather();
