@@ -279,6 +279,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
 /* Beta: while listening, steer things: more like this, read along, save; and what's up next */
 .np-acts { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
 .np-acts[hidden] { display: none; }
+.np-act[hidden] { display: none; }
 .np-act { display: inline-flex; align-items: center; gap: 6px; padding: 8px 13px; border-radius: 999px; font: inherit; font-size: 0.8rem; font-weight: 700; color: #ffffff;
   background: rgba(255, 255, 255, 0.12); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14); transition: background-color 0.2s ease, transform 0.15s ease; }
 .np-act:active { transform: scale(0.95); }
@@ -1223,6 +1224,8 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
       <button type="button" class="np-act" id="npLike" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span>More like this</span></button>
       <button type="button" class="np-act" id="npRead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 11h16M4 16h10"/></svg><span>Read along</span></button>
       <button type="button" class="np-act" id="npSave" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11a1 1 0 0 1 1 1V20l-6.5-4-6.5 4V4.5a1 1 0 0 1 1-1z"/></svg><span>Save</span></button>
+      <button type="button" class="np-act" id="npGoWx" aria-label="Back to the weather"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18.5h10.3a4 4 0 0 0 .7-7.94A5.6 5.6 0 0 0 7.2 9.3 4.6 4.6 0 0 0 7 18.5z"/></svg><span>Weather</span></button>
+      <button type="button" class="np-act" id="npGoTr" aria-label="Back to your drive" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17h14M6.5 17l1.6-5.2A2 2 0 0 1 10 10.4h4a2 2 0 0 1 1.9 1.4L17.5 17"/><circle cx="8" cy="17.5" r="1.6"/><circle cx="16" cy="17.5" r="1.6"/><path d="M12 3v3M8 5l1 2M16 5l-1 2"/></svg><span>Traffic</span></button>
     </div>
     <div class="np-ctl">
       <button type="button" class="np-btn sm" id="npPrev" aria-label="Previous story"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 5.5v13l-9-6.5zM5 5h3v14H5z"/></svg></button>
@@ -1949,7 +1952,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     // Straight after the weather: the headlines, so you can jump to one (and a tip about Settings).
     if (p.kind !== "open" && p.kind !== "wk" && L.kind === "drive" && L.opened && !L.listShown) {
       L.listShown = true;
-      $("npCust").hidden = false; $("npWk").hidden = !state.wx;  // from here on: a small "Customise" pill that opens Settings (shown, not read out)
+      $("npCust").hidden = false; $("npWk").hidden = !state.wx; $("npGoTr").hidden = !commuteSet(); $("npGoWx").hidden = !state.wx;  // from here on: a small "Customise" pill that opens Settings (shown, not read out)
       // (beta: the headlines list opens from the "1 of 28" button, not by itself)
     }
     if (p.kind === "cue") {
@@ -3622,6 +3625,26 @@ const handle = async (m, post) => {
     return out;
   }
   async function preHas(text) { if (!PRE) return false; const t = PRE.c[await sha16(`${PRE.v}|${text}`)]; return t === 1; }
+  // From the news, back to the weather or your drive: they play again, then the story carries on from the bit it was on.
+  async function replaySeg(which) {
+    const k = L.part, cur = L.parts[k];
+    if (!L.on || L.kind !== "drive" || !cur || ["open", "warn", "traffic", "wk"].includes(cur.kind)) return;
+    let parts = [];
+    if (which === "weather") {
+      if (!state.wx) { toast("The weather isn't available right now"); return; }
+      const t = usePre() ? preOpening() : "";
+      parts = [t ? { text: t, para: -1, kind: "open" } : { text: driveOpening(), para: -1, kind: "open", silent: usePre() }, ...warnParts()];
+    } else {
+      const c = await Promise.race([commuteNow(), new Promise(r => setTimeout(r, 4000))]);
+      if (!c) { toast("Your drive isn't available right now"); return; }
+      L.commute = c; parts = trafficParts();
+    }
+    if (!L.on || L.part !== k || !parts.length) return;
+    const tk = ++L.token; hush(); L.paused = false; L.sid++;
+    L.parts = [...L.parts.slice(0, k), ...parts, ...L.parts.slice(k)]; L.part = k;
+    if (which === "weather") { wxListenIntro(); wxListenOn(); }
+    updatePlayer(); armDog(); speakNext(tk);
+  }
   async function weekBrief() {
     const k = L.part, cur = L.parts[k];
     if (!L.on || L.kind !== "drive" || !cur || cur.kind === "wk") return;
@@ -3776,6 +3799,7 @@ const handle = async (m, post) => {
     const id = L.queue[L.at], on = L.kind === "drive" && !!id;
     $("npActs").hidden = !on;
     if (!on) return;
+    $("npGoWx").hidden = !state.wx; $("npGoTr").hidden = !commuteSet();
     $("npLike").setAttribute("aria-pressed", "false");
     $("npSave").setAttribute("aria-pressed", String(isSaved(id)));
     npUpNext();
@@ -4034,6 +4058,8 @@ const handle = async (m, post) => {
     if (t.closest("#npPrev")) { prevStory(); return; }
     if (t.closest("#npLike")) { likeThis(); return; }
     if (t.closest("#npRead")) { readAlong(); return; }
+    if (t.closest("#npGoWx")) { replaySeg("weather"); return; }
+    if (t.closest("#npGoTr")) { replaySeg("traffic"); return; }
     if (t.closest("#npSave")) { const id = L.queue[L.at]; if (id) { toggleSave(id); $("npSave").setAttribute("aria-pressed", String(isSaved(id))); toast(isSaved(id) ? "Saved for later" : "Removed from saved"); } return; }
     if (t.closest("#npUpNext")) { skipListen(); return; }
     if (t.closest("#npWk")) { weekBrief(); return; }
@@ -5611,7 +5637,7 @@ const handle = async (m, post) => {
   function trafficParts() {
     const c = L.commute; if (!c) return [];
     const n = say5(c.est), at = QUARTER[CM().leave];
-    const parts = [c.toWork ? "Now, your drive to work." : "Now, your drive home.",
+    const parts = ["Onto traffic.",
       c.planned && at ? `Leaving at ${at}, allow about ${n} minutes.` : `Leaving now, allow about ${n} minutes.`];
     const by = t => c.events.filter(e => e.type === t);
     if (!c.events.length) parts.push("Nothing's been reported on your way.");
