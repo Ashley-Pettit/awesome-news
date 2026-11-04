@@ -888,6 +888,7 @@ body.wxdrive #weather .bs-now, body.wxdrive #weather .bs-rain, body.wxdrive #wea
 .dv-ok { display: flex; align-items: center; gap: 8px; font-weight: 650; }
 .dv-ok svg { width: 20px; height: 20px; color: #5bd38a; flex: none; }
 .dv-src { margin: 0; font-size: 0.68rem; color: var(--bs-faint); }
+.dv-panel[hidden] { display: none; }
 @media (min-width: 900px) { .dv-panel { align-self: flex-start; } }
 #bsGl { transition: filter 1s ease, transform 1s ease; }
 body.wxintro #weather, body.wxreveal #weather { z-index: 54; }
@@ -4906,7 +4907,8 @@ const handle = async (m, post) => {
         crash.visible = !!c?.events.some(e => e.type === "Crash" || e.type === "Hazard");
         works.visible = !!c?.events.some(e => e.type === "Roadworks");
         const note = !c ? "" : c.events.some(e => e.type === "Crash") ? "Crash ahead" : c.events.some(e => e.type === "Congestion") ? "Heavy traffic" : c.events.some(e => e.type === "Flooding") ? "Flooding reported" : c.events.some(e => e.type === "Roadworks") ? "Roadworks" : "";
-        W.driveSign(c?.toWork === false ? "Moorooka" : "Logan Central", c ? c.est : "--", note);
+        const cc = CM();
+        W.driveSign(c?.toWork === false ? cc.home?.sign || "Moorooka" : cc.work?.sign || "Logan Central", c ? c.est : "--", note);
       };
       const m4 = new THREE.Object3D(), gone = new THREE.Matrix4().makeTranslation(0, -60, 0);
       W.driveTick = (dt, lit, still) => {
@@ -5618,10 +5620,16 @@ const handle = async (m, post) => {
   // (no street address in the public code), which makes no real difference to a 20 km drive time.
   const ASH_DRIVE = { home: { q: "Moorooka", label: "Moorooka", lat: -27.532, lon: 153.024 },
     work: { q: "Logan City Council, 150 Wembley Road, Logan Central", label: "Logan City Council", lat: -27.6388, lon: 153.1095 }, leave: "07:45" };
+  // Rod: the middle of Norman Road, Inverloch, into Inverloch's town centre.
+  const ROD_DRIVE = { home: { q: "Norman Road, Inverloch", label: "Norman Road", sign: "Norman Rd", lat: -38.64062, lon: 145.71191 },
+    work: { q: "Inverloch", label: "Inverloch town centre", sign: "Inverloch", lat: -38.63316, lon: 145.72795 }, leave: "07:45", toName: "Drive into Inverloch" };
   const isAsh = () => /^ash(ley)?$/i.test((S.name || "").trim());
-  const commuteOK = () => !!DEFAULT_COMMUTE || !!A.unlocked || isAsh();
+  const isRod = () => /^rod(ney)?$/i.test((S.name || "").trim());
+  const commuteOK = () => !!DEFAULT_COMMUTE || !!A.unlocked || isAsh() || isRod();
+  // What the drive is called: "Drive to work" (or Rod's "Drive into Inverloch"), "Drive home".
+  const driveName = c => c.toWork ? (CM().toName || "Drive to work") : "Drive home";
   const CM = () => { if (!commuteOK()) return {}; let v = null; try { v = store.get("brief.commute", null); } catch {}
-    return Object.assign({ leave: "07:45" }, DEFAULT_COMMUTE || (isAsh() ? ASH_DRIVE : {}), v && typeof v === "object" ? v : {}); };
+    return Object.assign({ leave: "07:45" }, DEFAULT_COMMUTE || (isAsh() ? ASH_DRIVE : isRod() ? ROD_DRIVE : {}), v && typeof v === "object" ? v : {}); };
   const commuteSet = () => { const c = CM(); return !!(c.home?.lat && c.work?.lat); };
   async function geocode(q) {
     const u = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=au&viewbox=152.4,-26.6,153.6,-28.3&q=" + encodeURIComponent(q);
@@ -5652,6 +5660,7 @@ const handle = async (m, post) => {
   const pointsOf = g => !g ? [] : g.type === "Point" ? [g.coordinates] : g.type === "MultiPoint" || g.type === "LineString" ? g.coordinates
     : g.type === "MultiLineString" || g.type === "Polygon" ? g.coordinates.flat() : g.type === "GeometryCollection" ? g.geometries.flatMap(pointsOf) : [];
   let COMMUTE_CACHE = null;
+  const inQld = p => p.lat > -29.2 && p.lon > 137.9;  // QLDTraffic's road reports only cover Queensland
   const hm = d => new Intl.DateTimeFormat("en-AU", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: TZ }).format(d).replace(/\s/g, "").toLowerCase();
   // How much slower than an empty road, by when you leave (weekday peaks in Brisbane's south and Logan).
   function peakFactor(d) {
@@ -5684,7 +5693,7 @@ const handle = async (m, post) => {
     try {
       const [r, evs] = await Promise.all([
         withTimeout(fetch(`https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${b.lon},${b.lat}?overview=full&geometries=geojson`).then(x => x.json()), 10000),
-        trafficEvents().catch(() => null)]);
+        inQld(a) && inQld(b) ? trafficEvents().catch(() => null) : Promise.resolve(null)]);
       const rt = r?.routes?.[0]; if (!rt) return null;
       const line = rt.geometry.coordinates, now = Date.now();
       const near = (evs || []).filter(f => {
@@ -5701,7 +5710,7 @@ const handle = async (m, post) => {
       const base = rt.duration / 60, extra = Math.min(25, near.reduce((t, e) => t + ({ Crash: 8, Congestion: 6, Flooding: 10, Hazard: 2, Roadworks: 3, "Special event": 3 })[e.type] || 0, 0));
       const est = Math.round(base * peakFactor(leave) + extra), arrive = new Date(leave.getTime() + est * 60000);
       const v = { toWork, base: Math.round(base), est, extra, planned, leaveAt: hm(leave), arriveAt: hm(arrive), km: Math.round(rt.distance / 100) / 10,
-        from: a.label, to: b.label, events: near.slice(0, 8), more: Math.max(0, near.length - 8) };
+        from: a.label, to: b.label, events: near.slice(0, 8), more: Math.max(0, near.length - 8), noInc: !(inQld(a) && inQld(b)) };
       COMMUTE_CACHE = { key, at: Date.now(), v };
       return v;
     } catch { return null; }
@@ -5725,7 +5734,8 @@ const handle = async (m, post) => {
     const parts = ["Onto traffic.",
       c.planned && at ? `Leaving at ${at}, allow about ${n} minutes.` : `Leaving now, allow about ${n} minutes.`];
     const by = t => c.events.filter(e => e.type === t);
-    if (!c.events.length) parts.push("Nothing's been reported on your way.");
+    if (c.noInc) {}  // no road reports outside Queensland: just the time
+    else if (!c.events.length) parts.push("Nothing's been reported on your way.");
     else {
       for (const t of ORDER) {
         const e = by(t); if (!e.length) continue;
@@ -5743,10 +5753,10 @@ const handle = async (m, post) => {
   }
   function trafficCard(c) {
     const hot = t => t === "Crash" || t === "Flooding" || t === "Congestion";
-    $("npTraffic").innerHTML = `<div class="tr-top"><b>${c.toWork ? "Your drive to work" : "Your drive home"}</b><span>About ${c.est} min · ${c.km} km</span></div>
+    $("npTraffic").innerHTML = `<div class="tr-top"><b>Your ${driveName(c).replace(/^Drive/, "drive")}</b><span>About ${c.est} min · ${c.km} km</span></div>
       <p class="tr-ok">Leave ${c.leaveAt}, there about ${c.arriveAt}. ${c.base} min with empty roads${c.extra ? `, plus about ${c.extra} for what's reported` : ""}.</p>
       ${c.events.length ? `<ul>${c.events.map(e => `<li><i class="${hot(e.type) ? "hot" : ""}">${esc(e.type === "Congestion" ? "Traffic" : e.type)}</i><span>${esc(e.road || "On your way")}${e.place ? `, ${esc(e.place)}` : ""}<small>${esc([e.what, e.impact, e.delay].filter(x => x && x !== e.type).join(" · "))}</small></span></li>`).join("")}</ul>${c.more ? `<p class="tr-ok">And ${c.more} more.</p>` : ""}`
-        : `<p class="tr-ok">Nothing reported on your way right now.</p>`}`;
+        : c.noInc ? "" : `<p class="tr-ok">Nothing reported on your way right now.</p>`}`;
     driveHUD(c);
   }
   // The 3D drive view's words, laid out like the weather page.
@@ -5762,20 +5772,20 @@ const handle = async (m, post) => {
     const delay = Math.max(0, c.est - c.base);
     const tag = t => t === "Crash" || t === "Flooding" ? "hot" : t === "Congestion" || t === "Hazard" ? "warm" : "";
     box.innerHTML = `
-      <div class="dv-top"><h1>${c.toWork ? "Drive to work" : "Drive home"}</h1><p>${esc(c.from || "Home")} to ${esc(c.to || "Work")}</p></div>
+      <div class="dv-top"><h1>${esc(driveName(c))}</h1><p>${esc(c.from || "Home")} to ${esc(c.to || "Work")}</p></div>
       <section class="dv-now">
         <div class="bs-when">Leave ${esc(c.leaveAt)}${c.planned ? "" : " (now)"}</div>
         <div class="dv-big"><div class="bs-temp" aria-label="About ${c.est} minutes">${c.est}<sup>min</sup></div>
           <div class="bs-hilo"><span>Arrive <b>${esc(c.arriveAt)}</b></span><span>Empty roads <b>${c.base} min</b></span></div></div>
         <div class="bs-what dv-what" style="--dv-c:${col}"><i aria-hidden="true"></i>${esc(what)}</div>
-        <div class="bs-chips"><span class="bs-chip">Distance <b>${c.km} km</b></span><span class="bs-chip">Traffic adds <b>${delay} min</b></span><span class="bs-chip">Reported <b>${c.events.length + (c.more || 0)}</b></span></div>
+        <div class="bs-chips"><span class="bs-chip">Distance <b>${c.km} km</b></span><span class="bs-chip">Traffic adds <b>${delay} min</b></span>${c.noInc ? "" : `<span class="bs-chip">Reported <b>${c.events.length + (c.more || 0)}</b></span>`}</div>
       </section>
       <aside class="dv-meter" aria-label="Traffic: ${level}">
         <div class="br-top"><b>Traffic</b><span class="pc">${level}</span></div>
         <div class="dv-bars">${Array.from({ length: n }, (_, k) => `<i class="${k < on ? "on" : ""}" style="--c:${barCol(k)}"></i>`).join("")}</div>
         <div class="dv-scale"><span>Light</span><span>Moderate</span><span>Heavy</span></div>
       </aside>
-      <section class="dv-panel">
+      <section class="dv-panel"${c.noInc ? " hidden" : ""}>
         <h2>On your way</h2>
         ${c.events.length ? `<ul>${c.events.map(e => `<li><i class="${tag(e.type)}">${esc(e.type === "Congestion" ? "Traffic" : e.type)}</i><span>${esc(e.road || "On your way")}${e.place ? `, ${esc(e.place)}` : ""}<small>${esc([e.what, e.impact, e.delay].filter(x => x && x !== e.type).join(" · "))}</small></span></li>`).join("")}</ul>${c.more ? `<p class="dv-src">And ${c.more} more.</p>` : ""}`
           : `<div class="dv-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.6 2.6L16 9.5"/></svg>Nothing reported on your way</div>`}
@@ -5787,7 +5797,7 @@ const handle = async (m, post) => {
     box.hidden = !c;
     if (!c) return;
     const hot = c.events.filter(e => ["Crash", "Congestion", "Flooding"].includes(e.type)).length;
-    box.innerHTML = `<div class="lc-t"><b>${c.toWork ? "Drive to work" : "Drive home"} · about ${c.est} min</b><small>Leave ${c.leaveAt}, there about ${c.arriveAt}. ${c.events.length ? `${c.events.length} thing${c.events.length > 1 ? "s" : ""} reported on the way${hot ? ", allow extra time" : ""}.` : "Nothing reported on the way."}</small></div>`;
+    box.innerHTML = `<div class="lc-t"><b>${esc(driveName(c))} · about ${c.est} min</b><small>Leave ${c.leaveAt}, there about ${c.arriveAt}. ${c.noInc ? "" : c.events.length ? `${c.events.length} thing${c.events.length > 1 ? "s" : ""} reported on the way${hot ? ", allow extra time" : ""}.` : "Nothing reported on the way."}</small></div>`;
   }
   function commuteHTML() {
     const c = CM(), row = (k, label, ph) => `<div class="cm-row"><label class="lbl" for="cm-${k}">${label}</label>
@@ -5796,7 +5806,7 @@ const handle = async (m, post) => {
     return `<div class="group"><h2>Your drive</h2><div class="card">
       ${row("home", "Home", "Address or suburb")}${row("work", "Work", "Address or suburb")}
       <div class="cm-row"><label class="lbl" for="cm-leave">Leave for work at</label><form class="add" data-commute-leave><input type="time" id="cm-leave" value="${esc(c.leave || "07:45")}"><button type="submit">Save</button></form></div>
-    </div><p class="hint">Weekdays, after the weather, Listen tells you about your drive: to work in the morning (leaving at this time), home after midday. Shows when your name in Settings is Ash, or on a phone unlocked with the passphrase. Addresses you enter stay on this phone.</p></div>`;
+    </div><p class="hint">Weekdays, after the weather, Listen tells you about your drive: to work in the morning (leaving at this time), home after midday. Shows when your name in Settings is Ash or Rod, or on a phone unlocked with the passphrase. Addresses you enter stay on this phone.</p></div>`;
   }
   const saveCommute = c => { const { home, work, leave } = c; store.set("brief.commute", { home, work, leave }); COMMUTE_CACHE = null; };
   document.addEventListener("submit", async e => {
