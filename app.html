@@ -2003,6 +2003,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     const bw = $("bsWarn"); if (bw) { bw.hidden = p.kind !== "warn"; if (p.kind === "warn") bw.innerHTML = `<b>Weather warning</b>${esc(p.text.replace(/^Weather warning\.\s*/, ""))}`; }
     // Once a story itself is being read (not just its headline), it counts as heard.
     if (L.kind === "drive" && !["open", "cue", "title", "wk", "warn", "traffic", "sfx"].includes(p.kind)) heardAdd(L.queue[L.at]);
+    if (L.kind === "drive" && p.kind === "title") skimAdd(L.queue[L.at]);  // heard the headline: goes to the back next time
     // Straight after the weather: the headlines, so you can jump to one (and a tip about Settings).
     if (p.kind !== "open" && p.kind !== "wk" && L.kind === "drive" && L.opened && !L.listShown) {
       L.listShown = true;
@@ -3621,11 +3622,13 @@ const handle = async (m, post) => {
       let pool = base;
       if (r) { pool = [...base.filter(id => !r.queue.includes(id)), ...r.queue]; L.secOf = new Map([...(L.secOf || []), ...r.sec]); resumed = true; }
       const fresh = [], seen = seenLike();
-      for (const id of pool) if ((anew || !seen(id)) && !fresh.some(k => k === id || sameStory(k, id))) fresh.push(id);
+      // Even "From the start" (anew) puts what you've already read, heard, or heard the headline of, at the back.
+      const keep = r?.queue[0];  // back within the hour: the story you were part way through isn't sent to the back
+      for (const id of pool) if ((id === keep || !seen(id)) && !fresh.some(k => k === id || sameStory(k, id))) fresh.push(id);
       topUp(fresh, 24);
-      const old = []; for (const id of pool) if (!fresh.includes(id) && !old.some(k => k === id || sameStory(k, id))) old.push(id);
+      const old = []; for (const id of pool) if (!fresh.some(k => k === id || sameStory(k, id)) && !old.some(k => k === id || sameStory(k, id))) old.push(id);
       if (!fresh.length && !old.length) { toast("You've heard all the news for now. New stories come with the next update."); npClose(); return; }
-      if (!fresh.length) toast("Nothing new since last time, so here's what you've already heard");
+      if (!fresh.length && !anew) toast("Nothing new since last time, so here's what you've already heard");
       L.welcome = r && fresh.length && !r.queue.includes(fresh[0]) ? WELCOME_NEW : WELCOME_BACK;
       L.queue = [...fresh, ...old];
     }
@@ -3759,11 +3762,20 @@ const handle = async (m, post) => {
   const heardish = id => HEARD.has(id) || siblings(id).some(x => HEARD.has(x));
   // Heard in Listen, or read in the app.
   const seenish = id => heardish(id) || state.read.has(id) || siblings(id).some(x => state.read.has(x)) || readByTitle(id);
+  // Headlines you've heard in Listen (even if you skipped the story), kept 3 days: they go to the back next time.
+  const SKIM_AT = (() => { const v = store.get("brief.skim", null); return v && typeof v === "object" && !Array.isArray(v) ? v : {}; })();
+  function skimAdd(id) {
+    if (!id || SKIM_AT[id]) return;
+    SKIM_AT[id] = Date.now();
+    for (const k of Object.keys(SKIM_AT)) if (Date.now() - SKIM_AT[k] > 3 * 864e5) delete SKIM_AT[k];
+    store.set("brief.skim", SKIM_AT);
+  }
   // Also the same story from another outlet, worded differently (you read 7NEWS's, Listen has ABC's): checked
   // against the stories you've read or heard that are still in today's news.
   function seenLike() {
-    const mine = [...new Set([...[...state.read].slice(-400), ...HEARD])].filter(id => findItem(id));
-    return id => seenish(id) || mine.some(r => sameStory(r, id));
+    const skim = Object.keys(SKIM_AT).filter(id => Date.now() - SKIM_AT[id] < 3 * 864e5);
+    const mine = [...new Set([...[...state.read].slice(-400), ...HEARD, ...skim])].filter(id => findItem(id));
+    return id => seenish(id) || id in SKIM_AT || mine.some(r => sameStory(r, id));
   }
   // Beta: more stories when the list runs low: anything Emma has read that hasn't been heard, newest first.
   function topUp(queue, want) {
