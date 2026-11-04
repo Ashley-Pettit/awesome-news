@@ -3035,11 +3035,8 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
         <input type="password" id="adminPass" placeholder="Type the passphrase" autocomplete="current-password" required>
         <button type="submit" class="unlockbtn">Unlock</button>
       </form>${keepNote()}</div><p class="hint">The passphrase is saved on this device only.</p></div>`;
-    const gh = store.get("brief.ghToken", "");
     return `<div class="group"><h2>Full articles</h2><div class="card">
       ${toggle("data-admin", "full", A.full, "Full articles", A.full ? "On. Every story opens in full right here." : "Off. Stories show the publisher's preview.")}
-      <div class="field col"><div class="top"><span class="lbl">Update when I open the app<span class="sub">${gh ? (A.ghBad ? "GitHub key isn't working. Paste a new one." : "On. Opening the app updates stories over 3 hours old.") : "Optional, for Ash. Paste a GitHub key to turn this on. Otherwise stories update once a day."}</span></span></div>
-        <form class="adminpass" id="ghForm" style="margin-top:0"><input type="password" id="ghTok" placeholder="${gh ? "Saved. Paste to replace" : "GitHub key"}" aria-label="GitHub key" autocomplete="off"><button type="submit">Save</button></form></div>
       ${keepNote()}<button class="field" type="button" id="adminLock"><span class="lbl">Forget passphrase<span class="sub">Locks full articles on this device again</span></span></button>
     </div><p class="hint">Saved on this device only.${n ? ` ${n} full stories in the latest update.` : ""}</p></div>`;
   }
@@ -3078,9 +3075,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
         <div class="field"><span class="lbl">Text size</span>${seg("textSize", S.textSize, [["s", "A", "Small"], ["m", "A", "Medium"], ["l", "A", "Large"], ["xl", "A", "Extra large"]])}</div>
         <div class="field"><span class="lbl">Appearance</span>${seg("theme", S.theme, [["system", "Auto"], ["light", "Light"], ["dark", "Dark"]])}</div>
       </div><p class="hint">${offlineArticles ? `${Object.keys(offlineArticles).length} full stories are kept on this device, so they still open with no signal.` : "Stories are kept on this device as they load, so they still open with no signal."}</p></div>
-      ${fullHTML()}${state.mode === "static" && A.unlocked && vaultKey ? `<div class="group"><div class="card">
-        ${toggle("data-admin", "full", A.full, "Full articles", A.full ? "On. Every story opens in full right here." : "Off. Stories show the publisher's preview.")}
-      </div></div>` : ""}`,
+      ${fullHTML()}`,
       listen: `${listenHTML() || `<p class="hint" style="margin-top:20px">This browser can't read stories out loud.</p>`}
       ${commuteOK() ? commuteHTML() : ""}`,
       app: `${getAppHTML()}
@@ -6264,6 +6259,11 @@ const handle = async (m, post) => {
     hour: [["now", "Now"], ["6", "6am"], ["11", "Midday"], ["18", "Sunset"], ["21", "Night"]],
     drive: [["off", "No drive"], ["mooClear", "Beaudesert Rd, clear"], ["mooHeavy", "Beaudesert Rd, heavy"], ["motorway", "Motorway"], ["inv", "Into Inverloch"]] };
   const PREV_SKY = { sun: { rain: 0, cover: .08, storm: 0 }, cloud: { rain: 0, cover: .85, storm: 0 }, rain: { rain: 1, cover: .95, storm: .3 }, storm: { rain: 1, cover: 1, storm: 1 } };
+  function ghFieldHTML() {
+    const gh = store.get("brief.ghToken", "");
+    return `<div class="field col"><div class="top"><span class="lbl">Update when I open the app<span class="sub">${gh ? (A.ghBad ? "GitHub key isn't working. Paste a new one." : "On. Opening the app updates stories over 3 hours old.") : "Optional, for Ash. Paste a GitHub key to turn this on. Otherwise stories update once a day."}</span></span></div>
+        <form class="adminpass" id="ghForm" style="margin-top:0"><input type="password" id="ghTok" placeholder="${gh ? "Saved. Paste to replace" : "GitHub key"}" aria-label="GitHub key" autocomplete="off"><button type="submit">Save</button></form></div>`;
+  }
   function betaHTML() {
     if (!isTester()) return "";
     const row = (k, label) => `<div class="beta-row"><span class="beta-l">${label}</span><div class="beta-chips">${PREV_OPTS[k].map(([v, t]) =>
@@ -6274,6 +6274,7 @@ const handle = async (m, post) => {
       <div class="beta-row"><span class="beta-l">TV</span><div class="beta-chips">
         <button type="button" class="bchip" data-tv-new>Awesome News TV (no ads)</button><button type="button" class="bchip" data-open-tv>Old TV (YouTube clips)</button></div></div>
       ${state.mode === "claude" ? "" : `<div class="beta-tog">${toggle("data-skipads", "1", S.skipAds, "Hide YouTube ads", "Old TV: sound off and headlines on screen while an ad plays")}</div>`}
+      ${state.mode === "claude" ? "" : `<div class="beta-tog">${ghFieldHTML()}</div>`}
     </div><p class="hint">Only for Ash and Rod. Show it opens the 3D weather with these settings; close it to come back here. Your real weather and drive aren't changed. TV has moved here while the new ad-free one is tried out.</p></div>`;
   }
   function previewGo() {
