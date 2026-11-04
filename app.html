@@ -861,6 +861,15 @@ body.wxlisten #weather .bs-stop { display: grid; }
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border: 1px solid var(--bs-line); border-radius: 999px; padding: 6px 12px; }
 .bs-skip svg { width: 14px; height: 14px; }
 body.wxlisten #weather .bs-skip { display: inline-flex; }
+/* While Listen plays the weather or your drive: the same back, stop, play and skip buttons as the news, along the bottom
+   (so the top right only has the week button, clear of the title) */
+.bs-ctl { display: none; }
+body.wxlisten #weather .bs-ctl { display: flex; position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; margin: 0; padding: 10px 16px max(14px, env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(to top, rgba(8, 10, 24, 0.55), rgba(8, 10, 24, 0)); }
+body.wxlisten #weather .bs-skip:not(.bs-weekbtn), body.wxlisten #weather .bs-stop { display: none; }
+body.wxlisten #weather .bs-hud { padding-bottom: calc(max(12px, env(safe-area-inset-bottom, 0px)) + 86px); }
+body.wxlisten.wxdrive #bsDrive { padding-bottom: calc(max(14px, env(safe-area-inset-bottom, 0px)) + 86px); }
+body.wxintro #weather .bs-ctl { opacity: 0; pointer-events: none; }
 #weather .bs-warn { margin-top: 12px; max-width: 34rem; padding: 10px 14px; border-radius: 14px; font-size: 0.92rem; font-weight: 600; line-height: 1.35;
   color: #ffffff; background: rgba(190, 30, 40, 0.82); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25); }
 #weather .bs-warn[hidden] { display: none; }
@@ -874,6 +883,7 @@ body.wxdrive #bsDrive { display: flex; flex-direction: column; gap: 10px; positi
   padding: calc(env(safe-area-inset-top, 0px) + 22px) max(16px, env(safe-area-inset-right, 0px)) max(14px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
 body.wxdrive #weather .bs-now, body.wxdrive #weather .bs-rain, body.wxdrive #weather .bs-panel, body.wxdrive #weather .bs-place { visibility: hidden; }
 .dv-top { min-height: 40px; display: flex; flex-direction: column; justify-content: center; padding-right: 120px; }
+body.wxlisten .dv-top { padding-right: 104px; }  /* only the Week button up there */
 .dv-top h1 { margin: 0; font-family: var(--display); font-weight: 800; font-size: 1.7rem; line-height: 1; letter-spacing: -0.02em; text-shadow: 0 1px 12px rgba(0, 0, 0, .35); }
 .dv-top p { margin: 5px 0 0; font-size: 0.8rem; color: var(--bs-dim); }
 .dv-now { margin-top: 10px; text-shadow: 0 1px 2px rgba(0, 0, 0, .55), 0 2px 18px rgba(0, 0, 0, .45); }
@@ -1382,6 +1392,12 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   <div class="bs-drive" id="bsDrive"></div>
   <div id="bsNoGl" hidden><p>The 3D sky can't draw on this device, but the forecast below still works.</p></div>
   <main class="bs-hud" id="wBody"></main>
+  <div class="np-ctl bs-ctl" id="bsCtl">
+    <button type="button" class="np-btn sm" id="bsPrev" aria-label="Back"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 5.5v13l-9-6.5zM5 5h3v14H5z"/></svg></button>
+    <button type="button" class="np-btn" id="bsStop2" aria-label="Stop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <button type="button" class="np-btn big" id="bsPlay" aria-label="Pause"></button>
+    <button type="button" class="np-btn" id="bsNext" aria-label="Skip"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 5.5v13l9-6.5zM16 5h3v14h-3z"/></svg></button>
+  </div>
 </section>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -3914,6 +3930,25 @@ const handle = async (m, post) => {
     b.hidden = !nx || L.kind !== "drive"; if (nx) $("npUpNextT").textContent = nx.title;
   }
   function prevStory() {
+    // Listen to the news: back from the first story goes to your drive, then back again to the weather.
+    if (L.on && L.kind === "drive") {
+      const grp = k => ["open", "warn", "wk"].includes(k) ? "wx" : k === "traffic" ? "tr" : "";
+      const g = grp(L.parts[L.part]?.kind), first = gg => L.parts.findIndex(p => grp(p.kind) === gg);
+      const to = n => { const tk = ++L.token; hush(); L.paused = false; clearInterval(L.wxT); L.wxT = 0; document.body.classList.remove("wxweek");
+        L.part = n; if (grp(L.parts[n].kind) === "wx") { wxListenIntro(); wxListenOn(); } updatePlayer(); armDog(); speakNext(tk); };
+      if (g === "tr" && first("wx") >= 0) { to(first("wx")); return; }
+      if (g === "wx") { to(first("wx")); return; }  // already on the weather: from its start
+      if (!g && L.at === 0) {
+        if (first("tr") >= 0) { to(first("tr")); return; }
+        if (first("wx") >= 0) { to(first("wx")); return; }
+        if (state.wx && !L.loading) {  // back on the first story after moving on: put the weather and drive back in front of it
+          const t = usePre() ? preOpening() : "";
+          const pre = [t ? { text: t, para: -1, kind: "open" } : { text: driveOpening(), para: -1, kind: "open", silent: usePre() }, ...warnParts(), ...trafficParts()];
+          L.sid++; L.parts = [...pre, ...L.parts.filter(p => p.kind !== "sfx")];
+          const tr = L.parts.findIndex(p => p.kind === "traffic"); to(tr >= 0 ? tr : 0); return;
+        }
+      }
+    }
     if (!L.on || L.at <= 0) { if (L.on) { L.token++; L.sid++; hush(); L.paused = false; playStory(); } return; }  // first story: from its start
     L.token++; L.sid++; hush(); L.paused = false; L.back = null; L.skipped = true;
     L.at--; playStory();
@@ -3986,6 +4021,7 @@ const handle = async (m, post) => {
     $("pKick").textContent = `${L.kind === "brief" ? "Briefing" : L.kind === "drive" ? "The news" : "Listening"} · ${L.at + 1} of ${L.queue.length}${L.paused ? " · Paused" : L.aiWait ? (L.aiProg > 0 && L.aiProg < 100 && !AI.loaded ? ` · Downloading voice ${L.aiProg}%` : " · Getting the voice ready") : ""}`;
     $("pPlay").innerHTML = L.paused ? I.play : I.pause;
     $("npPlay").innerHTML = L.paused ? I.play : I.pause;
+    const bp = $("bsPlay"); if (bp) { bp.innerHTML = L.paused ? I.play : I.pause; bp.setAttribute("aria-label", L.paused ? "Play" : "Pause"); }
     $("npPlay").setAttribute("aria-label", L.paused ? "Play" : "Pause");
     $("pPlay").setAttribute("aria-label", L.paused ? "Play" : "Pause");
     if ($("pRate")) $("pRate").textContent = L.rate + "×";
@@ -4188,7 +4224,10 @@ const handle = async (m, post) => {
     if (t.closest("[data-prev-go]")) { previewGo(); return; }
     if (t.closest("#appVer")) { state.sTab = "app"; store.set("brief.sTab", "app"); openSettings(); return; }  // the version tag opens Try it out
     if (t.closest("#bsWeekBtn")) { weekBrief(); return; }
-    if (t.closest("#bsStop")) { stopListen(); return; }
+    if (t.closest("#bsStop") || t.closest("#bsStop2")) { stopListen(); return; }
+    if (t.closest("#bsPrev")) { prevStory(); return; }
+    if (t.closest("#bsNext")) { skipWeather(); return; }
+    if (t.closest("#bsPlay")) { L.paused ? resumeListen() : pauseListen(); return; }
     if (t.closest("#npPos")) { $("npList").hidden ? npListShow(false) : npListHide(); return; }
     if (t.closest("#npListX")) { npListHide(); return; }
     const jump = t.closest("[data-np-jump]"); if (jump) { npJump(+jump.dataset.npJump); return; }
@@ -5956,7 +5995,8 @@ const handle = async (m, post) => {
   // Minutes until you leave (0: now), worked out each time it's shown, and where you're going ("to work", "home").
   const leaveIn = c => c.planned ? Math.max(0, Math.round((c.leaveMs - Date.now()) / 60000)) : 0;
   const getThere = c => c.toWork ? (CM().toWord || "to work") : "home";
-  const leaveText = c => { const k = leaveIn(c); return k < 2 ? "" : `Leave in about ${k} min`; };
+  // "Leave in about 20 min (7:45am)", or "Leave at 7:45am" when that's more than an hour off (not "in 320 min" at 2am)
+  const leaveText = c => { const k = leaveIn(c); return k < 2 ? "" : k > 60 ? `Leave at ${c.leaveAt}` : `Leave in about ${k} min (${c.leaveAt})`; };
   const inQld = p => p.lat > -29.2 && p.lon > 137.9;  // QLDTraffic's road reports only cover Queensland
   const hm = d => new Intl.DateTimeFormat("en-AU", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: TZ }).format(d).replace(/\s/g, "").toLowerCase();
   // How much slower than an empty road, by when you leave (weekday peaks in Brisbane's south and Logan).
@@ -6052,7 +6092,7 @@ const handle = async (m, post) => {
   function trafficCard(c) {
     const hot = t => t === "Crash" || t === "Flooding" || t === "Congestion";
     $("npTraffic").innerHTML = `<div class="tr-top"><b>Your ${driveName(c).replace(/^Drive/, "drive")}</b><span>About ${c.est} min · ${c.km} km</span></div>
-      <p class="tr-ok">${leaveText(c) ? `${leaveText(c)} (${c.leaveAt}), ` : ""}${c.est} min to get to ${esc(c.to || "work")}, there about ${c.arriveAt}. ${c.base} min with empty roads${c.extra ? `, plus about ${c.extra} for what's reported` : ""}.</p>
+      <p class="tr-ok">${leaveText(c) ? `${leaveText(c)}, ` : ""}${c.est} min to get to ${esc(c.to || "work")}, there about ${c.arriveAt}. ${c.base} min with empty roads${c.extra ? `, plus about ${c.extra} for what's reported` : ""}.</p>
       ${c.events.length ? `<ul>${c.events.map(e => `<li><i class="${hot(e.type) ? "hot" : ""}">${esc(e.type === "Congestion" ? "Traffic" : e.type)}</i><span>${esc(e.road || "On your way")}${e.place ? `, ${esc(e.place)}` : ""}<small>${esc([e.what, e.impact, e.delay].filter(x => x && x !== e.type).join(" · "))}</small></span></li>`).join("")}</ul>${c.more ? `<p class="tr-ok">And ${c.more} more.</p>` : ""}`
         : c.noInc ? "" : `<p class="tr-ok">Nothing reported on your way right now.</p>`}`;
     driveHUD(c);
@@ -6075,7 +6115,7 @@ const handle = async (m, post) => {
         <li><i class="dv-pin">A</i><span>From</span><b>${esc(c.from || "Home")}</b></li>
         <li><i class="dv-pin dv-b">B</i><span>To</span><b>${esc(c.to || "Work")}</b></li></ol>
       <section class="dv-now">
-        <div class="bs-when">${leaveText(c) ? `${esc(leaveText(c))} · ${esc(c.leaveAt)}` : `As of ${esc(c.leaveAt)}`}</div>
+        <div class="bs-when">${esc(leaveText(c) || `As of ${c.leaveAt}`)}</div>
         <div class="dv-big"><div class="bs-temp" aria-label="About ${c.est} minutes to get to ${esc(c.to || "work")}">${c.est}<small>min</small></div>
           <div class="bs-hilo"><span>Arrive <b>${esc(c.arriveAt)}</b></span><span>Empty roads <b>${c.base} min</b></span></div></div>
         <div class="bs-what dv-what" style="--dv-c:${col}"><i aria-hidden="true"></i>${esc(what)}</div>
