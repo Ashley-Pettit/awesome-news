@@ -241,7 +241,7 @@ def opening(region, w):
     return today, text, night
 
 
-WEEK_INTRO = "Here's the week ahead."
+WEEK_INTRO = "Here's the weather for the week ahead."
 
 
 def week(w):

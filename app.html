@@ -2021,11 +2021,11 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     if (!state.wx || document.body.classList.contains("wxlisten") || !$("weather").hidden) return;
     document.body.classList.add("wxlisten", "wxintro");
     BS.mooAlt = Math.random() < 0.5;
-    // The day from 4:45am in 5-minute steps, one every 0.2 seconds for the sky; the words update every 2 seconds (50 minutes).
+    // The day from 5:15am in 5-minute steps, one every 0.2 seconds for the sky; the words update every 2 seconds (50 minutes).
     // In the morning and afternoon it's today; from 6pm it's tomorrow.
     BS.D = bsData(); bsPlace();
     const t = Date.now(), day = bsMins(t) >= 18 * 60 ? (BS.D.days[1] || BS.D.days[0]).date : bsKey(t);
-    BS.view = { mode: "day", ms: bsMidnight(day) + 285 * 60000, play: false, day, jump: 5 * 60, every: 0.2, dawn: 285, acc: 0, n: 0 };
+    BS.view = { mode: "day", ms: bsMidnight(day) + 315 * 60000, play: false, day, jump: 5 * 60, every: 0.2, dawn: 315, acc: 0, n: 0 };
     if (!BS.tick) BS.tick = setInterval(() => { if (!$("weather").hidden) bsTick(); }, 1000);
     const el = $("weather"); el.hidden = false; el.scrollTop = 0;  // shown first, so the 3D sky sizes itself to the screen
     renderWeather();
@@ -3714,7 +3714,7 @@ const handle = async (m, post) => {
     // Beta: also any time from the player's Weather button; afterwards the story picks up from the bit it was on.
     if (cur.kind !== "open") { wxListenIntro(); }
     document.body.classList.add("wxweek"); wxListenOn();
-    const parts = [{ text: "Here's the week ahead.", para: -1, kind: "wk", date: items[0].date }, ...items.map(x => ({ text: x.text, para: -1, kind: "wk", date: x.date }))];
+    const parts = [{ text: "Here's the weather for the week ahead.", para: -1, kind: "wk", date: items[0].date }, ...items.map(x => ({ text: x.text, para: -1, kind: "wk", date: x.date }))];
     // Any day Emma hasn't recorded yet just shows on screen for a few seconds.
     if (usePre()) await Promise.all(parts.map(async q => { q.silent = !(await preHas(q.text)); }));
     if (!L.on || L.part !== k) return;
@@ -4446,7 +4446,7 @@ const handle = async (m, post) => {
   const BS_KIND = { sun: "Sunny", partly: "Partly cloudy", cloud: "Cloudy", rain: "Showers", storm: "Thunderstorms" };
   const BS_ICON = { sun: "i-sun", partly: "i-partly", cloud: "i-cloud", rain: "i-rain", storm: "i-storm" };
   const BS_SPEED = 15 * 60;  // seconds of forecast per second of real time (15 minutes a second)
-  const BS_DAWN = 4 * 60 + 30;    // a chosen day (and each replay) starts at 4:30am
+  const BS_DAWN = 5 * 60;    // a chosen day (and each replay) starts at 5am
   // ---- astronomy (the suncalc formulas) ----
   const bsRad = Math.PI / 180, bsDayMs = 864e5, J1970 = 2440588, J2000 = 2451545, bsEcl = bsRad * 23.4397;
   const bsToDays = ms => ms / bsDayMs - 0.5 + J1970 - J2000;
