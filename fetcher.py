@@ -708,7 +708,7 @@ JUNK_PARA = re.compile(r"^(-\s*)?(Read more|Related|Advertisement|Loading|Share 
 
 
 # Lines that aren't the story: "Download the 7NEWS app", "Watch the video above", sign-ups, follow us (JUNK in app.html).
-NOT_STORY = re.compile(r"""\b(download (the|our) [^.]{0,30}app|(stream|watch)[^.]{0,40}\b(7plus|9now|10 ?play|iview|sbs on demand)|watch the (video|full|latest|interview|moment|clip)|(the )?video (above|below)|click here|tap here|get (the )?(latest|breaking) news|news alerts|sign up|subscribe|newsletter|follow us|follow [^.]{0,25} on (facebook|instagram|x|twitter|tiktok|threads|youtube)|got a (news )?tip|send us (your|a) (tip|story)|contact the newsroom|all rights reserved|copyright)\b|©|^(watch|listen|video|more|related|recommended|trending|popular|read next)\b[:\s-]""", re.I)
+NOT_STORY = re.compile(r"""\b(download (the|our) [^.]{0,30}app|know the news with|download (it |the app )?(today|now)(?=[.!]?$)|(stream|watch)[^.]{0,40}\b(7plus|9now|10 ?play|iview|sbs on demand)|watch the (video|full|latest|interview|moment|clip)|(the )?video (above|below)|click here|tap here|get (the )?(latest|breaking) news|news alerts|sign up|subscribe|newsletter|follow us|follow [^.]{0,25} on (facebook|instagram|x|twitter|tiktok|threads|youtube)|got a (news )?tip|send us (your|a) (tip|story)|contact the newsroom|all rights reserved|copyright)\b|©|^(watch|listen|video|more|related|recommended|trending|popular|read next)\b[:\s-]""", re.I)
 
 
 def read_page(story, want_text):

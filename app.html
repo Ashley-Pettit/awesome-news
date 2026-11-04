@@ -3576,7 +3576,7 @@ const handle = async (m, post) => {
   const PROMO = /\b(sign up|subscribe)\b.{0,60}\b(newsletter|here|now|inbox|updates|today)\b|don't miss a story|podcast platforms|learn where to watch|submit a response|in your inbox|fact-checked, and edited|^advertisement$|^(read|watch|listen) (more|now)\b|^related\b/i;
   // Bits of web page that aren't the story: "Download the 7NEWS app", "Watch the video above", sign-ups, follow us...
   // Short lines only, so a story that happens to mention a newsletter keeps its paragraphs. (JUNK in voice.py.)
-  const JUNK = /\b(download (the|our) [^.]{0,30}app|(stream|watch)[^.]{0,40}\b(7plus|9now|10 ?play|iview|sbs on demand)|watch the (video|full|latest|interview|moment|clip)|(the )?video (above|below)|click here|tap here|get (the )?(latest|breaking) news|news alerts|sign up|subscribe|newsletter|follow us|follow [^.]{0,25} on (facebook|instagram|x|twitter|tiktok|threads|youtube)|got a (news )?tip|send us (your|a) (tip|story)|contact the newsroom|all rights reserved|copyright)\b|©|^(watch|listen|video|more|related|recommended|trending|popular|read next)\b[:\s-]/i;
+  const JUNK = /\b(download (the|our) [^.]{0,30}app|know the news with|download (it |the app )?(today|now)(?=[.!]?$)|(stream|watch)[^.]{0,40}\b(7plus|9now|10 ?play|iview|sbs on demand)|watch the (video|full|latest|interview|moment|clip)|(the )?video (above|below)|click here|tap here|get (the )?(latest|breaking) news|news alerts|sign up|subscribe|newsletter|follow us|follow [^.]{0,25} on (facebook|instagram|x|twitter|tiktok|threads|youtube)|got a (news )?tip|send us (your|a) (tip|story)|contact the newsroom|all rights reserved|copyright)\b|©|^(watch|listen|video|more|related|recommended|trending|popular|read next)\b[:\s-]/i;
   const junk = p => { const t = clean(p); return t.length < 240 && JUNK.test(t); };
   function speakable(p) {
     const t = clean(clean(p).replace(/\bhttps?:\/\/\S+|\bwww\.\S+/g, " "));
@@ -5488,7 +5488,7 @@ const handle = async (m, post) => {
     for (let c = 0; c < 5; c++) { const x = -48 - c * 17, z = RZ + 26 + rnd(c + 671) * 4; house(x, 1, z, -Math.PI / 2, hk++); }  // houses this side of the cross street, off to the sides
     for (let c = 0; c < 4; c++) { const x = 50 + c * 17, z = RZ + 24 + rnd(c + 681) * 4; house(x, 1, z, -Math.PI / 2, hk++); }
     // hills under the houses on the right
-    const rise = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 12), mGrass); rise.scale.set(150, 14, 120); rise.position.set(130, -4, -90); moo.add(rise);
+    const rise = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 12), mGrass); rise.scale.set(115, 14, 120); rise.position.set(130, -4, -90); moo.add(rise);  // stops short of Beaudesert Road (it used to poke up through it in a green patch)
     // jacarandas (purple October to December), gums and a mango or two
     const jacM = mStd(jacSeason ? 0x9d82e6 : 0x4f7a42, { roughness: 1 }), jacM2 = mStd(jacSeason ? 0x8466cc : 0x456c3a, { roughness: 1 }), gumM = mStd(0x56774c, { roughness: 1 }), gumM2 = mStd(0x46663f, { roughness: 1 });
     const mTree = (x, y, z, s, a, b, flat) => { const g = new THREE.Group(), t = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.5, 4.5, 6), trunkMat); t.position.y = 2.25; g.add(t);
