@@ -5146,7 +5146,7 @@ const handle = async (m, post) => {
       drv.add(new THREE.Points(lampG, W.driveLights));
       // how busy: 0 empty road to 1 crawling (from the drive estimate and what's reported)
       W.driveSet = c => {
-        const busy = c ? Math.max(0, Math.min(1, ((c.est - DOOR) / Math.max(1, c.base) - 1.05) / 0.5 + (c.events.some(e => ["Crash", "Congestion"].includes(e.type)) ? 0.35 : 0))) : 0.3;
+        const busy = c ? busyOf(c) : 0.3;
         W.driveBusy = busy;
         crash.visible = !!c?.events.some(e => e.type === "Crash" || e.type === "Hazard");
         works.visible = !!c?.events.some(e => e.type === "Roadworks");
@@ -6177,6 +6177,11 @@ const handle = async (m, post) => {
     if (m >= 945 && m < 1110) return 1.35;  // 3:45 to 6:30
     return 1.08;
   }
+  // How busy the drive is, 0 to 1 (the meter, the 3D traffic and what Emma says). The usual peak-hour slowdown on its
+  // own (up to 1.4 times the empty-road time) reads as moderate; heavy needs a crash or congestion on the way, or a
+  // drive well beyond the usual peak.
+  const busyOf = c => Math.max(0, Math.min(1, ((c.est - DOOR) / Math.max(1, c.base) - 1) / 0.8
+    + (c.events.some(e => ["Crash", "Congestion", "Flooding"].includes(e.type)) ? 0.35 : 0)));
   const isWeekend = () => ["Sat", "Sun"].includes(new Intl.DateTimeFormat("en-AU", { weekday: "short", timeZone: TZ }).format(new Date()));
   // The planned leaving time today (e.g. 7:45am), as a Date.
   function leaveToday(hhmm) {
@@ -6241,7 +6246,7 @@ const handle = async (m, post) => {
     const by = t => c.events.filter(e => e.type === t);
     if (c.noInc) {}  // no road reports outside Queensland: just the time
     else if (!c.events.length) {  // nothing reported, but the usual peak can still make it slow (same levels as the meter on screen)
-      const busy = Math.max(0, Math.min(1, ((c.est - DOOR) / Math.max(1, c.base) - 1.05) / 0.5));
+      const busy = busyOf(c);
       parts.push(busy > 0.66 ? "No crashes or roadworks reported, but expect heavy traffic." : busy > 0.33 ? "No crashes or roadworks reported, but it'll be a bit slow."
         : "No crashes or roadworks reported, so it should be a clear run.");
     }
@@ -6272,7 +6277,7 @@ const handle = async (m, post) => {
   function driveHUD(c) {
     const box = $("bsDrive"); if (!box || !c) return;
     const ratio = (c.est - DOOR) / Math.max(1, c.base), hot = c.events.filter(e => ["Crash", "Congestion", "Flooding"].includes(e.type));
-    const busy = Math.max(0, Math.min(1, (ratio - 1.05) / 0.5 + (hot.length ? 0.35 : 0)));
+    const busy = busyOf(c);
     const crash = c.events.find(e => e.type === "Crash"), flood = c.events.find(e => e.type === "Flooding");
     const what = crash ? `Crash on ${crash.road || "the way"}` : flood ? `Flooding on ${flood.road || "the way"}` : busy > 0.66 ? "Heavy traffic" : busy > 0.33 ? "A bit slow" : "Clear run";
     const col = crash || flood || busy > 0.66 ? "#ff5a5f" : busy > 0.33 ? "#ffb347" : "#5bd38a";
