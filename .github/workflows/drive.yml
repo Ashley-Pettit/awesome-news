@@ -5,9 +5,10 @@ name: Ash's drive
 # into the private Claude copy of the app, which can't reach those services itself.
 on:
   schedule:
-    - cron: "40 20 * * 0-4"   # 6:40am Brisbane, Monday to Friday
-    - cron: "20 21 * * 0-4"   # 7:20am
-    - cron: "10 6 * * 1-5"    # 4:10pm
+    # About 30 minutes before each copy into the Claude app (6:50am, 7:30am, 4:20pm), as GitHub often starts these late
+    - cron: "17 20 * * 0-4"   # 6:17am Brisbane, Monday to Friday
+    - cron: "57 20 * * 0-4"   # 6:57am
+    - cron: "47 5 * * 1-5"    # 3:47pm
   workflow_dispatch:
 
 permissions:
