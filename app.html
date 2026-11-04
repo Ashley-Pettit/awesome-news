@@ -2112,11 +2112,12 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     if (!state.wx || document.body.classList.contains("wxlisten") || !$("weather").hidden) return;
     document.body.classList.add("wxlisten", "wxintro");
     BS.mooAlt = Math.random() < 0.5;
-    // The day from 5:15am in 6-minute steps, one every 0.2 seconds for the sky (30 minutes a second); the words update every 2 seconds.
+    // The day from 5:15am in 10-minute steps, one every 0.2 seconds for the sky (50 minutes a second: the 8 or so seconds
+    // of weather talk covers about 5:15am to noon); the words update every 2 seconds.
     // In the morning and afternoon it's today; from 6pm it's tomorrow.
     BS.D = bsData(); bsPlace();
     const t = Date.now(), day = bsMins(t) >= 18 * 60 ? (BS.D.days[1] || BS.D.days[0]).date : bsKey(t);
-    BS.view = { mode: "day", ms: bsMidnight(day) + 315 * 60000, play: false, day, jump: 6 * 60, every: 0.2, dawn: 315, acc: 0, n: 0 };
+    BS.view = { mode: "day", ms: bsMidnight(day) + 315 * 60000, play: false, day, jump: 10 * 60, every: 0.2, dawn: 315, acc: 0, n: 0 };
     if (!BS.tick) BS.tick = setInterval(() => { if (!$("weather").hidden) bsTick(); }, 1000);
     const el = $("weather"); el.hidden = false; el.scrollTop = 0;  // shown first, so the 3D sky sizes itself to the screen
     renderWeather();
