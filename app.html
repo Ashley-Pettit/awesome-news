@@ -3053,6 +3053,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
         <div class="field"><label for="setName">Your name</label><input type="text" id="setName" placeholder="Optional" autocomplete="given-name" maxlength="30" value="${esc(S.name)}"></div>
         <div class="field"><label for="setRegion">Local news</label><select id="setRegion">${regions.map(r => `<option value="${r.id}"${r.id === S.region ? " selected" : ""}>${esc(r.label)}${counts["local-" + r.id] != null ? ` (${counts["local-" + r.id]})` : ""}</option>`).join("")}</select></div>
       </div><p class="hint">Your name is used in the greeting.</p></div>
+      ${fullHTML()}
 `,
       filters: `<div class="group"><h2>Sources</h2><details class="card srcdet"${state.srcOpen ? " open" : ""}>
         <summary class="field"><span class="lbl">Choose your sources<span class="sub">${PUBLISHERS.length - PUBLISHERS.filter(p => S.hiddenSources.includes(p.id)).length} of ${PUBLISHERS.length} on</span></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
@@ -3075,7 +3076,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
         <div class="field"><span class="lbl">Text size</span>${seg("textSize", S.textSize, [["s", "A", "Small"], ["m", "A", "Medium"], ["l", "A", "Large"], ["xl", "A", "Extra large"]])}</div>
         <div class="field"><span class="lbl">Appearance</span>${seg("theme", S.theme, [["system", "Auto"], ["light", "Light"], ["dark", "Dark"]])}</div>
       </div><p class="hint">${offlineArticles ? `${Object.keys(offlineArticles).length} full stories are kept on this device, so they still open with no signal.` : "Stories are kept on this device as they load, so they still open with no signal."}</p></div>
-      ${fullHTML()}`,
+`,
       listen: `${listenHTML() || `<p class="hint" style="margin-top:20px">This browser can't read stories out loud.</p>`}`,
       app: `${getAppHTML()}
       ${shareHTML()}
