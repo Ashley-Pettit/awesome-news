@@ -5188,9 +5188,17 @@ const handle = async (m, post) => {
         const hat = new THREE.Mesh(new THREE.CylinderGeometry(.3, .34, .14, 10), std(k % 3 ? 0xf6f4ee : 0x1f6b3a)); hat.position.set(0, 2.08, bend ? .64 : 0); p.add(hat);
         p.traverse(o => { if (o.isMesh) o.castShadow = true; }); p.position.set(x, .3, z); p.rotation.y = ry; p.scale.setScalar(1.25); bowls.add(p);
         // in the rain everyone runs for the verandah (those already on it stay put)
-        const n = bowlFolk.length, cover = z < -14 ? [x, z] : [Math.max(-30, Math.min(30, x)) + ((n % 3) - 1) * .9, -16.9 - (n % 2) * 1.1];
-        bowlFolk.push({ p, home: [x, z], ry, cover, ph: n }); return p; };
+        // about one in three has an umbrella: they pop it up and stay out (the rest head for the verandah)
+        const n = bowlFolk.length, umb = n % 3 === 1 && !bend ? mkUmbrella(UMB_COL[n % UMB_COL.length]) : null; if (umb) p.add(umb);
+        const cover = z < -14 || umb ? [x, z] : [Math.max(-30, Math.min(30, x)) + ((n % 3) - 1) * .9, -16.9 - (n % 2) * 1.1];
+        bowlFolk.push({ p, home: [x, z], ry, cover, ph: n, umb }); return p; };
       const bowlFolk = [];
+      const mkUmbrella = col => { const u = new THREE.Group(), cm = std(col, { side: THREE.DoubleSide, roughness: .6 });
+        const top = new THREE.Mesh(new THREE.ConeGeometry(1, .45, 10, 1, true), cm); top.position.y = 2.55; top.rotation.z = -.12; u.add(top);
+        const tip = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, .2, 5), std(0x333333)); tip.position.y = 2.85; u.add(tip);
+        const stick = new THREE.Mesh(new THREE.CylinderGeometry(.025, .025, 1.15, 5), std(0x333333)); stick.position.set(.06, 1.95, 0); u.add(stick);
+        u.position.x = .28; u.scale.setScalar(.001); u.visible = false; return u; };
+      const UMB_COL = [0xd63031, 0x1e3a8a, 0xf6c90e, 0x2d8a4e, 0x222222, 0x8e44ad, 0x0aa5c4];
       const bowlM = std(0x2b2b2b, { roughness: .35 }), bowlM2 = std(0x7a2e2e, { roughness: .35 }), jackM = std(0xf7f7f2, { roughness: .3 }), matM = std(0x22402c);
       const rinkPlay = (cx, cz, k) => { // a mat and bowler at one end, bowls clustered round the jack at the other
         box(.8, .04, 1.4, matM, cx, .32, cz + 15, null, false); person(cx, cz + 15.5, Math.PI, k, true);
@@ -5256,10 +5264,11 @@ const handle = async (m, post) => {
         const goTo = (p, tx, tz, sp, dt) => { const dx = tx - p.position.x, dz = tz - p.position.z, d = Math.hypot(dx, dz); if (d < 0.08) return true;
         const m = Math.min(d, sp * dt); p.position.x += dx / d * m; p.position.z += dz / d * m; p.rotation.y = Math.atan2(dx, dz); return false; };
         bowlFolk.forEach(f => { const [tx, tz] = wet ? f.cover : f.home;
-          if (still) { f.p.position.x = tx; f.p.position.z = tz; f.p.rotation.y = wet ? 0 : f.ry; return; }
-          const there = goTo(f.p, tx, tz, wet ? 7 : 2.2, dt);
-          f.ph += dt * (wet ? 15 : 8); f.p.position.y = .3 + (there ? 0 : Math.abs(Math.sin(f.ph)) * (wet ? .22 : .07));
-          if (there) f.p.rotation.y = wet ? 0 : f.ry; });
+          if (still) { f.p.position.x = tx; f.p.position.z = tz; f.p.rotation.y = wet && !f.umb ? 0 : f.ry; if (f.umb) { f.umb.scale.setScalar(wet ? 1 : .001); f.umb.visible = wet; } return; }
+          if (f.umb) { const sc = f.umb.scale.x + ((wet ? 1 : 0) - f.umb.scale.x) * Math.min(1, dt * 3); f.umb.scale.setScalar(Math.max(.001, sc)); f.umb.visible = sc > .02; }
+          const there = goTo(f.p, tx, tz, wet ? 4.2 : 2, dt);
+          f.ph += dt * (wet ? 11 : 8); f.p.position.y = .3 + (there ? 0 : Math.abs(Math.sin(f.ph)) * (wet ? .16 : .07));
+          if (there) f.p.rotation.y = wet && !f.umb ? 0 : f.ry; });
         if (still || wet) return;  // no bowls in the rain
     rolls.forEach((r, i) => { r.t = ((r.t ?? i * .27) + dt * .12) % 1.15; const t = Math.min(1, r.t), e = 1 - Math.pow(1 - t, 2.2);
           r.roll.position.set(r.x0 + Math.sin(e * Math.PI) * r.sway, .52, r.z0 + (r.z1 - r.z0) * e); r.roll.rotation.x -= dt * (1 - t) * 6; });
@@ -5395,7 +5404,13 @@ const handle = async (m, post) => {
     // People out and about: walking the Beaudesert Road footpaths, waiting at the roundabout, browsing under the awnings.
     // When it rains they run in under the shop awnings and wait it out; when it clears they wander back out.
     const mooFolk = [];
-    { const skin = [0x5b3a29, 0x8d5a3b, 0xc8946e, 0xe0b48f, 0x3d2618], tops = [0xe74c3c, 0x2f6fb0, 0xf1c40f, 0x16a085, 0xffffff, 0x8e44ad, 0xe67e22, 0x2c3e50],
+    { const mkUmbrella = col => { const u = new THREE.Group(), cm = mStd(col, { side: THREE.DoubleSide, roughness: .6 });
+        const top = new THREE.Mesh(new THREE.ConeGeometry(1, .45, 10, 1, true), cm); top.position.y = 2.55; top.rotation.z = -.12; u.add(top);
+        const tip = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, .2, 5), mStd(0x333333)); tip.position.y = 2.85; u.add(tip);
+        const stick = new THREE.Mesh(new THREE.CylinderGeometry(.025, .025, 1.15, 5), mStd(0x333333)); stick.position.set(.06, 1.95, 0); u.add(stick);
+        u.position.x = .28; u.scale.setScalar(.001); u.visible = false; return u; };
+      const UMB_COL = [0xd63031, 0x1e3a8a, 0xf6c90e, 0x2d8a4e, 0x222222, 0x8e44ad, 0x0aa5c4];
+      const skin = [0x5b3a29, 0x8d5a3b, 0xc8946e, 0xe0b48f, 0x3d2618], tops = [0xe74c3c, 0x2f6fb0, 0xf1c40f, 0x16a085, 0xffffff, 0x8e44ad, 0xe67e22, 0x2c3e50],
         bottoms = [0x2c3e50, 0x34495e, 0x6b4f3a, 0x1d2731, 0x7f8c8d];
       const folk = (k, x, z, ry, walk) => { const p = new THREE.Group(), legs = [];
         [-1, 1].forEach(sx => { const hip = new THREE.Group(); hip.position.set(sx * .13, .85, 0);
@@ -5403,7 +5418,9 @@ const handle = async (m, post) => {
         const body = new THREE.Mesh(new THREE.CylinderGeometry(.3, .25, .85, 8), mStd(tops[k % tops.length])); body.position.y = 1.27; p.add(body);
         const head = new THREE.Mesh(new THREE.SphereGeometry(.2, 10, 8), mStd(skin[k % skin.length])); head.position.y = 1.87; p.add(head);
         p.position.set(x, 1.26, z); p.rotation.y = ry; p.scale.setScalar(1.15); moo.add(p);
-        mooFolk.push({ p, legs, k, sd: Math.sign(x) || 1, home: [x, z], ry, walk, ph: k * 1.7 }); };
+        // about one in three carries an umbrella: up it goes in the rain, and they carry on (the rest head for the awnings)
+        const umb = k % 3 === 0 ? mkUmbrella(UMB_COL[k % UMB_COL.length]) : null; if (umb) p.add(umb);
+        mooFolk.push({ p, legs, k, sd: Math.sign(x) || 1, home: [x, z], ry, walk, ph: k * 1.7, umb }); };
       // walkers up and down both footpaths
       for (let k = 0; k < 12; k++) { const sd = k % 2 ? 1 : -1; folk(k, sd * 5.75, RZ - 20 - rnd(k * 13 + 901) * 100, 0, { dir: rnd(k * 17 + 903) > .5 ? 1 : -1, speed: 1.1 + rnd(k * 19 + 905) * .6 }); }
       // waiting at the roundabout, on the cross street's footpaths
@@ -5422,9 +5439,10 @@ const handle = async (m, post) => {
       const face = f => f.sd > 0 ? -Math.PI / 2 : Math.PI / 2;  // under an awning, looking out at the rain
       mooFolk.forEach(f => {
         let moving = false, run = false;
-        if (wet) {
+        if (f.umb) { const t = wet ? 1 : 0, sc = still ? (t || .001) : f.umb.scale.x + (t - f.umb.scale.x) * Math.min(1, dt * 3); f.umb.scale.setScalar(Math.max(.001, sc)); f.umb.visible = sc > .02; }
+        if (wet && !f.umb) {
           if (still) { f.p.position.x = f.cover[0]; f.p.position.z = f.cover[1]; f.p.rotation.y = face(f); }
-          else { moving = !goTo(f.p, f.cover[0], f.cover[1], 6.5, dt); run = moving; if (!moving) f.p.rotation.y = face(f); }
+          else { moving = !goTo(f.p, f.cover[0], f.cover[1], 4, dt); run = moving; if (!moving) f.p.rotation.y = face(f); }
         } else if (f.back) {  // out again: walkers step back to the kerb side and carry on, the rest go back to where they were
           const tx = f.walk ? f.sd * 5.75 : f.home[0], tz = f.walk ? f.p.position.z : f.home[1];
           if (still) { f.p.position.x = tx; f.p.position.z = tz; f.back = false; }
@@ -5436,8 +5454,8 @@ const handle = async (m, post) => {
           f.p.rotation.y = w.dir > 0 ? 0 : Math.PI; moving = true;
         }
         if (still) return;
-        f.ph += dt * (run ? 15 : 7);
-        const sw = moving ? Math.sin(f.ph) * (run ? .95 : .45) : 0;
+        f.ph += dt * (run ? 11 : 7);
+        const sw = moving ? Math.sin(f.ph) * (run ? .8 : .45) : 0;
         f.legs[0].rotation.x = sw; f.legs[1].rotation.x = -sw;
         f.p.position.y = 1.26 + (moving ? Math.abs(Math.sin(f.ph)) * (run ? .2 : .05) : 0);
         f.p.children[2].rotation.x = run ? .3 : 0;  // leaning into the run
