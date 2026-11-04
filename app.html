@@ -363,6 +363,10 @@ body.npon .player { display: none; }
    screen blew them up and blurred them). A soft, dimmed copy fills the space behind it. */
 .np-pic .np-bg { position: absolute; inset: -40px; z-index: 0; width: calc(100% + 80px); height: calc(100% + 80px); max-width: none; object-fit: cover; filter: blur(28px) brightness(0.5) saturate(1.2); opacity: 0; transition: opacity 0.8s ease; }
 .np-pic .np-bg.on { opacity: 1; }
+.np-pic #npVid { position: absolute; z-index: 0; left: 0; right: 0; top: calc(env(safe-area-inset-top, 0px) + 62px); width: 100%; max-height: 46%; object-fit: contain; background: #000; }
+body.npvid .np-pic #npImg { opacity: 0 !important; }
+@media (orientation: landscape) { .np-pic #npVid { inset: 0; top: 0; max-height: none; height: 100%; object-fit: cover; } }
+body.tvmode .np-pic #npVid { inset: 0; top: 0; max-height: none; height: 100%; object-fit: cover; }
 .np-pic #npImg { position: absolute; z-index: 0; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 62px); transform: translateX(-50%); width: var(--pw, 100%); max-width: 100%; height: auto; max-height: 46%;
   object-fit: contain; border-radius: 4px; box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45); opacity: 0; transition: opacity 0.8s ease; }
 .np-pic #npImg.on { opacity: 1; animation: kb 30s ease-in-out infinite alternate; }
@@ -1318,7 +1322,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
 <div class="np" id="np" role="dialog" aria-label="Now playing" hidden>
   <div class="tv-bug" aria-hidden="true"><b>Awesome News</b><span class="tv-live">TV</span><span id="tvClock"></span></div>
   <div class="tv-ticker" aria-hidden="true"><span class="tv-tl">Up next</span><div class="tv-tw"><div class="tv-tt" id="tvTicker"></div></div></div>
-  <div class="np-pic"><img class="np-bg" id="npBg" alt=""><img id="npImg" alt=""><div class="np-mono" id="npMono"></div></div>
+  <div class="np-pic"><img class="np-bg" id="npBg" alt=""><img id="npImg" alt=""><video id="npVid" muted playsinline loop preload="none" hidden></video><div class="np-mono" id="npMono"></div></div>
   <div class="np-top">
     <div class="np-brand"><img id="npLogo" alt=""><span>Awesome News</span></div>
     <button type="button" class="np-wkbtn" id="npWk" aria-label="Detailed weather: hear the week ahead" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M8.5 3.5v1.6M3.6 8.4h1.6M5 5l1.1 1.1M13.4 5l-1.1 1.1"/><path d="M5.6 11.6a3.6 3.6 0 1 1 6.6-2.4"/><path d="M8 20.5h9.5a3.5 3.5 0 0 0 .3-7 5 5 0 0 0-9.5 1A3 3 0 0 0 8 20.5z"/></svg>Detailed</button>
@@ -1942,6 +1946,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     keepAwake();
   }
   function npClose() {
+    try { const v = $("npVid"); if (v && !v.hidden) v.pause(); } catch {}
     if ($("np").hidden) return;
     $("np").hidden = true; document.body.classList.remove("npon");
     try { wake?.release(); } catch {} wake = null;
@@ -2013,8 +2018,20 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     el.style.setProperty("--tvs", Math.max(30, next.join(" ").length / 7) + "s");
     el.style.animation = "none"; void el.offsetWidth; el.style.animation = "";
   }
+  // Beta (Settings, App): an ABC story with its own video plays that video, muted, in place of the photo while Emma reads.
+  // Only the ABC's own clips (fetcher.py abc_video): never YouTube, and the ABC has no ads.
+  function npVideo(i) {
+    const v = $("npVid"); if (!v) return;
+    const url = S.beta && L.kind !== "story" && i?.video?.url && /^https:\/\/mediacore-live-production\.akamaized\.net\//.test(i.video.url) ? i.video.url : "";
+    if (!url) { if (!v.hidden) { v.pause(); v.removeAttribute("src"); v.load(); v.hidden = true; } document.body.classList.remove("npvid"); return; }
+    if (v.getAttribute("src") !== url) { v.src = url; }
+    v.hidden = false; v.muted = true; document.body.classList.add("npvid");
+    v.play().catch(() => { v.hidden = true; document.body.classList.remove("npvid"); });
+    v.onerror = () => { v.hidden = true; document.body.classList.remove("npvid"); };
+  }
   function npStory(i) {
     if (!i) return;
+    try { npVideo(i); } catch {}
     if (document.body.classList.contains("tvmode")) setTimeout(tvTicker, 0);
     const img = $("npImg"), bg = $("npBg"), mono = $("npMono");
     img.classList.remove("on"); bg.classList.remove("on");
@@ -4017,7 +4034,7 @@ const handle = async (m, post) => {
     L.token++; L.sid++; hush(); L.paused = false; L.skipped = true; nextStory();
   }
   function stopListen() {
-    endTV();
+    endTV(); try { npVideo(null); } catch {}
     saveResume();  // beta: come back within the hour to pick up here
     wxListenOff(); $("npCust").hidden = true; $("npWk").hidden = true;
     L.on = false; L.paused = false; L.token++; L.sid++; L.aiWait = false;
@@ -4177,6 +4194,8 @@ const handle = async (m, post) => {
       renderTabs();
       return;
     }
+    const bt = t.closest("[data-beta]");
+    if (bt) { S.beta = !S.beta; saveSettings(); renderSettings(); return; }
     const sa = t.closest("[data-skipads]");
     if (sa) { S.skipAds = !S.skipAds; saveSettings(); sa.setAttribute("aria-checked", String(S.skipAds)); return; }
     const fo = t.closest("[data-fullonly]");
@@ -6322,7 +6341,9 @@ const handle = async (m, post) => {
     if (!isTester()) return "";
     const row = (k, label) => `<div class="beta-row"><span class="beta-l">${label}</span><div class="beta-chips">${PREV_OPTS[k].map(([v, t]) =>
       `<button type="button" class="bchip" data-prev-k="${k}" data-prev-v="${v}" aria-pressed="${state.prevSel[k] === v}">${t}</button>`).join("")}</div></div>`;
-    return `<div class="group"><h2>Try it out (beta)</h2><div class="card beta">
+    if (!S.beta) return `<div class="group"><h2>Beta</h2><div class="card">${toggle("data-beta", "1", false, "Beta features", "Try things still being built: videos in Listen, the 3D previews, the new TV")}</div></div>`;
+    return `<div class="group"><h2>Beta</h2><div class="card">${toggle("data-beta", "1", true, "Beta features", "On: ABC videos play in Listen (ad-free, never YouTube), and the previews below")}</div></div>
+    <div class="group"><h2>Try it out (beta)</h2><div class="card beta">
       ${row("place", "Place")}${row("sky", "Weather")}${row("hour", "Time")}${row("drive", "Drive")}
       <button type="button" class="pill-btn beta-go" data-prev-go>Show it</button>
       <div class="beta-row"><span class="beta-l">TV</span><div class="beta-chips">

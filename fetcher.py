@@ -711,11 +711,37 @@ JUNK_PARA = re.compile(r"^(-\s*)?(Read more|Related|Advertisement|Loading|Share 
 NOT_STORY = re.compile(r"""\b(download (the|our) [^.]{0,30}app|know the news with|download (it |the app )?(today|now)(?=[.!]?$)|(stream|watch)[^.]{0,40}\b(7plus|9now|10 ?play|iview|sbs on demand)|watch the (video|full|latest|interview|moment|clip)|(the )?video (above|below)|click here|tap here|get (the )?(latest|breaking) news|news alerts|sign up|subscribe|newsletter|follow us|follow [^.]{0,25} on (facebook|instagram|x|twitter|tiktok|threads|youtube)|got a (news )?tip|send us (your|a) (tip|story)|contact the newsroom|all rights reserved|copyright)\b|©|^(watch|listen|video|more|related|recommended|trending|popular|read next)\b[:\s-]""", re.I)
 
 
+# ABC News stories often carry the ABC's own video (no YouTube, no ads: the ABC has none). The page lists each clip's
+# plain MP4 copies; keep the one closest to 576 high (good on a phone, not huge). Used by Listen's video beta.
+ABC_MP4 = re.compile(r'"MIMEType":"video/mp4"[^{}]*?"height":(\d+)[^{}]*?"url":"(https://mediacore-live-production\.akamaized\.net/[^"]+\.mp4)"')
+ABC_VDUR = re.compile(r'"docType":"Video","duration":(\d+)')
+
+
+def abc_video(raw):
+    clips = [(int(h), u) for h, u in ABC_MP4.findall(raw)]
+    if not clips:
+        return None
+    ok = [c for c in clips if c[0] <= 576] or clips
+    h, url = max(ok) if ok is not clips else min(clips)
+    m = ABC_VDUR.search(raw)
+    dur = int(m.group(1)) if m else 0
+    if dur and not 8 <= dur <= 600:
+        return None
+    return {"url": url, "dur": dur, "h": h}
+
+
 def read_page(story, want_text):
     try:
         raw = get(story["url"], timeout=20, limit=1_500_000).decode("utf-8", "ignore")
     except Exception:
         return None, None
+    if "abc.net.au" in story["url"]:
+        try:
+            v = abc_video(raw)
+            if v:
+                story["video"] = v
+        except Exception:
+            pass
     img = None
     m = OG_RE.search(raw[:200_000])
     if m:
