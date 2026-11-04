@@ -863,6 +863,7 @@ body.locked .player { z-index: 45; bottom: calc(env(safe-area-inset-bottom, 0px)
 .bchip { padding: 7px 12px; border-radius: 999px; font: inherit; font-size: 0.86rem; font-weight: 650; color: var(--ink); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); min-height: 36px; }
 .bchip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); box-shadow: none; }
 .beta-go { justify-self: start; }
+.beta-tog { margin: 0 -14px -14px; border-top: 1px solid var(--line); }
 .ver { cursor: pointer; }
 .pchip .ck { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; box-shadow: inset 0 0 0 2px var(--pc); color: transparent; transition: background-color 0.2s ease, color 0.2s ease; flex: none; }
 .pchip .ck svg { width: 14px; height: 14px; }
@@ -3048,12 +3049,10 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     STABS = BASE_STABS;
     const tab = STABS.some(t => t[0] === state.sTab) ? state.sTab : "news";
     const panes = {
-      news: `${state.mode === "static" && A.unlocked && vaultKey ? `<div class="group"><div class="card">
-        ${toggle("data-admin", "full", A.full, "Full articles", A.full ? "On. Every story opens in full right here." : "Off. Stories show the publisher's preview.")}
-      </div></div>` : ""}<div class="group"><h2>You</h2><div class="card">
+      news: `<div class="group"><h2>You</h2><div class="card">
         <div class="field"><label for="setName">Your name</label><input type="text" id="setName" placeholder="Optional" autocomplete="given-name" maxlength="30" value="${esc(S.name)}"></div>
         <div class="field"><label for="setRegion">Local news</label><select id="setRegion">${regions.map(r => `<option value="${r.id}"${r.id === S.region ? " selected" : ""}>${esc(r.label)}${counts["local-" + r.id] != null ? ` (${counts["local-" + r.id]})` : ""}</option>`).join("")}</select></div>
-      </div><p class="hint">Your name is used in the greeting. Everything here stays on this device.</p></div>
+      </div><p class="hint">Your name is used in the greeting.</p></div>
       <div class="group"><h2>Your interests</h2><div class="card">
         <button class="field" type="button" data-open-interests><span class="lbl">Choose what you see<span class="sub clamp">${esc(enabledSections().map(s => s.id === "local" ? `Local (${regionLabel()})` : s.label).join(", "))}</span></span><span class="chev" aria-hidden="true">›</span></button>
       </div><p class="hint">Each interest gets its own tab, and For you mixes them all.</p></div>`,
@@ -3072,23 +3071,24 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
           <div class="negscale" aria-hidden="true"><span>All news</span><span>No negative news</span></div>
         </div>
       </div><p class="hint" id="negHint">${esc(negHint())}</p></div>`,
-      reading: `${fullHTML()}<div class="group"><h2>Reading</h2><div class="card">
+      reading: `<div class="group"><h2>Reading</h2><div class="card">
         ${toggle("data-hideread", "1", state.hideRead, "Hide stories I've read", "Read stories drop out of your feeds")}
         ${state.mode === "static" && !fullOn() ? toggle("data-fullonly", "1", !!S.fullOnly, "Full stories only", "Hide previews that open the publisher's site") : ""}
         <div class="field"><span class="lbl">Text size</span>${seg("textSize", S.textSize, [["s", "A", "Small"], ["m", "A", "Medium"], ["l", "A", "Large"], ["xl", "A", "Extra large"]])}</div>
         <div class="field"><span class="lbl">Appearance</span>${seg("theme", S.theme, [["system", "Auto"], ["light", "Light"], ["dark", "Dark"]])}</div>
       </div><p class="hint">${offlineArticles ? `${Object.keys(offlineArticles).length} full stories are kept on this device, so they still open with no signal.` : "Stories are kept on this device as they load, so they still open with no signal."}</p></div>
+      ${fullHTML()}${state.mode === "static" && A.unlocked && vaultKey ? `<div class="group"><div class="card">
+        ${toggle("data-admin", "full", A.full, "Full articles", A.full ? "On. Every story opens in full right here." : "Off. Stories show the publisher's preview.")}
+      </div></div>` : ""}`,
+      listen: `${listenHTML() || `<p class="hint" style="margin-top:20px">This browser can't read stories out loud.</p>`}
+      ${commuteOK() ? commuteHTML() : ""}`,
+      app: `${getAppHTML()}
+      ${shareHTML()}
       <div class="group"><h2>Your data</h2><div class="card">
         <button class="field danger" type="button" id="clearRead">Clear read history <span class="sub" style="color:var(--muted)">${state.read.size} stories</span></button>
         <button class="field danger" type="button" id="clearSaved">Clear saved stories <span class="sub" style="color:var(--muted)">${state.saved.length} saved</span></button>
-      </div></div>`,
-      listen: `${listenHTML() || `<p class="hint" style="margin-top:20px">This browser can't read stories out loud.</p>`}${tvAdsHTML()}
-      ${commuteOK() ? commuteHTML() : ""}
-      <div class="group"><h2>Beta</h2><div class="card">
-        ${toggle("data-betaheads", "1", !!store.get("brief.betaHeads", false), "Headlines list while listening", "After the weather, see the stories and tap one to hear it next")}
-      </div><p class="hint">Still being tried out, so it may change.</p></div>`,
-      app: `${betaHTML()}${getAppHTML()}
-      ${shareHTML()}
+      </div><p class="hint">Everything you set here stays on this device.</p></div>
+      ${betaHTML()}
       <p class="about">Awesome News pulls from free sources only: ABC, SBS, BBC, The Guardian, 7NEWS, The Conversation, 360info, Global Voices, NASA, EFF, Ars Technica, TechCrunch, iTnews and more. ${privateMode() ? "Stories open in full right here." : "Stories marked Full are free to republish, so they open in full right here."} No paywalls, no sport.${state.status?.updatedAt ? `<br>Stories last updated ${esc(longDate(state.status.updatedAt))}.` : ""}</p>
 `,
     };
@@ -6272,6 +6272,7 @@ const handle = async (m, post) => {
       <button type="button" class="pill-btn beta-go" data-prev-go>Show it</button>
       <div class="beta-row"><span class="beta-l">TV</span><div class="beta-chips">
         <button type="button" class="bchip" data-tv-new>Awesome News TV (no ads)</button><button type="button" class="bchip" data-open-tv>Old TV (YouTube clips)</button></div></div>
+      ${state.mode === "claude" ? "" : `<div class="beta-tog">${toggle("data-skipads", "1", S.skipAds, "Hide YouTube ads", "Old TV: sound off and headlines on screen while an ad plays")}</div>`}
     </div><p class="hint">Only for Ash and Rod. Show it opens the 3D weather with these settings; close it to come back here. Your real weather and drive aren't changed. TV has moved here while the new ad-free one is tried out.</p></div>`;
   }
   function previewGo() {
