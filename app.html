@@ -480,6 +480,9 @@ body.beta-heads button.np-pos::after { content: ""; display: inline-block; width
 .hl-for { margin-top: -4px; padding: 5px 14px; border-radius: 999px; font-family: var(--ui); font-size: 0.95rem; font-weight: 800; letter-spacing: 0.02em; color: #fff; background: linear-gradient(90deg, rgba(139, 108, 255, 0.5), rgba(255, 143, 177, 0.5)); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22); }
 .hl-date { font-family: var(--ui); font-size: 0.8rem; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255, 255, 255, 0.72); }
 .hl-line { width: 56px; height: 3px; border-radius: 3px; background: linear-gradient(90deg, #8b6cff, #ff8fb1); animation: hlLine 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s both; }
+.hl-wait { margin-top: 6px; font-family: var(--ui); font-size: 0.9rem; font-weight: 650; letter-spacing: 0.01em; color: rgba(255, 255, 255, 0.78); animation: hlPulse 1.4s ease-in-out infinite; }
+@keyframes hlPulse { 50% { opacity: 0.4; } }
+.np-spin { display: block; width: 26px; height: 26px; border-radius: 50%; border: 3px solid rgba(27, 24, 48, 0.16); border-top-color: #1b1830; animation: spin 0.8s linear infinite; }
 @keyframes hlPop { from { opacity: 0; transform: scale(0.6) rotate(-8deg); } to { opacity: 1; transform: none; } }
 @keyframes hlShine { from { background-position: 100% 0; } to { background-position: 0 0; } }
 @keyframes hlLine { from { transform: scaleX(0); } to { transform: scaleX(1); } }
@@ -3559,14 +3562,22 @@ const handle = async (m, post) => {
       const d = driveList(scope);
       if (!d.ids.length) { toast(scope === "logan" ? "No Logan stories yet. They come with the next update." : "There's nothing to read out yet"); return; }
       L.scope = scope; L.secOf = d.secOf; L.driveSecs = d.secs;
+      // The player opens straight away on the "Awesome News" title, so the tap clearly worked, while your drive
+      // and Logan's weather get ready behind it (a few seconds at most).
+      document.body.classList.add("npstart"); $("npCue").dataset.k = ""; npHello();
+      npOpen();
+      setTimeout(() => document.body.classList.remove("npstart"), 1500);
+      const go = L.startTok = (L.startTok || 0) + 1;
+      $("npPlay").innerHTML = '<span class="np-spin" aria-hidden="true"></span>'; $("npPlay").setAttribute("aria-label", "Getting ready");
+      $("npCue").querySelector(".np-hello")?.insertAdjacentHTML("beforeend", '<span class="hl-wait">Getting your news ready…</span>');
+      const ready = () => document.querySelectorAll("#npCue .hl-wait").forEach(e => e.remove());
       // Logan news uses Logan's weather while it plays (your own comes back when it stops).
       L.commute = null;
       if (scope !== "logan" && commuteSet()) { const c = await Promise.race([commuteNow(), new Promise(r => setTimeout(r, 4000))]); if (c) L.commute = c; }
       if (scope === "logan") { const lw = await Promise.race([loganWx(), new Promise(r => setTimeout(r, 2500))]); if (lw) { state.wxHome = state.wxHome || state.wx; state.wx = lw; } }
-      document.body.classList.add("npstart"); $("npCue").dataset.k = ""; npHello();
-      npOpen();
-      setTimeout(() => document.body.classList.remove("npstart"), 1500);
-      return startListen(d.ids, "drive");
+      ready();
+      if (go !== L.startTok || $("np").hidden || L.on) return;  // closed (or started again) while it was getting ready
+      startListen(d.ids, "drive"); updatePlayer(); return;
     }
     if (L.on && kind === "dock") { L.paused ? resumeListen() : pauseListen(); return; }
     let ids = state.briefIds?.length ? state.briefIds : briefing().map(i => i.id);
@@ -3618,7 +3629,7 @@ const handle = async (m, post) => {
       L.welcome = r && fresh.length && !r.queue.includes(fresh[0]) ? WELCOME_NEW : WELCOME_BACK;
       L.queue = [...fresh, ...old];
     }
-    if (!L.queue.length) { toast("There's nothing to read out yet"); return; }
+    if (!L.queue.length) { toast("There's nothing to read out yet"); if (kind === "drive") npClose(); return; }
     Object.assign(L, { on: true, paused: false, at: 0, kind, opened: resumed, resumed, lastSec: null, back: null, done: new Set(), listShown: false, cueN: 0 });
     if (resumed) { $("npCue").hidden = true; $("np").classList.remove("calm"); }
     $("npCust").hidden = true;
