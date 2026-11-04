@@ -1120,6 +1120,58 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   body.locked .player { bottom: 16px; }
   .toast { bottom: calc(var(--dock-h) + 30px); }
 }
+/* ---------- Desktop (900px and wider; phones are untouched) ---------- */
+.rail-wrap { position: relative; }
+.rail-nav { display: none; }
+@media (min-width: 900px) {
+  .wrap { max-width: 1180px; }
+  /* Top of the home page: Listen on the left, the week's weather and search beside it */
+  .head { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); column-gap: 16px; grid-auto-flow: row dense; align-items: start; padding-top: 18px; }
+  .head > .topbar, .head > .wxwarn { grid-column: 1 / -1; }
+  .head > .listenbar, .head > .lb-catch, .head > .lb-lgwrap { grid-column: 1; }
+  .head > .week, .head > .topsearch { grid-column: 2; }
+  .head > .week { align-self: stretch; align-content: center; margin-top: 10px; padding: 14px 8px; border-radius: 20px; box-shadow: inset 0 0 0 1px var(--line); }
+  .head > .week .wd { gap: 4px; grid-template-rows: auto 28px auto auto; }
+  .head > .week svg { width: 24px; height: 24px; }
+  .head > .week .t { font-size: 1.02rem; }
+  .head > .week .dn { font-size: 0.66rem; }
+  .head > .topsearch { align-self: stretch; height: auto; min-height: 46px; margin-top: 8px; border-radius: 16px; }
+  .tabs { gap: 4px; }
+  /* Top stories: three across, with arrows to move along */
+  .rail-wrap .hero-rail { margin-inline: 0; padding-inline: 0; scroll-padding-left: 0; gap: 16px; }
+  .rail-wrap .hcard { flex-basis: calc((100% - 32px) / 3); aspect-ratio: 4 / 4.4; max-height: none; }
+  .rail-wrap .hcard .h { font-size: 1.32rem; }
+  .rail-nav { position: absolute; top: calc(50% - 30px); z-index: 4; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%;
+    background: var(--surface); color: var(--ink); box-shadow: 0 6px 20px var(--shade), inset 0 0 0 1px var(--line); transition: opacity 0.2s ease, transform 0.2s ease; }
+  .rail-nav svg { width: 20px; height: 20px; }
+  .rail-nav.prev { left: -20px; }
+  .rail-nav.next { right: -20px; }
+  .rail-nav:disabled { opacity: 0; pointer-events: none; }
+  .today-grid .rail-nav { display: none; }
+  .today-grid .rail-wrap .hcard { flex-basis: 100%; aspect-ratio: 4 / 3.4; }
+  /* More stories: two columns, picture stories across both (no gaps beside them) */
+  .feed-head { margin-top: 34px; }
+  .feed { grid-auto-flow: row dense; column-gap: 48px; }
+  .feature { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 32px; align-items: center; padding-block: 26px; }
+  .feature .body { padding-top: 0; gap: 10px; }
+  .feature .h { font-size: 1.75rem; line-height: 1.12; letter-spacing: -0.015em; }
+  .feature .dek { font-size: 1rem; -webkit-line-clamp: 4; }
+  .item { padding-block: 18px; }
+  .item .h { font-size: 1.1rem; }
+  .item .pic { width: 104px; }
+}
+@media (min-width: 900px) and (hover: hover) {
+  .rail-nav:hover { transform: scale(1.06); }
+  .item .h, .feature .h, .lead .h { transition: color 0.15s ease; }
+  .item:hover .h, .feature:hover .h, .lead:hover .h { color: var(--accent); }
+  .item .pic, .feature .pic { overflow: hidden; }
+  .item .pic img, .feature .pic img { transition: transform 0.4s ease; }
+  .item:hover .pic img, .feature:hover .pic img { transform: scale(1.05); }
+  .hcard:hover { transform: translateY(-3px); box-shadow: 0 16px 36px var(--shade); }
+  .lb-listen:hover { filter: brightness(1.06); }
+  .lb-logan:hover, .topsearch:hover, .head > .week:hover { box-shadow: inset 0 0 0 1.5px var(--accent); }
+  .tab:not([aria-selected="true"]):hover { color: var(--ink); }
+}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
@@ -2213,7 +2265,9 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
       if (picks.length >= 2) {
         const ids = new Set(picks.map(i => i.id));
         rest = list.filter(i => !ids.has(i.id));
-        top = `<div class="hero-rail" id="heroRail" aria-label="Top stories">${picks.map((i, n) => heroCard(i, false, withSec, n === 0)).join("")}</div>
+        top = `<div class="rail-wrap"><div class="hero-rail" id="heroRail" aria-label="Top stories">${picks.map((i, n) => heroCard(i, false, withSec, n === 0)).join("")}</div>
+          <button class="rail-nav prev" type="button" data-rail="-1" aria-label="Previous top stories" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button>
+          <button class="rail-nav next" type="button" data-rail="1" aria-label="More top stories"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button></div>
           <div class="dots" id="heroDots" aria-hidden="true">${picks.map((_, n) => `<i${n ? "" : ' class="on"'}></i>`).join("")}</div>`;
         if (side) top = `<div class="today-grid"><div>${side}</div><div>${top}</div></div>`;
         rest = [...picks, ...rest].slice(picks.length);
@@ -2418,7 +2472,13 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
       const sync = () => {
         const w = (rail.firstElementChild?.offsetWidth || 1) + 12, n = Math.round(rail.scrollLeft / w);
         [...($("heroDots")?.children || [])].forEach((d, k) => d.classList.toggle("on", k === n));
+        // Desktop: the arrows either side of the top stories (hidden on phones)
+        const pv = document.querySelector(".rail-nav.prev"), nx = document.querySelector(".rail-nav.next");
+        if (pv) pv.disabled = rail.scrollLeft < 8;
+        if (nx) nx.disabled = rail.scrollLeft + rail.clientWidth > rail.scrollWidth - 8;
       };
+      document.querySelectorAll("[data-rail]").forEach(b => b.onclick = () =>
+        rail.scrollBy({ left: +b.dataset.rail * rail.clientWidth * 0.9, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }));
       rail.addEventListener("scroll", sync, { passive: true });
       sync();
     }
