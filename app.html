@@ -1811,7 +1811,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     if (cue.dataset.k === k) return;
     cue.dataset.k = k;
     const date = new Intl.DateTimeFormat("en-AU", { timeZone: TZ, weekday: "long", day: "numeric", month: "long" }).format(new Date());
-    cue.innerHTML = `<div class="np-hello"><img class="hl-logo" src="${APP_ICON}" alt=""><span class="hl-name">Awesome News</span>${lg ? `<span class="hl-for np-in" style="--i:2">for Logan</span>` : ""}<span class="hl-date np-in" style="--i:3">${esc(date)}</span><span class="hl-line" aria-hidden="true"></span></div>`;
+    cue.innerHTML = `<div class="np-hello"><img class="hl-logo" src="${APP_ICON}" alt=""><span class="hl-name">Awesome News</span>${lg ? `<span class="hl-for np-in" style="--i:2">City of Logan</span>` : ""}<span class="hl-date np-in" style="--i:3">${esc(date)}</span><span class="hl-line" aria-hidden="true"></span></div>`;
   }
   function npOpen() {
     $("npLogo").src = APP_ICON;
@@ -1959,7 +1959,8 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
       const label = p.sec === "top" ? "Top stories" : p.sec === "local news" ? "Local news" : p.sec === "more headlines" ? "More headlines" : p.sec;
       if (was !== "cue:" + label) { cue.dataset.k = label; cue.innerHTML = `<small class="np-in">Up next</small><span class="t np-in" style="--i:1">${esc(label.charAt(0).toUpperCase() + label.slice(1))}</span>`; }
     }
-    $("npCap").textContent = p.kind === "title" ? "" : p.text;
+    // On screen, Logan news says "City of Logan" (Emma still says "This is Logan news, from Awesome News").
+    $("npCap").textContent = p.kind === "title" ? "" : p.text.replace(/This is Logan news, from Awesome News,?/, "City of Logan news,").replace("City of Logan news,.", "City of Logan news.");
   }
   // Listen to the news: the weather sits blurred behind the "Awesome News" title, then sharpens and takes over
   // when the weather is read out. Its clock only starts once it's sharp.
@@ -2061,7 +2062,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
         wx = ` First, the weather in ${state.wx.city}. It's ${Math.round(v.cur.temperature_2m)} degrees ${wxSay(v.cur.weather_code, v.cur.is_day)}. ${wxSummary(v).replace(/°/g, " degrees").replace(/\((\d+)%\)/g, ", $1 percent").replace(/\((\d+)\)/g, "$1")}`;
       }
     } catch {}
-    return `${greeting()}. ${L.scope === "logan" ? "This is Logan news, from Awesome News." : "This is Awesome News."}${wx}`;
+    return `${greeting()}. ${L.scope === "logan" ? "This is Logan news, from Awesome News." : "Your news, tailored the way you like it."}${wx}`;
   }
   function briefingHTML(picks) {
     if (picks.length < 3) { state.briefIds = []; return ""; }
@@ -5601,10 +5602,13 @@ const handle = async (m, post) => {
   async function commuteNow() {
     const c = CM(); if (!c.home?.lat || !c.work?.lat || isWeekend()) return null;
     // Addresses set up with rough map points get looked up properly once, then kept.
-    if (!commuteNow.tried) { commuteNow.tried = true;
+    if (!commuteNow.tried && state.mode !== "claude") { commuteNow.tried = true;
       for (const k of ["home", "work"]) if (c[k].approx) try { const hit = await geocode(c[k].q); if (hit) { c[k] = { ...hit, label: c[k].label || hit.label }; saveCommute(c); } } catch {} }
     const toWork = hourNow() < 12, a = toWork ? c.home : c.work, b = toWork ? c.work : c.home, key = `${toWork}|${a.lat},${a.lon}|${b.lat},${b.lon}|${c.leave}`;
     if (COMMUTE_CACHE?.key === key && Date.now() - COMMUTE_CACHE.at < 5 * 60000) return COMMUTE_CACHE.v;
+    // The Claude copy can't reach the route planner or QLDTraffic (its sandbox blocks other sites): it uses the drive
+    // worked out on GitHub on weekday mornings and afternoons (drive.py), copied into its database as meta/drive.
+    if (state.mode === "claude") return commuteSnap(c, toWork, a, b);
     try {
       const [r, evs] = await Promise.all([
         withTimeout(fetch(`https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${b.lon},${b.lat}?overview=full&geometries=geojson`).then(x => x.json()), 10000),
@@ -5629,6 +5633,15 @@ const handle = async (m, post) => {
       COMMUTE_CACHE = { key, at: Date.now(), v };
       return v;
     } catch { return null; }
+  }
+  function commuteSnap(c, toWork, a, b) {
+    const d = state.driveSnap, r = d?.[toWork ? "work" : "home"], now = Date.now();
+    if (!r || !(now - Date.parse(d.at || "") < 4 * 3600e3)) return null;  // nothing from the last 4 hours: no drive section
+    const plan = toWork ? leaveToday(c.leave) : null, planned = !!plan && plan.getTime() > now - 5 * 60000, leave = planned ? plan : new Date(now);
+    const events = r.events || [], extra = Math.min(25, events.reduce((t, e) => t + ({ Crash: 8, Congestion: 6, Flooding: 10, Hazard: 2, Roadworks: 3, "Special event": 3 })[e.type] || 0, 0));
+    const est = Math.round(r.mins * peakFactor(leave) + extra), arrive = new Date(leave.getTime() + est * 60000);
+    return { toWork, base: Math.round(r.mins), est, extra, planned, leaveAt: hm(leave), arriveAt: hm(arrive), km: r.km,
+      from: a.label, to: b.label, events: events.slice(0, 8), more: r.more || 0 };
   }
   const ORDER = ["Crash", "Flooding", "Hazard", "Congestion", "Roadworks", "Special event"];
   const QUARTER = { "07:45": "a quarter to eight", "07:30": "half past seven", "08:00": "eight", "07:15": "a quarter past seven", "08:15": "a quarter past eight", "08:30": "half past eight", "07:00": "seven" };
@@ -5851,6 +5864,10 @@ const handle = async (m, post) => {
       if (Object.keys(next).length || !state.fromCache) state.feeds = next;  // never swap the saved copy for an empty offline answer
       arrived();
     }, () => { state.loaded = true; render(); toast(state.fromCache ? "You're offline. Showing the stories saved on this device." : "Stories couldn't load. Check your connection and reopen the page.", 6000); });
+    db.doc("meta/drive").onSnapshot(snap => {  // Ash's drive, worked out on GitHub (see commuteSnap)
+      state.driveSnap = snap.exists ? snap.data() : null; COMMUTE_CACHE = null;
+      if (commuteSet() && !L.on) commuteNow().then(driveLine);
+    }, () => {});
     db.doc("meta/status").onSnapshot(snap => {
       const prev = state.status?.updatedAt;
       if (!snap.exists && state.fromCache) { arrived(); return; }

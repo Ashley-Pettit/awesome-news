@@ -1,0 +1,40 @@
+name: Ash's drive
+
+# Weekdays before the 7:45am drive to work, and in the afternoon for the drive home: works out the drive time and
+# what QLDTraffic reports on the way, and keeps it on the "drive" branch as drive.json. A scheduled task copies it
+# into the private Claude copy of the app, which can't reach those services itself.
+on:
+  schedule:
+    - cron: "40 20 * * 0-4"   # 6:40am Brisbane, Monday to Friday
+    - cron: "20 21 * * 0-4"   # 7:20am
+    - cron: "10 6 * * 1-5"    # 4:10pm
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: drive
+  cancel-in-progress: true
+
+jobs:
+  drive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Work out the drive
+        run: python drive.py /tmp/drive.json
+      - name: Keep it on the drive branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan drive-tmp
+          git rm -rfq .
+          cp /tmp/drive.json drive.json
+          git add drive.json
+          git commit -qm "[skip ci] Drive $(date -u +%FT%TZ)"
+          git push -fq origin HEAD:drive
