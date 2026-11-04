@@ -1276,8 +1276,6 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
       <button type="button" class="np-act" id="npLike" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span>More like this</span></button>
       <button type="button" class="np-act" id="npRead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 11h16M4 16h10"/></svg><span>Read along</span></button>
       <button type="button" class="np-act" id="npSave" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11a1 1 0 0 1 1 1V20l-6.5-4-6.5 4V4.5a1 1 0 0 1 1-1z"/></svg><span>Save</span></button>
-      <button type="button" class="np-act" id="npGoWx" aria-label="Back to the weather"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18.5h10.3a4 4 0 0 0 .7-7.94A5.6 5.6 0 0 0 7.2 9.3 4.6 4.6 0 0 0 7 18.5z"/></svg><span>Weather</span></button>
-      <button type="button" class="np-act" id="npGoTr" aria-label="Back to your drive" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17h14M6.5 17l1.6-5.2A2 2 0 0 1 10 10.4h4a2 2 0 0 1 1.9 1.4L17.5 17"/><circle cx="8" cy="17.5" r="1.6"/><circle cx="16" cy="17.5" r="1.6"/><path d="M12 3v3M8 5l1 2M16 5l-1 2"/></svg><span>Traffic</span></button>
     </div>
     <div class="np-ctl">
       <button type="button" class="np-btn sm" id="npPrev" aria-label="Previous story"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 5.5v13l-9-6.5zM5 5h3v14H5z"/></svg></button>
@@ -2004,7 +2002,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     // Straight after the weather: the headlines, so you can jump to one (and a tip about Settings).
     if (p.kind !== "open" && p.kind !== "wk" && L.kind === "drive" && L.opened && !L.listShown) {
       L.listShown = true;
-      $("npCust").hidden = false; $("npWk").hidden = !state.wx; $("npGoTr").hidden = !commuteSet(); $("npGoWx").hidden = !state.wx;  // from here on: a small "Customise" pill that opens Settings (shown, not read out)
+      $("npCust").hidden = false; $("npWk").hidden = !state.wx;  // from here on: a small "Customise" pill that opens Settings (shown, not read out)
       // (beta: the headlines list opens from the "1 of 28" button, not by itself)
     }
     if (p.kind === "cue") {
@@ -3860,7 +3858,6 @@ const handle = async (m, post) => {
     const id = L.queue[L.at], on = L.kind === "drive" && !!id;
     $("npActs").hidden = !on;
     if (!on) return;
-    $("npGoWx").hidden = !state.wx; $("npGoTr").hidden = !commuteSet();
     $("npLike").setAttribute("aria-pressed", "false");
     $("npSave").setAttribute("aria-pressed", String(isSaved(id)));
     npUpNext();
@@ -3874,7 +3871,21 @@ const handle = async (m, post) => {
     L.token++; L.sid++; hush(); L.paused = false; L.back = null; L.skipped = true;
     L.at--; playStory();
   }
-  function skipListen() { L.token++; L.sid++; hush(); L.paused = false; L.skipped = true; nextStory(); }
+  function skipListen() {
+    // In the opening: skip the weather (and any warning) to your drive, or your drive to the first story, in order.
+    const grp = k => ["open", "warn", "wk"].includes(k) ? "wx" : k === "traffic" ? "tr" : "";
+    const cur = L.parts?.[L.part], g = L.on && L.kind === "drive" && cur ? grp(cur.kind) : "";
+    if (g) {
+      let n = L.part + 1;
+      while (n < L.parts.length && grp(L.parts[n].kind) === g) n++;
+      if (n < L.parts.length) {
+        const tk = ++L.token; hush(); L.paused = false; clearInterval(L.wxT); L.wxT = 0;
+        document.body.classList.remove("wxweek");
+        L.part = n; updatePlayer(); armDog(); speakNext(tk); return;
+      }
+    }
+    L.token++; L.sid++; hush(); L.paused = false; L.skipped = true; nextStory();
+  }
   function stopListen() {
     saveResume();  // beta: come back within the hour to pick up here
     wxListenOff(); $("npCust").hidden = true; $("npWk").hidden = true;
@@ -4119,8 +4130,6 @@ const handle = async (m, post) => {
     if (t.closest("#npPrev")) { prevStory(); return; }
     if (t.closest("#npLike")) { likeThis(); return; }
     if (t.closest("#npRead")) { readAlong(); return; }
-    if (t.closest("#npGoWx")) { replaySeg("weather"); return; }
-    if (t.closest("#npGoTr")) { replaySeg("traffic"); return; }
     if (t.closest("#npSave")) { const id = L.queue[L.at]; if (id) { toggleSave(id); $("npSave").setAttribute("aria-pressed", String(isSaved(id))); toast(isSaved(id) ? "Saved for later" : "Removed from saved"); } return; }
     if (t.closest("#npUpNext")) { skipListen(); return; }
     if (t.closest("#npWk")) { weekBrief(); return; }
@@ -5734,8 +5743,7 @@ const handle = async (m, post) => {
     $("npTraffic").innerHTML = `<div class="tr-top"><b>${c.toWork ? "Your drive to work" : "Your drive home"}</b><span>About ${c.est} min · ${c.km} km</span></div>
       <p class="tr-ok">Leave ${c.leaveAt}, there about ${c.arriveAt}. ${c.base} min with empty roads${c.extra ? `, plus about ${c.extra} for what's reported` : ""}.</p>
       ${c.events.length ? `<ul>${c.events.map(e => `<li><i class="${hot(e.type) ? "hot" : ""}">${esc(e.type === "Congestion" ? "Traffic" : e.type)}</i><span>${esc(e.road || "On your way")}${e.place ? `, ${esc(e.place)}` : ""}<small>${esc([e.what, e.impact, e.delay].filter(x => x && x !== e.type).join(" · "))}</small></span></li>`).join("")}</ul>${c.more ? `<p class="tr-ok">And ${c.more} more.</p>` : ""}`
-        : `<p class="tr-ok">Nothing reported on your way right now.</p>`}
-      <p class="tr-src">An estimate: OSRM drive time (OpenStreetMap) with the usual peak-hour slowdown. Incidents: QLDTraffic.</p>`;
+        : `<p class="tr-ok">Nothing reported on your way right now.</p>`}`;
     driveHUD(c);
   }
   // The 3D drive view's words, laid out like the weather page.
@@ -5768,7 +5776,6 @@ const handle = async (m, post) => {
         <h2>On your way</h2>
         ${c.events.length ? `<ul>${c.events.map(e => `<li><i class="${tag(e.type)}">${esc(e.type === "Congestion" ? "Traffic" : e.type)}</i><span>${esc(e.road || "On your way")}${e.place ? `, ${esc(e.place)}` : ""}<small>${esc([e.what, e.impact, e.delay].filter(x => x && x !== e.type).join(" · "))}</small></span></li>`).join("")}</ul>${c.more ? `<p class="dv-src">And ${c.more} more.</p>` : ""}`
           : `<div class="dv-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.6 2.6L16 9.5"/></svg>Nothing reported on your way</div>`}
-        <p class="dv-src">An estimate: OSRM drive time (OpenStreetMap) with the usual peak-hour slowdown. Incidents: QLDTraffic.</p>
       </section>`;
   }
   // On the home page, under Listen: the drive at a glance.
