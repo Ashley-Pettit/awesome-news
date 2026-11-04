@@ -1,0 +1,50 @@
+name: Quick publish (app changes)
+
+# A change to the app itself goes live in a few minutes: this takes the site that's already published (news, voice,
+# pictures), drops in the newly built page, and publishes that. The full "Update news and publish" run still follows
+# with fresh news, about 15 minutes later.
+on:
+  push:
+    branches: [main]
+    paths: ["app.html", "build.py", "sw.js", "manifest.webmanifest", "icons/**", "beta/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-quick
+  cancel-in-progress: true
+
+jobs:
+  quick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get the site that's live now
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for id in $(gh run list --workflow pages.yml --status success --limit 6 --json databaseId --jq '.[].databaseId'); do
+            if gh run download "$id" -n github-pages -D /tmp/pages 2>/dev/null; then echo "From run $id"; break; fi
+          done
+          test -f /tmp/pages/artifact.tar
+          mkdir -p _site && tar -xf /tmp/pages/artifact.tar -C _site && rm -rf /tmp/pages
+
+      - name: Build the new page
+        run: python3 build.py _site
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
