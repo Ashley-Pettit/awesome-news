@@ -342,7 +342,8 @@ def plan(data, vkey):
               + [f"Leave at {w}." for w in ("seven", "a quarter past seven", "half past seven", "a quarter to eight", "eight", "a quarter past eight", "half past eight")]
               + [f"Leave in about {n} minutes." for n in list(range(2, 21)) + list(range(25, 125, 5))]
               + [f"It's about {n} minutes to get {w}." for w in ("to work", "home", "into Inverloch") for n in list(range(2, 21)) + list(range(25, 125, 5))]
-              + ["No crashes or roadworks reported, so it should be a clear run.", "Best to allow some extra time."]):
+              + ["No crashes or roadworks reported, so it should be a clear run.", "No crashes or roadworks reported, but it'll be a bit slow.",
+                 "No crashes or roadworks reported, but expect heavy traffic.", "Best to allow some extra time."]):
         want(t)
     for n in range(1, 9):
         want(f"Story {n}.")

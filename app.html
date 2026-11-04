@@ -6133,7 +6133,11 @@ const handle = async (m, post) => {
     else parts.push(k > 60 && at ? `Leave at ${at}.` : `Leave in about ${say5(k)} minutes.`, `It's about ${n} minutes to get ${getThere(c)}.`);
     const by = t => c.events.filter(e => e.type === t);
     if (c.noInc) {}  // no road reports outside Queensland: just the time
-    else if (!c.events.length) parts.push("No crashes or roadworks reported, so it should be a clear run.");
+    else if (!c.events.length) {  // nothing reported, but the usual peak can still make it slow (same levels as the meter on screen)
+      const busy = Math.max(0, Math.min(1, ((c.est - DOOR) / Math.max(1, c.base) - 1.05) / 0.5));
+      parts.push(busy > 0.66 ? "No crashes or roadworks reported, but expect heavy traffic." : busy > 0.33 ? "No crashes or roadworks reported, but it'll be a bit slow."
+        : "No crashes or roadworks reported, so it should be a clear run.");
+    }
     else {
       for (const t of ORDER) {
         const e = by(t); if (!e.length) continue;
