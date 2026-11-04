@@ -338,8 +338,10 @@ def plan(data, vkey):
                "There's heavy traffic on your way.", "There are roadworks on your way.", "There's an event on your way.", "Allow some extra time.",
                "The details are on screen."]
               + [f"It usually takes about {n} minutes." for n in list(range(2, 21)) + list(range(25, 125, 5))]
-              # Your drive (app.html): leaving at your usual time, or now.
-              + [f"Leaving {w}, allow about {n} minutes." for w in ("at a quarter to eight", "now") for n in list(range(2, 21)) + list(range(25, 125, 5))]):
+              # Your drive (trafficParts() in app.html): when to leave, then how long it takes to get there.
+              + ["Leave now."] + [f"Leave at {w}." for w in ("seven", "a quarter past seven", "half past seven", "a quarter to eight", "eight", "a quarter past eight", "half past eight")]
+              + [f"Leave in about {n} minutes." for n in list(range(2, 21)) + list(range(25, 125, 5))]
+              + [f"About {n} minutes to get {w}." for w in ("to work", "home", "to Inverloch") for n in list(range(2, 21)) + list(range(25, 125, 5))]):
         want(t)
     for n in range(1, 9):
         want(f"Story {n}.")
