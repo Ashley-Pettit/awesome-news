@@ -2009,8 +2009,11 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
       const label = p.sec === "top" ? "Top stories" : p.sec === "local news" ? "Local news" : p.sec === "more headlines" ? "More headlines" : p.sec;
       if (was !== "cue:" + label) { cue.dataset.k = label; cue.innerHTML = `<small class="np-in">Up next</small><span class="t np-in" style="--i:1">${esc(label.charAt(0).toUpperCase() + label.slice(1))}</span>`; }
     }
-    // On screen, Logan news says "City of Logan" (Emma still says "This is Logan news, from Awesome News").
-    $("npCap").textContent = p.kind === "title" ? "" : p.text.replace(/This is Logan news, from Awesome News,?/, "City of Logan news,").replace("City of Logan news,.", "City of Logan news.");
+    // On screen only (Emma still says "This is Awesome News" and "This is Logan news, from Awesome News"):
+    // the opening reads "Your news, tailored the way you like it", and Logan news says "City of Logan".
+    $("npCap").textContent = p.kind === "title" ? "" : p.text
+      .replace(/This is Awesome News( for)?/, (m, f) => "Your news, tailored the way you like it" + (f ? ", for" : ""))
+      .replace(/This is Logan news, from Awesome News,?/, "City of Logan news,").replace("City of Logan news,.", "City of Logan news.");
   }
   // Listen to the news: the weather sits blurred behind the "Awesome News" title, then sharpens and takes over
   // when the weather is read out. Its clock only starts once it's sharp.
@@ -2112,7 +2115,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
         wx = ` First, the weather in ${state.wx.city}. It's ${Math.round(v.cur.temperature_2m)} degrees ${wxSay(v.cur.weather_code, v.cur.is_day)}. ${wxSummary(v).replace(/°/g, " degrees").replace(/\((\d+)%\)/g, ", $1 percent").replace(/\((\d+)\)/g, "$1")}`;
       }
     } catch {}
-    return `${greeting()}. ${L.scope === "logan" ? "This is Logan news, from Awesome News." : "Your news, tailored the way you like it."}${wx}`;
+    return `${greeting()}. ${L.scope === "logan" ? "This is Logan news, from Awesome News." : "This is Awesome News."}${wx}`;
   }
   function briefingHTML(picks) {
     if (picks.length < 3) { state.briefIds = []; return ""; }
