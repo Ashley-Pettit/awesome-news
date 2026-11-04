@@ -3076,15 +3076,14 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
         <div class="field"><span class="lbl">Appearance</span>${seg("theme", S.theme, [["system", "Auto"], ["light", "Light"], ["dark", "Dark"]])}</div>
       </div><p class="hint">${offlineArticles ? `${Object.keys(offlineArticles).length} full stories are kept on this device, so they still open with no signal.` : "Stories are kept on this device as they load, so they still open with no signal."}</p></div>
       ${fullHTML()}`,
-      listen: `${listenHTML() || `<p class="hint" style="margin-top:20px">This browser can't read stories out loud.</p>`}
-      ${commuteOK() ? commuteHTML() : ""}`,
+      listen: `${listenHTML() || `<p class="hint" style="margin-top:20px">This browser can't read stories out loud.</p>`}`,
       app: `${getAppHTML()}
       ${shareHTML()}
       <div class="group"><h2>Your data</h2><div class="card">
         <button class="field danger" type="button" id="clearRead">Clear read history <span class="sub" style="color:var(--muted)">${state.read.size} stories</span></button>
         <button class="field danger" type="button" id="clearSaved">Clear saved stories <span class="sub" style="color:var(--muted)">${state.saved.length} saved</span></button>
       </div><p class="hint">Everything you set here stays on this device.</p></div>
-      ${betaHTML()}
+      ${betaHTML()}${commuteOK() ? commuteHTML() : ""}
       <p class="about">Awesome News pulls from free sources only: ABC, SBS, BBC, The Guardian, 7NEWS, The Conversation, 360info, Global Voices, NASA, EFF, Ars Technica, TechCrunch, iTnews and more. ${privateMode() ? "Stories open in full right here." : "Stories marked Full are free to republish, so they open in full right here."} No paywalls, no sport.${state.status?.updatedAt ? `<br>Stories last updated ${esc(longDate(state.status.updatedAt))}.` : ""}</p>
 `,
     };
@@ -3294,8 +3293,8 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   // ======================================================================
   const tts = window.speechSynthesis;
   const canSpeak = !!tts && typeof window.SpeechSynthesisUtterance === "function";
-  const RATES = [0.9, 1, 1.15, 1.3, 1.5, 1.75];
-  const L = { fails: 0, aiProg: 0, aiWait: false, aiAt: -1, unlocked: false, on: false, paused: false, queue: [], at: 0, parts: [], part: 0, loading: false, waiting: false, token: 0, sid: 0, kind: "", curPara: -1, rate: store.get("brief.rate", 1) };
+  const RATES = [0.9, 1, 1.15, 1.3, 1.5];
+  const L = { fails: 0, aiProg: 0, aiWait: false, aiAt: -1, unlocked: false, on: false, paused: false, queue: [], at: 0, parts: [], part: 0, loading: false, waiting: false, token: 0, sid: 0, kind: "", curPara: -1, rate: Math.min(1.5, Number(store.get("brief.rate", 1)) || 1) };
   // Speed is set in Settings only now; anything a stray tap on the old player button changed goes back to 1×.
   if (!store.get("brief.rateReset", false)) { L.rate = 1; store.set("brief.rate", 1); store.set("brief.rateReset", true); }
   let voices = [];
@@ -6017,7 +6016,9 @@ const handle = async (m, post) => {
   // What the drive is called: "Drive to work" (or Rod's "Drive into Inverloch"), "Drive home".
   const driveName = c => c.toWork ? (CM().toName || "Drive to work") : "Drive home";
   const CM = () => { if (!commuteOK()) return {}; let v = null; try { v = store.get("brief.commute", null); } catch {}
-    return Object.assign({ leave: "07:45" }, DEFAULT_COMMUTE || (isAsh() ? ASH_DRIVE : isRod() ? ROD_DRIVE : {}), v && typeof v === "object" ? v : {}); };
+    const c = Object.assign({ leave: "07:45" }, DEFAULT_COMMUTE || (isAsh() ? ASH_DRIVE : isRod() ? ROD_DRIVE : {}), v && typeof v === "object" ? v : {});
+    for (const k of ["home", "work"]) if (!c[k]) delete c[k];  // cleared in Settings
+    return c; };
   const commuteSet = () => { const c = CM(); return !!(c.home?.lat && c.work?.lat); };
   async function geocode(q) {
     const u = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=au&viewbox=152.4,-26.6,153.6,-28.3&q=" + encodeURIComponent(q);
@@ -6205,19 +6206,23 @@ const handle = async (m, post) => {
     const c = CM(), row = (k, label, ph) => `<div class="cm-row"><label class="lbl" for="cm-${k}">${label}</label>
         <form class="add" data-commute="${k}"><input type="text" id="cm-${k}" placeholder="${ph}" maxlength="120" value="${esc(c[k]?.q || "")}" autocomplete="off"><button type="submit">Save</button></form>
         ${c[k]?.label ? `<span class="cm-saved">Found: ${esc(c[k].label)} · <button type="button" class="linkish" data-commute-clear="${k}">Clear</button></span>` : ""}</div>`;
-    return `<div class="group"><h2>Your drive</h2><div class="card">
+    // The Claude copy can't look up addresses or traffic itself: its drive comes from Ash's daily drive data.
+    if (state.mode === "claude") return `<div class="group"><h2>Your drive (beta)</h2><div class="card"><div class="field col"><span class="lbl">${esc(c.home?.label || "Home")} to ${esc(c.work?.label || "work")}, leaving ${esc(c.leave || "07:45")}<span class="sub">Set here by Ash's drive data, checked on weekday mornings and afternoons. To change it, use the website.</span></span></div></div></div>`;
+    return `<div class="group"><h2>Your drive (beta)</h2><div class="card">
       ${row("home", "Home", "Address or suburb")}${row("work", "Work", "Address or suburb")}
       <div class="cm-row"><label class="lbl" for="cm-leave">Leave for work at</label><form class="add" data-commute-leave><input type="time" id="cm-leave" value="${esc(c.leave || "07:45")}"><button type="submit">Save</button></form></div>
     </div><p class="hint">Weekdays, after the weather, Listen tells you about your drive: to work in the morning (leaving at this time), home after midday. Shows when your name in Settings is Ash or Rod, or on a phone unlocked with the passphrase. Addresses you enter stay on this phone.</p></div>`;
   }
-  const saveCommute = c => { const { home, work, leave } = c; store.set("brief.commute", { home, work, leave }); COMMUTE_CACHE = null; };
+  // Saved changes show straight away: the drive is worked out again and the home page line updated.
+  const saveCommute = c => { const { home = null, work = null, leave } = c; store.set("brief.commute", { home, work, leave }); COMMUTE_CACHE = null; L.commute = null;
+    if (commuteSet()) commuteNow().then(driveLine); else driveLine(null); };
   document.addEventListener("submit", async e => {
     const lv = e.target.closest?.("[data-commute-leave]");
     if (lv) { e.preventDefault(); const v = lv.querySelector("input").value; if (/^\d\d:\d\d$/.test(v)) { const c = CM(); c.leave = v; saveCommute(c); toast(`Leaving at ${v}`); } return; }
     const f = e.target.closest?.("[data-commute]"); if (!f) return;
     e.preventDefault();
     const k = f.dataset.commute, q = f.querySelector("input").value.trim(), c = CM();
-    if (!q) { delete c[k]; saveCommute(c); renderSettings(); return; }
+    if (!q) { c[k] = null; saveCommute(c); renderSettings(); return; }
     const btn = f.querySelector("button"); btn.disabled = true; btn.textContent = "Finding…";
     let hit = null; try { hit = await geocode(q); } catch {}
     if (!hit) { btn.disabled = false; btn.textContent = "Save"; toast("Couldn't find that address. Try adding the suburb."); return; }
@@ -6226,7 +6231,7 @@ const handle = async (m, post) => {
   });
   document.addEventListener("click", e => {
     const b = e.target.closest?.("[data-commute-clear]"); if (!b) return;
-    const c = CM(); delete c[b.dataset.commuteClear]; saveCommute(c); renderSettings();
+    const c = CM(); c[b.dataset.commuteClear] = null; saveCommute(c); renderSettings();
   });
   // iPhone home-screen apps sometimes leave the bottom bar stranded part way up the screen (after the keyboard,
   // a video or a full-screen view closes). Whenever that happens, it's put back on the bottom edge.
