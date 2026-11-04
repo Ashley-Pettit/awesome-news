@@ -5198,9 +5198,14 @@ const handle = async (m, post) => {
   // congestion, hazards, flooding and roadworks now. The estimate adds the usual peak-hour slowdown for when you
   // leave, plus time for anything reported on the way. Addresses stay on this phone.
   const QLDT = "https://api.qldtraffic.qld.gov.au/v2/events?apikey=3e83add325cbb69ac4d8e5bf433d770b";  // its public key
-  const commuteOK = () => !!DEFAULT_COMMUTE || !!A.unlocked;
+  // Ash's drive comes set up on any phone where the name in Settings is Ash. Home is just the suburb's middle
+  // (no street address in the public code), which makes no real difference to a 20 km drive time.
+  const ASH_DRIVE = { home: { q: "Moorooka", label: "Moorooka", lat: -27.532, lon: 153.024 },
+    work: { q: "Logan City Council, 150 Wembley Road, Logan Central", label: "Logan City Council", lat: -27.6388, lon: 153.1095 }, leave: "07:45" };
+  const isAsh = () => /^ash(ley)?$/i.test((S.name || "").trim());
+  const commuteOK = () => !!DEFAULT_COMMUTE || !!A.unlocked || isAsh();
   const CM = () => { if (!commuteOK()) return {}; let v = null; try { v = store.get("brief.commute", null); } catch {}
-    return Object.assign({ leave: "07:45" }, DEFAULT_COMMUTE || {}, v && typeof v === "object" ? v : {}); };
+    return Object.assign({ leave: "07:45" }, DEFAULT_COMMUTE || (isAsh() ? ASH_DRIVE : {}), v && typeof v === "object" ? v : {}); };
   const commuteSet = () => { const c = CM(); return !!(c.home?.lat && c.work?.lat); };
   async function geocode(q) {
     const u = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=au&viewbox=152.4,-26.6,153.6,-28.3&q=" + encodeURIComponent(q);
@@ -5331,7 +5336,7 @@ const handle = async (m, post) => {
     return `<div class="group"><h2>Your drive</h2><div class="card">
       ${row("home", "Home", "Address or suburb")}${row("work", "Work", "Address or suburb")}
       <div class="cm-row"><label class="lbl" for="cm-leave">Leave for work at</label><form class="add" data-commute-leave><input type="time" id="cm-leave" value="${esc(c.leave || "07:45")}"><button type="submit">Save</button></form></div>
-    </div><p class="hint">Weekdays, after the weather, Listen tells you about your drive: to work in the morning (leaving at this time), home after midday. Only you see this. Your addresses stay on this phone.</p></div>`;
+    </div><p class="hint">Weekdays, after the weather, Listen tells you about your drive: to work in the morning (leaving at this time), home after midday. Shows when your name in Settings is Ash, or on a phone unlocked with the passphrase. Addresses you enter stay on this phone.</p></div>`;
   }
   const saveCommute = c => { const { home, work, leave } = c; store.set("brief.commute", { home, work, leave }); COMMUTE_CACHE = null; };
   document.addEventListener("submit", async e => {
