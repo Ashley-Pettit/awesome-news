@@ -3741,10 +3741,9 @@ const handle = async (m, post) => {
   }
   // Skip button on the weather while listening: straight on to the stories.
   function skipWeather() {
-    if (!L.on || !["open", "wk", "warn"].includes(L.parts[L.part]?.kind)) { wxListenOff(); return; }
-    const tk = ++L.token; hush(); L.paused = false;
-    const from = L.part; L.part = L.parts.findIndex((p, n) => n >= from && !["open", "wk", "warn"].includes(p.kind)); if (L.part < 0) L.part = L.parts.length;
-    wxListenOff(); updatePlayer(); armDog(); speakNext(tk);
+    // The weather goes to your drive (straight from one 3D view to the other), your drive goes to the news.
+    if (L.on && L.kind === "drive" && ["open", "wk", "warn", "traffic"].includes(L.parts[L.part]?.kind)) { skipListen(); return; }
+    wxListenOff();
   }
   // Stories already heard in Listen to the news are left out next time.
   // Beta: remembered with the time, for 3 days (older ones drop off), and a story counts as heard once its
@@ -5633,7 +5632,7 @@ const handle = async (m, post) => {
     work: { q: "Logan City Council, 150 Wembley Road, Logan Central", label: "Logan City Council", lat: -27.6388, lon: 153.1095 }, leave: "07:45" };
   // Rod: the middle of Norman Road, Inverloch, into Inverloch's town centre.
   const ROD_DRIVE = { home: { q: "Norman Road, Inverloch", label: "Norman Road", sign: "Norman Rd", lat: -38.64062, lon: 145.71191 },
-    work: { q: "Inverloch", label: "Inverloch town centre", sign: "Inverloch", lat: -38.63316, lon: 145.72795 }, leave: "07:45", toName: "Drive into Inverloch", toWord: "to Inverloch" };
+    work: { q: "Inverloch", label: "Inverloch town centre", sign: "Inverloch", lat: -38.63316, lon: 145.72795 }, leave: "07:45", toName: "Drive into Inverloch", toWord: "into Inverloch" };
   const isAsh = () => /^ash(ley)?$/i.test((S.name || "").trim());
   const isRod = () => /^rod(ney)?$/i.test((S.name || "").trim());
   const commuteOK = () => !!DEFAULT_COMMUTE || !!A.unlocked || isAsh() || isRod();
@@ -5675,7 +5674,7 @@ const handle = async (m, post) => {
   // Minutes until you leave (0: now), worked out each time it's shown, and where you're going ("to work", "home").
   const leaveIn = c => c.planned ? Math.max(0, Math.round((c.leaveMs - Date.now()) / 60000)) : 0;
   const getThere = c => c.toWork ? (CM().toWord || "to work") : "home";
-  const leaveText = c => { const k = leaveIn(c); return k < 2 ? "Leave now" : `Leave in about ${k} min`; };
+  const leaveText = c => { const k = leaveIn(c); return k < 2 ? "" : `Leave in about ${k} min`; };
   const inQld = p => p.lat > -29.2 && p.lon > 137.9;  // QLDTraffic's road reports only cover Queensland
   const hm = d => new Intl.DateTimeFormat("en-AU", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: TZ }).format(d).replace(/\s/g, "").toLowerCase();
   // How much slower than an empty road, by when you leave (weekday peaks in Brisbane's south and Logan).
@@ -5747,12 +5746,12 @@ const handle = async (m, post) => {
   function trafficParts() {
     const c = L.commute; if (!c) return [];
     const n = say5(c.est), at = QUARTER[CM().leave], k = leaveIn(c);
-    const parts = ["Onto traffic.",
-      k < 2 ? "Leave now." : k > 60 && at ? `Leave at ${at}.` : `Leave in about ${say5(k)} minutes.`,
-      `About ${n} minutes to get ${getThere(c)}.`];
+    const parts = ["Onto traffic."];
+    if (k < 2) parts.push(`It's about ${n} minutes to get ${getThere(c)}.`);
+    else parts.push(k > 60 && at ? `Leave at ${at}.` : `Leave in about ${say5(k)} minutes.`, `It's about ${n} minutes to get ${getThere(c)}.`);
     const by = t => c.events.filter(e => e.type === t);
     if (c.noInc) {}  // no road reports outside Queensland: just the time
-    else if (!c.events.length) parts.push("Nothing's been reported on your way.");
+    else if (!c.events.length) parts.push("No crashes or roadworks reported, so it should be a clear run.");
     else {
       for (const t of ORDER) {
         const e = by(t); if (!e.length) continue;
@@ -5762,7 +5761,7 @@ const handle = async (m, post) => {
           : `${({ Crash: "A crash", Flooding: "Flooding", Hazard: "A hazard", Congestion: "Heavy traffic", Roadworks: "Roadworks", "Special event": "An event" })[t]} on ${[...new Set(e.map(x => x.road).filter(Boolean))].slice(0, 2).join(" and ") || "your way"}.`;
         parts.push(say);
       }
-      if (c.events.some(e => ["Crash", "Congestion", "Flooding"].includes(e.type) || /clos/i.test(e.impact))) parts.push("Allow some extra time.");
+      if (c.events.some(e => ["Crash", "Congestion", "Flooding"].includes(e.type) || /clos/i.test(e.impact))) parts.push("Best to allow some extra time.");
       parts.push("The details are on screen.");
     }
     trafficCard(c);
@@ -5771,7 +5770,7 @@ const handle = async (m, post) => {
   function trafficCard(c) {
     const hot = t => t === "Crash" || t === "Flooding" || t === "Congestion";
     $("npTraffic").innerHTML = `<div class="tr-top"><b>Your ${driveName(c).replace(/^Drive/, "drive")}</b><span>About ${c.est} min · ${c.km} km</span></div>
-      <p class="tr-ok">${leaveText(c)} (${c.leaveAt}), ${c.est} min to get to ${esc(c.to || "work")}, there about ${c.arriveAt}. ${c.base} min with empty roads${c.extra ? `, plus about ${c.extra} for what's reported` : ""}.</p>
+      <p class="tr-ok">${leaveText(c) ? `${leaveText(c)} (${c.leaveAt}), ` : ""}${c.est} min to get to ${esc(c.to || "work")}, there about ${c.arriveAt}. ${c.base} min with empty roads${c.extra ? `, plus about ${c.extra} for what's reported` : ""}.</p>
       ${c.events.length ? `<ul>${c.events.map(e => `<li><i class="${hot(e.type) ? "hot" : ""}">${esc(e.type === "Congestion" ? "Traffic" : e.type)}</i><span>${esc(e.road || "On your way")}${e.place ? `, ${esc(e.place)}` : ""}<small>${esc([e.what, e.impact, e.delay].filter(x => x && x !== e.type).join(" · "))}</small></span></li>`).join("")}</ul>${c.more ? `<p class="tr-ok">And ${c.more} more.</p>` : ""}`
         : c.noInc ? "" : `<p class="tr-ok">Nothing reported on your way right now.</p>`}`;
     driveHUD(c);
@@ -5791,7 +5790,7 @@ const handle = async (m, post) => {
     box.innerHTML = `
       <div class="dv-top"><h1>${esc(driveName(c))}</h1><p>${esc(c.from || "Home")} to ${esc(c.to || "Work")}</p></div>
       <section class="dv-now">
-        <div class="bs-when">${esc(leaveText(c))} · ${esc(c.leaveAt)}</div>
+        <div class="bs-when">${leaveText(c) ? `${esc(leaveText(c))} · ${esc(c.leaveAt)}` : `As of ${esc(c.leaveAt)}`}</div>
         <div class="dv-big"><div class="bs-temp" aria-label="About ${c.est} minutes to get to ${esc(c.to || "work")}">${c.est}<sup>min</sup></div>
           <div class="bs-hilo"><span>Arrive <b>${esc(c.arriveAt)}</b></span><span>Empty roads <b>${c.base} min</b></span></div></div>
         <div class="bs-what dv-what" style="--dv-c:${col}"><i aria-hidden="true"></i>${esc(what)}</div>
@@ -5814,7 +5813,7 @@ const handle = async (m, post) => {
     box.hidden = !c;
     if (!c) return;
     const hot = c.events.filter(e => ["Crash", "Congestion", "Flooding"].includes(e.type)).length;
-    box.innerHTML = `<div class="lc-t"><b>${esc(driveName(c))} · about ${c.est} min</b><small>${leaveText(c)}, ${c.est} min to get to ${esc(c.to || "work")}, there about ${c.arriveAt}. ${c.noInc ? "" : c.events.length ? `${c.events.length} thing${c.events.length > 1 ? "s" : ""} reported on the way${hot ? ", allow extra time" : ""}.` : "Nothing reported on the way."}</small></div>`;
+    box.innerHTML = `<div class="lc-t"><b>${esc(driveName(c))} · about ${c.est} min</b><small>${leaveText(c) ? leaveText(c) + ", " : ""}${c.est} min to get to ${esc(c.to || "work")}, there about ${c.arriveAt}. ${c.noInc ? "" : c.events.length ? `${c.events.length} thing${c.events.length > 1 ? "s" : ""} reported on the way${hot ? ", allow extra time" : ""}.` : "Nothing reported on the way."}</small></div>`;
   }
   function commuteHTML() {
     const c = CM(), row = (k, label, ph) => `<div class="cm-row"><label class="lbl" for="cm-${k}">${label}</label>
