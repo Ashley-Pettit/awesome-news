@@ -444,7 +444,7 @@ def plan(data, vkey):
 # a headline, trailing off slightly at the end of a sentence, and breaths of natural length between sentences. All of
 # it is tiny and seeded from the words, so the same text always sounds the same. Bump STYLEV when this changes:
 # pieces made the old way are kept (so nothing goes missing) and remade in the background, newest stories first.
-STYLEV = 1
+STYLEV = 2
 PACE = 1.02  # her overall pace: 2% quicker than the voice's own
 SENT = re.compile(r"(?<=[.!?…])[\"”’)]?\s+(?=[A-Z0-9\"“‘(])")
 
@@ -456,17 +456,17 @@ def speak(model, np, say, seed, head):
     out, sr = [], 24000
     for n, sent in enumerate(parts):
         words = len(sent.split())
-        speed = 0.95 if head else 1.0 + rng.uniform(-0.035, 0.035)
+        speed = 0.93 if head else 1.0 + rng.uniform(-0.07, 0.07)
         if sent.rstrip().endswith("?"):
-            speed -= 0.02
+            speed -= 0.04
         if words < 6:
-            speed -= 0.02          # short sentences land a little slower
+            speed -= 0.04          # short sentences land a little slower
         elif words > 26:
-            speed += 0.015         # long ones move along
+            speed += 0.03          # long ones move along
         if not head and n == len(parts) - 1 and len(parts) > 1:
-            speed -= 0.015         # easing off at the end of a thought
+            speed -= 0.03          # easing off at the end of a thought
         speed *= PACE
-        pitch = 1.008 if head else 1 + rng.uniform(-0.012, 0.012)  # tape-style nudge, made up for in the speed
+        pitch = 1.016 if head else 1 + rng.uniform(-0.025, 0.025)  # tape-style nudge, made up for in the speed
         if any(w.search(sent) for w, _, _ in SOUNDS):
             ph = model.tokenizer.phonemize(sent, LANG)
             for w, pat, snd in SOUNDS:
@@ -489,7 +489,7 @@ def speak(model, np, say, seed, head):
             audio[:fade] *= np.linspace(0, 1, fade, dtype=np.float32)
             audio[-fade:] *= np.linspace(1, 0, fade, dtype=np.float32)
         if out:
-            gap = 0.24 + rng.uniform(0, 0.11) + (0.05 if out_end.endswith("?") else 0)
+            gap = 0.19 + rng.uniform(0, 0.09) + (0.04 if out_end.endswith("?") else 0)
             out.append(np.zeros(int(sr * gap), dtype=np.float32))
         out.append(audio)
         out_end = sent.rstrip()
