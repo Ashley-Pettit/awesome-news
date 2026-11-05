@@ -3823,13 +3823,14 @@ const handle = async (m, post) => {
     const paras = vidTurn ? [] : await storyParas(i, L.kind === "drive" || (usePre() && !L.dev));
     if (sid !== L.sid) return;
     let add = []; paras.forEach(([p, n]) => add.push(...chunks(p, n)));
-    // Beta: long stories are read short, about 100 words, stopping at the end of a sentence; "Hear the whole story"
+    // Beta: long stories are read short, about 60 words, stopping at the end of a sentence; "Hear the whole story"
     // reads the rest. (Cut between Emma's recorded pieces, so every piece is still her own recording.)
     L.rest = null;
     if (S.beta && L.kind === "drive" && !vidTurn) {
       const words = x => x.text.split(/\s+/).length, total = add.reduce((t, x) => t + words(x), 0);
-      if (total >= 150) { let w = 0, cut = add.length; for (let k = 0; k < add.length; k++) { w += words(add[k]); if (w >= 90) { cut = k + 1; break; } }
-        if (cut < add.length) { L.rest = { at: L.at, parts: add.slice(cut) }; add = add.slice(0, cut); } }
+      if (total >= 120) { let w = 0, cut = add.length; for (let k = 0; k < add.length; k++) { w += words(add[k]); if (w >= 55) { cut = k + 1; break; } }
+        const left = add.slice(cut).reduce((t, x) => t + words(x), 0);
+        if (cut < add.length && left >= 50) { L.rest = { at: L.at, parts: add.slice(cut) }; add = add.slice(0, cut); } }  // not worth a button for a line or two
     }
     L.parts.push(...add); npAllBtn();
     L.loading = false;
