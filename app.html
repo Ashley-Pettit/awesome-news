@@ -474,9 +474,17 @@ body.betaon .beta-tag { display: inline-block; }
 .np-all { justify-self: start; display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px; border-radius: 999px; font: inherit; font-size: 0.82rem; font-weight: 700;
   color: #ffffff; background: rgba(255, 255, 255, 0.14); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22); }
 .np-all svg { width: 15px; height: 15px; }
+/* a quiet option under the headline, not a second big button */
+.np-all { padding: 4px 0; gap: 6px; font-size: 0.8rem; font-weight: 600; color: rgba(255, 255, 255, 0.66); background: none; box-shadow: none; }
+.np-all b { color: #d2c6ff; font-weight: 750; text-decoration: underline; text-underline-offset: 3px; }
 .np-all[hidden] { display: none; }
 .np-cap { margin: 0; min-height: 4.6em; font-family: var(--read); font-size: clamp(1rem, 3.8vw, 1.3rem); line-height: 1.5; color: rgba(255, 255, 255, 0.92); display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
-.np-ctl { display: flex; align-items: center; justify-content: center; gap: 30px; margin-top: 4px; }
+.np-ctl { display: grid; grid-template-columns: 1fr auto auto auto 1fr; align-items: center; justify-items: center; column-gap: 22px; margin-top: 4px; }
+.np-ctl #npStop { justify-self: start; }
+.np-ctl #npShare { justify-self: end; }
+.np-ctl #npShare[hidden] { display: grid; visibility: hidden; }
+.np-btn.xs { width: 40px; height: 40px; background: transparent; box-shadow: none; color: rgba(255, 255, 255, 0.78); }
+.np-btn.xs svg { width: 21px; height: 21px; }
 .np-bar { height: 4px; border-radius: 4px; background: rgba(255, 255, 255, 0.18); overflow: hidden; }
 .np-bar i { display: block; height: 100%; width: 0; border-radius: 4px; background: linear-gradient(90deg, #8f78ff, #d2c6ff); transition: width 0.6s linear; }
 /* While the weather or a cue is up, only the controls stay at the bottom. */
@@ -1355,19 +1363,19 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     <div class="np-meta"><span class="np-sec" id="npSec"></span><span id="npSrc"></span></div>
     <h2 class="np-h" id="npTitle"></h2>
     <p class="np-cap" id="npCap" aria-live="off"></p>
-    <button type="button" class="np-all" id="npAll" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 11h16M4 16h10"/><path d="m17 15 3 3-3 3"/></svg>Short version · Hear the whole story</button>
+    <button type="button" class="np-all" id="npAll" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 11h16M4 16h10"/><path d="m17 15 3 3-3 3"/></svg>Short version<span aria-hidden="true">·</span><b>Hear it all</b></button>
     <div class="np-traffic" id="npTraffic" hidden></div>
     <div class="np-acts" id="npActs" hidden>
       <button type="button" class="np-act" id="npLike" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span>More like this</span></button>
       <button type="button" class="np-act" id="npRead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 11h16M4 16h10"/></svg><span>Read along</span></button>
       <button type="button" class="np-act" id="npSave" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11a1 1 0 0 1 1 1V20l-6.5-4-6.5 4V4.5a1 1 0 0 1 1-1z"/></svg><span>Save</span></button>
-      <button type="button" class="np-act" id="npShare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 12v6.5a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5V12"/></svg><span>Share</span></button>
     </div>
     <div class="np-ctl">
+      <button type="button" class="np-btn xs" id="npStop" aria-label="Stop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
       <button type="button" class="np-btn sm" id="npPrev" aria-label="Previous story"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 5.5v13l-9-6.5zM5 5h3v14H5z"/></svg></button>
-      <button type="button" class="np-btn" id="npStop" aria-label="Stop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
       <button type="button" class="np-btn big" id="npPlay" aria-label="Pause"></button>
       <button type="button" class="np-btn" id="npNext" aria-label="Next story"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 5.5v13l9-6.5zM16 5h3v14h-3z"/></svg></button>
+      <button type="button" class="np-btn xs" id="npShare" aria-label="Share this story"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 12v6.5a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5V12"/></svg></button>
     </div>
     <div class="np-bar"><i id="npBar"></i></div>
     <button type="button" class="np-next" id="npUpNext" hidden><small>Up next</small><span id="npUpNextT"></span></button>
@@ -4076,11 +4084,10 @@ const handle = async (m, post) => {
   }
   function npActs() {
     // Share shows whenever a story is playing, in every kind of Listen; the other buttons are for the 30-minute news.
-    const id = L.queue[L.at], drive = L.kind === "drive" && !!id, on = !!id && !!findItem(id) && L.kind !== "story";
+    const id = L.queue[L.at], on = L.kind === "drive" && !!id;
+    $("npShare").hidden = !(id && findItem(id));
     $("npActs").hidden = !on;
     if (!on) return;
-    ["npLike", "npRead", "npSave"].forEach(b => { $(b).hidden = !drive; });
-    if (!drive) return;
     $("npLike").setAttribute("aria-pressed", "false");
     $("npSave").setAttribute("aria-pressed", String(isSaved(id)));
     npUpNext();
