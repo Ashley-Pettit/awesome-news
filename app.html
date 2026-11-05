@@ -2127,15 +2127,15 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     np.classList.toggle("traffic", p.kind === "traffic"); $("npTraffic").hidden = p.kind !== "traffic";
     if (p.kind === "open") npHello();
     if (p.kind === "wk") wxShowDay(p.date);  // the week ahead: the weather steps through each day as it's read
-    else if (p.kind === "warn") wxListenOn();  // weather warnings: still on the weather screen
+    else if (p.kind === "warn" || p.kind === "wxnow") wxListenOn();  // the temperature now, weather warnings: still on the weather screen
     else if (p.kind === "traffic" && state.wx && BS.W.drive) { BS.drive = true; BS.W.driveSet(L.commute); bsPlace(); document.body.classList.add("wxdrive"); wxListenOn(); }  // your drive: the 3D motorway
     else if (p.kind !== "open") wxListenOff();
     const bw = $("bsWarn"); if (bw) { bw.hidden = p.kind !== "warn"; if (p.kind === "warn") bw.innerHTML = `<b>Weather warning</b>${esc(p.text.replace(/^Weather warning\.\s*/, ""))}`; }
     // Once a story itself is being read (not just its headline), it counts as heard.
-    if (L.kind === "drive" && !["open", "cue", "title", "wk", "warn", "traffic", "sfx"].includes(p.kind)) heardAdd(L.queue[L.at]);
+    if (L.kind === "drive" && !["open", "wxnow", "cue", "title", "wk", "warn", "traffic", "sfx"].includes(p.kind)) heardAdd(L.queue[L.at]);
     if (L.kind === "drive" && p.kind === "title") skimAdd(L.queue[L.at]);  // heard the headline: goes to the back next time
     // Straight after the weather: the headlines, so you can jump to one (and a tip about Settings).
-    if (p.kind !== "open" && p.kind !== "wk" && L.kind === "drive" && L.opened && !L.listShown) {
+    if (p.kind !== "open" && p.kind !== "wxnow" && p.kind !== "wk" && L.kind === "drive" && L.opened && !L.listShown) {
       L.listShown = true;
       $("npCust").hidden = false; $("npWk").hidden = !state.wx;  // from here on: a small "Customise" pill that opens Settings (shown, not read out)
       // (beta: the headlines list opens from the "1 of 28" button, not by itself)
@@ -3545,6 +3545,11 @@ const handle = async (m, post) => {
   }
   // Bureau of Meteorology warnings for your area (severe storms, floods on local rivers) from the last news update,
   // if that was in the last 6 hours. Emma reads them (made with the update); the words show on screen.
+  // Straight after the forecast: the temperature right now (Emma has every whole degree recorded, voice.py).
+  function wxNowParts() {
+    try { if (!state.wx) return []; const t = Math.round(wxView(state.wx).cur.temperature_2m); if (!isFinite(t) || t < -10 || t > 50) return [];
+      return [{ text: `It's currently ${t < 0 ? "minus " + -t : t} degree${Math.abs(t) === 1 ? "" : "s"}.`, para: -1, kind: "wxnow", opt: usePre() }]; } catch { return []; }
+  }
   function warnParts() {
     const ws = state.status?.warnings?.[wxPlace()] || [];
     if (!ws.length || Date.now() - Date.parse(state.status?.updatedAt || 0) > 6 * 3600000) return [];
@@ -3787,7 +3792,7 @@ const handle = async (m, post) => {
         // No Emma opening for this hour (e.g. just after midnight, before the morning update): show the weather
         // quietly for a few seconds rather than switching to the phone's voice.
         pre.push(t ? { text: t, para: -1, kind: "open" } : { text: driveOpening(), para: -1, kind: "open", silent: usePre() });
-        pre.push(...warnParts());  // any Bureau weather warning, straight after the weather
+        pre.push(...wxNowParts(), ...warnParts());  // any Bureau weather warning, straight after the weather
         pre.push(...trafficParts());  // your drive, straight after the weather
       }
       // A whoosh at the front of every story, however you got there (on by itself, skip or back), and between your
@@ -3850,12 +3855,12 @@ const handle = async (m, post) => {
   // From the news, back to the weather or your drive: they play again, then the story carries on from the bit it was on.
   async function replaySeg(which) {
     const k = L.part, cur = L.parts[k];
-    if (!L.on || L.kind !== "drive" || !cur || ["open", "warn", "traffic", "wk"].includes(cur.kind)) return;
+    if (!L.on || L.kind !== "drive" || !cur || ["open", "wxnow", "warn", "traffic", "wk"].includes(cur.kind)) return;
     let parts = [];
     if (which === "weather") {
       if (!state.wx) { toast("The weather isn't available right now"); return; }
       const t = usePre() ? preOpening() : "";
-      parts = [t ? { text: t, para: -1, kind: "open" } : { text: driveOpening(), para: -1, kind: "open", silent: usePre() }, ...warnParts()];
+      parts = [t ? { text: t, para: -1, kind: "open" } : { text: driveOpening(), para: -1, kind: "open", silent: usePre() }, ...wxNowParts(), ...warnParts()];
     } else {
       const c = await Promise.race([commuteNow(), new Promise(r => setTimeout(r, 4000))]);
       if (!c) { toast("Your drive isn't available right now"); return; }
@@ -3890,7 +3895,7 @@ const handle = async (m, post) => {
   // Skip button on the weather while listening: straight on to the stories.
   function skipWeather() {
     // The weather goes to your drive (straight from one 3D view to the other), your drive goes to the news.
-    if (L.on && L.kind === "drive" && ["open", "wk", "warn", "traffic"].includes(L.parts[L.part]?.kind)) { skipListen(); return; }
+    if (L.on && L.kind === "drive" && ["open", "wxnow", "wk", "warn", "traffic"].includes(L.parts[L.part]?.kind)) { skipListen(); return; }
     wxListenOff();
   }
   // Stories already heard in Listen to the news are left out next time.
@@ -4065,7 +4070,7 @@ const handle = async (m, post) => {
   function prevStory() {
     // Listen to the news: back from the first story goes to your drive, then back again to the weather.
     if (L.on && L.kind === "drive") {
-      const grp = k => ["open", "warn", "wk"].includes(k) ? "wx" : k === "traffic" ? "tr" : "";
+      const grp = k => ["open", "wxnow", "warn", "wk"].includes(k) ? "wx" : k === "traffic" ? "tr" : "";
       const g = grp(L.parts[L.part]?.kind), first = gg => L.parts.findIndex(p => grp(p.kind) === gg);
       const to = n => { const tk = ++L.token; hush(); L.paused = false; clearInterval(L.wxT); L.wxT = 0; document.body.classList.remove("wxweek");
         L.part = n; if (grp(L.parts[n].kind) === "wx") { wxListenIntro(); wxListenOn(); } updatePlayer(); armDog(); speakNext(tk); };
@@ -4076,7 +4081,7 @@ const handle = async (m, post) => {
         if (first("wx") >= 0) { to(first("wx")); return; }
         if (state.wx && !L.loading) {  // back on the first story after moving on: put the weather and drive back in front of it
           const t = usePre() ? preOpening() : "";
-          const pre = [t ? { text: t, para: -1, kind: "open" } : { text: driveOpening(), para: -1, kind: "open", silent: usePre() }, ...warnParts(), ...trafficParts()];
+          const pre = [t ? { text: t, para: -1, kind: "open" } : { text: driveOpening(), para: -1, kind: "open", silent: usePre() }, ...wxNowParts(), ...warnParts(), ...trafficParts()];
           L.sid++; L.parts = [...pre, ...L.parts.filter(p => p.kind !== "sfx")];
           const tr = L.parts.findIndex(p => p.kind === "traffic"); to(tr >= 0 ? tr : 0); return;
         }
@@ -4088,7 +4093,7 @@ const handle = async (m, post) => {
   }
   function skipListen() {
     // In the opening: skip the weather (and any warning) to your drive, or your drive to the first story, in order.
-    const grp = k => ["open", "warn", "wk"].includes(k) ? "wx" : k === "traffic" ? "tr" : "";
+    const grp = k => ["open", "wxnow", "warn", "wk"].includes(k) ? "wx" : k === "traffic" ? "tr" : "";
     const cur = L.parts?.[L.part], g = L.on && L.kind === "drive" && cur ? grp(cur.kind) : "";
     if (g) {
       let n = L.part + 1;
@@ -6271,6 +6276,7 @@ const handle = async (m, post) => {
     const parts = ["Onto traffic."];
     if (k < 2) parts.push(`It's about ${n} minutes to get ${getThere(c)}.`);
     else parts.push(k > 60 && at ? `Leave at ${at}.` : `Leave in about ${say5(k)} minutes.`, `It's about ${n} minutes to get ${getThere(c)}.`);
+    const km = Math.round(c.km || 0); if (km >= 1 && km <= 80) parts.push(km === 1 ? "That's about 1 kilometre." : `That's about ${km} kilometres.`);
     const by = t => c.events.filter(e => e.type === t);
     if (c.noInc) {}  // no road reports outside Queensland: just the time
     else if (!c.events.length) {  // nothing reported, but the usual peak can still make it slow (same levels as the meter on screen)
