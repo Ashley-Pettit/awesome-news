@@ -3700,12 +3700,32 @@ const handle = async (m, post) => {
     const hit = pw.filter(w => tw.has(w)).length;
     return pw.length <= tw.size * 1.6 + 3 && hit / pw.length >= 0.7;
   }
+  // The story's opening often says the headline again: leave out a first paragraph that does, or just its first
+  // sentence when the paragraph goes on. Must match drop_repeat() in voice.py exactly, or Emma's recordings won't line up.
+  function closeToTitle(s, title) {
+    const words = t => String(t).toLowerCase().match(/[a-z0-9']+/g) || [];
+    const sw = words(s), tw = new Set(words(title));
+    if (sw.length < 6 || tw.size < 4) return false;  // a real sentence, not "On Nov."
+    return sw.length <= tw.size * 1.6 + 3 && sw.filter(w => tw.has(w)).length / sw.length >= 0.6;
+  }
+  function dropRepeat(ps, title) {
+    const out = []; let done = false;
+    ps.forEach(([p, n0], n) => {
+      if (n < 2 && !done) {
+        if (sameAsTitle(p, title)) { done = true; return; }
+        const m = p.match(/^(.+?[.!?])\s+(?=[A-Z"“‘])/);
+        if (m && closeToTitle(m[1], title)) { done = true; p = p.slice(m[0].length).trim(); if (!p) return; }
+      }
+      out.push([p, n0]);
+    });
+    return out;
+  }
   async function storyParas(i, trim) {
     let t = null;
     try { t = i.text ? (await loadText(i.text))?.[i.id] : null; if (!t) t = (await getOffline())[i.id] || null; if (!t && i.feed) t = (await loadText(i.feed))?.[i.id] || null; } catch {}
     let ps = (t?.paras || []).map((p, n) => [speakable(p), n]).filter(x => x[0]);
     if (!ps.length && i.summary) { const x = speakable(i.summary); if (x) ps = [[x, 0]]; }
-    ps = ps.filter((x, n) => !(n < 2 && sameAsTitle(x[0], i.title || "")));  // a first line that just repeats the headline isn't read twice
+    ps = dropRepeat(ps, i.title || "");  // an opening that just repeats the headline isn't read twice
     if (trim) {
       const keep = []; let w = 0;
       for (const x of ps) { if (w >= DRIVE_WORDS) { keep.push([MORE_LINE, -1]); break; } keep.push(x); w += x[0].split(" ").length; }

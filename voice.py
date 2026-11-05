@@ -309,6 +309,38 @@ def same_as_title(p, title):
     return len(pw) <= len(tw) * 1.6 + 3 and hit / len(pw) >= 0.7
 
 
+FIRST_SENT = re.compile(r"^(.+?[.!?])\s+(?=[A-Z\"“‘])")  # (not "Nov. 4": a capital or quote must follow)
+
+
+def drop_repeat(ps, title):
+    """The story's opening often says the headline again ("A MAN has been charged after a crash near Geelong on
+    Thursday night. Police say..."): leave out a first paragraph that does, or just its first sentence when the
+    paragraph goes on. Must match dropRepeat() in app.html exactly, or the recordings won't line up."""
+    out, done = [], False
+    for n, p in enumerate(ps):
+        if n < 2 and not done:
+            if same_as_title(p, title):
+                done = True
+                continue
+            m = FIRST_SENT.match(p)
+            if m and close_to_title(m.group(1), title):
+                done = True
+                p = p[m.end():].strip()
+                if not p:
+                    continue
+        out.append(p)
+    return out
+
+
+def close_to_title(s, title):
+    """One sentence that's mostly the headline, maybe with a detail or two added."""
+    words = lambda t: re.findall(r"[a-z0-9']+", t.lower())
+    sw, tw = words(s), set(words(title))
+    if len(sw) < 6 or len(tw) < 4:  # a real sentence, not "On Nov."
+        return False
+    return len(sw) <= len(tw) * 1.6 + 3 and sum(1 for w in sw if w in tw) / len(sw) >= 0.6
+
+
 def plan(data, vkey):
     """Every piece to make, most useful first, plus the pieces each story needs to be complete."""
     status = json.load(open(os.path.join(data, "status.json")))
@@ -389,7 +421,7 @@ def plan(data, vkey):
         if not ps and i.get("summary"):
             ps = [x for x in [speakable(i["summary"])] if x]
         # A first line that just says the headline again isn't read twice (sameAsTitle() in app.html).
-        return [x for n, x in enumerate(ps) if not (n < 2 and same_as_title(x, i.get("title", "")))]
+        return drop_repeat(ps, i.get("title", ""))
 
     def body(ps, cap):
         out, w = [], 0
