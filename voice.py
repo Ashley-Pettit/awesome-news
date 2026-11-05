@@ -445,6 +445,7 @@ def plan(data, vkey):
 # it is tiny and seeded from the words, so the same text always sounds the same. Bump STYLEV when this changes:
 # pieces made the old way are kept (so nothing goes missing) and remade in the background, newest stories first.
 STYLEV = 1
+PACE = 1.02  # her overall pace: 2% quicker than the voice's own
 SENT = re.compile(r"(?<=[.!?…])[\"”’)]?\s+(?=[A-Z0-9\"“‘(])")
 
 
@@ -464,6 +465,7 @@ def speak(model, np, say, seed, head):
             speed += 0.015         # long ones move along
         if not head and n == len(parts) - 1 and len(parts) > 1:
             speed -= 0.015         # easing off at the end of a thought
+        speed *= PACE
         pitch = 1.008 if head else 1 + rng.uniform(-0.012, 0.012)  # tape-style nudge, made up for in the speed
         if any(w.search(sent) for w, _, _ in SOUNDS):
             ph = model.tokenizer.phonemize(sent, LANG)
