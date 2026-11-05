@@ -6,7 +6,7 @@ name: Quick publish (app changes)
 on:
   push:
     branches: [main]
-    paths: ["app.html", "build.py", "sw.js", "manifest.webmanifest", "icons/**", "beta/**"]
+    paths: ["app.html", "build.py", "share.py", "sw.js", "manifest.webmanifest", "icons/**", "beta/**"]
   workflow_dispatch:
 
 permissions:
@@ -41,6 +41,10 @@ jobs:
 
       - name: Build the new page
         run: python3 build.py _site
+
+      - name: Share pages
+        continue-on-error: true
+        run: python3 share.py _site
 
       - uses: actions/upload-pages-artifact@v3
         with:

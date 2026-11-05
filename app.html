@@ -1888,15 +1888,19 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
   }
   const ARCH = { items: [], byId: new Map(), at: "", loading: null };
   const findItem = id => everything().find(i => i.id === id) || ARCH.byId.get(id) || state.saved.find(i => i.id === id) || (sharedStory?.id === id ? sharedStory : null);
-  // Share a story: a link that opens it right here in Awesome News (the public site), for anyone.
-  const storyLink = i => `${PUBLIC_URL}#story=${encodeURIComponent(i.id)}&u=${encodeURIComponent(i.url)}&t=${encodeURIComponent(i.title).slice(0, 300)}&s=${encodeURIComponent(i.source || "")}&d=${encodeURIComponent(i.published || "")}`;
+  // Share a story: a short link to its own page on the public site (s/<id>, made by share.py with every update). Messages,
+  // WhatsApp and the like show it as a big preview (the story's photo, headline and outlet, "Awesome News" as the site),
+  // and tapping it opens the story right here in the app, even after it has dropped out of today's news.
+  const storyLink = i => /^[A-Za-z0-9_-]{4,40}$/.test(i.id || "") ? `${PUBLIC_URL}s/${i.id}`
+    : `${PUBLIC_URL}#story=${encodeURIComponent(i.id)}&u=${encodeURIComponent(i.url)}&t=${encodeURIComponent(i.title).slice(0, 300)}&s=${encodeURIComponent(i.source || "")}&d=${encodeURIComponent(i.published || "")}`;
   async function shareStory(i) {
     if (!i) return;
-    const url = storyLink(i), text = `${i.title} (on ${APP_NAME})`;
+    const url = storyLink(i), text = `📰 ${i.title}\n${i.source ? `${i.source} · ` : ""}via ${APP_NAME}`;
     if (navigator.share) { try { await navigator.share({ title: i.title, text, url }); return; } catch (e) { if (e && e.name === "AbortError") return; } }
-    try { await navigator.clipboard.writeText(url); toast("Link copied. It opens this story in Awesome News."); }
+    const both = `${text}\n${url}`;
+    try { await navigator.clipboard.writeText(both); toast("Link copied. It opens this story in Awesome News."); }
     catch {  // older browsers: copy through a hidden text box
-      const ta = document.createElement("textarea"); ta.value = url; ta.setAttribute("readonly", ""); ta.style.cssText = "position:fixed;opacity:0"; document.body.appendChild(ta); ta.select();
+      const ta = document.createElement("textarea"); ta.value = both; ta.setAttribute("readonly", ""); ta.style.cssText = "position:fixed;opacity:0"; document.body.appendChild(ta); ta.select();
       try { document.execCommand("copy"); toast("Link copied. It opens this story in Awesome News."); } catch { toast("Couldn't copy the link here"); } ta.remove(); }
   }
 
@@ -6794,7 +6798,7 @@ const handle = async (m, post) => {
       else if (state.refreshing && changed) finishRefresh(true);
       bgRefresh();
       if (!openSheet) render(true);
-      if (pendingStory) { const id = pendingStory; pendingStory = ""; history.replaceState(null, "", location.pathname); if (findItem(id)) openReader(id); else toast("That story isn't in the news here any more"); }
+      if (pendingStory) { const id = pendingStory; pendingStory = ""; history.replaceState(null, "", location.pathname); if (findItem(id)) openReader(id); else loadArchive()?.then?.(() => findItem(id) ? openReader(id) : toast("That story isn't in the news here any more")).catch(() => toast("That story isn't in the news here any more")); }
       if (pendingTV) { pendingTV = false; try { history.replaceState(null, "", location.pathname); } catch {} openTV(); }
       afterPics("offline", saveOffline);
       if (!state.wx) loadWeather();

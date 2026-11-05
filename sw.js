@@ -1,6 +1,6 @@
 // Awesome News service worker: network first, so news is always fresh when
 // you're online, with the last copy kept so the app still opens offline.
-const CACHE = "awesome-news-v4";
+const CACHE = "awesome-news-v5";
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", e => e.waitUntil(self.clients.claim()));
@@ -11,6 +11,8 @@ self.addEventListener("fetch", e => {
   if (req.method !== "GET" || url.origin !== self.location.origin) return;
   // Ready-made voice clips change with every update, so they aren't kept (they'd pile up on the phone).
   if (url.pathname.includes("/data/voice/")) return;
+  // Shared-story pages (s/<id>) just open the app at that story: no need to keep them.
+  if (url.pathname.includes("/s/")) return;
   // One cache entry per file, ignoring the ?v= cache-busting query.
   const key = url.origin + url.pathname;
   // Opening the app always checks for a fresh page, so updates show straight away.

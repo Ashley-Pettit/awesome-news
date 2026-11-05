@@ -151,6 +151,13 @@ jobs:
           git checkout FETCH_HEAD -- beta sw.js icons manifest.webmanifest 2>/dev/null || true
           python build.py _site
 
+      # A link-preview page for every story (s/<id>), for sharing.
+      - name: Share pages
+        continue-on-error: true
+        run: |
+          git checkout FETCH_HEAD -- share.py 2>/dev/null || true
+          python share.py _site
+
       - name: Join the audio lists
         continue-on-error: true
         env:
