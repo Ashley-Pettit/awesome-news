@@ -60,14 +60,44 @@ SAY = [(r"\b7NEWS\b", "Seven News"), (r"\b9News\b", "Nine News"), (r"\b10 News\b
        (r"£\s?(\d[\d,]*(?:\.\d+)?)(\s(?:thousand|million|billion|trillion))?", r"\1\2 pounds"),
        (r"€\s?(\d[\d,]*(?:\.\d+)?)(\s(?:thousand|million|billion|trillion))?", r"\1\2 euros")]
 # Words no spelling gets right: once the text is turned into sounds, theirs are swapped in.
-# Logan the Aussie way, "Loh-gn" (lˈoʊɡən). Bump SOUNDSV when this changes, to remake the pieces with them.
+# Logan the Aussie way, "Loh-gn" (lˈoʊɡən). Bump SOUNDSV when any of these (or LEXICON) change, to remake the pieces with them.
 SOUNDS = [(re.compile(r"\bLogan"), re.compile(r"(?<![^\s.,;:!?\"“”‘’'(—–-])lˈəʊɡən"), "lˈoʊɡən"),
           # Inverloch the local way, "in-ver-LOCK"
           (re.compile(r"\bInverloch"), re.compile(r"(?<![^\s.,;:!?\"“”‘’'(—–-])ɪnvˈɜːlɒk"), "ɪnvəlˈɒk"),
           # Bass (Bass Coast, Bass Strait, the seat of Bass) the Aussie way, "bas" like the fish (bˈæs), never "base"
           (re.compile(r"\bBass\b"), re.compile(r"(?<![^\s.,;:!?\"“”‘’'(—–-])bˈ?(?:eɪ|æ|ɑː|a)s(?![^\s.,;:!?\"“”‘’')—–-])"), "bˈæs")]
-SOUNDSV = 1
-SOUNDW = re.compile(r"\b(Logan|Inverloch)|\bBass\b")
+# Aussie names, places and letters the voice gets wrong (it reads with a British dictionary). Each is how it's said, in
+# the voice's sound alphabet; at recording time the voice's own guess for the word is swapped for this.
+LEXICON = {
+    # places
+    "Brisbane": "bɹˈɪzbən", "Moorooka": "məɹˈuːkə", "Mackay": "məkˈaɪ", "Beaudesert": "bəʊdˈɛzət", "Indooroopilly": "ˌɪndəɹˈuːpɪli",
+    "Coolangatta": "kˌuːlənɡˈatə", "Caboolture": "kəbˈuːltʃə", "Maroochydore": "məɹˈuːtʃidˌɔː", "Gympie": "ɡˈɪmpi",
+    "Rockhampton": "ɹɒkhˈamptən", "Launceston": "lˈɒnsɛstən", "Geelong": "dʒəlˈɒŋ", "Wagga": "wˈɒɡə", "Kalgoorlie": "kalɡˈʊəli",
+    "Wonthaggi": "wɒnθˈaɡi", "Korumburra": "kˌɒɹəmbˈʌɹə", "Traralgon": "tɹəɹˈalɡən", "Pakenham": "pˈakənəm", "Bunurong": "bˈʌnəɹɒŋ",
+    "Murrumbidgee": "mˌʌɹəmbˈɪdʒi", "Kosciuszko": "kˌɒziˈɒskəʊ", "Toowong": "tuːwˈɒŋ", "Yeronga": "jəɹˈɒŋɡə", "Rocklea": "ɹˈɒkliː",
+    "Murray": "mˈʌɹi",
+    # First Nations
+    "Kaurna": "ɡˈɑːnə", "Wurundjeri": "wəɹˈʌndʒəɹi", "Ngunnawal": "nˈʌnəwɒl", "Kulin": "kˈuːlɪn", "Wiradjuri": "wɪɹˈadʒəɹi",
+    # people
+    "Albanese": "ˌalbənˈiːzi", "Crisafulli": "kɹˌɪsəfˈʊli", "Jacinta": "dʒəsˈɪntə", "Pocock": "pˈəʊkɒk", "Malinauskas": "mˌalɪnˈaʊskəs",
+    "Finocchiaro": "fˌɪnəkiˈɑːɹəʊ",
+    # letters and short names
+    "ACCC": "ˌeɪ tɹˈɪpəl sˈiː", "ASIC": "ˈeɪsɪk", "APRA": "ˈapɹə", "NDIS": "ˌɛndˌiːˌaɪˈɛs", "AFP": "ˌeɪˌɛfpˈiː", "ATO": "ˌeɪtˌiːˈəʊ",
+    "ALP": "ˌeɪˌɛlpˈiː",
+}
+_B = "(?<![^\\s.,;:!?\"“”‘’'(—–-])"
+
+
+def add_lexicon(tok):
+    """Once the voice is loaded: swap its own guess at each word above for how it's really said."""
+    for word, snd in LEXICON.items():
+        guess = tok.phonemize(word, LANG).strip()
+        if guess and guess != snd:
+            SOUNDS.append((re.compile(rf"\b{re.escape(word)}\b"), re.compile(_B + re.escape(guess)), snd))  # (no end check: "Brisbane's", a linking r)
+
+
+SOUNDSV = 2
+SOUNDW = re.compile(r"\b(Logan|Inverloch)|\b(" + "|".join(map(re.escape, ["Bass", *LEXICON])) + r")\b")
 # Pieces with these words were made before the pronunciation above was fixed: remake them once.
 # Bump SAYV (and add the words) whenever another pronunciation fix is added.
 SAYV, RESAY = 3, re.compile(r"Logan|Queensland|\bQld\b|\bSEQ\b|[$£€]|\b(?:AI|EVs?|ASX|RBA|CEO|LNP|SBS|ABC|BBC|EFF|iTnews)\b")
@@ -468,6 +498,7 @@ def make(a, data, vkey):
         import numpy as np
         from kokoro_onnx import Kokoro
         model = Kokoro(os.path.join(a.models, "kokoro-v1.0.onnx"), os.path.join(a.models, "voices-v1.0.bin"))
+        add_lexicon(model.tokenizer)
         aes = None
         if vkey:
             from cryptography.hazmat.primitives.ciphers.aead import AESGCM
