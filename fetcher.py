@@ -224,7 +224,7 @@ MAX_AGE_LOGAN = timedelta(days=21)
 PER_LOGAN = 60
 
 INTEREST_GROUPS = [("news", "News"), ("tech", "Tech & science"), ("life", "Life"), ("culture", "Culture"), ("planet", "Planet")]
-PER_INTEREST = 30
+PER_INTEREST = 36
 PER_INTEREST_MORE = {"wildlife": 50, "truecrime": 50}  # interests with lots of good sources keep more
 PER_SOURCE_MOST = {"truecrime": 0.32}
 # Some sources file stories loosely (a 7NEWS "crime" story about a Lego store, a dog video in birds), so their stories
@@ -243,10 +243,10 @@ CITIES = {"logan": ("Logan", -27.64, 153.11), "inv": ("Inverloch", -38.63, 145.7
           "wa": ("Perth", -31.95, 115.86), "sa": ("Adelaide", -34.93, 138.6), "tas": ("Hobart", -42.88, 147.33),
           "act": ("Canberra", -35.28, 149.13), "nt": ("Darwin", -12.46, 130.84)}
 SECTION_ORDER = ["copilot", "politics", "finance", "ai", "tech", "headlines"]
-PER_SECTION = 40
-PER_REGION = 30
-MAX_AGE = timedelta(days=4)
-MAX_AGE_LOCAL = timedelta(days=10)  # smaller states publish less, so look back further
+PER_SECTION = 50  # with hourly updates, a few more fresh stories per section
+PER_REGION = 40
+MAX_AGE = timedelta(days=3)  # older stories make way, so the app feels fresher
+MAX_AGE_LOCAL = timedelta(days=6)  # smaller states publish less, so look back further
 MAX_AGE_COPILOT = timedelta(days=21)  # product blogs post a few times a week
 
 # ---------------------------------------------------------------------------

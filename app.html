@@ -1802,7 +1802,10 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
     return list;
   }
   const enabledSections = () => allSections().filter(isOn);
-  const visible = list => state.hideRead ? list.filter(i => !state.read.has(i.id)) : list;
+  // Stories you've read (or read from another outlet) drop out with "Hide stories I've read", and otherwise sink below
+  // the ones you haven't seen, so each visit leads with something new.
+  const readIt = i => state.read.has(i.id) || siblings(i.id).some(x => state.read.has(x));
+  const visible = list => state.hideRead ? list.filter(i => !readIt(i)) : [...list.filter(i => !readIt(i)), ...list.filter(readIt)];
   function everything() {
     const seen = new Set(), out = [];
     for (const s of allSections()) for (const i of items(s.id)) if (!seen.has(i.id)) { seen.add(i.id); out.push(i); }
