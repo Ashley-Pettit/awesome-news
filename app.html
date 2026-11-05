@@ -463,6 +463,8 @@ body.beta-heads button.np-pos::after { content: ""; display: inline-block; width
 .np-meta { display: flex; gap: 8px; align-items: center; font-size: 0.76rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255, 255, 255, 0.86); flex-wrap: wrap; }
 .np-sec { background: #ffffff; color: #1b1830; border-radius: 5px; padding: 3px 8px; font-weight: 800; }
 .np-sec:empty { display: none; }
+.np-seen { padding: 3px 8px; border-radius: 5px; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.02em; text-transform: none; color: #d2c6ff; background: rgba(124, 92, 255, 0.22); }
+.np-seen[hidden] { display: none; }
 .np-h { font-family: var(--display); font-weight: 800; font-size: clamp(1.5rem, 6vw, 2.4rem); line-height: 1.08; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
 /* Beta on (Settings, App): a small Beta tag on Listen, which then reads long stories short and plays ABC videos */
 .beta-tag { display: none; margin-left: 6px; padding: 2px 6px; border-radius: 5px; font-style: normal; font-family: var(--ui); font-size: 0.62rem; font-weight: 800;
@@ -1360,7 +1362,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     <p class="nl-tip" id="npTip" hidden>Tip: choose the kinds of stories you get in Settings.</p>
   </section>
   <div class="np-low">
-    <div class="np-meta"><span class="np-sec" id="npSec"></span><span id="npSrc"></span></div>
+    <div class="np-meta"><span class="np-sec" id="npSec"></span><span id="npSrc"></span><span class="np-seen" id="npSeen" hidden>You may have already read this</span></div>
     <h2 class="np-h" id="npTitle"></h2>
     <p class="np-cap" id="npCap" aria-live="off"></p>
     <button type="button" class="np-all" id="npAll" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 11h16M4 16h10"/><path d="m17 15 3 3-3 3"/></svg>Short version<span aria-hidden="true">·</span><b>Hear it all</b></button>
@@ -2084,6 +2086,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   function npStory(i) {
     if (!i) return;
     { const b = $("npAll"); if (b) b.hidden = true; }
+    { const b = $("npSeen"); if (b) b.hidden = !L.seenB4?.get(i.id); }
     try { npVideo(i); } catch {}
     if (document.body.classList.contains("tvmode")) setTimeout(tvTicker, 0);
     const img = $("npImg"), bg = $("npBg"), mono = $("npMono");
@@ -3759,7 +3762,7 @@ const handle = async (m, post) => {
     }, 6000);
   }
   function startListen(ids, kind) {
-    hush();
+    hush(); L.seenB4 = new Map();
     // If nothing can be heard after a few seconds (a phone that refused to start the sound), offer the play button:
     // a tap on it is allowed to start sound.
     armDog();
@@ -3805,6 +3808,9 @@ const handle = async (m, post) => {
     const sid = ++L.sid, tk = ++L.token, id = L.queue[L.at], i = findItem(id);
     saveResume();
     if (!i) { nextStory(); return; }
+    // Already read (in the app, or the same story from another outlet)? Noted before this play marks it read.
+    if (!L.seenB4) L.seenB4 = new Map();
+    if (!L.seenB4.has(id)) L.seenB4.set(id, state.read.has(id) || siblings(id).some(x => state.read.has(x)) || readByTitle(id));
     markRead(id);
     const intro = L.kind === "brief" ? [{ text: `Story ${L.at + 1}.`, para: -1, kind: "title" }] : [];
     const pre = [];
