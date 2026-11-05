@@ -3442,7 +3442,7 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
   };
   const usePre = () => !!PRE && voicePref() === "pre";
   const useAI = () => aiOK && !aiBroken && voicePref().startsWith("ai:");
-  const aiVoice = () => { if (voicePref() === "pre") return PRE?.voice || String(PRE?.v || "").split(".")[0] || "bf_emma";  // PRE.v is the recording tag (bf_emma.3), not a voice const id = voicePref().slice(3); return AI_VOICES.some(v => v[0] === id) ? id : "af_heart"; };
+  const aiVoice = () => { if (voicePref() === "pre") return PRE?.voice || String(PRE?.v || "").split(".")[0] || "bf_emma"; const id = voicePref().slice(3); return AI_VOICES.some(v => v[0] === id) ? id : "af_heart"; };
   const AI = (() => {
     // One job at a time; jobs from a story that's been skipped are dropped.
     const handler = `let tts = null, live = 0, q = Promise.resolve();
