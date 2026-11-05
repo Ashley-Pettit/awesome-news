@@ -2049,14 +2049,27 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   // Beta (Settings, App): an ABC story with its own video plays that video, muted, in place of the photo while Emma reads.
   // Only the ABC's own clips (fetcher.py abc_video): never YouTube, and the ABC has no ads.
   const vidOK = i => !!i?.video?.url && /^https:\/\/mediacore-live-production\.akamaized\.net\//.test(i.video.url);
+  // The clip stays out of sight (photo showing) until it is really playing, so no black box or frozen frame first.
+  function vidHide(v) { v.hidden = true; v.onplaying = null; document.body.classList.remove("npvid"); }
+  function vidShowWhenPlaying(v) {
+    v.onplaying = () => { v.onplaying = null; v.hidden = false; document.body.classList.add("npvid"); };
+    if (!v.paused && v.readyState > 2) v.onplaying();
+  }
+  // A story told by its own video (beta): the photo shows through the headline, and the clip only while it plays.
+  const vidTurnNow = i => L.queue?.[L.at] === i?.id && (L.parts || []).some(p => p.kind === "vid");
   function npVideo(i) {
     const v = $("npVid"); if (!v) return;
     const url = S.beta && L.kind !== "story" && vidOK(i) ? i.video.url : "";
-    if (!url) { if (!v.hidden) { v.pause(); v.removeAttribute("src"); v.load(); v.hidden = true; } document.body.classList.remove("npvid"); return; }
+    if (!url) { if (v.getAttribute("src")) { v.pause(); v.removeAttribute("src"); v.load(); } vidHide(v); return; }
+    if (vidTurnNow(i)) {
+      if (L.parts[L.part]?.kind === "vid") return;  // already playing its turn: leave it be
+      v.pause(); vidHide(v); v.preload = "auto"; if (v.getAttribute("src") !== url) v.src = url; return;
+    }
+    vidHide(v);
     if (v.getAttribute("src") !== url) { v.src = url; }
-    v.hidden = false; v.muted = true; document.body.classList.add("npvid");
-    v.play().catch(() => { v.hidden = true; document.body.classList.remove("npvid"); });
-    v.onerror = () => { v.hidden = true; document.body.classList.remove("npvid"); };
+    v.muted = true; v.loop = true; vidShowWhenPlaying(v);
+    v.play().catch(() => vidHide(v));
+    v.onerror = () => vidHide(v);
   }
   function npStory(i) {
     if (!i) return;
@@ -3969,9 +3982,9 @@ const handle = async (m, post) => {
     npPart(k);
     const next = () => { if (tk !== L.token || L.part !== k) return; v.loop = true; v.muted = true; L.part++; updateBar(); speakNext(tk); };
     if (v.getAttribute("src") !== i.video.url) v.src = i.video.url;
-    v.hidden = false; document.body.classList.add("npvid");
+    vidShowWhenPlaying(v);
     if (L.vidK !== L.at) { L.vidK = L.at; v.currentTime = 0; }  // a new video starts from the beginning; after a pause it carries on
-    v.loop = false; v.muted = false; v.onended = next; v.onerror = next;
+    v.loop = false; v.muted = false; v.onended = next; v.onerror = () => { vidHide(v); next(); };
     v.play().then(() => { L.heard = true; }).catch(() => {
       // The phone wouldn't play it with sound (some iPhones need a tap for that): Emma reads the story after all,
       // with the clip playing quietly as the picture.
