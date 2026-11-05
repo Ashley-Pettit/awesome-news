@@ -924,7 +924,9 @@ body.wxlisten #weather .bs-skip { display: inline-flex; }
 /* While Listen plays the weather or your drive: the same back, stop, play and skip buttons as the news, along the bottom
    (so the top right only has the week button, clear of the title) */
 .bs-ctl { display: none; }
-body.wxlisten #weather .bs-ctl { display: flex; position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; margin: 0; padding: 10px 16px max(14px, env(safe-area-inset-bottom, 0px));
+.bs-ctl #bsStop2 { justify-self: start; }
+.bs-ctl .bs-ctl-gap { justify-self: end; visibility: hidden; }  /* where Listen has Share: keeps the buttons centred the same */
+body.wxlisten #weather .bs-ctl { display: grid; position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; margin: 0 auto; max-width: 560px; padding: 10px 20px calc(max(14px, env(safe-area-inset-bottom, 0px)) + 16px);
   background: linear-gradient(to top, rgba(8, 10, 24, 0.55), rgba(8, 10, 24, 0)); }
 body.wxlisten #weather .bs-skip:not(.bs-weekbtn), body.wxlisten #weather .bs-stop { display: none; }
 body.wxlisten #weather .bs-hud { padding-bottom: calc(max(12px, env(safe-area-inset-bottom, 0px)) + 86px); }
@@ -1470,10 +1472,11 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
   <div id="bsNoGl" hidden><p>The 3D sky can't draw on this device, but the forecast below still works.</p></div>
   <main class="bs-hud" id="wBody"></main>
   <div class="np-ctl bs-ctl" id="bsCtl">
+    <button type="button" class="np-btn xs" id="bsStop2" aria-label="Stop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     <button type="button" class="np-btn sm" id="bsPrev" aria-label="Back"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 5.5v13l-9-6.5zM5 5h3v14H5z"/></svg></button>
-    <button type="button" class="np-btn" id="bsStop2" aria-label="Stop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     <button type="button" class="np-btn big" id="bsPlay" aria-label="Pause"></button>
     <button type="button" class="np-btn" id="bsNext" aria-label="Skip"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 5.5v13l9-6.5zM16 5h3v14h-3z"/></svg></button>
+    <span class="np-btn xs bs-ctl-gap" aria-hidden="true"></span>
   </div>
 </section>
 
@@ -5107,7 +5110,7 @@ const handle = async (m, post) => {
     const wallMat = new THREE.MeshStandardMaterial({ color: 0xece4d6, roughness: .9 }), roofMat = new THREE.MeshStandardMaterial({ color: 0x3e4650, roughness: .8 });
     const houseLights = [];
     for (let i = 0; i < 34; i++) { const x = -150 + rnd(i * 11 + 2) * 170, z = -66 - rnd(i * 13 + 3) * 50, w = 4 + rnd(i * 17) * 3, d = 4 + rnd(i * 19) * 3, hh = 2.6 + rnd(i * 23) * 1.6;
-      if (x > -64 && x < 44 && z > -104) continue;  // the town centre: the clock, A'Beckett and Reilly Streets, the shops, the hotel and the Hub
+      if (x > -92 && x < 44 && z > -104) continue;  // the town centre: the clock, A'Beckett and Reilly Streets, the shops, the hotel and the Hub
       const body = new THREE.Mesh(new THREE.BoxGeometry(w, hh, d), wallMat); body.position.set(x, 2.2 + hh / 2, z); inv.add(body);
       const roof = new THREE.Mesh(new THREE.ConeGeometry(Math.max(w, d) * 0.78, 1.8, 4), roofMat); roof.position.set(x, 2.2 + hh + 0.9, z); roof.rotation.y = Math.PI / 4; inv.add(roof);
       houseLights.push(x + (rnd(i * 29) - 0.5) * w * 0.6, 2.2 + hh * 0.5, z + d / 2 + 0.1); }
@@ -5148,10 +5151,11 @@ const handle = async (m, post) => {
     {
       const clk = new THREE.Group(), teal = new THREE.MeshStandardMaterial({ color: 0x3b8f86, roughness: .5, metalness: .3 });
       const gold = new THREE.MeshStandardMaterial({ color: 0xffb53a, roughness: .45, metalness: 0, emissive: 0x8a5200, emissiveIntensity: .6 }), black = new THREE.MeshStandardMaterial({ color: 0x15171a, roughness: .6, side: THREE.DoubleSide });
+      const tower = new THREE.Group(); tower.scale.setScalar(0.4); clk.add(tower);  // the clock at its real size: a little taller than the street lamps
       const CY = 13.4, Ro = 2.55, Ri = 2.18;  // the clock's centre, and its gear's tips and roots
       // the two teal poles run up behind the clock and carry the ship on top
-      [-0.78, 0.78].forEach(x => { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.22, CY + Ro + 0.5, 10), teal); p.position.set(x, (CY + Ro + 0.5) / 2, -0.38); clk.add(p); });
-      const brace = new THREE.Mesh(new THREE.BoxGeometry(1.56, 0.12, 0.12), teal); brace.position.set(0, CY * 0.38, -0.38); clk.add(brace);
+      [-0.78, 0.78].forEach(x => { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.22, CY + Ro + 0.5, 10), teal); p.position.set(x, (CY + Ro + 0.5) / 2, -0.38); tower.add(p); });
+      const brace = new THREE.Mesh(new THREE.BoxGeometry(1.56, 0.12, 0.12), teal); brace.position.set(0, CY * 0.38, -0.38); tower.add(brace);
       // a gear outline: n teeth, square ("sq") or tapered
       const gear = (n, ro, ri, sq, holeR) => { const sh = new THREE.Shape(), step = Math.PI * 2 / n;
         for (let k = 0; k < n; k++) { const a0 = k * step, w = sq ? 0.3 : 0.17, t = sq ? 0.29 : 0.12;
@@ -5161,9 +5165,9 @@ const handle = async (m, post) => {
         const g2 = new THREE.ExtrudeGeometry(sh, { depth: 0.3, bevelEnabled: false, curveSegments: 4 }); g2.translate(0, 0, -0.15); return g2; };
       // the navy gear behind, set down and to the left of the clock
       const navy = new THREE.MeshStandardMaterial({ color: 0x1f2f86, roughness: .55, metalness: .1 });
-      const back = new THREE.Mesh(gear(20, 2.75, 2.25, false), navy); back.position.set(-0.62, CY - 0.5, -0.78); back.rotation.z = 0.08; clk.add(back);
+      const back = new THREE.Mesh(gear(20, 2.75, 2.25, false), navy); back.position.set(-0.62, CY - 0.5, -0.78); back.rotation.z = 0.08; tower.add(back);
       // the clock itself: a gold gear with square teeth, its face a blue band with gold rims and spokes round a white dial
-      const front = new THREE.Mesh(gear(26, Ro, Ri, true, 2.05), gold); front.position.y = CY; clk.add(front);
+      const front = new THREE.Mesh(gear(26, Ro, Ri, true, 2.05), gold); front.position.y = CY; tower.add(front);
       const cv = document.createElement("canvas"); cv.width = cv.height = 512; const g = cv.getContext("2d"), C = 256;
       g.fillStyle = "#e9ad2c"; g.beginPath(); g.arc(C, C, C, 0, Math.PI * 2); g.fill();
       g.fillStyle = "#1d3fa0"; g.beginPath(); g.arc(C, C, C * 0.93, 0, Math.PI * 2); g.fill();
@@ -5182,7 +5186,7 @@ const handle = async (m, post) => {
         const face = new THREE.Mesh(new THREE.CircleGeometry(Ri + 0.02, 64), faceMat); face.position.z = 0.16; side.add(face);
         const mk = (len, w) => { const p = new THREE.Group(), h = new THREE.Mesh(new THREE.BoxGeometry(w, len, 0.04), black); h.position.y = len / 2 - 0.15; p.add(h); p.position.z = 0.2; side.add(p); return p; };
         const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.08, 12), black); hub.rotation.x = Math.PI / 2; hub.position.z = 0.23; side.add(hub);
-        hands.push([mk(0.8, 0.11), mk(1.18, 0.07)]); clk.add(side); });
+        hands.push([mk(0.8, 0.11), mk(1.18, 0.07)]); tower.add(side); });
       // the ship on top: a black gaff-rigged ketch sailing right, fixed to the tops of the poles
       const V = (pts) => new THREE.Shape(pts.map(([x, y]) => new THREE.Vector2(x, y)));
       const shipShapes = [
@@ -5194,22 +5198,26 @@ const handle = async (m, post) => {
         V([[-1.85, 0.5], [-1.2, 0.5], [-1.2, 2.1], [-1.7, 1.75]]),                                          // mizzen
       ];
       const ship = new THREE.Mesh(new THREE.ExtrudeGeometry(shipShapes, { depth: 0.06, bevelEnabled: false }), black);
-      ship.position.set(-0.15, CY + Ro + 0.45, -0.41); ship.scale.setScalar(1.02); clk.add(ship);
+      ship.position.set(-0.15, CY + Ro + 0.45, -0.41); ship.scale.setScalar(1.02); tower.add(ship);
       // the plaza: red brick, a garden bed of grasses and the four mosaic blocks
-      const brick = new THREE.Mesh(new THREE.BoxGeometry(14, 0.3, 8), new THREE.MeshStandardMaterial({ color: 0xa4523f, roughness: 1 })); brick.position.set(0.5, 0.15, 0.4); clk.add(brick);
+      const brick = new THREE.Mesh(new THREE.BoxGeometry(16, 0.3, 8), new THREE.MeshStandardMaterial({ color: 0xa4523f, roughness: 1 })); brick.position.set(-1.2, 0.15, -0.6); clk.add(brick);
       const bed = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 2.8, 0.45, 18), new THREE.MeshStandardMaterial({ color: 0x4a3426, roughness: 1 })); bed.position.set(0, 0.4, -0.3); clk.add(bed);
       const tuft = new THREE.MeshStandardMaterial({ color: 0x5f7d3a, roughness: 1, flatShading: true });
-      for (let k = 0; k < 9; k++) { const a = k / 9 * Math.PI * 2 + 0.3, t2 = new THREE.Mesh(new THREE.ConeGeometry(0.55 + rnd(k * 7 + 1) * 0.3, 1.3 + rnd(k * 3 + 2) * 0.7, 6), tuft); t2.position.set(Math.cos(a) * 1.9, 1.1, -0.3 + Math.sin(a) * 1.9); clk.add(t2); }
+      const blade = new THREE.ConeGeometry(0.09, 1, 3);
+      for (let k = 0; k < 11; k++) { const a = k / 11 * Math.PI * 2 + 0.3, r = 1.4 + rnd(k * 7 + 1) * 1.1, cx = Math.cos(a) * r, cz = -0.3 + Math.sin(a) * r, hgt = 1.5 + rnd(k * 3 + 2) * 0.9;
+        for (let j = 0; j < 9; j++) { const bl = new THREE.Mesh(blade, tuft), ang = j / 9 * Math.PI * 2; bl.scale.set(1, hgt, 1); bl.position.set(cx + Math.cos(ang) * 0.15, 0.6 + hgt / 2 * 0.9, cz + Math.sin(ang) * 0.15);
+          bl.rotation.set(Math.sin(ang) * 0.55, 0, -Math.cos(ang) * 0.55); clk.add(bl); } }
+      const boulder = new THREE.Mesh(new THREE.DodecahedronGeometry(0.75, 0), new THREE.MeshStandardMaterial({ color: 0x7d7a72, roughness: 1, flatShading: true })); boulder.scale.set(1.3, 0.65, 1); boulder.position.set(1.6, 0.8, 1.1); clk.add(boulder);
       const prof = new THREE.Shape([[-0.55, 0], [0.55, 0], [0.2, 1.4], [-0.2, 1.4]].map(([x, y]) => new THREE.Vector2(x, y)));
       const blockGeo = new THREE.ExtrudeGeometry(prof, { depth: 1.5, bevelEnabled: false }); blockGeo.translate(0, 0, -0.75); blockGeo.rotateY(Math.PI / 2);
       const conc = new THREE.MeshStandardMaterial({ color: 0xcbc7be, roughness: .95 }), tilt = Math.atan2(0.35, 1.4);
       const PALS = [["#2f6fd0", "#f2c230", "#e0463a", "#ffffff", "#3d9bd9"], ["#f2b33d", "#7a4fb5", "#d8433a", "#3e9a4b", "#f6e7b0"], ["#4f9e3b", "#8fcf5a", "#6b4b33", "#e9f1f7", "#9bbbe0"], ["#3a7fd6", "#7cc4f0", "#e8f2fa", "#c43a33", "#59a34b"]];
-      PALS.forEach((pal, k) => { const b = new THREE.Mesh(blockGeo, conc); b.position.set(-4.4 + k * 2.1, 0.3, 3.1); clk.add(b);
+      PALS.forEach((pal, k) => { const b = new THREE.Mesh(blockGeo, conc); b.position.set(-7.2 + k * 2.1, 0.3, -2.6); clk.add(b);
         const mc = document.createElement("canvas"); mc.width = mc.height = 48; const mg = mc.getContext("2d");
         for (let y = 0; y < 12; y++) for (let x = 0; x < 12; x++) { const band = Math.floor((y + (x * 0.3 + k) % 3) / 3); mg.fillStyle = pal[(band + (rnd(k * 997 + y * 31 + x) < 0.28 ? 1 : 0)) % pal.length]; mg.fillRect(x * 4, y * 4, 4, 4); }
         const mt = new THREE.CanvasTexture(mc); mt.magFilter = THREE.NearestFilter; if ("colorSpace" in mt) mt.colorSpace = THREE.SRGBColorSpace;
         const mm = new THREE.MeshStandardMaterial({ map: mt, roughness: .4, metalness: .1 });
-        [1, -1].forEach(sd => { const pnl = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 1.05), mm); pnl.position.set(b.position.x, 0.3 + 0.72, 3.1 + sd * 0.385); pnl.rotation.set(-sd * tilt, sd > 0 ? 0 : Math.PI, 0); clk.add(pnl); }); });
+        [1, -1].forEach(sd => { const pnl = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 1.05), mm); pnl.position.set(b.position.x, 0.3 + 0.72, -2.6 + sd * 0.385); pnl.rotation.set(-sd * tilt, sd > 0 ? 0 : Math.PI, 0); clk.add(pnl); }); });
       clk.scale.setScalar(1.45); clk.position.set(-16, 2.15, -68); clk.rotation.y = 0.18; inv.add(clk);
       houseLights.push(-17.4, 2.7, -63.8, -14.6, 2.7, -64);  // garden lights at its feet
       // Inverloch's town centre, from photos of the A'Beckett and Reilly Street corner: single-storey shops under
@@ -5227,20 +5235,32 @@ const handle = async (m, post) => {
       [-1, 1].forEach(k => box(1.4, 0.13, 2.6, lineM, -1.5 + k * 1.6, G0 + 0.06, -74.6));  // a zebra crossing on Reilly
       box(110, 0.25, 3.2, kerb, -10, G0 + 0.1, -85.6); box(50, 0.25, 3, pave, -36, G0 + 0.1, -74.6);
       // the shops along A'Beckett, under one run of verandahs
-      const shops = [[-56, 9, 4.6, 0x9b5743, 0x9b5743], [-46.5, 8, 4.2, 0xefe4c8, 0x2b6a3c, "stripes"], [-37.5, 8, 4.8, 0xf0cf5a, 0x1f3f7a, "gable"], [-29, 7.5, 4.4, 0xc7342c, 0xc7342c],
-        [-20.5, 8, 4.2, 0xefe4c8, 0x2f8a7e], [-12, 7.5, 4.6, 0x9b5743, 0x7d4636], [-4.6, 5.5, 4.2, 0xf2f2ee, 0x2d5fa8, "pavilion"],
-        [8, 8, 4.4, 0xf2e8d2, 0x2b6a3c, "stripes"], [16.5, 8, 4.8, 0x9b5743, 0x9b5743], [25, 8, 4.2, 0xefe4c8, 0xd9653b], [33.5, 8, 4.6, 0xe6dccb, 0x2d5fa8]];
+      // the businesses, east (by the clock) to west: [x, width, height, wall, sign colour, kind, sign, sign text colour]
+      const shops = [[-4.6, 5.5, 4.2, 0xf2f2ee, 0x2d5fa8, "pavilion", "REAL ESTATE", "#ffffff"], [-12, 7.5, 4.6, 0x9b5743, 0x15161a, "pies", "PRIZE WINNING PIES & PASTRIES", "#ffffff"],
+        [-20.5, 8, 4.4, 0xefe4c8, 0x1f6b3c, "stripes", "BAKERY CAFE", "#f6c945"], [-29, 7.5, 4.4, 0xc7342c, 0xc7342c, "", "REAL ESTATE", "#ffffff"],
+        [-37.5, 8, 4.8, 0xf0cf5a, 0x1f3f7a, "gable", "BOTTLE SHOP", "#ffffff"], [-46.5, 8, 4.2, 0xefe4c8, 0xc7342c, "", "PIZZA", "#ffffff"], [-56, 9, 4.6, 0x9b5743, 0x2e8b57, "", "PHARMACY", "#ffffff"],
+        [8, 8, 4.4, 0xf2e8d2, 0x2d5fa8, "", "MILK BAR", "#ffffff"], [16.5, 8, 4.8, 0x9b5743, 0x6b2d6b, "", "CRAFTS & WOOL", "#ffffff"], [25, 8, 4.2, 0xefe4c8, 0xd9653b, "", "NEWSAGENCY", "#ffffff"], [33.5, 8, 4.6, 0xe6dccb, 0x1f3f7a, "", "CAFE", "#ffffff"]];
+      const signTex = (text, bg, fg, w) => { const c = document.createElement("canvas"); c.width = 512; c.height = Math.max(48, Math.round(512 / (w / 0.9))); const g = c.getContext("2d");
+        g.fillStyle = "#" + bg.toString(16).padStart(6, "0"); g.fillRect(0, 0, c.width, c.height); g.fillStyle = fg; g.textAlign = "center"; g.textBaseline = "middle";
+        let fs = Math.round(c.height * 0.62); g.font = `800 ${fs}px Georgia, 'Times New Roman', serif`; while (g.measureText(text).width > c.width * 0.92 && fs > 10) { fs -= 2; g.font = `800 ${fs}px Georgia, 'Times New Roman', serif`; }
+        g.fillText(text, c.width / 2, c.height / 2 + 2); const t = new THREE.CanvasTexture(c); t.anisotropy = 4; if ("colorSpace" in t) t.colorSpace = THREE.SRGBColorSpace; return t; };
       const stripeTex = (() => { const c = document.createElement("canvas"); c.width = 64; c.height = 8; const g = c.getContext("2d");
         for (let i = 0; i < 8; i++) { g.fillStyle = i % 2 ? "#f4f1e8" : "#2b6a3c"; g.fillRect(i * 8, 0, 8, 8); } const t = new THREE.CanvasTexture(c); if ("colorSpace" in t) t.colorSpace = THREE.SRGBColorSpace; return t; })();
       const FZ = -87.4;  // the shop fronts
-      shops.forEach(([x, w, h, wall, trim, kind]) => {
+      shops.forEach(([x, w, h, wall, trim, kind, sign, ink]) => {
         const wallM = M(wall); box(w - 0.1, h, 8, wallM, x, G0 + h / 2, FZ - 4);
         if (kind === "gable") { const sh = new THREE.Shape([[-w / 2, 0], [w / 2, 0], [w / 2, 0.6], [w * 0.18, 0.6], [0, 1.9], [-w * 0.18, 0.6], [-w / 2, 0.6]].map(([a, b]) => new THREE.Vector2(a, b)));
           const gm = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 0.3, bevelEnabled: false }), wallM); gm.position.set(x, G0 + h, FZ - 0.3); inv.add(gm); }
         if (kind === "pavilion") { const sh = new THREE.Shape([[-w / 2 - 0.3, 0], [w / 2 + 0.3, 0], [0, 2.2]].map(([a, b]) => new THREE.Vector2(a, b)));
           const gm = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 5, bevelEnabled: false }), M(0x2d5fa8, .6)); gm.position.set(x, G0 + h, FZ - 2.5); inv.add(gm);
           box(w, 0.25, 0.3, M(0xf4f4f0), x, G0 + h + 0.1, FZ + 2.6); }
-        box(w - 0.1, 0.9, 0.25, M(trim, .7), x, G0 + h - 0.45, FZ + 0.05);                 // the sign band
+        const tm = M(trim, .7), sm = new THREE.MeshStandardMaterial({ map: signTex(sign, trim, ink, w), roughness: .6 });
+        const band = new THREE.Mesh(new THREE.BoxGeometry(w - 0.1, 0.9, 0.25), [tm, tm, tm, tm, sm, tm]); band.position.set(x, G0 + h - 0.45, FZ + 0.05); inv.add(band);  // the sign
+        if (kind === "pies") { const disc = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.25, 0.2, 28), [M(0x15161a), M(0xf1a33a, .6), M(0x15161a)]); disc.rotation.x = Math.PI / 2; disc.position.set(x - 1.2, G0 + h + 1.5, FZ - 0.4); inv.add(disc);
+          box(0.18, 1.2, 0.18, M(0x15161a), x - 1.2, G0 + h + 0.3, FZ - 0.5); }
+        if (kind === "stripes") [-1, 1].forEach(k => { const b2 = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.12, 20), [M(0xffffff), M(0xc8342b, .6), M(0xffffff)]); b2.rotation.x = Math.PI / 2; b2.position.set(x + k * (w / 2 - 0.5), G0 + h - 0.45, FZ + 0.25); inv.add(b2); });
+        if (kind === "stripes") [[0xd8312b, -2.2], [0x2f6fd6, 1.6]].forEach(([c, dx]) => { const um = new THREE.Mesh(new THREE.ConeGeometry(1.5, 0.6, 10), M(c, .7)); um.position.set(x + dx, G0 + 2.5, FZ + 4.1); inv.add(um);
+          box(0.06, 2.3, 0.06, M(0xdddddd), x + dx, G0 + 1.15, FZ + 4.1); });
         box(w - 1.2, 2.3, 0.1, glassM, x - 0.4, G0 + 1.35, FZ + 0.05);                     // shop window
         const ver = box(w - 0.1, 0.12, 2.8, kind === "stripes" ? new THREE.MeshStandardMaterial({ map: stripeTex, roughness: .8 }) : M(0x8e979c, .6), x, G0 + 3.05, FZ + 1.4);
         ver.rotation.x = -0.06;
@@ -5258,24 +5278,30 @@ const handle = async (m, post) => {
         const c = Math.cos(face), s2 = Math.sin(face); houseLights.push(x + 1.8 * c, G0 + 5.2, z - 1.8 * s2); };
       for (let x = -58; x <= 38; x += 13) { lamp(x, -84.6, -Math.PI / 2); if (x < -8 || x > 8) lamp(x + 6, -75.4, Math.PI / 2); }
       // the Esplanade Hotel across Reilly Street: cream, two storeys, grey roof with gable ends, a tall brick chimney
-      { const hx = 17, hz = -70, hw = 20, hd = 9, hh = 7.2, cream = M(0xeee2c2);
-        box(hw, hh, hd, cream, hx, G0 + hh / 2, hz);
+      { const H = new THREE.Group(), hw = 20, hd = 9, hh = 7.2, cream = M(0xeee2c2), hb = (w, h, d, m, x, y, z) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); H.add(o); return o; }, lights = [];
+        hb(hw, hh, hd, cream, 0, hh / 2, 0);
         const rs = new THREE.Shape([[-hd / 2 - 0.4, 0], [hd / 2 + 0.4, 0], [0, 3.1]].map(([a, b]) => new THREE.Vector2(a, b)));
-        const roof = new THREE.Mesh(new THREE.ExtrudeGeometry(rs, { depth: hw + 0.8, bevelEnabled: false }), ironM); roof.rotation.y = Math.PI / 2; roof.position.set(hx - hw / 2 - 0.4, G0 + hh, hz); inv.add(roof);
-        box(1.1, 6.5, 1.1, M(0x8e4c3a), hx + 4, G0 + hh + 2.4, hz - 1.5);
-        for (let row = 0; row < 2; row++) for (let k = 0; k < 7; k++) { const wx = hx - hw / 2 + 1.8 + k * 2.75; if (row === 0 && k === 2) continue;
-          box(0.95, 1.5, 0.12, glassM, wx, G0 + 1.9 + row * 3.4, hz + hd / 2 + 0.03);
-          if (row === 0) { const aw = box(1.2, 0.08, 0.7, new THREE.MeshStandardMaterial({ map: stripeTex, roughness: .8, color: 0xffd6d0 }), wx, G0 + 2.85, hz + hd / 2 + 0.35); aw.rotation.x = 0.4; }
-          houseLights.push(wx, G0 + 1.9 + row * 3.4, hz + hd / 2 + 0.12); }
+        const roof = new THREE.Mesh(new THREE.ExtrudeGeometry(rs, { depth: hw + 0.8, bevelEnabled: false }), ironM); roof.rotation.y = Math.PI / 2; roof.position.set(-hw / 2 - 0.4, hh, 0); H.add(roof);
+        for (let k = 0; k < 4; k++) { const sp = hb(3.2, 0.12, 2.2, M(0x1c2a4a, .3, { metalness: .5 }), -6 + k * 3.6, hh + 1.7, 2.1); sp.rotation.x = 0.6; }  // solar panels
+        hb(1.1, 6.5, 1.1, M(0x8e4c3a), 4, hh + 2.4, -1.5);
+        for (let row = 0; row < 2; row++) for (let k = 0; k < 7; k++) { const wx = -hw / 2 + 1.8 + k * 2.75; if (row === 0 && k === 2) continue;
+          hb(0.95, 1.5, 0.12, glassM, wx, 1.9 + row * 3.4, hd / 2 + 0.03);
+          if (row === 0) { const aw = hb(1.2, 0.08, 0.7, new THREE.MeshStandardMaterial({ map: stripeTex, roughness: .8, color: 0xffd6d0 }), wx, 2.85, hd / 2 + 0.35); aw.rotation.x = 0.4; }
+          lights.push(new THREE.Vector3(wx, 1.9 + row * 3.4, hd / 2 + 0.12)); }
         const ps = new THREE.Shape([[-1.6, 0], [1.6, 0], [0, 1.2]].map(([a, b]) => new THREE.Vector2(a, b)));
-        const porch = new THREE.Mesh(new THREE.ExtrudeGeometry(ps, { depth: 2, bevelEnabled: false }), ironM); porch.position.set(hx - hw / 2 + 7.3, G0 + 3.2, hz + hd / 2); inv.add(porch);
-        box(1.8, 3.2, 0.1, glassM, hx - hw / 2 + 7.3, G0 + 1.6, hz + hd / 2 + 0.04); }
+        const porch = new THREE.Mesh(new THREE.ExtrudeGeometry(ps, { depth: 2, bevelEnabled: false }), ironM); porch.position.set(-hw / 2 + 7.3, 3.2, hd / 2); H.add(porch);
+        hb(1.8, 3.2, 0.1, glassM, -hw / 2 + 7.3, 1.6, hd / 2 + 0.04);
+        H.position.set(-76, G0, -80); H.rotation.y = 1.25; inv.add(H); H.updateMatrixWorld(true);
+        lights.forEach(v => { v.applyMatrix4(H.matrix); houseLights.push(v.x, v.y, v.z); }); }
+      // tall white banner poles along the kerb
+      [[-52, 0x2d5fa8], [-41, 0xd8312b], [-25, 0x2d5fa8], [-16.5, 0xf2c230], [12, 0xd8312b], [29, 0x2d5fa8]].forEach(([x, c]) => {
+        box(0.12, 9, 0.12, M(0xf2f2f2), x, G0 + 4.5, -84.2); const bn = box(0.9, 2.6, 0.04, M(c, .7, { side: THREE.DoubleSide }), x + 0.5, G0 + 7.3, -84.2); bn.rotation.y = 0.3; });
       // the Community Hub behind the clock: a big grey shed on a brick base, with its flagpoles
-      { const bx = -42, bz = -66, bw = 22, bd = 12;
+      { const bx = -46, bz = -62, bw = 20, bd = 11;
         box(bw, 2.4, bd, M(0x8a5040), bx, G0 + 1.2, bz); box(bw, 4.4, bd, ironM, bx, G0 + 2.4 + 2.2, bz - 0.2);
         box(bw * 0.7, 3, bd * 0.6, M(0xa8aeb1, .6), bx - 2, G0 + 6.8 + 1.5, bz - 1);
         box(bw - 2, 1.4, 0.1, glassM, bx, G0 + 1.4, bz + bd / 2 + 0.03);
-        [-29.5, -28.3].forEach((fx, k) => { const fp = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 10, 6), M(0xdddddd)); fp.position.set(fx, G0 + 5, -58.5); inv.add(fp);
+        [-34.5, -33.3].forEach((fx, k) => { const fp = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 10, 6), M(0xdddddd)); fp.position.set(fx, G0 + 5, -58.5); inv.add(fp);
           const fl = new THREE.Mesh(new THREE.PlaneGeometry(2, 1.1), new THREE.MeshStandardMaterial({ color: 0x1a2f78, side: THREE.DoubleSide })); fl.position.set(fx + 1, G0 + 9.2 - k * 1.4, -58.5); inv.add(fl); W.invFlags.push(fl); }); }
       // timber bollards round the corner, and gum trees about town
       for (let k = 0; k < 7; k++) box(0.35, 1.1, 0.35, M(0xb8a589), -24 + k * 2.6, G0 + 0.55, -76.6);
@@ -6020,10 +6046,13 @@ const handle = async (m, post) => {
   // ---- Explore: fly round the 3D scene with game controls ----
   // Computer: click the scene to look with the mouse (Esc gives the mouse back), WASD or the arrow keys to move, Space or E up,
   // C or Q down, Shift to go faster, R back to the start. Phone: drag on the left half to move, the right half to look.
+  const BS_INV_SPOT = { pos: [-4, 3.9, -58], yaw: 0.95, pitch: 0.22 };
   function bsFlyOn() {
     const B = BS.B; if (!B || BS.fly) return;
     const cam = B.camera, dir = new B.THREE.Vector3().subVectors(B.camLook, B.camBase).normalize();
-    const start = { pos: cam.position.clone(), yaw: Math.atan2(-dir.x, -dir.z), pitch: Math.asin(bsClamp(dir.y, -1, 1)) };
+    const inv = BS.W.inv?.visible && !BS.drive;  // Inverloch: start where the photos of the Rotary clock are taken, looking up A'Beckett Street
+    const start = inv ? { pos: new B.THREE.Vector3(...BS_INV_SPOT.pos), yaw: BS_INV_SPOT.yaw, pitch: BS_INV_SPOT.pitch }
+      : { pos: cam.position.clone(), yaw: Math.atan2(-dir.x, -dir.z), pitch: Math.asin(bsClamp(dir.y, -1, 1)) };
     const F = BS.fly = { ...start, pos: start.pos.clone(), start, keys: new Set(), stick: { x: 0, y: 0 }, touches: new Map(), drag: null };
     const canvas = $("bsGl"), touch = matchMedia("(pointer: coarse)").matches;
     document.body.classList.add("bsfly"); $("bsFly").hidden = false;
