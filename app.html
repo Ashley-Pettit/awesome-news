@@ -5104,6 +5104,7 @@ const handle = async (m, post) => {
     const wallMat = new THREE.MeshStandardMaterial({ color: 0xece4d6, roughness: .9 }), roofMat = new THREE.MeshStandardMaterial({ color: 0x3e4650, roughness: .8 });
     const houseLights = [];
     for (let i = 0; i < 34; i++) { const x = -150 + rnd(i * 11 + 2) * 170, z = -66 - rnd(i * 13 + 3) * 50, w = 4 + rnd(i * 17) * 3, d = 4 + rnd(i * 19) * 3, hh = 2.6 + rnd(i * 23) * 1.6;
+      if (x > -52 && x < 20 && z > -90) continue;  // the town centre: the clock's plaza, A'Beckett Street and its shops
       const body = new THREE.Mesh(new THREE.BoxGeometry(w, hh, d), wallMat); body.position.set(x, 2.2 + hh / 2, z); inv.add(body);
       const roof = new THREE.Mesh(new THREE.ConeGeometry(Math.max(w, d) * 0.78, 1.8, 4), roofMat); roof.position.set(x, 2.2 + hh + 0.9, z); roof.rotation.y = Math.PI / 4; inv.add(roof);
       houseLights.push(x + (rnd(i * 29) - 0.5) * w * 0.6, 2.2 + hh * 0.5, z + d / 2 + 0.1); }
@@ -5190,8 +5191,24 @@ const handle = async (m, post) => {
         const mt = new THREE.CanvasTexture(mc); mt.magFilter = THREE.NearestFilter; if ("colorSpace" in mt) mt.colorSpace = THREE.SRGBColorSpace;
         const mm = new THREE.MeshStandardMaterial({ map: mt, roughness: .4, metalness: .1 });
         [1, -1].forEach(sd => { const pnl = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 1.05), mm); pnl.position.set(b.position.x, 0.3 + 0.72, 3.1 + sd * 0.385); pnl.rotation.set(-sd * tilt, sd > 0 ? 0 : Math.PI, 0); clk.add(pnl); }); });
-      clk.scale.setScalar(1.35); clk.position.set(-5, 0.6, -37); clk.rotation.y = 0.22; inv.add(clk);
-      houseLights.push(-6.2, 1.1, -33.4, -3.6, 1.1, -33.6);  // garden lights at its feet
+      clk.scale.setScalar(1.45); clk.position.set(-16, 2.15, -68); clk.rotation.y = 0.18; inv.add(clk);
+      houseLights.push(-17.4, 2.7, -63.8, -14.6, 2.7, -64);  // garden lights at its feet
+      // A'Beckett Street behind it: the road, a footpath and a row of shops with coloured fronts and awnings
+      const road = new THREE.Mesh(new THREE.BoxGeometry(76, 0.12, 6), new THREE.MeshStandardMaterial({ color: 0x3c3f44, roughness: .95 })); road.position.set(-16, 2.25, -79); inv.add(road);
+      const line = new THREE.Mesh(new THREE.BoxGeometry(76, 0.13, 0.18), new THREE.MeshStandardMaterial({ color: 0xe9e4d4, roughness: 1 })); line.position.set(-16, 2.26, -79); inv.add(line);
+      const path = new THREE.Mesh(new THREE.BoxGeometry(76, 0.2, 2.6), new THREE.MeshStandardMaterial({ color: 0xbdb6a8, roughness: 1 })); path.position.set(-16, 2.3, -83.3); inv.add(path);
+      const fronts = [0xc8342b, 0x2f6b3a, 0x2d5fa8, 0xe2a32b, 0x7b3f8c, 0xc8342b, 0x2f6b3a, 0x3a8f86, 0xd9653b];
+      const shopMat = new THREE.MeshStandardMaterial({ color: 0xf1e9da, roughness: .9 }), glass = new THREE.MeshStandardMaterial({ color: 0x2c3a48, roughness: .2, metalness: .3 }), awnMat = new THREE.MeshStandardMaterial({ color: 0x2b2f35, roughness: .8 });
+      fronts.forEach((c, k) => { const x = -48 + k * 8, w = 7.4, h = 4.2 + (k % 3) * 0.7;
+        const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, 6), shopMat); body.position.set(x, 2.2 + h / 2, -87.8); inv.add(body);
+        const fascia = new THREE.Mesh(new THREE.BoxGeometry(w, 1.1, 0.3), new THREE.MeshStandardMaterial({ color: c, roughness: .7 })); fascia.position.set(x, 2.2 + h - 0.6, -84.7); inv.add(fascia);
+        const win = new THREE.Mesh(new THREE.BoxGeometry(w - 1.4, 1.9, 0.12), glass); win.position.set(x, 3.6, -84.75); inv.add(win);
+        const awn = new THREE.Mesh(new THREE.BoxGeometry(w, 0.15, 2), awnMat); awn.position.set(x, 2.2 + h - 1.3, -83.8); inv.add(awn);
+        houseLights.push(x - 1.5, 3.6, -84.6, x + 1.5, 3.6, -84.6); });
+      // a few parked cars along the kerb
+      [0xd8d8d8, 0x8a1f24, 0x2a3f6b, 0xf2f2ee].forEach((c, k) => { const car = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.2, 1.7), new THREE.MeshStandardMaterial({ color: c, roughness: .4, metalness: .3 }));
+        car.position.set(-42 + k * 15 + (k % 2) * 3, 2.95, -81.2); inv.add(car);
+        const top = new THREE.Mesh(new THREE.BoxGeometry(2, 0.75, 1.5), glass); top.position.set(car.position.x - 0.2, 3.9, -81.2); inv.add(top); });
       let vaneAng = null;
       W.invClockTick = (ms, dt, lit, still) => {
         const off = (state.wx?.d?.utc_offset_seconds ?? 39600) * 1000, d = new Date(ms + off), m = d.getUTCMinutes() + d.getUTCSeconds() / 60, h = (d.getUTCHours() % 12) + m / 60;
