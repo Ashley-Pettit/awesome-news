@@ -5104,7 +5104,7 @@ const handle = async (m, post) => {
     const wallMat = new THREE.MeshStandardMaterial({ color: 0xece4d6, roughness: .9 }), roofMat = new THREE.MeshStandardMaterial({ color: 0x3e4650, roughness: .8 });
     const houseLights = [];
     for (let i = 0; i < 34; i++) { const x = -150 + rnd(i * 11 + 2) * 170, z = -66 - rnd(i * 13 + 3) * 50, w = 4 + rnd(i * 17) * 3, d = 4 + rnd(i * 19) * 3, hh = 2.6 + rnd(i * 23) * 1.6;
-      if (x > -52 && x < 20 && z > -90) continue;  // the town centre: the clock's plaza, A'Beckett Street and its shops
+      if (x > -64 && x < 44 && z > -104) continue;  // the town centre: the clock, A'Beckett and Reilly Streets, the shops, the hotel and the Hub
       const body = new THREE.Mesh(new THREE.BoxGeometry(w, hh, d), wallMat); body.position.set(x, 2.2 + hh / 2, z); inv.add(body);
       const roof = new THREE.Mesh(new THREE.ConeGeometry(Math.max(w, d) * 0.78, 1.8, 4), roofMat); roof.position.set(x, 2.2 + hh + 0.9, z); roof.rotation.y = Math.PI / 4; inv.add(roof);
       houseLights.push(x + (rnd(i * 29) - 0.5) * w * 0.6, 2.2 + hh * 0.5, z + d / 2 + 0.1); }
@@ -5122,7 +5122,8 @@ const handle = async (m, post) => {
       flag.position.set(x, 6.1, z); inv.add(flag); W.invFlags.push(flag); });
     // Norfolk Island pines along the foreshore
     const pine = new THREE.MeshStandardMaterial({ color: 0x29452c, roughness: 1 });
-    [-138, -112, -90, -52, -34, -4, 26, 44].forEach((x, i) => { const g = new THREE.Group(), hgt = 15 + rnd(i * 41) * 6;
+    [-138, -112, -90, -74, 44, 60].forEach((x, i) =>  // Norfolk pines, kept clear of the town centre
+       { const g = new THREE.Group(), hgt = 15 + rnd(i * 41) * 6;
       const tr = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.5, hgt, 6), trunkMat2()); tr.position.y = hgt / 2; g.add(tr);
       for (let k = 0; k < 6; k++) { const tier = new THREE.Mesh(new THREE.ConeGeometry(3.4 - k * 0.45, 2.6, 8), pine); tier.position.y = hgt * 0.35 + k * (hgt * 0.11); g.add(tier); }
       g.position.set(x, 1, -60 - rnd(i * 43) * 6); inv.add(g); });
@@ -5193,22 +5194,82 @@ const handle = async (m, post) => {
         [1, -1].forEach(sd => { const pnl = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 1.05), mm); pnl.position.set(b.position.x, 0.3 + 0.72, 3.1 + sd * 0.385); pnl.rotation.set(-sd * tilt, sd > 0 ? 0 : Math.PI, 0); clk.add(pnl); }); });
       clk.scale.setScalar(1.45); clk.position.set(-16, 2.15, -68); clk.rotation.y = 0.18; inv.add(clk);
       houseLights.push(-17.4, 2.7, -63.8, -14.6, 2.7, -64);  // garden lights at its feet
-      // A'Beckett Street behind it: the road, a footpath and a row of shops with coloured fronts and awnings
-      const road = new THREE.Mesh(new THREE.BoxGeometry(76, 0.12, 6), new THREE.MeshStandardMaterial({ color: 0x3c3f44, roughness: .95 })); road.position.set(-16, 2.25, -79); inv.add(road);
-      const line = new THREE.Mesh(new THREE.BoxGeometry(76, 0.13, 0.18), new THREE.MeshStandardMaterial({ color: 0xe9e4d4, roughness: 1 })); line.position.set(-16, 2.26, -79); inv.add(line);
-      const path = new THREE.Mesh(new THREE.BoxGeometry(76, 0.2, 2.6), new THREE.MeshStandardMaterial({ color: 0xbdb6a8, roughness: 1 })); path.position.set(-16, 2.3, -83.3); inv.add(path);
-      const fronts = [0xc8342b, 0x2f6b3a, 0x2d5fa8, 0xe2a32b, 0x7b3f8c, 0xc8342b, 0x2f6b3a, 0x3a8f86, 0xd9653b];
-      const shopMat = new THREE.MeshStandardMaterial({ color: 0xf1e9da, roughness: .9 }), glass = new THREE.MeshStandardMaterial({ color: 0x2c3a48, roughness: .2, metalness: .3 }), awnMat = new THREE.MeshStandardMaterial({ color: 0x2b2f35, roughness: .8 });
-      fronts.forEach((c, k) => { const x = -48 + k * 8, w = 7.4, h = 4.2 + (k % 3) * 0.7;
-        const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, 6), shopMat); body.position.set(x, 2.2 + h / 2, -87.8); inv.add(body);
-        const fascia = new THREE.Mesh(new THREE.BoxGeometry(w, 1.1, 0.3), new THREE.MeshStandardMaterial({ color: c, roughness: .7 })); fascia.position.set(x, 2.2 + h - 0.6, -84.7); inv.add(fascia);
-        const win = new THREE.Mesh(new THREE.BoxGeometry(w - 1.4, 1.9, 0.12), glass); win.position.set(x, 3.6, -84.75); inv.add(win);
-        const awn = new THREE.Mesh(new THREE.BoxGeometry(w, 0.15, 2), awnMat); awn.position.set(x, 2.2 + h - 1.3, -83.8); inv.add(awn);
-        houseLights.push(x - 1.5, 3.6, -84.6, x + 1.5, 3.6, -84.6); });
-      // a few parked cars along the kerb
-      [0xd8d8d8, 0x8a1f24, 0x2a3f6b, 0xf2f2ee].forEach((c, k) => { const car = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.2, 1.7), new THREE.MeshStandardMaterial({ color: c, roughness: .4, metalness: .3 }));
-        car.position.set(-42 + k * 15 + (k % 2) * 3, 2.95, -81.2); inv.add(car);
-        const top = new THREE.Mesh(new THREE.BoxGeometry(2, 0.75, 1.5), glass); top.position.set(car.position.x - 0.2, 3.9, -81.2); inv.add(top); });
+      // Inverloch's town centre, from photos of the A'Beckett and Reilly Street corner: single-storey shops under
+      // verandahs on posts (brick, cream and painted fronts), teal swan-neck street lamps that match the clock, the cream
+      // two-storey Esplanade Hotel with its grey roof and tall chimney, the big grey Community Hub behind the clock,
+      // red brick paving with timber bollards, native grasses and gum trees.
+      const M = (c, r = .85, extra) => new THREE.MeshStandardMaterial({ color: c, roughness: r, ...extra });
+      const tealM = M(0x3b8f86, .5, { metalness: .3 }), glassM = M(0x51657a, .2, { metalness: .35 }), ironM = M(0x9aa2a6, .6, { metalness: .2 });
+      const box = (w, h, d, m, x, y, z, ry = 0) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.rotation.y = ry; inv.add(o); return o; };
+      const G0 = 2.2;  // ground level in town
+      // the streets: A'Beckett running across, Reilly coming down past the clock to the foreshore
+      const asph = M(0x3e4146, .95), pave = M(0xb4644f, 1), kerb = M(0xcfc8ba, 1), lineM = M(0xeeeadc, 1);
+      box(110, 0.12, 8, asph, -10, G0 + 0.04, -80); box(7, 0.12, 52, asph, 0, G0 + 0.04, -84);
+      for (let x = -62; x < 44; x += 6) if (Math.abs(x) > 5) box(3, 0.13, 0.2, lineM, x, G0 + 0.06, -80);
+      [-1, 1].forEach(k => box(1.4, 0.13, 2.6, lineM, -1.5 + k * 1.6, G0 + 0.06, -74.6));  // a zebra crossing on Reilly
+      box(110, 0.25, 3.2, kerb, -10, G0 + 0.1, -85.6); box(50, 0.25, 3, pave, -36, G0 + 0.1, -74.6);
+      // the shops along A'Beckett, under one run of verandahs
+      const shops = [[-56, 9, 4.6, 0x9b5743, 0x9b5743], [-46.5, 8, 4.2, 0xefe4c8, 0x2b6a3c, "stripes"], [-37.5, 8, 4.8, 0xf0cf5a, 0x1f3f7a, "gable"], [-29, 7.5, 4.4, 0xc7342c, 0xc7342c],
+        [-20.5, 8, 4.2, 0xefe4c8, 0x2f8a7e], [-12, 7.5, 4.6, 0x9b5743, 0x7d4636], [-4.6, 5.5, 4.2, 0xf2f2ee, 0x2d5fa8, "pavilion"],
+        [8, 8, 4.4, 0xf2e8d2, 0x2b6a3c, "stripes"], [16.5, 8, 4.8, 0x9b5743, 0x9b5743], [25, 8, 4.2, 0xefe4c8, 0xd9653b], [33.5, 8, 4.6, 0xe6dccb, 0x2d5fa8]];
+      const stripeTex = (() => { const c = document.createElement("canvas"); c.width = 64; c.height = 8; const g = c.getContext("2d");
+        for (let i = 0; i < 8; i++) { g.fillStyle = i % 2 ? "#f4f1e8" : "#2b6a3c"; g.fillRect(i * 8, 0, 8, 8); } const t = new THREE.CanvasTexture(c); if ("colorSpace" in t) t.colorSpace = THREE.SRGBColorSpace; return t; })();
+      const FZ = -87.4;  // the shop fronts
+      shops.forEach(([x, w, h, wall, trim, kind]) => {
+        const wallM = M(wall); box(w - 0.1, h, 8, wallM, x, G0 + h / 2, FZ - 4);
+        if (kind === "gable") { const sh = new THREE.Shape([[-w / 2, 0], [w / 2, 0], [w / 2, 0.6], [w * 0.18, 0.6], [0, 1.9], [-w * 0.18, 0.6], [-w / 2, 0.6]].map(([a, b]) => new THREE.Vector2(a, b)));
+          const gm = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 0.3, bevelEnabled: false }), wallM); gm.position.set(x, G0 + h, FZ - 0.3); inv.add(gm); }
+        if (kind === "pavilion") { const sh = new THREE.Shape([[-w / 2 - 0.3, 0], [w / 2 + 0.3, 0], [0, 2.2]].map(([a, b]) => new THREE.Vector2(a, b)));
+          const gm = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 5, bevelEnabled: false }), M(0x2d5fa8, .6)); gm.position.set(x, G0 + h, FZ - 2.5); inv.add(gm);
+          box(w, 0.25, 0.3, M(0xf4f4f0), x, G0 + h + 0.1, FZ + 2.6); }
+        box(w - 0.1, 0.9, 0.25, M(trim, .7), x, G0 + h - 0.45, FZ + 0.05);                 // the sign band
+        box(w - 1.2, 2.3, 0.1, glassM, x - 0.4, G0 + 1.35, FZ + 0.05);                     // shop window
+        const ver = box(w - 0.1, 0.12, 2.8, kind === "stripes" ? new THREE.MeshStandardMaterial({ map: stripeTex, roughness: .8 }) : M(0x8e979c, .6), x, G0 + 3.05, FZ + 1.4);
+        ver.rotation.x = -0.06;
+        box(w - 0.1, 0.35, 0.08, M(kind === "stripes" ? 0x2b6a3c : 0xe9e5da, .7), x, G0 + 2.85, FZ + 2.8);  // verandah edge
+        [-w / 2 + 0.3, w / 2 - 0.3].forEach(dx => { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 3, 6), M(0xe9e5da, .6)); p.position.set(x + dx, G0 + 1.5, FZ + 2.7); inv.add(p); });
+        houseLights.push(x - w / 4, G0 + 1.6, FZ + 0.2, x + w / 4, G0 + 1.6, FZ + 0.2);
+      });
+      // teal swan-neck street lamps along both kerbs
+      const lampGeo = new THREE.TorusGeometry(0.9, 0.07, 6, 16, Math.PI), shade = new THREE.ConeGeometry(0.42, 0.45, 10, 1, true);
+      const lamp = (x, z, face) => { const g2 = new THREE.Group();
+        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 5.6, 8), tealM); pole.position.y = 2.8; g2.add(pole);
+        const arc = new THREE.Mesh(lampGeo, tealM); arc.position.set(0.9, 5.6, 0); g2.add(arc);
+        const sh2 = new THREE.Mesh(shade, tealM); sh2.position.set(1.8, 5.45, 0); g2.add(sh2);
+        g2.position.set(x, G0, z); g2.rotation.y = face; inv.add(g2);
+        const c = Math.cos(face), s2 = Math.sin(face); houseLights.push(x + 1.8 * c, G0 + 5.2, z - 1.8 * s2); };
+      for (let x = -58; x <= 38; x += 13) { lamp(x, -84.6, -Math.PI / 2); if (x < -8 || x > 8) lamp(x + 6, -75.4, Math.PI / 2); }
+      // the Esplanade Hotel across Reilly Street: cream, two storeys, grey roof with gable ends, a tall brick chimney
+      { const hx = 17, hz = -70, hw = 20, hd = 9, hh = 7.2, cream = M(0xeee2c2);
+        box(hw, hh, hd, cream, hx, G0 + hh / 2, hz);
+        const rs = new THREE.Shape([[-hd / 2 - 0.4, 0], [hd / 2 + 0.4, 0], [0, 3.1]].map(([a, b]) => new THREE.Vector2(a, b)));
+        const roof = new THREE.Mesh(new THREE.ExtrudeGeometry(rs, { depth: hw + 0.8, bevelEnabled: false }), ironM); roof.rotation.y = Math.PI / 2; roof.position.set(hx - hw / 2 - 0.4, G0 + hh, hz); inv.add(roof);
+        box(1.1, 6.5, 1.1, M(0x8e4c3a), hx + 4, G0 + hh + 2.4, hz - 1.5);
+        for (let row = 0; row < 2; row++) for (let k = 0; k < 7; k++) { const wx = hx - hw / 2 + 1.8 + k * 2.75; if (row === 0 && k === 2) continue;
+          box(0.95, 1.5, 0.12, glassM, wx, G0 + 1.9 + row * 3.4, hz + hd / 2 + 0.03);
+          if (row === 0) { const aw = box(1.2, 0.08, 0.7, new THREE.MeshStandardMaterial({ map: stripeTex, roughness: .8, color: 0xffd6d0 }), wx, G0 + 2.85, hz + hd / 2 + 0.35); aw.rotation.x = 0.4; }
+          houseLights.push(wx, G0 + 1.9 + row * 3.4, hz + hd / 2 + 0.12); }
+        const ps = new THREE.Shape([[-1.6, 0], [1.6, 0], [0, 1.2]].map(([a, b]) => new THREE.Vector2(a, b)));
+        const porch = new THREE.Mesh(new THREE.ExtrudeGeometry(ps, { depth: 2, bevelEnabled: false }), ironM); porch.position.set(hx - hw / 2 + 7.3, G0 + 3.2, hz + hd / 2); inv.add(porch);
+        box(1.8, 3.2, 0.1, glassM, hx - hw / 2 + 7.3, G0 + 1.6, hz + hd / 2 + 0.04); }
+      // the Community Hub behind the clock: a big grey shed on a brick base, with its flagpoles
+      { const bx = -42, bz = -66, bw = 22, bd = 12;
+        box(bw, 2.4, bd, M(0x8a5040), bx, G0 + 1.2, bz); box(bw, 4.4, bd, ironM, bx, G0 + 2.4 + 2.2, bz - 0.2);
+        box(bw * 0.7, 3, bd * 0.6, M(0xa8aeb1, .6), bx - 2, G0 + 6.8 + 1.5, bz - 1);
+        box(bw - 2, 1.4, 0.1, glassM, bx, G0 + 1.4, bz + bd / 2 + 0.03);
+        [-29.5, -28.3].forEach((fx, k) => { const fp = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 10, 6), M(0xdddddd)); fp.position.set(fx, G0 + 5, -58.5); inv.add(fp);
+          const fl = new THREE.Mesh(new THREE.PlaneGeometry(2, 1.1), new THREE.MeshStandardMaterial({ color: 0x1a2f78, side: THREE.DoubleSide })); fl.position.set(fx + 1, G0 + 9.2 - k * 1.4, -58.5); inv.add(fl); W.invFlags.push(fl); }); }
+      // timber bollards round the corner, and gum trees about town
+      for (let k = 0; k < 7; k++) box(0.35, 1.1, 0.35, M(0xb8a589), -24 + k * 2.6, G0 + 0.55, -76.6);
+      const gumBark = M(0xd9d3c4, .9), gumLeaf = M(0x6d8049, 1, { flatShading: true });
+      [[-48, -97], [-22, -98], [-6, -100], [10, -97], [30, -99], [-56, -57], [6, -60], [36, -62], [-62, -72]].forEach(([x, z], i) => { const g3 = new THREE.Group(), th = 6 + rnd(i * 13) * 4;
+        const tr = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.45, th, 6), gumBark); tr.position.y = th / 2; tr.rotation.z = (rnd(i * 7) - 0.5) * 0.3; g3.add(tr);
+        for (let k = 0; k < 5; k++) { const c = new THREE.Mesh(new THREE.DodecahedronGeometry(1, 0), gumLeaf); c.scale.set(2.2 + rnd(i * 5 + k) * 1.6, 1.3 + rnd(i * 3 + k) * 0.8, 2 + rnd(i * 9 + k) * 1.4);
+          c.position.set((rnd(i * 11 + k) - 0.5) * 4.5, th + (rnd(i * 17 + k) - 0.3) * 2.4, (rnd(i * 19 + k) - 0.5) * 3); g3.add(c); }
+        g3.position.set(x, G0, z); inv.add(g3); });
+      // parked cars nose-in along the shops, and a couple on the far kerb
+      [0xd8d8d8, 0x8a1f24, 0x2a3f6b, 0xf2f2ee, 0x5d6b4a, 0xb9bcc0, 0x7a1d1d].forEach((c, k) => { const x = -54 + k * 14 + (k % 2) * 2.5; if (Math.abs(x) < 6) return;
+        const car = box(1.8, 1.2, 3.8, M(c, .4, { metalness: .3 }), x, G0 + 0.75, -82.7); box(1.6, 0.7, 2, glassM, x, G0 + 1.65, -82.9); });
       let vaneAng = null;
       W.invClockTick = (ms, dt, lit, still) => {
         const off = (state.wx?.d?.utc_offset_seconds ?? 39600) * 1000, d = new Date(ms + off), m = d.getUTCMinutes() + d.getUTCSeconds() / 60, h = (d.getUTCHours() % 12) + m / 60;
