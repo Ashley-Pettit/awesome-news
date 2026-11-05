@@ -104,31 +104,46 @@ shutil.copy(os.path.join(here, "sw.js"), site)
 # Council news pictures sent from the work PC (council_news.py), served next to the app.
 if os.path.isdir(os.path.join(here, "council", "img")):
     shutil.copytree(os.path.join(here, "council", "img"), os.path.join(site, "council", "img"), dirs_exist_ok=True)
-# The local news apps (Moorooka's "Over the Fence", "The Logan Wire"): one engine (local/local.html), each with its
-# own name, look, icons and install details (local/brands.json), reading the same hourly data.
+# The local news apps (Moorooka's "Over the Fence", "The Logan Wire"): copies of Awesome News with their own name, icon and
+# install details, whose Local news is tailored to the area (local/brands.json; LOCAL_APP in app.html). Each sits in its own
+# folder but reads the same news, voice and pictures as the main app (<base href="../">), like the beta.
 if os.path.exists(os.path.join(here, "local", "brands.json")):
-    import html as _html
+    import base64
     brands = json.load(open(os.path.join(here, "local", "brands.json"), encoding="utf-8"))
-    tpl = open(os.path.join(here, "local", "local.html"), encoding="utf-8").read()
     for slug, b in brands.items():
-        out = os.path.join(site, b["dir"])
+        d, nm = b["dir"], b["name"]
+        out = os.path.join(site, d)
         os.makedirs(out, exist_ok=True)
-        url = f"https://ashley-pettit.github.io/awesome-news/{b['dir']}/"
-        page = tpl
-        for k, v in {"{{NAME_HTML}}": b["name_html"], "{{NAME}}": _html.escape(b["name"]), "{{TAGLINE}}": _html.escape(b["tagline"]),
-                     "{{THEME}}": b["theme"], "{{FONTS}}": b["fonts"], "{{URL}}": url, "{{SLUG}}": slug,
-                     "{{UPS_TITLE}}": _html.escape(b["ups_title"]), "{{EVENTS_TITLE}}": _html.escape(b["events_title"]),
-                     "{{NEWS_TITLE}}": _html.escape(b["news_title"]), "{{CREDIT}}": _html.escape(b["credit"]),
-                     "{{BRAND_JSON}}": json.dumps({"slug": slug, "feed": b["feed"], "wx": b["wx"], "council": b["council"], "near": b.get("near", ""), "city": b.get("city", "")})}.items():
-            page = page.replace(k, v)
+        url = f"{site_url}{d}/"
+        icon = "data:image/png;base64," + base64.b64encode(open(os.path.join(here, "local", slug, "icon-120.png"), "rb").read()).decode()
+        lbody = body.replace("Awesome News", nm)
+        cfg = {"extra": b["local"].get("extra", "")}
+        cfg.update({k: v for k, v in b["local"].items() if k != "extra" and v})
+        for a, z in [('const DEFAULT_REGION = "qld";', f'const DEFAULT_REGION = {json.dumps(b["region"])};'),
+                     ("const LOCAL_APP = null;", f"const LOCAL_APP = {json.dumps(cfg)};"),
+                     ('const OPEN_KEY = "";', f'const OPEN_KEY = {json.dumps(b["open_key"])};'),
+                     ('const KEY_PREFIX = "";', f'const KEY_PREFIX = {json.dumps(b["prefix"])};')]:
+            assert lbody.count(a) == 1, a
+            lbody = lbody.replace(a, z)
+        lbody = re.sub(r'const APP_ICON = "data:image/png;base64,[^"]+";', lambda m: f'const APP_ICON = "{icon}";', lbody, count=1)
+        lhead = (head.replace("<head>\n", '<head>\n<base href="../">\n', 1)
+                     .replace(f"<title>{title}</title>", f"<title>{nm}</title>")
+                     .replace(f'content="{title}"', f'content="{nm}"')
+                     .replace(desc, b["tagline"])
+                     .replace(f'href="{site_url}"', f'href="{url}"').replace(f'content="{site_url}"', f'content="{url}"')
+                     .replace(f"{site_url}icons/share-card.png?v=3", f"{url}share.png?v=1")
+                     .replace("Awesome News app icon and name", f"{nm} app icon and name")
+                     .replace('href="manifest.webmanifest"', f'href="{d}/manifest.webmanifest"')
+                     .replace('href="icons/favicon-64.png?v=2"', f'href="{d}/icon-192.png?v=1"')
+                     .replace('href="icons/apple-touch-icon.png?v=2"', f'href="{d}/icon-180.png?v=1"'))
         with open(os.path.join(out, "index.html"), "w", encoding="utf-8") as f:
-            f.write(page)
-        for fn in os.listdir(os.path.join(here, "local", slug)):
+            f.write(stamped(lhead, lbody, out) + lbody.strip() + "\n</body>\n</html>\n")
+        for fn in ("icon-180.png", "icon-192.png", "icon-512.png", "share.png"):
             shutil.copy(os.path.join(here, "local", slug, fn), out)
         with open(os.path.join(out, "manifest.webmanifest"), "w", encoding="utf-8") as f:
-            json.dump({"name": b["name"], "short_name": b["name"].replace("The ", ""), "description": b["tagline"], "start_url": "./", "scope": "./",
-                       "display": "standalone", "background_color": b["bg"], "theme_color": b["theme"],
-                       "icons": [{"src": "icon-192.png", "sizes": "192x192", "type": "image/png"}, {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"}]}, f)
+            json.dump({"name": nm, "short_name": b["short"], "description": b["tagline"], "start_url": "./", "scope": "./", "id": "./",
+                       "display": "standalone", "background_color": "#f6f5fa", "theme_color": "#f6f5fa",
+                       "icons": [{"src": "icon-192.png", "sizes": "192x192", "type": "image/png"}, {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"}]}, f)
         print(f"Built {out}/index.html")
 open(os.path.join(site, ".nojekyll"), "w").close()
 print(f"Built {site}/index.html")

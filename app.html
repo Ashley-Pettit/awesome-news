@@ -1503,6 +1503,13 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
   const CORE_IDS = new Set(SECTIONS.map(s => s.id));
   const DEFAULT_ON = [];                // set per build: interests switched on out of the box
   const DEFAULT_COMMUTE = null;         // set per build: the private copy's drive to work (never in the public build: it's an address)
+  // The local spin-offs (Over the Fence for Moorooka, The Logan Wire): the same app, with a local news feed. Set per build
+  // (build.py, from local/brands.json); the main app leaves these empty.
+  const DEFAULT_REGION = "qld";
+  const LOCAL_APP = null;               // { extra: community feed, near / keep / away / trust: patterns that tailor the Local feed }
+  const OPEN_KEY = "";                  // Emma's opening for this app ("This is Over the Fence for...")
+  const KEY_PREFIX = "";                // keeps each app's settings apart on the same website
+  const lead = s => LOCAL_APP && s.id === "local" ? 3 : 1;  // in a local app, Local news gets three turns to every other tab's one
   const OWN_COLOUR = new Set([...CORE_IDS, "copilot"]);
   const PUBLISHERS = [
     { id: "ABC", label: "ABC News" }, { id: "SBS", label: "SBS News" }, { id: "BBC", label: "BBC" }, { id: "The Guardian", label: "The Guardian" }, { id: "7NEWS", label: "7NEWS" },
@@ -1518,7 +1525,8 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
   const REGION_FALLBACK = [{ id: "qld", label: "Queensland" }];
   // Every state the news update can fetch. Picking one asks the next update to include it.
   const ALL_REGIONS = [{ id: "qld", label: "Queensland" }, { id: "nsw", label: "New South Wales" }, { id: "vic", label: "Victoria" }, { id: "wa", label: "Western Australia" },
-    { id: "sa", label: "South Australia" }, { id: "tas", label: "Tasmania" }, { id: "act", label: "Canberra" }, { id: "nt", label: "Northern Territory" }, { id: "inv", label: "Inverloch" }, { id: "moo", label: "Moorooka" }];
+    { id: "sa", label: "South Australia" }, { id: "tas", label: "Tasmania" }, { id: "act", label: "Canberra" }, { id: "nt", label: "Northern Territory" }, { id: "inv", label: "Inverloch" }, { id: "moo", label: "Moorooka" },
+    ...(DEFAULT_REGION === "logan" ? [{ id: "logan", label: "Logan" }] : [])];
   const FOR_YOU_PER_SECTION = 7;
   const FEATURE_EVERY = 6;
   const MONO = { "ABC": "ABC", "SBS": "SBS", "BBC": "BBC", "M365": "365", "Microsoft": "MS", "Office 365": "IT", "Windows Central": "WC", "Ars": "Ars", "360info": "360", "Global Voices": "GV", "NASA": "NASA", "EFF": "EFF", "Mongabay": "MB", "CrimeReads": "CR", "Oxygen": "OX", "Defrosting Cold Cases": "DCC", "CrimeOnline": "CO", "eBird": "eB", "BirdLife Australia": "BL", "Birds in Backyards": "BB", "Law&Crime": "L&C", "Logan City Council": "LCC", "MyCity Logan": "ML", "Queensland Police": "QPS", "Jimboomba Times": "JT", "Sentinel-Times": "ST", "Australian Geographic": "AG", "Wildlife Victoria": "WV", "New Scientist": "NS", "ScienceDaily": "SD", "Smithsonian": "SM", "The Dodo": "Dodo", "KFF": "KFF", "TechCrunch": "TC", "iTnews": "iT", "The Conversation": "C", "The Guardian": "G", "7NEWS": "7" };
@@ -1529,11 +1537,11 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
   // Per-device storage
   // ======================================================================
   const store = {
-    get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
-    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+    get(k, d) { try { const v = localStorage.getItem(KEY_PREFIX + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem(KEY_PREFIX + k, JSON.stringify(v)); } catch {} },
   };
   const defaults = {
-    name: DEFAULT_NAME, region: "qld",
+    name: DEFAULT_NAME, region: DEFAULT_REGION,
     tabs: { local: true, headlines: true, politics: true, finance: true, tech: true, ai: true },
     topics: [], muted: [], hiddenSources: [],
     openIn: "app", textSize: "m", theme: "system", welcomed: false, fullOnly: false, negCut: 0, skipAds: true,
@@ -1722,7 +1730,7 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
   // ======================================================================
   // Data
   // ======================================================================
-  const sectionKey = id => id === "local" ? `local-${S.region}` : id;
+  const sectionKey = id => id === "local" ? (S.region === "logan" ? "logan" : `local-${S.region}`) : id;
   // Core sections plus every interest the news data offers.
   const allSections = () => [...SECTIONS, ...((state.status?.interests) || [])
     .filter(x => !CORE_IDS.has(x.id)).map(x => ({ id: x.id, label: x.label, tag: x.label, group: x.group }))];
@@ -1913,16 +1921,16 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
   // so no single topic floods the top. Stories matching your topics go first.
   function forYou() {
     const secs = enabledSections();
-    const lanes = secs.map(s => visible(items(s.id)).slice(0, FOR_YOU_PER_SECTION).sort((a, b) => rank(b) - rank(a)));
+    const lanes = secs.map(s => visible(items(s.id)).slice(0, FOR_YOU_PER_SECTION * lead(s)).sort((a, b) => rank(b) - rank(a)));
     // Beta: kinds of stories you've said "more like this" to while listening lead the mix.
     const likes = store.get("beta.likes", {}) || {}, likeOf = sc => likes[sc.id === "local" ? "local news" : sc.id === "headlines" ? "more headlines" : sc.label] || 0;
-    const order = secs.map((_, n) => n).sort((a, b) => (likeOf(secs[b]) - likeOf(secs[a])) || ((lanes[b][0] ? rank(lanes[b][0]) : 0) - (lanes[a][0] ? rank(lanes[a][0]) : 0)));
+    const order = secs.map((_, n) => n).sort((a, b) => (lead(secs[b]) - lead(secs[a])) || (likeOf(secs[b]) - likeOf(secs[a])) || ((lanes[b][0] ? rank(lanes[b][0]) : 0) - (lanes[a][0] ? rank(lanes[a][0]) : 0)));
     const out = [], seen = new Set();
     const take = id => { seen.add(id); siblings(id).forEach(x => seen.add(x)); };
     for (const t of S.topics) for (const i of visible(topicItems(t)).slice(0, 3)) if (!seen.has(i.id)) { take(i.id); out.push({ ...i, _sec: t, _sid: "topic" }); }
     for (let round = 0; round < FOR_YOU_PER_SECTION; round++) {
-      for (const n of order) {
-        const it = lanes[n][round];
+      for (const n of order) for (let j = 0; j < lead(secs[n]); j++) {
+        const it = lanes[n][round * lead(secs[n]) + j];
         if (it && !seen.has(it.id)) { take(it.id); out.push(it); }
       }
     }
@@ -1936,7 +1944,7 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
     for (const s of enabledSections()) {
       items(s.id).slice(0, 12).forEach((i, n) => {
         const fresh = Date.now() - Date.parse(i.published) < 6 * 3600e3;
-        cands.push({ i, score: (sourceCount(i.id) - 1) * 3 + (i.top ? 3 : 0) + (12 - n) / 4 + (s.id === "local" ? 2 : 0) + (s.id === "headlines" ? 1.5 : 0) + (fresh ? 1.5 : 0) - (Number(S.negCut) && isNegative(i) ? 3 : 0) });
+        cands.push({ i, score: (sourceCount(i.id) - 1) * 3 + (i.top ? 3 : 0) + (12 - n) / 4 + (s.id === "local" ? (LOCAL_APP ? 5 : 2) : 0) + (s.id === "headlines" ? 1.5 : 0) + (fresh ? 1.5 : 0) - (Number(S.negCut) && isNegative(i) ? 3 : 0) });
       });
     }
     cands.sort((a, b) => b.score - a.score);
@@ -1975,9 +1983,9 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
     // short ones, which only fill in when a section runs out.
     // Beta: kinds of stories you've said "more like this" to come round first.
     const likes = store.get("beta.likes", {}) || {}, likeOf = sc => likes[sc.id === "local" ? "local news" : sc.id === "headlines" ? "more headlines" : sc.label] || 0;
-    const lanes = (logan ? [{ id: "logan", label: "Logan" }] : enabledSections()).slice().sort((a, b) => likeOf(b) - likeOf(a)).map(sc => ({ sc, list: items(sc.id).filter(i => listenable(i) && !(Number(S.negCut) && isNegative(i))).slice(0, 30)
+    const lanes = (logan ? [{ id: "logan", label: "Logan" }] : enabledSections()).slice().sort((a, b) => (lead(b) - lead(a)) || (likeOf(b) - likeOf(a))).map(sc => ({ sc, list: items(sc.id).filter(i => listenable(i) && !(Number(S.negCut) && isNegative(i))).slice(0, 30 * lead(sc))
       .map((i, n) => { const d = depth(best(i) || i); return { i, k: n + (d === 2 ? 0 : d === 1 ? 10 : 60) }; }).sort((a, b) => a.k - b.k).map(x => x.i) }));
-    for (let r = 0; secs < target && r < 40; r++) for (const { sc, list } of lanes) { if (secs >= target) break; add(list[r], sc.id === "local" ? "local news" : sc.id === "headlines" ? "more headlines" : sc.label); }
+    for (let r = 0; secs < target && r < 40; r++) for (const { sc, list } of lanes) for (let j = 0; j < lead(sc); j++) { if (secs >= target) break; add(list[r * lead(sc) + j], sc.id === "local" ? "local news" : sc.id === "headlines" ? "more headlines" : sc.label); }
     return { ids: out, secOf, secs };
   }
   // ---- News video screen ----
@@ -2856,7 +2864,7 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
     let opening = null;
     const open = () => opening || (opening = new Promise((ok, bad) => {
       try {
-        const r = indexedDB.open("awesome-news", 1);
+        const r = indexedDB.open("awesome-news" + (KEY_PREFIX ? "-" + KEY_PREFIX.replace(/\W/g, "") : ""), 1);
         r.onupgradeneeded = () => r.result.createObjectStore("kv");
         r.onsuccess = () => ok(r.result);
         r.onerror = () => bad(r.error);
@@ -3140,7 +3148,7 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
     </div><p class="hint">Saved on this device only.${n ? ` ${n} full stories in the latest update.` : ""}</p></div>`;
   }
   function renderSettings() {
-    const regions = state.mode === "claude" ? ALL_REGIONS : (state.status?.regions || REGION_FALLBACK);
+    const regions = state.mode === "claude" ? ALL_REGIONS : [...(state.status?.regions || REGION_FALLBACK), ...ALL_REGIONS.filter(r => r.id === "logan")];
     const counts = state.status?.counts || {};
     STABS = BASE_STABS;
     const tab = STABS.some(t => t[0] === state.sTab) ? state.sTab : "news";
@@ -3608,8 +3616,9 @@ const handle = async (m, post) => {
     if (!ws.length || Date.now() - Date.parse(state.status?.updatedAt || 0) > 6 * 3600000) return [];
     return ws.map(w => ({ text: w.say, para: -1, kind: "warn", opt: usePre() }));
   }
+  const openKey = () => { const p = wxPlace(); return OPEN_KEY && p === DEFAULT_REGION && PRE?.open?.[OPEN_KEY] ? OPEN_KEY : p; };
   const preOpening = () => {
-    const o = PRE?.open?.[wxPlace()];
+    const o = PRE?.open?.[openKey()];
     const today = new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new Date());
     if (o?.next?.day === today && o.day !== today) return o.next.text;  // after midnight, before the morning update
     if (!o || o.day !== today) return "";
@@ -3915,7 +3924,7 @@ const handle = async (m, post) => {
   // stepping through each day as it's read. Then on to the stories.
   function weekItems() {
     const today = new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new Date());
-    const w = PRE?.open?.[wxPlace()]?.week;
+    const w = (PRE?.open?.[openKey()] || PRE?.open?.[wxPlace()])?.week;
     if (w && w.day === today && w.items?.length) return w.items;  // the same words Emma recorded
     if (!state.wx) return [];
     const { dy, di } = wxView(state.wx), out = [];
@@ -6827,12 +6836,28 @@ const handle = async (m, post) => {
     } catch {}
     if (!newBuild || L.on || openSheet) return;
     // Once per new version (so a stale copy somewhere can't loop), with the build in the address so it's fetched fresh.
-    let tried = ""; try { tried = sessionStorage.getItem("an.reloadFor") || ""; } catch {}
+    let tried = ""; try { tried = sessionStorage.getItem(KEY_PREFIX + "an.reloadFor") || ""; } catch {}
     if (tried === newBuild) return;
-    try { sessionStorage.setItem("an.reloadFor", newBuild); } catch {}
+    try { sessionStorage.setItem(KEY_PREFIX + "an.reloadFor", newBuild); } catch {}
     location.replace(location.pathname + "?b=" + newBuild);
   }
   // ---- Static files (GitHub Pages) ----
+  // A local app's Local feed: the area's own stories first (and local stories found by search), then the wider city's,
+  // leaving out stories from elsewhere that only came in with the state's news.
+  async function tailorLocal(feeds, v) {
+    const key = sectionKey("local"), re = x => x ? new RegExp(x, "i") : null;
+    const near = re(LOCAL_APP.near), keep = re(LOCAL_APP.keep), away = re(LOCAL_APP.away), trust = re(LOCAL_APP.trust);
+    let extra = [];
+    try { if (LOCAL_APP.extra) extra = ((await (await fetch(`data/feeds/${LOCAL_APP.extra}.json?v=${v}`)).json()).news || []).filter(i => i.id && i.url && i.title).map(i => ({ summary: "", ...i })); } catch {}
+    const seen = new Set(), out = [];
+    for (const i of [...(feeds[key]?.items || []), ...extra]) {
+      if (seen.has(i.id)) continue;
+      const t = `${i.title} ${i.summary || ""}`, here = near?.test(t);
+      if (!here && !trust?.test(i.source || "") && (!keep?.test(t) || away?.test(i.title))) continue;
+      seen.add(i.id); out.push(here ? { ...i, near: 1 } : i);
+    }
+    feeds[key] = { ...(feeds[key] || {}), items: out };
+  }
   async function loadStatic(manual) {
     try {
       const st = await (await fetch(`data/status.json?t=${Date.now()}`, { cache: "no-store" })).json();
@@ -6843,6 +6868,7 @@ const handle = async (m, post) => {
         const docs = await Promise.all(names.map(n => fetch(`data/feeds/${n}.json?v=${v}`).then(r => r.ok ? r.json() : null).catch(() => null)));
         const feeds = {};
         names.forEach((n, k) => { if (docs[k]) feeds[n] = docs[k]; });
+        if (LOCAL_APP) await tailorLocal(feeds, v);
         state.feeds = feeds;
         state.status = st; TV.items = [];
         for (const k in textCache) delete textCache[k];

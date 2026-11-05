@@ -240,7 +240,11 @@ def rain_part(w, date, start=5):
     return "" if peak < 20 else "in the morning" if h < 12 else "in the afternoon" if h < 18 else "in the evening"
 
 
-def opening(region, w):
+# The local apps' own openings (OPEN_KEY in app.html, local/brands.json): key -> (whose weather, what Emma calls the app).
+BRAND_OPENS = {"fence": ("moo", "This is Over the Fence"), "wire": ("logan", "This is The Logan Wire")}
+
+
+def opening(region, w, brand=None):
     """The start of the 30-minute listen, from the forecast saved with the news."""
     d = w["daily"]
     off = timedelta(seconds=w.get("utc_offset_seconds", 36000))
@@ -250,7 +254,7 @@ def opening(region, w):
     k = d["time"].index(today)
     day = datetime.strptime(today, "%Y-%m-%d")
     city = fetcher.CITIES[w.get("borrowed") or region][0]  # a suburb using its city's forecast says the city
-    brand = "This is Logan news, from Awesome News," if region == "logan" else "This is Awesome News"  # Logan news has its own opening
+    brand = brand or ("This is Logan news, from Awesome News," if region == "logan" else "This is Awesome News")  # Logan news has its own opening
     sky = WMO.get(d["weather_code"][k], "mixed weather")
     text = (f"{brand} for {day:%A} the {ordinal(day.day)} of {day:%B}. First, the weather in {city}. "
             f"Expect {sky} today, with a top of {round(d['temperature_2m_max'][k])} degrees and a low of {round(d['temperature_2m_min'][k])}.")
@@ -370,9 +374,11 @@ def plan(data, vkey):
         return k
 
     opens = {}
-    for r, w in (status.get("weather") or {}).items():
+    wxs = status.get("weather") or {}
+    places = [(r, r, w, None) for r, w in wxs.items()] + [(k, r, wxs[r], b) for k, (r, b) in BRAND_OPENS.items() if r in wxs]
+    for r, src, w, brand in places:
         try:
-            day, text, both = opening(r, w)
+            day, text, both = opening(src, w, brand)
             night, nxt = both if both else (None, None)
             if text:
                 opens[r] = {"day": day, "text": text, "night": night, "next": nxt}
