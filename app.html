@@ -5142,45 +5142,60 @@ const handle = async (m, post) => {
     nest.position.set(12, -0.5, -24); inv.add(nest);
     // flat rock platforms just off the beach
     for (let i = 0; i < 6; i++) { const r = new THREE.Mesh(new THREE.CylinderGeometry(2 + rnd(i * 3) * 3, 3 + rnd(i * 5) * 3, 0.7, 7), rockDark); r.position.set(4 + rnd(i * 7) * 22, 0.1, -14 - rnd(i * 11) * 14); inv.add(r); }
-    // The Rotary clock from A'Beckett Street: twin teal poles, a round two-faced clock in a gold cog ring, and a black
-    // sailing ketch on top as a weathervane. Set on a brick plaza at the foreshore with the four mosaic blocks and grasses at
-    // its feet. Its hands show the scene's time, its faces glow at night, and the ketch swings to face the forecast wind.
+    // The Rotary clock from A'Beckett Street, matched to photos: a gold gear-shaped clock (blue band, gold spokes, a white
+    // Roman-numeral dial) with a navy gear behind it, on twin teal poles that carry a black gaff-rigged ketch on top. Its
+    // plaza sits in the town centre with the four mosaic blocks and grasses. The hands show the scene's time and the
+    // faces glow at night.
     {
       const clk = new THREE.Group(), teal = new THREE.MeshStandardMaterial({ color: 0x3b8f86, roughness: .5, metalness: .3 });
-      const gold = new THREE.MeshStandardMaterial({ color: 0xffc93a, roughness: .5, metalness: 0, emissive: 0x6a4300, emissiveIntensity: .45 }), black = new THREE.MeshStandardMaterial({ color: 0x15171a, roughness: .6, side: THREE.DoubleSide });
-      const CY = 12.6;  // the clock's centre
-      [-1.05, 1.05].forEach(x => { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.24, CY + 0.6, 10), teal); p.position.set(x, (CY + 0.6) / 2, -0.35); clk.add(p); });
-      const brace = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.14, 0.14), teal); brace.position.set(0, CY * 0.52, -0.35); clk.add(brace);
-      // the gold cog
-      const teeth = 30, Ro = 2.55, Ri = 2.25, cog = new THREE.Shape();
-      for (let k = 0; k < teeth * 4; k++) { const a = (k / (teeth * 4)) * Math.PI * 2, r = (k % 4 === 1 || k % 4 === 2) ? Ro : Ri; k ? cog.lineTo(Math.cos(a) * r, Math.sin(a) * r) : cog.moveTo(Math.cos(a) * r, Math.sin(a) * r); }
-      const hole = new THREE.Path(); hole.absarc(0, 0, 1.9, 0, Math.PI * 2, true); cog.holes.push(hole);
-      const cogGeo = new THREE.ExtrudeGeometry(cog, { depth: 0.34, bevelEnabled: false, curveSegments: 6 }); cogGeo.translate(0, 0, -0.17);
-      const cogM = new THREE.Mesh(cogGeo, gold); cogM.position.y = CY; clk.add(cogM);
-      // the faces: a blue ring around a white dial (drawn once, used front and back)
-      const cv = document.createElement("canvas"); cv.width = cv.height = 256; const g = cv.getContext("2d");
-      g.fillStyle = "#1d4fae"; g.beginPath(); g.arc(128, 128, 128, 0, Math.PI * 2); g.fill();
-      g.strokeStyle = "#e0a92a"; g.lineWidth = 3; g.beginPath(); g.arc(128, 128, 120, 0, Math.PI * 2); g.stroke(); g.beginPath(); g.arc(128, 128, 98, 0, Math.PI * 2); g.stroke();
-      for (let k = 0; k < 24; k++) { const a = k / 24 * Math.PI * 2; g.fillStyle = "#e0a92a"; g.beginPath(); g.arc(128 + Math.cos(a) * 109, 128 + Math.sin(a) * 109, 2.4, 0, Math.PI * 2); g.fill(); }
-      g.fillStyle = "#fbfaf4"; g.beginPath(); g.arc(128, 128, 94, 0, Math.PI * 2); g.fill();
-      g.strokeStyle = "#1b1d22"; for (let k = 0; k < 60; k++) { const a = k / 60 * Math.PI * 2, big = k % 5 === 0; g.lineWidth = big ? 4 : 1.5; g.beginPath(); g.moveTo(128 + Math.cos(a) * (big ? 76 : 83), 128 + Math.sin(a) * (big ? 76 : 83)); g.lineTo(128 + Math.cos(a) * 89, 128 + Math.sin(a) * 89); g.stroke(); }
-      g.fillStyle = "#1b1d22"; g.font = "600 21px Georgia, serif"; g.textAlign = "center"; g.textBaseline = "middle";
-      for (let n = 1; n <= 12; n++) { const a = n / 12 * Math.PI * 2 - Math.PI / 2; g.fillText(String(n), 128 + Math.cos(a) * 61, 128 + Math.sin(a) * 61); }
+      const gold = new THREE.MeshStandardMaterial({ color: 0xffb53a, roughness: .45, metalness: 0, emissive: 0x8a5200, emissiveIntensity: .6 }), black = new THREE.MeshStandardMaterial({ color: 0x15171a, roughness: .6, side: THREE.DoubleSide });
+      const CY = 13.4, Ro = 2.55, Ri = 2.18;  // the clock's centre, and its gear's tips and roots
+      // the two teal poles run up behind the clock and carry the ship on top
+      [-0.78, 0.78].forEach(x => { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.22, CY + Ro + 0.5, 10), teal); p.position.set(x, (CY + Ro + 0.5) / 2, -0.38); clk.add(p); });
+      const brace = new THREE.Mesh(new THREE.BoxGeometry(1.56, 0.12, 0.12), teal); brace.position.set(0, CY * 0.38, -0.38); clk.add(brace);
+      // a gear outline: n teeth, square ("sq") or tapered
+      const gear = (n, ro, ri, sq, holeR) => { const sh = new THREE.Shape(), step = Math.PI * 2 / n;
+        for (let k = 0; k < n; k++) { const a0 = k * step, w = sq ? 0.3 : 0.17, t = sq ? 0.29 : 0.12;
+          const pts = [[a0 - step / 2, ri], [a0 - step * w, ri], [a0 - step * t, ro], [a0 + step * t, ro], [a0 + step * w, ri]];
+          pts.forEach(([ang, r], j) => { const x = Math.cos(ang) * r, y = Math.sin(ang) * r; (k || j) ? sh.lineTo(x, y) : sh.moveTo(x, y); }); }
+        if (holeR) { const h = new THREE.Path(); h.absarc(0, 0, holeR, 0, Math.PI * 2, true); sh.holes.push(h); }
+        const g2 = new THREE.ExtrudeGeometry(sh, { depth: 0.3, bevelEnabled: false, curveSegments: 4 }); g2.translate(0, 0, -0.15); return g2; };
+      // the navy gear behind, set down and to the left of the clock
+      const navy = new THREE.MeshStandardMaterial({ color: 0x1f2f86, roughness: .55, metalness: .1 });
+      const back = new THREE.Mesh(gear(20, 2.75, 2.25, false), navy); back.position.set(-0.62, CY - 0.5, -0.78); back.rotation.z = 0.08; clk.add(back);
+      // the clock itself: a gold gear with square teeth, its face a blue band with gold rims and spokes round a white dial
+      const front = new THREE.Mesh(gear(26, Ro, Ri, true, 2.05), gold); front.position.y = CY; clk.add(front);
+      const cv = document.createElement("canvas"); cv.width = cv.height = 512; const g = cv.getContext("2d"), C = 256;
+      g.fillStyle = "#e9ad2c"; g.beginPath(); g.arc(C, C, C, 0, Math.PI * 2); g.fill();
+      g.fillStyle = "#1d3fa0"; g.beginPath(); g.arc(C, C, C * 0.93, 0, Math.PI * 2); g.fill();
+      g.strokeStyle = "#e9ad2c"; g.lineWidth = 7; for (let k = 0; k < 6; k++) { const a2 = k / 6 * Math.PI * 2 + Math.PI / 6; g.beginPath(); g.moveTo(C + Math.cos(a2) * C * 0.66, C + Math.sin(a2) * C * 0.66); g.lineTo(C + Math.cos(a2) * C * 0.93, C + Math.sin(a2) * C * 0.93); g.stroke(); }
+      g.lineWidth = 8; g.beginPath(); g.arc(C, C, C * 0.665, 0, Math.PI * 2); g.stroke();
+      g.fillStyle = "#16181d"; g.beginPath(); g.arc(C, C, C * 0.65, 0, Math.PI * 2); g.fill();
+      g.fillStyle = "#f7f6f1"; g.beginPath(); g.arc(C, C, C * 0.61, 0, Math.PI * 2); g.fill();
+      g.strokeStyle = "#1b1d22"; for (let k = 0; k < 60; k++) { const a2 = k / 60 * Math.PI * 2, big = k % 5 === 0; g.lineWidth = big ? 4 : 1.6; g.beginPath(); g.moveTo(C + Math.cos(a2) * C * (big ? 0.53 : 0.56), C + Math.sin(a2) * C * (big ? 0.53 : 0.56)); g.lineTo(C + Math.cos(a2) * C * 0.59, C + Math.sin(a2) * C * 0.59); g.stroke(); }
+      const ROMAN = ["XII", "I", "II", "III", "IIII", "V", "VI", "VII", "VIII", "IX", "X", "XI"];
+      g.fillStyle = "#1b1d22"; g.font = "600 34px Georgia, 'Times New Roman', serif"; g.textAlign = "center"; g.textBaseline = "middle";
+      for (let n = 0; n < 12; n++) { const a2 = n / 12 * Math.PI * 2 - Math.PI / 2; g.save(); g.translate(C + Math.cos(a2) * C * 0.44, C + Math.sin(a2) * C * 0.44); g.rotate(a2 + Math.PI / 2); g.fillText(ROMAN[n], 0, 0); g.restore(); }
       const tex = new THREE.CanvasTexture(cv); tex.anisotropy = 4; if ("colorSpace" in tex) tex.colorSpace = THREE.SRGBColorSpace;
-      const faceMat = new THREE.MeshStandardMaterial({ map: tex, emissiveMap: tex, emissive: 0xfff1d0, emissiveIntensity: 0, roughness: .6 });
+      const faceMat = new THREE.MeshStandardMaterial({ map: tex, emissiveMap: tex, emissive: 0xfff1d0, emissiveIntensity: 0, roughness: .55 });
       const hands = [];
       [0, Math.PI].forEach(ry => { const side = new THREE.Group(); side.rotation.y = ry; side.position.y = CY;
-        const face = new THREE.Mesh(new THREE.CircleGeometry(1.95, 48), faceMat); face.position.z = 0.18; side.add(face);
-        const mk = (len, w) => { const p = new THREE.Group(), h = new THREE.Mesh(new THREE.BoxGeometry(w, len, 0.04), black); h.position.y = len / 2 - 0.12; p.add(h); p.position.z = 0.22; side.add(p); return p; };
-        const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.08, 12), black); hub.rotation.x = Math.PI / 2; hub.position.z = 0.25; side.add(hub);
-        hands.push([mk(0.82, 0.12), mk(1.2, 0.08)]); clk.add(side); });
-      // the ketch weathervane: a hull with two masts of sail, in black, on a short stem above the cog
-      const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.1, 6), black); stem.position.y = CY + Ro + 0.45; clk.add(stem);
-      const hull = new THREE.Shape([[-1.0, 0], [0.95, 0], [1.3, 0.38], [-1.15, 0.38]].map(([x, y]) => new THREE.Vector2(x, y)));
-      const tri = pts => new THREE.Shape(pts.map(([x, y]) => new THREE.Vector2(x, y)));
-      const ship = new THREE.Mesh(new THREE.ShapeGeometry([hull, tri([[0.12, 0.48], [0.12, 1.95], [0.95, 0.5]]), tri([[0.2, 1.6], [1.0, 0.55], [1.45, 0.5]]), tri([[-0.55, 0.48], [-0.55, 1.45], [0.0, 0.5]]),
-        tri([[0.05, 0.38], [0.11, 0.38], [0.11, 2.05], [0.05, 2.05]]), tri([[-0.62, 0.38], [-0.56, 0.38], [-0.56, 1.55], [-0.62, 1.55]])]), black);
-      const vane = new THREE.Group(); vane.add(ship); ship.position.x = -0.15; vane.position.y = CY + Ro + 0.95; vane.scale.setScalar(1.05); clk.add(vane);
+        const face = new THREE.Mesh(new THREE.CircleGeometry(Ri + 0.02, 64), faceMat); face.position.z = 0.16; side.add(face);
+        const mk = (len, w) => { const p = new THREE.Group(), h = new THREE.Mesh(new THREE.BoxGeometry(w, len, 0.04), black); h.position.y = len / 2 - 0.15; p.add(h); p.position.z = 0.2; side.add(p); return p; };
+        const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.08, 12), black); hub.rotation.x = Math.PI / 2; hub.position.z = 0.23; side.add(hub);
+        hands.push([mk(0.8, 0.11), mk(1.18, 0.07)]); clk.add(side); });
+      // the ship on top: a black gaff-rigged ketch sailing right, fixed to the tops of the poles
+      const V = (pts) => new THREE.Shape(pts.map(([x, y]) => new THREE.Vector2(x, y)));
+      const shipShapes = [
+        V([[-1.95, 0.32], [-1.7, 0.02], [1.15, 0.02], [1.75, 0.42], [1.2, 0.36], [-1.4, 0.36]]),            // hull with a raised bow
+        V([[1.62, 0.4], [2.45, 0.6], [2.45, 0.66], [1.62, 0.48]]),                                          // bowsprit
+        V([[0.22, 0.42], [0.3, 0.42], [0.3, 3.05], [0.22, 3.05]]), V([[-1.12, 0.42], [-1.05, 0.42], [-1.05, 2.25], [-1.12, 2.25]]),  // masts
+        V([[-0.92, 0.55], [0.12, 0.55], [0.12, 2.85], [-0.72, 2.2]]),                                       // mainsail (gaff)
+        V([[0.42, 0.56], [1.45, 0.52], [0.42, 2.95]]), V([[1.55, 0.55], [2.35, 0.62], [0.5, 2.6]]),          // two headsails out to the bowsprit
+        V([[-1.85, 0.5], [-1.2, 0.5], [-1.2, 2.1], [-1.7, 1.75]]),                                          // mizzen
+      ];
+      const ship = new THREE.Mesh(new THREE.ExtrudeGeometry(shipShapes, { depth: 0.06, bevelEnabled: false }), black);
+      ship.position.set(-0.15, CY + Ro + 0.45, -0.41); ship.scale.setScalar(1.02); clk.add(ship);
       // the plaza: red brick, a garden bed of grasses and the four mosaic blocks
       const brick = new THREE.Mesh(new THREE.BoxGeometry(14, 0.3, 8), new THREE.MeshStandardMaterial({ color: 0xa4523f, roughness: 1 })); brick.position.set(0.5, 0.15, 0.4); clk.add(brick);
       const bed = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 2.8, 0.45, 18), new THREE.MeshStandardMaterial({ color: 0x4a3426, roughness: 1 })); bed.position.set(0, 0.4, -0.3); clk.add(bed);
@@ -5274,17 +5289,10 @@ const handle = async (m, post) => {
       // parked cars nose-in along the shops, and a couple on the far kerb
       [0xd8d8d8, 0x8a1f24, 0x2a3f6b, 0xf2f2ee, 0x5d6b4a, 0xb9bcc0, 0x7a1d1d].forEach((c, k) => { const x = -54 + k * 14 + (k % 2) * 2.5; if (Math.abs(x) < 6) return;
         const car = box(1.8, 1.2, 3.8, M(c, .4, { metalness: .3 }), x, G0 + 0.75, -82.7); box(1.6, 0.7, 2, glassM, x, G0 + 1.65, -82.9); });
-      let vaneAng = null;
       W.invClockTick = (ms, dt, lit, still) => {
         const off = (state.wx?.d?.utc_offset_seconds ?? 39600) * 1000, d = new Date(ms + off), m = d.getUTCMinutes() + d.getUTCSeconds() / 60, h = (d.getUTCHours() % 12) + m / 60;
         hands.forEach(([hh, mm]) => { hh.rotation.z = -h / 12 * Math.PI * 2; mm.rotation.z = -m / 60 * Math.PI * 2; });
         faceMat.emissiveIntensity = lit * 0.85;
-        const i = BS.D && bsHour(ms), dir = i != null ? BS.D.hr.wind_direction_10m?.[i] : null;
-        if (dir != null) {  // the ketch's bow points into the wind (north is into the scene, east to the right); turned in the clock's own frame
-          let want = (90 - dir) * Math.PI / 180 - clk.rotation.y; if (vaneAng == null) vaneAng = want;
-          const diff = Math.atan2(Math.sin(want - vaneAng), Math.cos(want - vaneAng)); vaneAng += diff * Math.min(1, dt * (still ? 6 : 1.6));
-          vane.rotation.y = vaneAng + (still ? 0 : Math.sin(performance.now() / 900) * 0.04);
-        }
       };
     }
     const hl = new THREE.BufferGeometry(); hl.setAttribute("position", new THREE.Float32BufferAttribute(houseLights, 3));
@@ -6170,7 +6178,7 @@ const handle = async (m, post) => {
     W.wheel.rotation.z += dt * (still ? 0.04 : 0.12);
     if (W.invFlags && !still) W.invFlags.forEach((f, i) => { f.rotation.y = Math.sin(t * 2.2 + i) * 0.35 + (st.wind || 15) / 60; });
     if (W.invFoam) W.invFoam.position.z = -32.5 + Math.sin(t * 0.8) * 0.9;
-    if (W.inv?.visible && W.invClockTick) W.invClockTick(ms, dt, lit, still);  // the Rotary clock: hands, lit faces and the ketch vane
+    if (W.inv?.visible && W.invClockTick) W.invClockTick(ms, dt, lit, still);  // the Rotary clock: its hands and lit faces
     if (W.koala && !still) W.koala.rotation.y = Math.sin(t * 0.3) * 0.4;
     r.render(B.scene, cam);
   }
