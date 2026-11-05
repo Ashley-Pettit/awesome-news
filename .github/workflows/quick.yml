@@ -6,7 +6,7 @@ name: Quick publish (app changes)
 on:
   push:
     branches: [main]
-    paths: ["app.html", "build.py", "share.py", "sw.js", "manifest.webmanifest", "icons/**", "beta/**"]
+    paths: ["app.html", "build.py", "share.py", "sw.js", "manifest.webmanifest", "icons/**", "beta/**", "local/**"]
   workflow_dispatch:
 
 permissions:

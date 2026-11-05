@@ -1,0 +1,36 @@
+{
+  "moo": {
+    "dir": "moorooka",
+    "name": "Over the Fence",
+    "name_html": "<span>Over the</span><span>Fence</span>",
+    "tagline": "What's on and what's changed around Moorooka",
+    "feed": "local-moo",
+    "wx": "moo",
+    "council": "Brisbane City Council",
+    "ups_title": "Changes on the ground",
+    "events_title": "Coming up nearby",
+    "news_title": "In the news",
+    "credit": "Moorooka, Yeronga, Annerley, Salisbury, Rocklea, Tarragindi and Coopers Plains. Events from Brisbane City Council and its libraries, transport from Translink, roads from QLDTraffic.",
+    "theme": "#5B3E96",
+    "bg": "#F6F5FA",
+    "fonts": "https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Newsreader:opsz,wght@6..72,400..600&display=swap",
+    "near": "\\b(Moorooka|Yeronga|Yeerongpilly|Annerley|Salisbury|Rocklea|Tarragindi|Coopers Plains|Moorvale|Tennyson|Fairfield|Beaudesert Road|Ipswich Road)\\b",
+    "city": "Brisbane"
+  },
+  "logan": {
+    "dir": "logan",
+    "name": "The Logan Wire",
+    "name_html": "The Logan Wire",
+    "tagline": "Roads, rail, events and news across Logan",
+    "feed": "logan",
+    "wx": "logan",
+    "council": "Logan City Council",
+    "ups_title": "More on the roads and rails",
+    "events_title": "Things to do",
+    "news_title": "Latest from Logan",
+    "credit": "An independent local news reader, not a Logan City Council service. News from local outlets and the council's own newsroom, transport from Translink, roads from QLDTraffic.",
+    "theme": "#0E5F66",
+    "bg": "#EEF2F1",
+    "fonts": "https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&display=swap"
+  }
+}

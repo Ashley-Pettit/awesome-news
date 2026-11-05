@@ -104,5 +104,31 @@ shutil.copy(os.path.join(here, "sw.js"), site)
 # Council news pictures sent from the work PC (council_news.py), served next to the app.
 if os.path.isdir(os.path.join(here, "council", "img")):
     shutil.copytree(os.path.join(here, "council", "img"), os.path.join(site, "council", "img"), dirs_exist_ok=True)
+# The local news apps (Moorooka's "Over the Fence", "The Logan Wire"): one engine (local/local.html), each with its
+# own name, look, icons and install details (local/brands.json), reading the same hourly data.
+if os.path.exists(os.path.join(here, "local", "brands.json")):
+    import html as _html
+    brands = json.load(open(os.path.join(here, "local", "brands.json"), encoding="utf-8"))
+    tpl = open(os.path.join(here, "local", "local.html"), encoding="utf-8").read()
+    for slug, b in brands.items():
+        out = os.path.join(site, b["dir"])
+        os.makedirs(out, exist_ok=True)
+        url = f"https://ashley-pettit.github.io/awesome-news/{b['dir']}/"
+        page = tpl
+        for k, v in {"{{NAME_HTML}}": b["name_html"], "{{NAME}}": _html.escape(b["name"]), "{{TAGLINE}}": _html.escape(b["tagline"]),
+                     "{{THEME}}": b["theme"], "{{FONTS}}": b["fonts"], "{{URL}}": url, "{{SLUG}}": slug,
+                     "{{UPS_TITLE}}": _html.escape(b["ups_title"]), "{{EVENTS_TITLE}}": _html.escape(b["events_title"]),
+                     "{{NEWS_TITLE}}": _html.escape(b["news_title"]), "{{CREDIT}}": _html.escape(b["credit"]),
+                     "{{BRAND_JSON}}": json.dumps({"slug": slug, "feed": b["feed"], "wx": b["wx"], "council": b["council"], "near": b.get("near", ""), "city": b.get("city", "")})}.items():
+            page = page.replace(k, v)
+        with open(os.path.join(out, "index.html"), "w", encoding="utf-8") as f:
+            f.write(page)
+        for fn in os.listdir(os.path.join(here, "local", slug)):
+            shutil.copy(os.path.join(here, "local", slug, fn), out)
+        with open(os.path.join(out, "manifest.webmanifest"), "w", encoding="utf-8") as f:
+            json.dump({"name": b["name"], "short_name": b["name"].replace("The ", ""), "description": b["tagline"], "start_url": "./", "scope": "./",
+                       "display": "standalone", "background_color": b["bg"], "theme_color": b["theme"],
+                       "icons": [{"src": "icon-192.png", "sizes": "192x192", "type": "image/png"}, {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"}]}, f)
+        print(f"Built {out}/index.html")
 open(os.path.join(site, ".nojekyll"), "w").close()
 print(f"Built {site}/index.html")

@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>{{NAME}}</title>
+<meta name="description" content="{{TAGLINE}}">
+<meta name="theme-color" content="{{THEME}}">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta property="og:title" content="{{NAME}}">
+<meta property="og:description" content="{{TAGLINE}}">
+<meta property="og:image" content="{{URL}}share.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="{{FONTS}}" rel="stylesheet">
+<style>
+/* One engine, two places. Each brand sets its own palette, type and its own signature section:
+   Moorooka ("Over the Fence"): coming events drawn as a train line, a day per station (the Beenleigh line runs through it).
+   Logan ("The Logan Wire"): what's changed on roads and rails shown on overhead motorway-gantry signs. */
+:root { --gut: 18px; --max: 720px; }
+[data-brand="moo"] {
+  --bg: #F6F5FA; --ink: #1E2B24; --soft: #5C6660; --line: #DCD8E6; --brand: #5B3E96; --brand-2: #8C6CC9; --leaf: #2E5A45;
+  --major: #B3261E; --minor: #C98A00; --info: #6F7A73; --council: #2E5A45; --paper: #FFFFFF;
+  --display: "Bricolage Grotesque", system-ui, sans-serif; --body: "Newsreader", Georgia, serif; --ui: "Bricolage Grotesque", system-ui, sans-serif;
+}
+[data-brand="logan"] {
+  --bg: #EEF2F1; --ink: #10212B; --soft: #4C5C63; --line: #C9D3CF; --brand: #0E5F66; --brand-2: #157C84; --gold: #E8B53A;
+  --major: #B3261E; --minor: #B98200; --info: #5D6B70; --council: #0E5F66; --paper: #FFFFFF;
+  --display: "Archivo", system-ui, sans-serif; --body: "Archivo", system-ui, sans-serif; --ui: "Archivo", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  [data-brand="moo"] { --bg: #16131D; --ink: #ECE8F5; --soft: #A9A3B8; --line: #2E2840; --brand: #B79BEA; --brand-2: #8C6CC9; --leaf: #8FC3A6; --paper: #1E1A28; --council: #8FC3A6; --info: #9AA39E; }
+  [data-brand="logan"] { --bg: #0C171C; --ink: #E7EEEC; --soft: #9FB0B4; --line: #23363D; --brand: #5FC3C9; --brand-2: #157C84; --paper: #12222A; --council: #5FC3C9; --info: #93A3A8; }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.55 var(--body); }
+a { color: inherit; }
+a:focus-visible, button:focus-visible { outline: 3px solid var(--brand-2); outline-offset: 3px; border-radius: 6px; }
+.wrap { max-width: var(--max); margin: 0 auto; padding: 0 var(--gut); }
+main { padding-bottom: calc(40px + env(safe-area-inset-bottom)); }
+h2 { font: 800 1.45rem/1.15 var(--display); margin: 42px 0 14px; letter-spacing: -0.01em; }
+.muted { color: var(--soft); }
+.empty { color: var(--soft); font: 500 0.95rem/1.4 var(--ui); padding: 10px 0; }
+
+/* ---- Header ---- */
+header { padding: calc(22px + env(safe-area-inset-top)) 0 0; }
+.mast { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; }
+.name { margin: 0; font-family: var(--display); }
+.place { margin: 6px 0 0; font: 500 1rem/1.35 var(--ui); color: var(--soft); max-width: 34ch; }
+.wx { font: 600 0.92rem/1.2 var(--ui); text-align: right; white-space: nowrap; color: var(--soft); }
+.wx b { display: block; font: 800 2rem/1 var(--display); color: var(--ink); }
+.stamp { font: 500 0.82rem var(--ui); color: var(--soft); margin: 14px 0 0; }
+
+[data-brand="moo"] .name { font-weight: 800; font-size: clamp(2.6rem, 11vw, 4.2rem); line-height: 0.92; letter-spacing: -0.035em; color: var(--brand); }
+[data-brand="moo"] .name span { display: block; }
+[data-brand="logan"] header { background: var(--brand); color: #fff; padding-bottom: 22px; }
+[data-brand="logan"] .name { font-weight: 800; font-stretch: 125%; font-variation-settings: "wdth" 125; font-size: clamp(2.1rem, 9vw, 3.4rem); line-height: 0.95; letter-spacing: 0.005em; text-transform: none; }
+[data-brand="logan"] .place, [data-brand="logan"] .wx, [data-brand="logan"] .stamp { color: rgba(255,255,255,0.82); }
+[data-brand="logan"] .wx b { color: #fff; }
+
+/* ---- Updates: Moorooka as a list with a coloured edge; Logan as gantry signs ---- */
+.ups { list-style: none; margin: 0; padding: 0; }
+.up { position: relative; padding: 12px 0 12px 16px; border-bottom: 1px solid var(--line); }
+.up::before { content: ""; position: absolute; left: 0; top: 14px; bottom: 14px; width: 4px; border-radius: 2px; background: var(--info); }
+.up.major::before { background: var(--major); } .up.minor::before { background: var(--minor); } .up.council::before { background: var(--council); }
+.up a { text-decoration: none; display: block; }
+.up h3 { margin: 0; font: 700 1.04rem/1.3 var(--ui); }
+.up a:hover h3 { text-decoration: underline; text-underline-offset: 3px; }
+.up p { margin: 3px 0 0; font: 500 0.88rem/1.4 var(--ui); color: var(--soft); }
+.up .when { color: var(--ink); font-weight: 700; }
+.more { margin: 12px 0 0; background: none; border: 0; padding: 8px 0; font: 700 0.95rem var(--ui); color: var(--brand); cursor: pointer; }
+
+[data-brand="logan"] .gantry { display: grid; gap: 10px; margin-top: 18px; }
+[data-brand="logan"] .sign { display: block; text-decoration: none; background: #0B4A50; color: #fff; border-radius: 6px; padding: 14px 16px 15px;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.9), inset 0 0 0 5px #0B4A50; }
+[data-brand="logan"] .sign b { display: block; font: 800 1.08rem/1.25 var(--display); font-stretch: 112%; font-variation-settings: "wdth" 112; }
+[data-brand="logan"] .sign span { display: block; margin-top: 4px; font: 600 0.86rem/1.35 var(--ui); color: var(--gold); }
+
+/* ---- Moorooka: coming events as a train line, a station per day ---- */
+.line { list-style: none; margin: 0; padding: 0 0 0 30px; position: relative; }
+.line::before { content: ""; position: absolute; left: 9px; top: 8px; bottom: 8px; width: 6px; border-radius: 3px; background: var(--brand); }
+.stop { position: relative; padding: 0 0 22px; }
+.stop::before { content: ""; position: absolute; left: -29px; top: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--paper); border: 4px solid var(--brand); }
+.stop > b { display: block; font: 800 1.02rem/1.3 var(--display); color: var(--brand); }
+.ev { display: grid; grid-template-columns: 1fr 72px; gap: 12px; margin-top: 10px; text-decoration: none; align-items: start; }
+.ev.noimg { grid-template-columns: 1fr; }
+.ev h3 { margin: 0; font: 700 1.02rem/1.3 var(--ui); }
+.ev:hover h3 { text-decoration: underline; text-underline-offset: 3px; }
+.ev p { margin: 2px 0 0; font: 500 0.86rem/1.4 var(--ui); color: var(--soft); }
+.ev img { width: 72px; height: 54px; object-fit: cover; border-radius: 8px; background: var(--line); }
+.free { color: var(--leaf); font-weight: 700; }
+
+/* ---- Logan: things to do as a simple run ---- */
+.todo { list-style: none; margin: 0; padding: 0; columns: 2 260px; column-gap: 28px; }
+.todo li { break-inside: avoid; padding: 10px 0; border-top: 3px solid var(--gold); margin-bottom: 8px; }
+.todo a { text-decoration: none; font: 700 1rem/1.3 var(--ui); }
+.todo a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* ---- News ---- */
+.news { list-style: none; margin: 0; padding: 0; }
+.story { padding: 14px 0; border-bottom: 1px solid var(--line); }
+.story a { text-decoration: none; display: grid; grid-template-columns: 1fr 96px; gap: 14px; align-items: start; }
+.story.noimg a { grid-template-columns: 1fr; }
+.story h3 { margin: 0; font: 600 1.1rem/1.32 var(--body); }
+[data-brand="logan"] .story h3 { font: 700 1.02rem/1.32 var(--display); }
+.story a:hover h3 { text-decoration: underline; text-underline-offset: 3px; }
+.story p { margin: 4px 0 0; font: 500 0.84rem/1.35 var(--ui); color: var(--soft); }
+.story img { width: 96px; height: 72px; object-fit: cover; border-radius: 8px; background: var(--line); }
+.story.lead a { grid-template-columns: 1fr; }
+.story.lead img { width: 100%; height: auto; aspect-ratio: 16 / 9; border-radius: 12px; order: -1; }
+.story.lead h3 { font-size: 1.32rem; }
+
+footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); font: 500 0.82rem/1.5 var(--ui); color: var(--soft); }
+footer p { margin: 0 0 8px; }
+@media (min-width: 900px) {
+  [data-brand="logan"] .gantry { grid-template-columns: repeat(3, 1fr); }
+  [data-brand="logan"] .sign { min-height: 104px; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+</head>
+<body data-brand="{{SLUG}}">
+<header><div class="wrap">
+  <div class="mast">
+    <div><h1 class="name">{{NAME_HTML}}</h1><p class="place">{{TAGLINE}}</p></div>
+    <div class="wx" id="wx" aria-live="polite"></div>
+  </div>
+  <div id="hero"></div>
+  <p class="stamp" id="stamp"></p>
+</div></header>
+<main class="wrap">
+  <section aria-labelledby="h-ups" id="upsSec"><h2 id="h-ups">{{UPS_TITLE}}</h2><ul class="ups" id="ups"></ul></section>
+  <section aria-labelledby="h-ev"><h2 id="h-ev">{{EVENTS_TITLE}}</h2><div id="events"><p class="empty">Loading…</p></div></section>
+  <section aria-labelledby="h-news"><h2 id="h-news">{{NEWS_TITLE}}</h2><ul class="news" id="news"><li class="empty">Loading…</li></ul></section>
+  <footer>
+    <p>{{CREDIT}}</p>
+    <p>Updated every hour from public sources. Stories open on the publisher's site.</p>
+    <p><a href="../">Made with Awesome News</a></p>
+  </footer>
+</main>
+<script>
+(() => {
+  const B = {{BRAND_JSON}};
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const TZ = "Australia/Brisbane";
+  const day = d => new Intl.DateTimeFormat("en-AU", { weekday: "long", day: "numeric", month: "long", timeZone: TZ }).format(d);
+  const time = d => new Intl.DateTimeFormat("en-AU", { hour: "numeric", minute: "2-digit", timeZone: TZ }).format(d).replace(":00", "").replace(" ", "").toLowerCase();
+  const dayKey = d => new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(d);
+  function ago(iso) {
+    const m = (Date.now() - Date.parse(iso)) / 60000;
+    if (!(m >= 0)) return "";
+    if (m < 60) return `${Math.max(1, Math.round(m))} min ago`;
+    if (m < 60 * 24) return `${Math.round(m / 60)} hr ago`;
+    const d = Math.round(m / 1440); return d === 1 ? "yesterday" : `${d} days ago`;
+  }
+  const get = p => fetch(`../data/${p}?t=${Math.floor(Date.now() / 300000)}`, { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null);
+  const upLink = (u, inner, cls = "") => u.url ? `<a href="${esc(u.url)}" target="_blank" rel="noopener" class="${cls}">${inner}</a>` : inner;
+  const upText = u => [u.when, u.services].filter(Boolean).map((t, n) => n ? esc(t) : `<span class="when">${esc(t)}</span>`).join(". ");
+
+  function weather(st) {
+    const w = st?.weather?.[B.wx]; const c = w?.current, d = w?.daily;
+    if (!c) return;
+    const hi = Math.round(d?.temperature_2m_max?.[0] ?? NaN), lo = Math.round(d?.temperature_2m_min?.[0] ?? NaN);
+    $("wx").innerHTML = `<b>${Math.round(c.temperature_2m)}°</b>${isFinite(hi) ? `${hi}° / ${isFinite(lo) ? lo : ""}° today` : ""}`;
+  }
+
+  function updates(list) {
+    if (B.slug === "logan") {
+      const top = list.filter(u => u.kind !== "council").slice(0, 3);
+      $("hero").innerHTML = top.length ? `<div class="gantry">${top.map(u => upLink(u, `<b>${esc(u.title)}</b><span>${esc(u.when || "")}</span>`, `sign ${u.severity === "major" ? "major" : ""}`)).join("")}</div>` : "";
+      list = list.filter(u => !top.includes(u));
+    }
+    const row = u => `<li class="up ${u.kind === "council" ? "council" : esc(u.severity || "info")}">${upLink(u, `<h3>${esc(u.title)}</h3>${upText(u) ? `<p>${upText(u)}</p>` : u.kind === "council" ? `<p>From ${esc(B.council)}</p>` : ""}`)}</li>`;
+    const first = 6;
+    $("ups").innerHTML = list.length ? list.slice(0, first).map(row).join("") : `<li class="empty">Nothing changing on the roads or rails nearby right now.</li>`;
+    if (list.length > first) {
+      const b = document.createElement("button"); b.className = "more"; b.type = "button"; b.textContent = `Show ${list.length - first} more`;
+      b.onclick = () => { $("ups").insertAdjacentHTML("beforeend", list.slice(first).map(row).join("")); b.remove(); };
+      $("ups").after(b);
+    }
+  }
+
+  function events(list) {
+    const box = $("events");
+    if (!list.length) { box.innerHTML = `<p class="empty">No events nearby in the next two weeks.</p>`; return; }
+    if (B.slug === "moo") {
+      const days = new Map();
+      for (const e of list) { const d = new Date(e.start); const k = dayKey(d); if (!days.has(k)) days.set(k, { d, items: [] }); days.get(k).items.push(e); }
+      box.innerHTML = `<ol class="line">${[...days.values()].map(({ d, items }) => `<li class="stop"><b>${esc(day(d))}</b>${items.map(e => {
+        const meta = [time(new Date(e.start)), e.venue].filter(Boolean).join(", ");
+        return `<a class="ev${e.image ? "" : " noimg"}" href="${esc(e.url)}" target="_blank" rel="noopener"><div><h3>${esc(e.title)}</h3><p>${esc(meta)}${e.free ? `. <span class="free">Free</span>` : ""}</p></div>${e.image ? `<img src="${esc(e.image)}?w=144&h=108" alt="" loading="lazy" width="72" height="54">` : ""}</a>`;
+      }).join("")}</li>`).join("")}</ol>`;
+    } else {
+      box.innerHTML = `<ul class="todo">${list.map(e => `<li><a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.title)}</a></li>`).join("")}</ul>`;
+    }
+  }
+
+  function news(list) {
+    if (!list.length) { $("news").innerHTML = `<li class="empty">No local stories in the last few days.</li>`; return; }
+    $("news").innerHTML = list.slice(0, 30).map((s, n) => {
+      const img = s.image && !/^data:/.test(s.image) ? s.image : "";
+      const lead = n === 0 && img;
+      const meta = [s.source, ago(s.published)].filter(Boolean).join(", ");
+      return `<li class="story${img ? "" : " noimg"}${lead ? " lead" : ""}"><a href="${esc(s.url)}" target="_blank" rel="noopener"><div><h3>${esc(s.title)}</h3><p>${esc(meta)}</p></div>${img ? `<img src="${esc(img)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}</a></li>`;
+    }).join("");
+  }
+
+  async function load() {
+    const [com, feed, st] = await Promise.all([get(`feeds/community-${B.slug}.json`), get(`feeds/${B.feed}.json`), get("status.json")]);
+    weather(st);
+    updates(com?.updates || []);
+    const now = Date.now();
+    events((com?.events || []).filter(e => !e.start || Date.parse(e.start) > now - 3 * 3600e3));
+    const seen = new Set(), list = [];
+    const near = B.near ? new RegExp(B.near, "i") : null, city = B.city ? new RegExp(`\\b${B.city}\\b`, "i") : null;
+    for (const s of [...(feed?.items || []), ...(com?.news || [])]) {
+      const k = (s.title || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+      if (!s.title || !s.url || seen.has(k) || /^data:/.test(s.url)) continue;
+      const txt = `${s.title} ${s.summary || ""}`;
+      s._near = near ? near.test(txt) : true;
+      if (!s._near && city && !city.test(txt)) continue;  // a suburb app keeps to its suburbs, then its city
+      seen.add(k); list.push(s);
+    }
+    list.sort((a, b) => (b._near - a._near) || Date.parse(b.published || 0) - Date.parse(a.published || 0));
+    news(list);
+    const at = com?.updatedAt || feed?.updatedAt;
+    $("stamp").textContent = at ? `Updated ${ago(at)}` : "";
+  }
+  load();
+})();
+</script>
+</body>
+</html>

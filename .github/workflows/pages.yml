@@ -151,7 +151,7 @@ jobs:
         run: |
           git fetch -q --depth=1 origin main
           git checkout FETCH_HEAD -- app.html build.py
-          git checkout FETCH_HEAD -- beta sw.js icons manifest.webmanifest 2>/dev/null || true
+          git checkout FETCH_HEAD -- beta sw.js icons manifest.webmanifest local 2>/dev/null || true
           python build.py _site
 
       # A link-preview page for every story (s/<id>), for sharing.

@@ -1432,6 +1432,14 @@ def main():
         counts[name] = len(out_items)
         with open(os.path.join(a.out, "feeds", f"{name}.json"), "w") as f:
             json.dump(doc, f, ensure_ascii=False, separators=(",", ":"))
+    # The Moorooka and Logan apps' community feeds (community.py: Translink changes, roadworks, council notices, local
+    # events, a local news search). Only with the full run: the private copy doesn't carry community.py.
+    if a.regions == "all":
+        try:
+            import community
+            print("community:", json.dumps(community.write(a.out, now, errors)))
+        except Exception as e:
+            errors.append(f"community: {e}"[:160])
     try:
         tv = fetch_tv(now, errors)
     except Exception as e:
