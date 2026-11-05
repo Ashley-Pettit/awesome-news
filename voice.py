@@ -63,9 +63,11 @@ SAY = [(r"\b7NEWS\b", "Seven News"), (r"\b9News\b", "Nine News"), (r"\b10 News\b
 # Logan the Aussie way, "Loh-gn" (lˈoʊɡən). Bump SOUNDSV when this changes, to remake the pieces with them.
 SOUNDS = [(re.compile(r"\bLogan"), re.compile(r"(?<![^\s.,;:!?\"“”‘’'(—–-])lˈəʊɡən"), "lˈoʊɡən"),
           # Inverloch the local way, "in-ver-LOCK"
-          (re.compile(r"\bInverloch"), re.compile(r"(?<![^\s.,;:!?\"“”‘’'(—–-])ɪnvˈɜːlɒk"), "ɪnvəlˈɒk")]
+          (re.compile(r"\bInverloch"), re.compile(r"(?<![^\s.,;:!?\"“”‘’'(—–-])ɪnvˈɜːlɒk"), "ɪnvəlˈɒk"),
+          # Bass (Bass Coast, Bass Strait, the seat of Bass) the Aussie way, "bas" like the fish (bˈæs), never "base"
+          (re.compile(r"\bBass\b"), re.compile(r"(?<![^\s.,;:!?\"“”‘’'(—–-])bˈ?(?:eɪ|æ|ɑː|a)s(?![^\s.,;:!?\"“”‘’')—–-])"), "bˈæs")]
 SOUNDSV = 1
-SOUNDW = re.compile(r"\b(Logan|Inverloch)")
+SOUNDW = re.compile(r"\b(Logan|Inverloch)|\bBass\b")
 # Pieces with these words were made before the pronunciation above was fixed: remake them once.
 # Bump SAYV (and add the words) whenever another pronunciation fix is added.
 SAYV, RESAY = 3, re.compile(r"Logan|Queensland|\bQld\b|\bSEQ\b|[$£€]|\b(?:AI|EVs?|ASX|RBA|CEO|LNP|SBS|ABC|BBC|EFF|iTnews)\b")
@@ -484,7 +486,7 @@ def make(a, data, vkey):
                     ph = model.tokenizer.phonemize(say, LANG)
                     for w, pat, snd in SOUNDS:
                         if w.search(say):
-                            ph = pat.sub(snd, ph)
+                            ph = pat.sub(snd, ph, count=len(w.findall(say)))  # no more swaps than the word appears ("base" stays "base")
                     audio, sr = model.create(ph, voice=VOICE, speed=1.0, lang=LANG, is_phonemes=True)
                 else:
                     audio, sr = model.create(say, voice=VOICE, speed=1.0, lang=LANG)
