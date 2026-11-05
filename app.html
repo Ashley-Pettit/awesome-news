@@ -467,7 +467,9 @@ body.beta-heads button.np-pos::after { content: ""; display: inline-block; width
 .beta-tag { display: none; margin-left: 6px; padding: 2px 6px; border-radius: 5px; font-style: normal; font-family: var(--ui); font-size: 0.62rem; font-weight: 800;
   letter-spacing: 0.08em; text-transform: uppercase; vertical-align: middle; color: #1b1830; background: #ffd166; }
 body.betaon .beta-tag { display: inline-block; }
-@media (max-width: 430px) { body.betaon #np .np-brand span { display: none; } }
+/* in the player: a tiny badge on the corner of the logo, taking no room from the buttons */
+#np .np-brand { position: relative; }
+#np .np-brand .beta-tag { position: absolute; left: 14px; bottom: -7px; margin: 0; padding: 1px 4px; font-size: 0.5rem; border-radius: 4px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); }
 .np-all { justify-self: start; display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px; border-radius: 999px; font: inherit; font-size: 0.82rem; font-weight: 700;
   color: #ffffff; background: rgba(255, 255, 255, 0.14); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22); }
 .np-all svg { width: 15px; height: 15px; }
@@ -6276,7 +6278,6 @@ const handle = async (m, post) => {
     const parts = ["Onto traffic."];
     if (k < 2) parts.push(`It's about ${n} minutes to get ${getThere(c)}.`);
     else parts.push(k > 60 && at ? `Leave at ${at}.` : `Leave in about ${say5(k)} minutes.`, `It's about ${n} minutes to get ${getThere(c)}.`);
-    const km = Math.round(c.km || 0); if (km >= 1 && km <= 80) parts.push(km === 1 ? "That's about 1 kilometre." : `That's about ${km} kilometres.`);
     const by = t => c.events.filter(e => e.type === t);
     if (c.noInc) {}  // no road reports outside Queensland: just the time
     else if (!c.events.length) {  // nothing reported, but the usual peak can still make it slow (same levels as the meter on screen)
