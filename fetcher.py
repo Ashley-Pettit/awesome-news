@@ -947,6 +947,48 @@ def lock(key, data):
     return {"iv": base64.b64encode(iv).decode(), "data": base64.b64encode(AESGCM(key).encrypt(iv, data, None)).decode()}
 
 
+# Local tuning, the same as tuneWx() in app.html (keep the two in step). The free forecast runs mild in some spots: checked
+# against Bureau stations for October 2026, highs ran 1 to 2 degrees cool and Inverloch nights about 1 degree warm. Each day's
+# hourly curve shifts by "lo" at its coolest hour sliding to "hi" at its warmest, so Emma's numbers match the app's.
+WX_TUNE = {"inv": (1.5, -1.0), "moo": (1.3, 0.3), "qld": (1.0, 0.8)}
+
+
+def tune_wx(w, place):
+    if place not in WX_TUNE or not w or w.get("tuned"):
+        return w
+    hi, lo = WX_TUNE[place]
+    hr, dy = w.get("hourly") or {}, w.get("daily") or {}
+    T, rng = hr.get("temperature_2m") or [], {}
+    for tm, v in zip(hr.get("time") or [], T):
+        if v is not None:
+            a, b = rng.get(tm[:10], (v, v))
+            rng[tm[:10]] = (min(a, v), max(b, v))
+
+    def shift(day, v):
+        r = rng.get(day)
+        if not r or v is None:
+            return lo + (hi - lo) / 2
+        f = max(0, min(1, (v - r[0]) / (r[1] - r[0]))) if r[1] > r[0] else 0.5
+        return lo + f * (hi - lo)
+    app = hr.get("apparent_temperature") or []
+    for j, tm in enumerate(hr.get("time") or []):
+        if j < len(T) and T[j] is not None:
+            s = shift(tm[:10], T[j])
+            T[j] = round(T[j] + s, 1)
+            if j < len(app) and app[j] is not None:
+                app[j] = round(app[j] + s, 1)
+    for key, add in (("temperature_2m_max", hi), ("temperature_2m_min", lo), ("apparent_temperature_max", hi)):
+        dy[key] = [None if x is None else round(x + add, 1) for x in dy.get(key) or []]
+    c = w.get("current") or {}
+    if c.get("temperature_2m") is not None:
+        s = shift(str(c.get("time") or "")[:10], c["temperature_2m"])
+        c["temperature_2m"] = round(c["temperature_2m"] + s, 1)
+        if c.get("apparent_temperature") is not None:
+            c["apparent_temperature"] = round(c["apparent_temperature"] + s, 1)
+    w["tuned"] = True
+    return w
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("out")
@@ -1268,7 +1310,7 @@ def main():
             try:
                 r, w = fut.result()
                 w["fetchedAt"] = now.strftime("%Y-%m-%dT%H:%M:%SZ")
-                weather[r] = w
+                weather[r] = tune_wx(w, r)
             except Exception:
                 pass  # no weather is fine; the app hides it
     # Any area still missing: keep the forecast from the last update (under a day old), so the weather and
