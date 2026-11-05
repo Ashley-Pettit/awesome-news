@@ -463,6 +463,15 @@ body.beta-heads button.np-pos::after { content: ""; display: inline-block; width
 .np-sec { background: #ffffff; color: #1b1830; border-radius: 5px; padding: 3px 8px; font-weight: 800; }
 .np-sec:empty { display: none; }
 .np-h { font-family: var(--display); font-weight: 800; font-size: clamp(1.5rem, 6vw, 2.4rem); line-height: 1.08; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+/* Beta on (Settings, App): a small Beta tag on Listen, which then reads long stories short and plays ABC videos */
+.beta-tag { display: none; margin-left: 6px; padding: 2px 6px; border-radius: 5px; font-style: normal; font-family: var(--ui); font-size: 0.62rem; font-weight: 800;
+  letter-spacing: 0.08em; text-transform: uppercase; vertical-align: middle; color: #1b1830; background: #ffd166; }
+body.betaon .beta-tag { display: inline-block; }
+@media (max-width: 430px) { body.betaon #np .np-brand span { display: none; } }
+.np-all { justify-self: start; display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px; border-radius: 999px; font: inherit; font-size: 0.82rem; font-weight: 700;
+  color: #ffffff; background: rgba(255, 255, 255, 0.14); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22); }
+.np-all svg { width: 15px; height: 15px; }
+.np-all[hidden] { display: none; }
 .np-cap { margin: 0; min-height: 4.6em; font-family: var(--read); font-size: clamp(1rem, 3.8vw, 1.3rem); line-height: 1.5; color: rgba(255, 255, 255, 0.92); display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 .np-ctl { display: flex; align-items: center; justify-content: center; gap: 30px; margin-top: 4px; }
 .np-bar { height: 4px; border-radius: 4px; background: rgba(255, 255, 255, 0.18); overflow: hidden; }
@@ -1262,7 +1271,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
       <button class="week" type="button" id="wxWeek" data-open-weather aria-label="Open the full forecast" hidden></button>
       <a class="wxwarn" id="wxWarn" target="_blank" rel="noopener" hidden></a>
       <div class="listenbar">
-        <button class="lb-listen" type="button" data-listen="drive" id="lbListen"><img class="lb-bg" id="lbBg" alt="" referrerpolicy="no-referrer" hidden><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg></span><span><b>Listen to the news</b><small>About an hour, top stories first</small></span></button>
+        <button class="lb-listen" type="button" data-listen="drive" id="lbListen"><img class="lb-bg" id="lbBg" alt="" referrerpolicy="no-referrer" hidden><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg></span><span><b>Listen to the news <i class="beta-tag" aria-label="Beta">Beta</i></b><small>About an hour, top stories first</small></span></button>
         <button class="lb-fresh" type="button" data-listen="fresh" id="lbFresh" aria-label="Listen from the start, as if new" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3.5 4v5h5"/></svg>From the start</button>
         <button class="lb-tv" type="button" data-open-tv id="lbTV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Watch</button>
       </div>
@@ -1324,7 +1333,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   <div class="tv-ticker" aria-hidden="true"><span class="tv-tl">Up next</span><div class="tv-tw"><div class="tv-tt" id="tvTicker"></div></div></div>
   <div class="np-pic"><img class="np-bg" id="npBg" alt=""><img id="npImg" alt=""><video id="npVid" muted playsinline loop preload="none" hidden></video><div class="np-mono" id="npMono"></div></div>
   <div class="np-top">
-    <div class="np-brand"><img id="npLogo" alt=""><span>Awesome News</span></div>
+    <div class="np-brand"><img id="npLogo" alt=""><span>Awesome News</span><i class="beta-tag" aria-label="Beta">Beta</i></div>
     <button type="button" class="np-wkbtn" id="npWk" aria-label="Detailed weather: hear the week ahead" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M8.5 3.5v1.6M3.6 8.4h1.6M5 5l1.1 1.1M13.4 5l-1.1 1.1"/><path d="M5.6 11.6a3.6 3.6 0 1 1 6.6-2.4"/><path d="M8 20.5h9.5a3.5 3.5 0 0 0 .3-7 5 5 0 0 0-9.5 1A3 3 0 0 0 8 20.5z"/></svg>Detailed</button>
     <button type="button" class="np-cust" id="npCust" aria-label="Personalise your stories in Settings" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg>Personalise</button>
     <button type="button" class="np-pos" id="npPos" aria-label="Show the headlines" aria-expanded="false"></button>
@@ -1342,6 +1351,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
     <div class="np-meta"><span class="np-sec" id="npSec"></span><span id="npSrc"></span></div>
     <h2 class="np-h" id="npTitle"></h2>
     <p class="np-cap" id="npCap" aria-live="off"></p>
+    <button type="button" class="np-all" id="npAll" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 11h16M4 16h10"/><path d="m17 15 3 3-3 3"/></svg>Short version · Hear the whole story</button>
     <div class="np-traffic" id="npTraffic" hidden></div>
     <div class="np-acts" id="npActs" hidden>
       <button type="button" class="np-act" id="npLike" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span>More like this</span></button>
@@ -2047,6 +2057,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   }
   function npStory(i) {
     if (!i) return;
+    { const b = $("npAll"); if (b) b.hidden = true; }
     try { npVideo(i); } catch {}
     if (document.body.classList.contains("tvmode")) setTimeout(tvTicker, 0);
     const img = $("npImg"), bg = $("npBg"), mono = $("npMono");
@@ -2505,7 +2516,8 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
   // Beta: within the hour of stopping, the card offers to pick up where you left off.
   function lbIdle() {
     let r = null; try { r = state.loaded ? getResume() : null; } catch {}
-    return r ? `<b>Carry on listening</b><small>Pick up where you left off, ${r.queue.length} stories to go</small>` : `<b>Listen to the news</b><small>About an hour, top stories first</small>`;
+    const tag = `<i class="beta-tag" aria-label="Beta">Beta</i>`;
+    return r ? `<b>Carry on listening ${tag}</b><small>Pick up where you left off, ${r.queue.length} stories to go</small>` : `<b>Listen to the news ${tag}</b><small>About an hour, top stories first</small>`;
   }
   // "From the start" shows when Listen would otherwise carry on, or skip stories you've already heard or read.
   function lbFresh(ids) {
@@ -3803,7 +3815,16 @@ const handle = async (m, post) => {
     speakNext(tk);  // starts at once with the headline, so phones treat it as part of the tap
     const paras = vidTurn ? [] : await storyParas(i, L.kind === "drive" || (usePre() && !L.dev));
     if (sid !== L.sid) return;
-    paras.forEach(([p, n]) => L.parts.push(...chunks(p, n)));
+    let add = []; paras.forEach(([p, n]) => add.push(...chunks(p, n)));
+    // Beta: long stories are read short, about 100 words, stopping at the end of a sentence; "Hear the whole story"
+    // reads the rest. (Cut between Emma's recorded pieces, so every piece is still her own recording.)
+    L.rest = null;
+    if (S.beta && L.kind === "drive" && !vidTurn) {
+      const words = x => x.text.split(/\s+/).length, total = add.reduce((t, x) => t + words(x), 0);
+      if (total >= 150) { let w = 0, cut = add.length; for (let k = 0; k < add.length; k++) { w += words(add[k]); if (w >= 90) { cut = k + 1; break; } }
+        if (cut < add.length) { L.rest = { at: L.at, parts: add.slice(cut) }; add = add.slice(0, cut); } }
+    }
+    L.parts.push(...add); npAllBtn();
     L.loading = false;
     preNext();
     if (L.waiting && !L.paused) { L.waiting = false; speakNext(L.token); }
@@ -3927,6 +3948,12 @@ const handle = async (m, post) => {
   const WELCOME_BACK = "Welcome back. Picking up where you left off.";  // voice.py records both
   const WELCOME_NEW = "Welcome back. Here's what's new.";
   // A video part (beta): the story's own clip plays with its sound in the picture area, then Listen carries on.
+  document.body.classList.toggle("betaon", !!S.beta);
+  function npAllBtn() { const b = $("npAll"); if (b) b.hidden = !(L.on && L.rest && L.rest.at === L.at && L.parts.length); }
+  function hearAll() {
+    if (!L.rest || L.rest.at !== L.at) return;
+    L.parts.push(...L.rest.parts); L.rest = null; npAllBtn(); toast("Reading the whole story"); updateBar();
+  }
   function playVid(tk) {
     const v = $("npVid"), i = findItem(L.queue[L.at]), k = L.part;
     if (!v || !vidOK(i)) { L.part++; speakNext(tk); return; }
@@ -4121,7 +4148,7 @@ const handle = async (m, post) => {
     if (lgOn && $("lbLoganFresh")) { $("lbLoganFresh").hidden = false; $("lbLgWrap").classList.add("has-fresh"); }
     if ($("lbLoganT")) $("lbLoganT").textContent = lgOn ? `Story ${L.at + 1} of ${L.queue.length}${L.paused ? ", paused" : ", playing now"}` : loganLine();
     if (lb) lb.querySelector("span:last-child").innerHTML = L.on && L.kind === "drive" && !lgOn
-      ? `<b>${L.paused ? "Carry on listening" : "Back to the news"}</b><small>Story ${L.at + 1} of ${L.queue.length}${L.paused ? ", paused" : ", playing now"}</small>`
+      ? `<b>${L.paused ? "Carry on listening" : "Back to the news"} <i class="beta-tag" aria-label="Beta">Beta</i></b><small>Story ${L.at + 1} of ${L.queue.length}${L.paused ? ", paused" : ", playing now"}</small>`
       : lbIdle();
     if (L.on && L.kind === "drive") lbFresh();
     $("pTitle").textContent = i ? i.title : "";
@@ -4236,7 +4263,7 @@ const handle = async (m, post) => {
       return;
     }
     const bt = t.closest("[data-beta]");
-    if (bt) { S.beta = !S.beta; saveSettings(); renderSettings(); return; }
+    if (bt) { S.beta = !S.beta; saveSettings(); document.body.classList.toggle("betaon", !!S.beta); renderSettings(); return; }
     const sa = t.closest("[data-skipads]");
     if (sa) { S.skipAds = !S.skipAds; saveSettings(); sa.setAttribute("aria-checked", String(S.skipAds)); return; }
     const fo = t.closest("[data-fullonly]");
@@ -4312,6 +4339,7 @@ const handle = async (m, post) => {
     if (tvb) { const n = Number(tvb.dataset.tv); $("tvsEnd").hidden = true; TV.cap = Infinity; tvGo(n); return; }
     if (t.closest("#npPlay")) { L.paused ? resumeListen() : pauseListen(); return; }
     if (t.closest("#npNext")) { skipListen(); return; }
+    if (t.closest("#npAll")) { hearAll(); return; }
     if (document.body.classList.contains("tvmode") && t.closest("#np") && !t.closest("button")) {
       document.body.classList.add("tvctl"); clearTimeout(startTV.c); startTV.c = setTimeout(() => document.body.classList.remove("tvctl"), 4000); }
     if (t.closest("#npStop")) { stopListen(); return; }
@@ -6388,7 +6416,7 @@ const handle = async (m, post) => {
     const row = (k, label) => `<div class="beta-row"><span class="beta-l">${label}</span><div class="beta-chips">${PREV_OPTS[k].map(([v, t]) =>
       `<button type="button" class="bchip" data-prev-k="${k}" data-prev-v="${v}" aria-pressed="${state.prevSel[k] === v}">${t}</button>`).join("")}</div></div>`;
     if (!S.beta) return `<div class="group"><h2>Beta</h2><div class="card">${toggle("data-beta", "1", false, "Beta features", "Try things still being built: videos in Listen, the 3D previews, the new TV")}</div></div>`;
-    return `<div class="group"><h2>Beta</h2><div class="card">${toggle("data-beta", "1", true, "Beta features", "On: ABC videos play in Listen (ad-free, never YouTube), and the previews below")}</div></div>
+    return `<div class="group"><h2>Beta</h2><div class="card">${toggle("data-beta", "1", true, "Beta features", "On: Listen reads long stories short (tap to hear the whole story), plays ABC videos (ad-free, never YouTube), and the previews below")}</div></div>
     <div class="group"><h2>Try it out (beta)</h2><div class="card beta">
       ${row("place", "Place")}${row("sky", "Weather")}${row("hour", "Time")}${row("drive", "Drive")}
       <button type="button" class="pill-btn beta-go" data-prev-go>Show it</button>
