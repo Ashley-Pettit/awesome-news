@@ -444,7 +444,7 @@ def plan(data, vkey):
 # a headline, trailing off slightly at the end of a sentence, and breaths of natural length between sentences. All of
 # it is tiny and seeded from the words, so the same text always sounds the same. Bump STYLEV when this changes:
 # pieces made the old way are kept (so nothing goes missing) and remade in the background, newest stories first.
-STYLEV = 6
+STYLEV = 7
 PACE = 1.02  # her overall pace: 2% quicker than the voice's own
 SENT = re.compile(r"(?<=[.!?…])[\"”’)]?\s+(?=[A-Z0-9\"“‘(])")
 
@@ -487,7 +487,7 @@ def speak(model, np, say, seed, head):
     out, sr = [], 24000
     for n, sent in enumerate(parts):
         words = len(sent.split())
-        speed = 0.975 if head else 1.0 + rng.uniform(-0.0125, 0.0125)
+        speed = 0.96 if head else 1.0 + rng.uniform(-0.0125, 0.0125)
         if sent.rstrip().endswith("?"):
             speed -= 0.0075
         if words < 6:
@@ -497,7 +497,7 @@ def speak(model, np, say, seed, head):
         if not head and n == len(parts) - 1 and len(parts) > 1:
             speed -= 0.006         # easing off at the end of a thought
         speed *= PACE
-        pitch = 1.002 if head else 1 + rng.uniform(-0.0045, 0.0045)  # tape-style nudge, made up for in the speed (kept small: more sounds like someone else)
+        pitch = 1.003 if head else 1 + rng.uniform(-0.0045, 0.0045)  # tape-style nudge, made up for in the speed (kept small: more sounds like someone else)
         if any(w.search(sent) for w, _, _ in SOUNDS):
             ph = model.tokenizer.phonemize(sent, LANG)
             for w, pat, snd in SOUNDS:
@@ -511,15 +511,15 @@ def speak(model, np, say, seed, head):
         if loud.size:
             audio = audio[max(0, loud[0] - int(sr * 0.04)):loud[-1] + int(sr * 0.06)]
         if audio.size > 10:
-            # The pitch nudge, plus a very slow, very small drift within the sentence (about 0.4%, every 2 to 3 seconds),
+            # The pitch nudge, plus a very slow, very small drift within the sentence (about 0.5%, every 2 to 3 seconds),
             # the way a voice never holds exactly level.
             m = int(len(audio) / pitch)
             t = np.arange(m) / sr
-            rate = pitch * (1 + 0.004 * np.sin(2 * np.pi * t / rng.uniform(1.8, 3.2) + rng.uniform(0, 6.283)))
+            rate = pitch * (1 + 0.005 * np.sin(2 * np.pi * t / rng.uniform(1.8, 3.2) + rng.uniform(0, 6.283)))
             pos = np.concatenate([[0.0], np.cumsum(rate[:-1])])
             pos = pos[pos < len(audio) - 1]
             audio = np.interp(pos, np.arange(len(audio)), audio).astype(np.float32)
-        gain = 1.03 if head else 1 + rng.uniform(-0.05, 0.05)
+        gain = 1.05 if head else 1 + rng.uniform(-0.05, 0.05)
         audio = audio * np.linspace(gain * 1.035, gain * 0.96, len(audio), dtype=np.float32)  # a person trails off a little
         fade = min(len(audio) // 4, int(sr * 0.008))
         if fade:
