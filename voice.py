@@ -444,7 +444,7 @@ def plan(data, vkey):
 # a headline, trailing off slightly at the end of a sentence, and breaths of natural length between sentences. All of
 # it is tiny and seeded from the words, so the same text always sounds the same. Bump STYLEV when this changes:
 # pieces made the old way are kept (so nothing goes missing) and remade in the background, newest stories first.
-STYLEV = 7
+STYLEV = 8
 PACE = 1.02  # her overall pace: 2% quicker than the voice's own
 SENT = re.compile(r"(?<=[.!?…])[\"”’)]?\s+(?=[A-Z0-9\"“‘(])")
 
@@ -487,7 +487,7 @@ def speak(model, np, say, seed, head):
     out, sr = [], 24000
     for n, sent in enumerate(parts):
         words = len(sent.split())
-        speed = 0.96 if head else 1.0 + rng.uniform(-0.0125, 0.0125)
+        speed = 0.97 if head else 1.0 + rng.uniform(-0.0125, 0.0125)
         if sent.rstrip().endswith("?"):
             speed -= 0.0075
         if words < 6:
@@ -519,7 +519,7 @@ def speak(model, np, say, seed, head):
             pos = np.concatenate([[0.0], np.cumsum(rate[:-1])])
             pos = pos[pos < len(audio) - 1]
             audio = np.interp(pos, np.arange(len(audio)), audio).astype(np.float32)
-        gain = 1.05 if head else 1 + rng.uniform(-0.05, 0.05)
+        gain = 1.035 if head else 1 + rng.uniform(-0.05, 0.05)
         audio = audio * np.linspace(gain * 1.035, gain * 0.96, len(audio), dtype=np.float32)  # a person trails off a little
         fade = min(len(audio) // 4, int(sr * 0.008))
         if fade:
