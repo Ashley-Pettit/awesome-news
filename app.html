@@ -3181,7 +3181,7 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
         <button class="field danger" type="button" id="clearSaved">Clear saved stories <span class="sub" style="color:var(--muted)">${state.saved.length} saved</span></button>
       </div><p class="hint">Everything you set here stays on this device.</p></div>
       ${betaHTML()}${commuteOK() ? commuteHTML() : ""}
-      <p class="about">Awesome News pulls from free sources only: ABC, SBS, BBC, The Guardian, 7NEWS, The Conversation, 360info, Global Voices, NASA, EFF, Ars Technica, TechCrunch, iTnews and more. ${privateMode() ? "Stories open in full right here." : "Stories marked Full are free to republish, so they open in full right here."} No paywalls, no sport.${state.status?.updatedAt ? `<br>Stories last updated ${esc(longDate(state.status.updatedAt))}.` : ""}</p>
+      <p class="about">Awesome News pulls from free sources only: ABC, SBS, BBC, The Guardian, 7NEWS, The Conversation, 360info, Global Voices, NASA, EFF, Ars Technica, TechCrunch, iTnews and more. Weather from Open-Meteo, tuned to local Bureau stations. ${privateMode() ? "Stories open in full right here." : "Stories marked Full are free to republish, so they open in full right here."} No paywalls, no sport.${state.status?.updatedAt ? `<br>Stories last updated ${esc(longDate(state.status.updatedAt))}.` : ""}</p>
 `,
     };
     $("sBody").innerHTML = `
@@ -4846,7 +4846,6 @@ const handle = async (m, post) => {
           </div>
           <output id="bsHourOut" for="bsHourIn"></output>
         </div>
-        <p class="bs-src">Forecast: Open-Meteo${state.wx?.tuned || state.wx?.d?.tuned ? ", tuned to local Bureau stations" : ""}</p>
       </section>`;
     $("bsFlyBtn").onclick = () => bsFlyOn();
     $("bsHourIn").addEventListener("change", () => { BS.view.play = true; });
