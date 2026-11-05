@@ -28,7 +28,8 @@
       "near": "\\b(Logan|Beenleigh|Springwood|Slacks Creek|Woodridge|Kingston|Marsden|Browns Plains|Jimboomba|Park Ridge|Shailer Park|Loganholme|Loganlea|Meadowbrook|Underwood|Daisy Hill|Rochedale South|Eagleby|Bethania|Waterford|Yarrabilba|Flagstone|Greenbank|Boronia Heights|Crestmead|Regents Park|Heritage Park|Tamborine|Bahrs Scrub|Holmview|Carbrook|Cornubia|Mount Warren Park|Hillcrest|Tanah Merah|Edens Landing|Chambers Flat|Munruben|Priestdale|Berrinba|Kingston|Cedar Creek|Mundoolun|Beaudesert)\\b",
       "keep": "",
       "away": "",
-      "trust": "^(MyCity Logan|Logan City Council)"
+      "trust": "^(MyCity Logan|Logan City Council)",
+      "only": true
     }
   }
 }

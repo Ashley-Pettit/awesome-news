@@ -1513,7 +1513,7 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
   // The local spin-offs (Moorooka News, The Logan Wire): the same app, with a local news feed. Set per build
   // (build.py, from local/brands.json); the main app leaves these empty.
   const DEFAULT_REGION = "qld";
-  const LOCAL_APP = null;               // { extra: community feed, near / keep / away / trust: patterns that tailor the Local feed }
+  const LOCAL_APP = null;               // { extra: community feed, near / keep / away / trust: patterns that tailor the Local feed, only: start with just Local }
   const OPEN_KEY = "";                  // Emma's opening for this app ("This is Moorooka News for...")
   const KEY_PREFIX = "";                // keeps each app's settings apart on the same website
   const lead = s => LOCAL_APP && s.id === "local" ? 3 : 1;  // in a local app, Local news gets three turns to every other tab's one
@@ -1549,7 +1549,7 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
   };
   const defaults = {
     name: DEFAULT_NAME, region: DEFAULT_REGION,
-    tabs: { local: true, headlines: true, politics: true, finance: true, tech: true, ai: true },
+    tabs: { local: true, headlines: !LOCAL_APP?.only, politics: !LOCAL_APP?.only, finance: !LOCAL_APP?.only, tech: !LOCAL_APP?.only, ai: !LOCAL_APP?.only },  // a local app can start with just Local news
     topics: [], muted: [], hiddenSources: [],
     openIn: "app", textSize: "m", theme: "system", welcomed: false, fullOnly: false, negCut: 0, skipAds: true,
   };

@@ -50,8 +50,14 @@ PLACES = {
     },
     "logan": {
         "label": "Logan", "centre": (-27.66, 153.12), "km": 14.0,
-        "words": re.compile(r"\b(" + "|".join(LOGAN_SUBURBS) + r")\b|\bT6 Beenleigh\b|\bBeenleigh line\b", re.I),
-        "search": [],  # the Logan section already carries Logan's news (council, police, local sites, a news search)
+        "words": re.compile(r"\b(Logan|" + "|".join(LOGAN_SUBURBS) + r")\b|\bT6 Beenleigh\b|\bBeenleigh line\b", re.I),
+        # Stories naming Logan or its suburbs from any outlet, on top of the Logan section's own (council, police, local sites).
+        "sure": re.compile(r"\b(Logan|Loganlea|Loganholme|Beenleigh|Woodridge|Slacks Creek|Browns Plains|Jimboomba|Yarrabilba|Shailer Park|Daisy Hill|"
+                           r"Eagleby|Crestmead|Park Ridge|Edens Landing|Holmview|Meadowbrook|Bethania|Rochedale South|Boronia Heights|Chambers Flat)\b", re.I),
+        "not": re.compile(r"\b(Utah|Cache Valley|Ohio|West Virginia|Logan Paul|Logan Roy|Logan Sargeant|Logan Lerman|Logan Henderson|Logan Airport|Wolverine)\b", re.I),
+        "search": [gnews('"Logan City" OR "City of Logan" OR "Logan Council" when:14d'),
+                   gnews("(" + " OR ".join(f'"{s}"' for s in ["Beenleigh", "Woodridge", "Loganholme", "Browns Plains", "Jimboomba", "Yarrabilba", "Springwood", "Slacks Creek", "Shailer Park", "Park Ridge"]) + ") Queensland when:14d"),
+                   gnews("Logan Queensland when:7d")],
         "council": [],
         "events": "logan",
     },
@@ -274,7 +280,7 @@ def searched(urls, place, now, errors, max_age=timedelta(days=30)):
         title, src = (m.group(1), m.group(2)) if m else (title, "")
         pub = it["published"] or now
         txt = f"{title} {re.sub(r'<[^>]+>', ' ', it.get('summary') or '')}"
-        if now - pub > max_age or title in seen or not place["words"].search(txt):
+        if now - pub > max_age or title in seen or not place["words"].search(txt) or (place.get("not") and place["not"].search(txt + " " + src)):
             continue
         if place.get("sure") and not place["sure"].search(txt) and not re.search(r"\b(Brisbane|Queensland|Qld|QLD)\b", txt + " " + src):
             continue  # Salisbury, Fairfield, Tennyson and Kingston are also places elsewhere
