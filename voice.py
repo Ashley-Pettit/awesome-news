@@ -437,6 +437,64 @@ def plan(data, vkey):
 
 
 # ---------------------------------------------------------------------------
+# A more human read
+# ---------------------------------------------------------------------------
+# The voice can't be told where to put emphasis, so each piece is read a sentence at a time with the small changes a
+# person makes without thinking: a touch slower or quicker, the pitch lifting or settling a hair, a little louder on
+# a headline, trailing off slightly at the end of a sentence, and breaths of natural length between sentences. All of
+# it is tiny and seeded from the words, so the same text always sounds the same. Bump STYLEV when this changes:
+# pieces made the old way are kept (so nothing goes missing) and remade in the background, newest stories first.
+STYLEV = 1
+SENT = re.compile(r"(?<=[.!?…])[\"”’)]?\s+(?=[A-Z0-9\"“‘(])")
+
+
+def speak(model, np, say, seed, head):
+    import random
+    rng = random.Random(seed)
+    parts = [p for p in SENT.split(say) if p.strip()] or [say]
+    out, sr = [], 24000
+    for n, sent in enumerate(parts):
+        words = len(sent.split())
+        speed = 0.95 if head else 1.0 + rng.uniform(-0.035, 0.035)
+        if sent.rstrip().endswith("?"):
+            speed -= 0.02
+        if words < 6:
+            speed -= 0.02          # short sentences land a little slower
+        elif words > 26:
+            speed += 0.015         # long ones move along
+        if not head and n == len(parts) - 1 and len(parts) > 1:
+            speed -= 0.015         # easing off at the end of a thought
+        pitch = 1.008 if head else 1 + rng.uniform(-0.012, 0.012)  # tape-style nudge, made up for in the speed
+        if any(w.search(sent) for w, _, _ in SOUNDS):
+            ph = model.tokenizer.phonemize(sent, LANG)
+            for w, pat, snd in SOUNDS:
+                if w.search(sent):
+                    ph = pat.sub(snd, ph, count=len(w.findall(sent)))
+            audio, sr = model.create(ph, voice=VOICE, speed=speed / pitch, lang=LANG, is_phonemes=True)
+        else:
+            audio, sr = model.create(sent, voice=VOICE, speed=speed / pitch, lang=LANG)
+        audio = np.asarray(audio, dtype=np.float32)
+        loud = np.flatnonzero(np.abs(audio) > 0.01)
+        if loud.size:
+            audio = audio[max(0, loud[0] - int(sr * 0.04)):loud[-1] + int(sr * 0.06)]
+        if abs(pitch - 1) > 1e-4 and audio.size > 10:
+            m = int(len(audio) / pitch)
+            audio = np.interp(np.arange(m) * pitch, np.arange(len(audio)), audio).astype(np.float32)
+        gain = 1.06 if head else 1 + rng.uniform(-0.05, 0.05)
+        audio = audio * np.linspace(gain * 1.035, gain * 0.96, len(audio), dtype=np.float32)  # a person trails off a little
+        fade = min(len(audio) // 4, int(sr * 0.008))
+        if fade:
+            audio[:fade] *= np.linspace(0, 1, fade, dtype=np.float32)
+            audio[-fade:] *= np.linspace(1, 0, fade, dtype=np.float32)
+        if out:
+            gap = 0.24 + rng.uniform(0, 0.11) + (0.05 if out_end.endswith("?") else 0)
+            out.append(np.zeros(int(sr * gap), dtype=np.float32))
+        out.append(audio)
+        out_end = sent.rstrip()
+    return np.concatenate(out) if out else np.zeros(1, dtype=np.float32), sr
+
+
+# ---------------------------------------------------------------------------
 # Making it
 # ---------------------------------------------------------------------------
 def make(a, data, vkey):
@@ -456,12 +514,14 @@ def make(a, data, vkey):
     if a.reuse_from:
         base = a.reuse_from.rstrip("/") + "/data/voice/"
         prev, fixed, sfixed = {}, set(), set()
+        styled_prev = set()
         try:
             pidx = json.loads(urllib.request.urlopen(base + f"index.json?v={int(t0)}", timeout=20).read())
             if pidx.get("v") == TAG and pidx.get("lk") == (lock_fp(vkey) if vkey else None):
                 prev = pidx.get("c", {})
                 fixed = set(pidx.get("fx", [])) if pidx.get("sayv") == SAYV else set()
                 sfixed = set(pidx.get("sfx", [])) if pidx.get("sndv") == SOUNDSV else set()
+                styled_prev = set(pidx.get("stx", [])) if pidx.get("stv") == STYLEV else set()
         except Exception as e:
             print("no earlier audio:", e)
 
@@ -487,12 +547,17 @@ def make(a, data, vkey):
                 if got and have.get(got[0]) != 1:
                     have[got[0]] = got[1]
     reused = len(have)
+    styled = {h for h in have if h in (styled_prev if a.reuse_from else set())}
 
     # Make the rest, until the time runs out.
     made, secs = 0, 0.0
     # An open piece is still wanted when only a locked recording of the same words exists: phones without the
     # passphrase can't play the locked one, so whole stories stayed unready for them.
     todo = [j for j in mine if j[0][:16] not in have or (not j[2] and have.get(j[0][:16]) != 1)]
+    # Then pieces made in an older style, remade in the background (the old recording stays until the new one is in).
+    restyle = [j for j in mine if j[0][:16] in have and j[0][:16] not in styled and (j[2] or have.get(j[0][:16]) == 1)]
+    todo += restyle
+    redo = {j[0][:16] for j in restyle}
     if todo and time.time() - t0 < a.budget:
         import lameenc
         import numpy as np
@@ -507,20 +572,13 @@ def make(a, data, vkey):
             if time.time() - t0 > a.budget:
                 break
             h = k[:16]
-            if h in have and (lock or have[h] == 1):  # the same words were already made (open beats locked)
+            if h in have and (lock or have[h] == 1) and (h not in redo or h in styled):  # already made (open beats locked)
                 continue
             say = text
             for pat, rep in SAY:
                 say = re.sub(pat, rep, say)
             try:
-                if any(w.search(say) for w, _, _ in SOUNDS):
-                    ph = model.tokenizer.phonemize(say, LANG)
-                    for w, pat, snd in SOUNDS:
-                        if w.search(say):
-                            ph = pat.sub(snd, ph, count=len(w.findall(say)))  # no more swaps than the word appears ("base" stays "base")
-                    audio, sr = model.create(ph, voice=VOICE, speed=1.0, lang=LANG, is_phonemes=True)
-                else:
-                    audio, sr = model.create(say, voice=VOICE, speed=1.0, lang=LANG)
+                audio, sr = speak(model, np, say, int(h, 16), k in heads)
             except Exception as e:
                 print("skip:", text[:60], e)
                 continue
@@ -547,6 +605,7 @@ def make(a, data, vkey):
                 with open(os.path.join(out_dir, f"{h}.mp3"), "wb") as f:
                     f.write(mp3)
                 have[h] = 1
+            styled.add(h)
             made += 1
             secs += len(audio) / sr
     with open(os.path.join(out_dir, f"part-{n_of}.json"), "w") as f:
@@ -556,6 +615,8 @@ def make(a, data, vkey):
         json.dump([j[0][:16] for j in mine if j[0][:16] in have and RESAY.search(j[1])], f)
     with open(os.path.join(out_dir, f"snd-{n_of}.json"), "w") as f:
         json.dump([j[0][:16] for j in mine if j[0][:16] in have and SOUNDW.search(j[1])], f)
+    with open(os.path.join(out_dir, f"sty-{n_of}.json"), "w") as f:
+        json.dump(sorted(h for h in styled if h in have), f)
     print(json.dumps({"shard": a.shard, "pieces": len(mine), "reused": reused, "made": made, "madeMinutes": round(secs / 60, 1),
                       "missing": len(mine) - len(have), "seconds": round(time.time() - t0)}))
 
@@ -579,6 +640,10 @@ def merge(data, vkey):
     for p in glob.glob(os.path.join(out_dir, "snd-*.json")):
         sfx.update(json.load(open(p)))
         os.remove(p)
+    stx = set()
+    for p in glob.glob(os.path.join(out_dir, "sty-*.json")):
+        stx.update(json.load(open(p)))
+        os.remove(p)
     done = {}
     for sid, st in stories.items():
         bits = 0
@@ -592,7 +657,8 @@ def merge(data, vkey):
              "open": {r: {**o, "night": o["night"] if o.get("night") and key_of(o["night"]) in have else None,
                           "next": o["next"] if o.get("next") and key_of(o["next"]["text"]) in have else None}
                       for r, o in opens.items() if key_of(o["text"]) in have}, "sample": SAMPLE, "c": have, "s": done,
-             "sayv": SAYV, "fx": sorted(h for h in fx if h in have), "sndv": SOUNDSV, "sfx": sorted(h for h in sfx if h in have)}
+             "sayv": SAYV, "fx": sorted(h for h in fx if h in have), "sndv": SOUNDSV, "sfx": sorted(h for h in sfx if h in have),
+             "stv": STYLEV, "stx": sorted(h for h in stx if h in have)}
     with open(os.path.join(out_dir, "index.json"), "w") as f:
         json.dump(index, f, separators=(",", ":"))
     print(json.dumps({"pieces": len(jobs), "have": len(have), "stories": len(stories), "complete": len(done),
