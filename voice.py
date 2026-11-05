@@ -444,7 +444,7 @@ def plan(data, vkey):
 # a headline, trailing off slightly at the end of a sentence, and breaths of natural length between sentences. All of
 # it is tiny and seeded from the words, so the same text always sounds the same. Bump STYLEV when this changes:
 # pieces made the old way are kept (so nothing goes missing) and remade in the background, newest stories first.
-STYLEV = 4
+STYLEV = 5
 PACE = 1.02  # her overall pace: 2% quicker than the voice's own
 SENT = re.compile(r"(?<=[.!?…])[\"”’)]?\s+(?=[A-Z0-9\"“‘(])")
 
@@ -487,17 +487,17 @@ def speak(model, np, say, seed, head):
     out, sr = [], 24000
     for n, sent in enumerate(parts):
         words = len(sent.split())
-        speed = 0.95 if head else 1.0 + rng.uniform(-0.025, 0.025)
+        speed = 0.95 if head else 1.0 + rng.uniform(-0.0125, 0.0125)
         if sent.rstrip().endswith("?"):
-            speed -= 0.015
+            speed -= 0.0075
         if words < 6:
-            speed -= 0.015         # short sentences land a little slower
+            speed -= 0.0075        # short sentences land a little slower
         elif words > 26:
-            speed += 0.012         # long ones move along
+            speed += 0.006         # long ones move along
         if not head and n == len(parts) - 1 and len(parts) > 1:
-            speed -= 0.012         # easing off at the end of a thought
+            speed -= 0.006         # easing off at the end of a thought
         speed *= PACE
-        pitch = 1.008 if head else 1 + rng.uniform(-0.009, 0.009)  # tape-style nudge, made up for in the speed
+        pitch = 1.004 if head else 1 + rng.uniform(-0.0045, 0.0045)  # tape-style nudge, made up for in the speed (kept small: more sounds like someone else)
         if any(w.search(sent) for w, _, _ in SOUNDS):
             ph = model.tokenizer.phonemize(sent, LANG)
             for w, pat, snd in SOUNDS:
