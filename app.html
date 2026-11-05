@@ -284,6 +284,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
   background: rgba(255, 255, 255, 0.12); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14); transition: background-color 0.2s ease, transform 0.15s ease; }
 .np-act:active { transform: scale(0.95); }
 .np-act svg { width: 16px; height: 16px; }
+.np-act[hidden] { display: none; }
 .np-act[aria-pressed="true"] { background: rgba(124, 92, 255, 0.55); }
 .np-act[aria-pressed="true"] svg { fill: currentColor; }
 .np-next { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 10px; width: 100%; padding: 9px 12px; border-radius: 14px; text-align: left; font: inherit; color: #ffffff;
@@ -1360,6 +1361,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
       <button type="button" class="np-act" id="npLike" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span>More like this</span></button>
       <button type="button" class="np-act" id="npRead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 11h16M4 16h10"/></svg><span>Read along</span></button>
       <button type="button" class="np-act" id="npSave" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11a1 1 0 0 1 1 1V20l-6.5-4-6.5 4V4.5a1 1 0 0 1 1-1z"/></svg><span>Save</span></button>
+      <button type="button" class="np-act" id="npShare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 12v6.5a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5V12"/></svg><span>Share</span></button>
     </div>
     <div class="np-ctl">
       <button type="button" class="np-btn sm" id="npPrev" aria-label="Previous story"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 5.5v13l-9-6.5zM5 5h3v14H5z"/></svg></button>
@@ -4073,9 +4075,12 @@ const handle = async (m, post) => {
     setTimeout(() => highlightPara(L.curPara), 600);
   }
   function npActs() {
-    const id = L.queue[L.at], on = L.kind === "drive" && !!id;
+    // Share shows whenever a story is playing, in every kind of Listen; the other buttons are for the 30-minute news.
+    const id = L.queue[L.at], drive = L.kind === "drive" && !!id, on = !!id && !!findItem(id) && L.kind !== "story";
     $("npActs").hidden = !on;
     if (!on) return;
+    ["npLike", "npRead", "npSave"].forEach(b => { $(b).hidden = !drive; });
+    if (!drive) return;
     $("npLike").setAttribute("aria-pressed", "false");
     $("npSave").setAttribute("aria-pressed", String(isSaved(id)));
     npUpNext();
@@ -4374,6 +4379,7 @@ const handle = async (m, post) => {
     if (t.closest("#npPrev")) { prevStory(); return; }
     if (t.closest("#npLike")) { likeThis(); return; }
     if (t.closest("#npRead")) { readAlong(); return; }
+    if (t.closest("#npShare")) { shareStory(findItem(L.queue[L.at])); return; }
     if (t.closest("#npSave")) { const id = L.queue[L.at]; if (id) { toggleSave(id); $("npSave").setAttribute("aria-pressed", String(isSaved(id))); toast(isSaved(id) ? "Saved for later" : "Removed from saved"); } return; }
     if (t.closest("#npUpNext")) { skipListen(); return; }
     if (t.closest("#npWk")) { weekBrief(); return; }
