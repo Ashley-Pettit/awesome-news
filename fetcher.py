@@ -1196,10 +1196,15 @@ def main():
         neg = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "ratings", "neg.json"), encoding="utf-8")).get("ratings", {})
     except Exception:
         neg = {}
+    # Editors' picks: stories on the ABC's Top Stories feed are what its newsroom rates most important right now. The
+    # app's briefing leans on that (a free signal of how big a story is, no AI needed).
+    top = {url_key(st["url"]) for it in raw.get(ABC_TOP, []) for st in [to_story(it, "ABC News", now)] if st}
     for items in sections.values():
         for st in items:
             if st["id"] in neg:
                 st["neg"] = neg[st["id"]]
+            if url_key(st["url"]) in top:
+                st["top"] = 1
 
     # Same story in several sections -> one shared object, so pictures and text are fetched once.
     unique = {}

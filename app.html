@@ -1926,14 +1926,14 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
     return out;
   }
 
-  // Briefing: five stories worth knowing today. Favours stories many outlets are covering,
-  // the top of each of your sections, local news and anything from the last few hours.
+  // Briefing: five stories worth knowing today. Favours stories many outlets are covering, the ABC newsroom's top
+  // stories, the top of each of your sections, local news and anything from the last few hours.
   function briefing() {
     const cands = [];
     for (const s of enabledSections()) {
       items(s.id).slice(0, 12).forEach((i, n) => {
         const fresh = Date.now() - Date.parse(i.published) < 6 * 3600e3;
-        cands.push({ i, score: (sourceCount(i.id) - 1) * 3 + (12 - n) / 4 + (s.id === "local" ? 2 : 0) + (s.id === "headlines" ? 1.5 : 0) + (fresh ? 1.5 : 0) - (Number(S.negCut) && isNegative(i) ? 3 : 0) });
+        cands.push({ i, score: (sourceCount(i.id) - 1) * 3 + (i.top ? 3 : 0) + (12 - n) / 4 + (s.id === "local" ? 2 : 0) + (s.id === "headlines" ? 1.5 : 0) + (fresh ? 1.5 : 0) - (Number(S.negCut) && isNegative(i) ? 3 : 0) });
       });
     }
     cands.sort((a, b) => b.score - a.score);

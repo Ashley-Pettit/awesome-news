@@ -8,6 +8,12 @@ rate.py: helps the "Awesome News: rate headlines" scheduled task rate how negati
 The scale (Claude rates each one): 0 uplifting or good news, 2 pleasant, 3 neutral (most politics, business, tech),
 5 mildly worrying (prices up, job cuts, disputes), 7 bad news (crime, crashes, storms damage, court cases),
 9 to 10 tragic or distressing (deaths, violence, war, abuse, disasters).
+
+To keep Claude's reading down, "todo" settles the easy ones itself (written to ratings/auto.tsv, merged with Claude's):
+  - a story with no worrying word at all in its headline or summary (the app's own word lists) is neutral: 3, or 1 in
+    Good news
+  - the same headline from another outlet gets the score already given
+Only the rest go in todo.tsv for Claude.
 """
 import json
 import os
@@ -19,6 +25,14 @@ from datetime import datetime, timezone
 HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = "https://ashley-pettit.github.io/awesome-news/data/"
 NEG = os.path.join(HERE, "neg.json")
+
+
+NEG_STRONG = re.compile(r"""\b(?:kill(?:s|ed|ing)?|dead|deaths?|dies|died|dying|murder\w*|homicide|manslaughter|wars?|warfare|attacks?|attacked|bomb\w*|missiles?|airstrikes?|shooting|gunman|stabb\w*|terror\w*|massacre|genocide|rape\w*|sexual assault|abuse\w*|assault\w*|violen\w*|hostages?|fatal\w*|tragedy|tragic|disaster\w*|catastroph\w*|famine|starv\w*|earthquake|cyclone|tsunami|bushfires?|wildfires?|floods?|flooding|drown\w*|crash\w*|collapse\w*|recession|layoffs?|laid off|sacked|bankrupt\w*|insolven\w*|jailed|prison|sentenced|charged|arrest\w*|convicted|fraud\w*|scam\w*|scandal|corrupt\w*|ransomware|data breach|hack(?:ed|ers?)|outbreak|pandemic|overdose|suicide|victims?|injur\w*|hospitalis\w*|critical condition|missing|evacuat\w*|crisis|crises|deadly|toll|jail\w*|guilty|explosive\w*|lash\w*|hailstones?|severe|thunderstorms?|storms?|hack|hacks|cancer|disease\w*|conflict|invasion|troops|military|chaos|emergenc\w*|horrif\w*|shock\w*|contaminat\w*|recall\w*|choking|hazard\w*)\b""", re.I)
+NEG_MILD = re.compile(r"""\b(?:fears?|feared|warn\w*|threat\w*|risk\w*|danger\w*|crackdown|protest\w*|riots?|clash\w*|slump\w*|plunge\w*|tumbl\w*|losses|lose|losing|cuts?|shortage\w*|struggl\w*|decline\w*|worst|fail\w*|blame\w*|lawsuit|sued|fined|penalt\w*|probe|investigat\w*|police|court|accused|allegation\w*|toxic|pollut\w*|extinct\w*|endangered|drought|heatwave|inflation|debt|deficit|backlash|outrage|anger|angry|grief|mourn\w*|condemn\w*|sanctions?|tariffs?|strikes?|delay\w*|outage|vulnerab\w*|malware|spyware|leak\w*|pain|hikes?|rate rises?|denies|denied|dispute\w*|tension\w*|slams?|furious|fury|aghast|exposure|closures?|shut\w*|targets?|trial|appeal\w*|apolog\w*|worse|alert\w*|sick|illness|concern\w*|controvers\w*|critic\w*|attack\w*|row|close|closing|fall|falls|falling|fell|poverty|poor|dent\w*|refused|bail|chase|battle\w*|blindsided|guns?|loses|lost|fall short|bankrupt\w*|stoush|surge in crime)\b""", re.I)
+
+
+def tkey(t):
+    return re.sub(r"[^a-z0-9 ]+", "", (t or "").lower())[:90]
 
 
 def load():
@@ -47,19 +61,43 @@ def main():
     if cmd == "todo":
         most = int(sys.argv[2]) if len(sys.argv) > 2 else 300
         have, cur = load(), current()
-        todo = [(k, *v) for k, v in cur.items() if k not in have][:most]
+        by_title = {tkey(cur[k][1]): v for k, v in have.items() if k in cur}
+        auto, todo, asked = [], [], set()
+        for k, (sec, t, s) in cur.items():
+            if k in have:
+                continue
+            tk = tkey(t)
+            if tk in by_title:
+                auto.append((k, by_title[tk])); continue
+            if not NEG_STRONG.search(f"{t} {s}") and not NEG_MILD.search(f"{t} {s}"):
+                auto.append((k, 1 if sec == "goodnews" else 3)); continue
+            if tk in asked:
+                continue  # its twin is already on the list: it gets the same score at merge
+            asked.add(tk); todo.append((k, sec, t, s))
+        todo = todo[:most]
         with open(os.path.join(HERE, "todo.tsv"), "w", encoding="utf-8") as f:
             for k, sec, t, s in todo:
                 f.write(f"{k}\t{sec}\t{t}\t{s}\n".replace("\r", " "))
-        print(json.dumps({"onSite": len(cur), "rated": sum(1 for k in cur if k in have), "todo": len(todo)}))
+        with open(os.path.join(HERE, "auto.tsv"), "w", encoding="utf-8") as f:
+            for k, v in auto:
+                f.write(f"{k}\t{v}\n")
+        print(json.dumps({"onSite": len(cur), "rated": sum(1 for k in cur if k in have), "auto": len(auto), "todo": len(todo)}))
     elif cmd == "merge":
         have, cur = load(), current()
         added = 0
-        for line in open(sys.argv[2], encoding="utf-8"):
+        lines = list(open(sys.argv[2], encoding="utf-8")) if os.path.exists(sys.argv[2]) else []
+        auto_f = os.path.join(HERE, "auto.tsv")
+        if os.path.exists(auto_f):
+            lines += list(open(auto_f, encoding="utf-8"))
+        for line in lines:
             parts = line.strip().split("\t")
             if len(parts) >= 2 and re.fullmatch(r"[0-9a-f]{12}", parts[0]) and re.fullmatch(r"\d+(\.\d+)?", parts[1]):
                 have[parts[0]] = max(0, min(10, round(float(parts[1]))))
                 added += 1
+        by_title = {tkey(cur[k][1]): v for k, v in have.items() if k in cur}  # twins of what Claude just rated
+        for k, (sec, t, s) in cur.items():
+            if k not in have and tkey(t) in by_title:
+                have[k] = by_title[tkey(t)]; added += 1
         keep = {k: v for k, v in have.items() if k in cur} if cur else have
         json.dump({"updated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "scale": "0 uplifting, 3 neutral, 5 worrying, 7 bad, 10 tragic",
                    "ratings": keep}, open(NEG, "w", encoding="utf-8"), separators=(",", ":"))
