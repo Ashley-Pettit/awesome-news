@@ -1,21 +1,25 @@
-import json, urllib.request, urllib.parse, time
-UA = {"User-Agent": "AwesomeNews forecast check (github.com/Ashley-Pettit/awesome-news)"}
-def get(u):
-    for t in range(2):
-        try:
-            with urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=90) as r: return json.loads(r.read() or b"[]")
-        except Exception as e: print("retry", u[:120], e); time.sleep(5)
-urls = ["bom.gov.au/places/vic/inverloch", "bom.gov.au/places/vic/wonthaggi", "bom.gov.au/places/vic/leongatha", "bom.gov.au/places/qld/moorooka", "bom.gov.au/places/qld/brisbane",
-        "bom.gov.au/vic/forecasts/", "bom.gov.au/qld/forecasts/brisbane", "bom.gov.au/vic/forecasts/westgippsland", "bom.gov.au/vic/forecasts/wonthaggi",
-        "willyweather.com.au/vic/gippsland/inverloch", "willyweather.com.au/vic/gippsland/wonthaggi", "willyweather.com.au/qld/brisbane/moorooka", "willyweather.com.au/qld/brisbane/brisbane",
-        "weatherzone.com.au/vic/central/inverloch", "weatherzone.com.au/vic/central/wonthaggi", "weatherzone.com.au/qld/brisbane/brisbane", "weatherzone.com.au/qld/brisbane/moorooka",
-        "ftp.bom.gov.au/anon/gen/fwo/IDV10753.xml", "ftp.bom.gov.au/anon/gen/fwo/IDQ10095.xml", "reg.bom.gov.au/places/vic/inverloch", "abc.net.au/news/weather",
-        "theweatherchaser.com/vic/inverloch", "weather.com/en-AU/weather/tenday/l/Inverloch", "inverlochweather"]
+import urllib.request, urllib.parse, re, json
+UA = {"User-Agent": "Mozilla/5.0 (compatible; AwesomeNews reader)"}
+def g(q): return "https://news.google.com/rss/search?" + urllib.parse.urlencode({"q": q, "hl": "en-AU", "gl": "AU", "ceid": "AU:en"})
+urls = {
+ "gn-moorooka": g("Moorooka when:14d"),
+ "gn-nearby": g('(Yeronga OR Annerley OR Salisbury OR Rocklea OR Tarragindi OR "Coopers Plains" OR Yeerongpilly) Brisbane when:14d'),
+ "gn-bcc": g("site:brisbane.qld.gov.au (Moorooka OR Yeronga OR Annerley OR Salisbury OR Rocklea OR Tarragindi) when:60d"),
+ "qps-southbrisbane": "https://mypolice.qld.gov.au/southbrisbane/feed/",
+ "qps-brisbanesouth": "https://mypolice.qld.gov.au/brisbanesouth/feed/",
+ "qps-south-brisbane": "https://mypolice.qld.gov.au/south-brisbane/feed/",
+ "qps-logan": "https://mypolice.qld.gov.au/logan/feed/",
+ "qps-oxley": "https://mypolice.qld.gov.au/oxley/feed/",
+ "qps-mtgravatt": "https://mypolice.qld.gov.au/mountgravatt/feed/",
+ "bcc-news": "https://www.brisbane.qld.gov.au/about-council/news-and-media/news/rss",
+}
 out = {}
-from concurrent.futures import ThreadPoolExecutor
-def one(u):
-    q = "https://web.archive.org/cdx/search/cdx?" + urllib.parse.urlencode({"url": u, "matchType": "prefix", "from": "20260920", "to": "20261105", "output": "json", "filter": "statuscode:200", "fl": "timestamp,original", "limit": "2000"})
-    r = get(q) or []; rows = r[1:]
-    out[u] = rows; print(f"{len(rows):5d}  {u}  days={len(set(x[0][:8] for x in rows))}  e.g. {rows[0] if rows else ''}", flush=True)
-with ThreadPoolExecutor(6) as ex: list(ex.map(one, urls))
-json.dump(out, open("cdx.json", "w"))
+for k, u in urls.items():
+    try:
+        b = urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=30).read().decode("utf-8", "replace")
+        items = re.findall(r"<item>.*?</item>", b, re.S)
+        titles = [re.sub(r"<!\[CDATA\[|\]\]>", "", (re.search(r"<title>(.*?)</title>", i, re.S) or [None, ""])[1]).strip()[:110] for i in items[:8]]
+        out[k] = {"items": len(items), "titles": titles}
+    except Exception as e:
+        out[k] = {"error": str(e)[:120]}
+    print(k, json.dumps(out[k], ensure_ascii=False)[:1200], flush=True)

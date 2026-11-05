@@ -11,7 +11,3 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: python3 check.py
-      - uses: actions/upload-artifact@v4
-        with:
-          name: wx
-          path: cdx.json
