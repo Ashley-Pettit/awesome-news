@@ -42,6 +42,7 @@ PLACES = {
     "moo": {
         "label": "Moorooka", "centre": (-27.535, 153.024), "km": 4.0,
         "words": re.compile(r"\b(" + "|".join(MOO_SUBURBS) + r")\b|\bBeaudesert R(?:oa)?d\b|\bIpswich R(?:oa)?d\b|\bT6 Beenleigh\b|\bBeenleigh line\b", re.I),
+        "sure": re.compile(r"\b(Moorooka|Yeronga|Yeerongpilly|Annerley|Rocklea|Tarragindi|Coopers Plains|Moorvale)\b", re.I),
         "search": [gnews("Moorooka when:30d"),
                    gnews("(" + " OR ".join(f'"{s}"' for s in MOO_SUBURBS[1:9]) + ") Brisbane when:14d")],
         "council": [gnews("site:brisbane.qld.gov.au (" + " OR ".join(MOO_SUBURBS[:7]) + ") when:60d")],
@@ -127,11 +128,16 @@ def translink(now, errors):
 # QLDTraffic: roadworks, closures and incidents
 # ---------------------------------------------------------------------------
 def qldtraffic(errors):
-    try:
-        return [f for f in json.loads(F.get(QLDT, timeout=30)).get("features", []) if (f.get("properties") or {}).get("status") == "Published"]
-    except Exception as e:
-        errors.append(f"QLDTraffic: {e}"[:160])
-        return []
+    import time
+    for n in range(2):
+        try:
+            return [f for f in json.loads(F.get(QLDT, timeout=30)).get("features", []) if (f.get("properties") or {}).get("status") == "Published"]
+        except Exception as e:
+            if n:
+                errors.append(f"QLDTraffic: {e}"[:160])
+            else:
+                time.sleep(20)  # busy: try once more
+    return []
 
 
 def points(g):
@@ -202,14 +208,7 @@ def bcc_events(place, now, errors):
         m = re.search(r"maps\.google\.com/\?q=(-?\d+\.\d+),(-?\d+\.\d+)", desc)
         if not m or km((float(m.group(1)), float(m.group(2))), place["centre"]) > place["km"]:
             continue
-        start = None
-        ds = g("xCal:dtstart")
-        for fmt in ("%Y%m%dT%H%M%S", "%Y%m%d"):
-            try:
-                start = datetime.strptime(ds[:15] if "T" in ds else ds[:8], fmt).replace(tzinfo=BRIS)
-                break
-            except Exception:
-                pass
+        start = F.parse_date(g("xCal:dtstart"))  # e.g. 2026-11-02T14:00:00Z
         if not start or start < now - timedelta(hours=3) or start > soon:
             continue
         key = (title, start.date())
@@ -230,7 +229,7 @@ def bcc_events(place, now, errors):
 
 EVENTISH = re.compile(r"\b(day|days|walk|workshop|festival|fair|market|markets|celebration|show|concert|night|tour|launch|expo|open|"
                       r"carnival|cleanup|clean-up|week|fun|movie|spotlighting|drop-off|parade|races|cinema|session)\b", re.I)
-NOT_EVENT = re.compile(r"\b(guidelines|fund|grants?|policy|dashboard|recycling made easy|what goes where|health and wellbeing|what's on|calendar)\b", re.I)
+NOT_EVENT = re.compile(r"\b(guidelines|fund|grants?|policy|dashboard|recycling made easy|what goes where|health and wellbeing|what's on|calendar|news briefs?|media release)\b", re.I)
 
 
 def logan_events(now, errors):
@@ -274,8 +273,11 @@ def searched(urls, place, now, errors, max_age=timedelta(days=30)):
         m = re.match(r"^(.*?)\s+[-–]\s+([^-–]{2,60})$", title)
         title, src = (m.group(1), m.group(2)) if m else (title, "")
         pub = it["published"] or now
-        if now - pub > max_age or title in seen or not place["words"].search(f"{title} {it.get('summary') or ''}"):
+        txt = f"{title} {re.sub(r'<[^>]+>', ' ', it.get('summary') or '')}"
+        if now - pub > max_age or title in seen or not place["words"].search(txt):
             continue
+        if place.get("sure") and not place["sure"].search(txt) and not re.search(r"\b(Brisbane|Queensland|Qld|QLD)\b", txt + " " + src):
+            continue  # Salisbury, Fairfield, Tennyson and Kingston are also places elsewhere
         if re.search(r"Police|Crime Stoppers", src) or re.match(r"^\d+\s+[A-Z]", title):
             continue  # police logs (crime is covered by the news itself) and property pages ("94 TAUNTON ST")
         seen.add(title)
@@ -305,7 +307,9 @@ def build(now, errors):
                                 "kind": "council", "published": c["published"]})
         ups += council[:8]
         sev = {"major": 0, "minor": 1, "info": 2}
-        ups.sort(key=lambda u: (u.get("upcoming", False), sev.get(u["severity"], 1), -(u["start"] or now).timestamp()))
+        soon = now + timedelta(hours=12)
+        ups.sort(key=lambda u: (u["kind"] == "council", bool(u["start"] and u["start"] > soon), sev.get(u["severity"], 1) if not (u["start"] and u["start"] > soon) else 0,
+                                (u["start"] or now).timestamp() if u["start"] and u["start"] > soon else 0))
         news = searched(place["search"], place, now, errors)
         events = bcc_events(place, now, errors) if place["events"] == "bcc" else logan_events(now, errors)
 
