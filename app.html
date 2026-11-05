@@ -230,6 +230,13 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
 .lb-logan b { display: block; font-family: var(--display); font-size: 1rem; letter-spacing: -0.01em; }
 .lb-logan small { display: block; font-size: 0.76rem; color: var(--muted); margin-top: 1px; }
 .lb-lgwrap { position: relative; }
+/* The local apps (Moorooka News, The Logan Wire), side by side under Listen */
+.lb-subs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.lb-subs .lb-sub { margin-top: 0; min-width: 0; text-decoration: none; padding: 10px 12px 10px 10px; gap: 10px; }
+.lb-subs .lb-sub > span:last-child { min-width: 0; }
+.lb-subs .lb-ic { width: 34px; height: 34px; flex: none; }
+.lb-subs .lb-ic svg { width: 18px; height: 18px; }
+@media (max-width: 480px) { .lb-subs .lb-ic { display: none; } .lb-subs .lb-sub { padding: 10px 14px; } }
 .lb-catch { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin-top: 8px; padding: 12px 14px; border-radius: 16px; background: color-mix(in srgb, var(--accent, #5b3fd0) 9%, transparent); border: 1px solid color-mix(in srgb, var(--accent, #5b3fd0) 22%, transparent); }
 .lb-catch[hidden] { display: none; }
 .lb-catch .lc-t { flex: 1 1 220px; min-width: 0; }
@@ -1303,7 +1310,7 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
       </div>
       <div class="lb-catch" id="lbCatch" role="status" hidden></div>
       <div class="lb-catch lb-drive" id="lbDrive" role="status" hidden></div>
-      <div class="lb-lgwrap" id="lbLgWrap"><button class="lb-logan" type="button" data-listen="logan" id="lbLogan" hidden><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg></span><span><b>Logan news</b><small id="lbLoganT">News about the City of Logan</small></span></button><button class="lb-fresh lg" type="button" data-listen="loganfresh" id="lbLoganFresh" aria-label="Logan news from the start, as if new" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3.5 4v5h5"/></svg>From the start</button></div>
+      <div class="lb-lgwrap lb-subs" id="lbLgWrap"><a class="lb-logan lb-sub" href="moorooka/" data-sub="moorooka/"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>Moorooka News</b><small>Local news first</small></span></a><a class="lb-logan lb-sub" href="logan/" data-sub="logan/"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>The Logan Wire</b><small>Local news first</small></span></a></div>
       <button class="topsearch" type="button" data-open-search aria-label="Search all news">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
         <span id="topSearchHint">Search all news</span><kbd>/</kbd></button>
@@ -1503,11 +1510,11 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
   const CORE_IDS = new Set(SECTIONS.map(s => s.id));
   const DEFAULT_ON = [];                // set per build: interests switched on out of the box
   const DEFAULT_COMMUTE = null;         // set per build: the private copy's drive to work (never in the public build: it's an address)
-  // The local spin-offs (Over the Fence for Moorooka, The Logan Wire): the same app, with a local news feed. Set per build
+  // The local spin-offs (Moorooka News, The Logan Wire): the same app, with a local news feed. Set per build
   // (build.py, from local/brands.json); the main app leaves these empty.
   const DEFAULT_REGION = "qld";
   const LOCAL_APP = null;               // { extra: community feed, near / keep / away / trust: patterns that tailor the Local feed }
-  const OPEN_KEY = "";                  // Emma's opening for this app ("This is Over the Fence for...")
+  const OPEN_KEY = "";                  // Emma's opening for this app ("This is Moorooka News for...")
   const KEY_PREFIX = "";                // keeps each app's settings apart on the same website
   const lead = s => LOCAL_APP && s.id === "local" ? 3 : 1;  // in a local app, Local news gets three turns to every other tab's one
   const OWN_COLOUR = new Set([...CORE_IDS, "copilot"]);
@@ -2626,6 +2633,7 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
       + `<div class="lc-b"><button class="lc-go" type="button" data-listen="drive">Listen now</button></div>`;
   }
   function loganLine() {
+    if (!$("lbLogan")) return "";  // the Logan news button has made way for the local apps
     // Logan news is just for Ash (the name in Settings)
     const ids = /^ash(ley)?$/i.test((S.name || "").trim()) ? driveList("logan").ids : [], n = ids.length;
     const b = $("lbLogan"); if (b) b.hidden = !n;
@@ -4376,6 +4384,8 @@ const handle = async (m, post) => {
     if (t.closest("#hideRead")) { state.hideRead = !state.hideRead; store.set("brief.hideRead", state.hideRead); render(true); return; }
     if (t.closest("#rSave")) { toggleSave(state.readerId); return; }
     if (t.closest("#copyLink")) { copyLink(); return; }
+    const sub = t.closest("a[data-sub]");  // the local apps: in the private copy, open the public site in a new tab
+    if (sub && state.mode === "claude") { e.preventDefault(); window.open(PUBLIC_URL + sub.dataset.sub, "_blank", "noopener"); return; }
     if (t.closest("#shareApp")) { navigator.share({ title: APP_NAME, text: "News that's all about you and what you're interested in. Customise your feed, full articles, TV and listen modes, and less negative news if you like.", url: shareUrl() }).catch(() => {}); return; }
     if (t.closest("#installBtn") && installEvent) { installEvent.prompt(); installEvent.userChoice.finally(() => { installEvent = null; renderSettings(); }); return; }
     if (t.closest("#rShare")) { shareStory(findItem(state.readerId)); return; }
@@ -6483,6 +6493,7 @@ const handle = async (m, post) => {
   // Loading data: Claude database (private copy) or files (GitHub Pages)
   // ======================================================================
   $("brandmark").src = APP_ICON;
+  if (LOCAL_APP && $("lbLgWrap")) $("lbLgWrap").hidden = true;  // the local apps link to each other only from Awesome News
   state.prevVisit = store.get("brief.lastVisit", 0);
   const markVisit = () => store.set("brief.lastVisit", Date.now());
   document.addEventListener("visibilitychange", () => { if (document.hidden) markVisit(); });

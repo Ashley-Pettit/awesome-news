@@ -104,7 +104,7 @@ shutil.copy(os.path.join(here, "sw.js"), site)
 # Council news pictures sent from the work PC (council_news.py), served next to the app.
 if os.path.isdir(os.path.join(here, "council", "img")):
     shutil.copytree(os.path.join(here, "council", "img"), os.path.join(site, "council", "img"), dirs_exist_ok=True)
-# The local news apps (Moorooka's "Over the Fence", "The Logan Wire"): copies of Awesome News with their own name, icon and
+# The local news apps ("Moorooka News", "The Logan Wire"): copies of Awesome News with their own name, icon and
 # install details, whose Local news is tailored to the area (local/brands.json; LOCAL_APP in app.html). Each sits in its own
 # folder but reads the same news, voice and pictures as the main app (<base href="../">), like the beta.
 if os.path.exists(os.path.join(here, "local", "brands.json")):
