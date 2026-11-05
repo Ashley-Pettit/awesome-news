@@ -444,9 +444,40 @@ def plan(data, vkey):
 # a headline, trailing off slightly at the end of a sentence, and breaths of natural length between sentences. All of
 # it is tiny and seeded from the words, so the same text always sounds the same. Bump STYLEV when this changes:
 # pieces made the old way are kept (so nothing goes missing) and remade in the background, newest stories first.
-STYLEV = 2
+STYLEV = 3
 PACE = 1.02  # her overall pace: 2% quicker than the voice's own
 SENT = re.compile(r"(?<=[.!?…])[\"”’)]?\s+(?=[A-Z0-9\"“‘(])")
+
+
+# Some outlets start a story in capitals ("A MAN has been charged", "IT was a night to remember", "THE INVERLOCH
+# community"). The voice spells short ones out ("M-A-N"), so in an article's first sentence a word in capitals is read
+# as a word when it's a real one: one the day's news also writes in normal case. Real acronyms stay letters.
+KEEP_CAPS = {"US", "UK", "UN", "EU", "AI", "NZ", "PM", "AFL", "NRL", "ABC", "SBS", "BBC", "CEO", "GP", "IVF", "CCTV", "NASA", "WHO", "AM", "OK"}
+LEDE = re.compile(r"^(\W*)((?:[A-Z][A-Z'’]*(?:[\s,]+|$))+)(?=[a-z])")
+
+
+def word_forms(texts):
+    """Every word the day's news writes in normal case, by its lower case: the form it's usually written in."""
+    seen = {}
+    for t in texts:
+        for w in re.findall(r"\b[A-Za-z][a-z]+(?:['’][a-z]+)?\b", t):
+            seen.setdefault(w.lower(), {}).setdefault(w, 0)
+            seen[w.lower()][w] += 1
+    return {k: max(v, key=v.get) for k, v in seen.items()}
+
+
+def unshout(say, forms):
+    m = LEDE.match(say)
+    if not m:
+        return say
+    run, out = m.group(2), []
+    for n, tok in enumerate(re.split(r"(\s+|,)", run)):
+        bare = tok.strip("'’")
+        if bare.isalpha() and bare.isupper() and bare not in KEEP_CAPS and (bare.lower() in forms or len(bare) == 1):
+            w = forms.get(bare.lower(), bare.lower())
+            tok = tok.replace(bare, w[:1].upper() + w[1:] if not out or not "".join(out).strip() else w)
+        out.append(tok)
+    return m.group(1) + "".join(out) + say[m.end():]
 
 
 def speak(model, np, say, seed, head):
@@ -456,17 +487,17 @@ def speak(model, np, say, seed, head):
     out, sr = [], 24000
     for n, sent in enumerate(parts):
         words = len(sent.split())
-        speed = 0.93 if head else 1.0 + rng.uniform(-0.07, 0.07)
+        speed = 0.95 if head else 1.0 + rng.uniform(-0.035, 0.035)
         if sent.rstrip().endswith("?"):
-            speed -= 0.04
+            speed -= 0.02
         if words < 6:
-            speed -= 0.04          # short sentences land a little slower
+            speed -= 0.02          # short sentences land a little slower
         elif words > 26:
-            speed += 0.03          # long ones move along
+            speed += 0.015         # long ones move along
         if not head and n == len(parts) - 1 and len(parts) > 1:
-            speed -= 0.03          # easing off at the end of a thought
+            speed -= 0.015         # easing off at the end of a thought
         speed *= PACE
-        pitch = 1.016 if head else 1 + rng.uniform(-0.025, 0.025)  # tape-style nudge, made up for in the speed
+        pitch = 1.008 if head else 1 + rng.uniform(-0.012, 0.012)  # tape-style nudge, made up for in the speed
         if any(w.search(sent) for w, _, _ in SOUNDS):
             ph = model.tokenizer.phonemize(sent, LANG)
             for w, pat, snd in SOUNDS:
@@ -489,7 +520,7 @@ def speak(model, np, say, seed, head):
             audio[:fade] *= np.linspace(0, 1, fade, dtype=np.float32)
             audio[-fade:] *= np.linspace(1, 0, fade, dtype=np.float32)
         if out:
-            gap = 0.19 + rng.uniform(0, 0.09) + (0.04 if out_end.endswith("?") else 0)
+            gap = 0.21 + rng.uniform(0, 0.1) + (0.04 if out_end.endswith("?") else 0)
             out.append(np.zeros(int(sr * gap), dtype=np.float32))
         out.append(audio)
         out_end = sent.rstrip()
@@ -556,6 +587,8 @@ def make(a, data, vkey):
     # An open piece is still wanted when only a locked recording of the same words exists: phones without the
     # passphrase can't play the locked one, so whole stories stayed unready for them.
     todo = [j for j in mine if j[0][:16] not in have or (not j[2] and have.get(j[0][:16]) != 1)]
+    forms = word_forms(t for _, t, _ in jobs)
+    firsts = {st[v][1] for st in stories.values() for v in ("o", "l") if len(st.get(v) or []) > 1}  # each article's opening
     # Then pieces made in an older style, remade in the background (the old recording stays until the new one is in).
     restyle = [j for j in mine if j[0][:16] in have and j[0][:16] not in styled and (j[2] or have.get(j[0][:16]) == 1)]
     todo += restyle
@@ -577,6 +610,8 @@ def make(a, data, vkey):
             if h in have and (lock or have[h] == 1) and (h not in redo or h in styled):  # already made (open beats locked)
                 continue
             say = text
+            if k in firsts:
+                say = unshout(say, forms)
             for pat, rep in SAY:
                 say = re.sub(pat, rep, say)
             try:
