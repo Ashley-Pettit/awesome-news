@@ -3403,7 +3403,7 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
         <button class="field danger" type="button" id="clearSaved">Clear saved stories <span class="sub" style="color:var(--muted)">${state.saved.length} saved</span></button>
       </div><p class="hint">Everything you set here stays on this device.</p></div>
       ${betaHTML()}${commuteOK() ? commuteHTML() : ""}
-      <p class="about">Awesome News pulls from free sources only: ABC, SBS, BBC, The Guardian, 7NEWS, The Conversation, 360info, Global Voices, NASA, EFF, Ars Technica, TechCrunch, iTnews and more. Weather from Open-Meteo, tuned to local Bureau stations. ${privateMode() ? "Stories open in full right here." : "Stories marked Full are free to republish, so they open in full right here."} No paywalls, no sport.${state.status?.updatedAt ? `<br>Stories last updated ${esc(longDate(state.status.updatedAt))}.` : ""}</p>
+      <p class="about">Awesome News pulls from free sources only: ABC, SBS, BBC, The Guardian, 7NEWS, The Conversation, 360info, Global Voices, NASA, EFF, Ars Technica, TechCrunch, iTnews and more. Weather from Open-Meteo, tuned to local Bureau stations. Inverloch's 3D town is built from OpenStreetMap (&copy; OpenStreetMap contributors). ${privateMode() ? "Stories open in full right here." : "Stories marked Full are free to republish, so they open in full right here."} No paywalls, no sport.${state.status?.updatedAt ? `<br>Stories last updated ${esc(longDate(state.status.updatedAt))}.` : ""}</p>
 `,
     };
     $("sBody").innerHTML = `
