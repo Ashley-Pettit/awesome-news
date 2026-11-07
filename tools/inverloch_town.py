@@ -268,6 +268,21 @@ for vi, v in enumerate(ver):
         for sg in signs:
             if seg_dist((sg[0] - nx * 3.15, sg[1] - nz * 3.15), (ax, az), (bx, bz))[0] < 1.2: name = sg[4]
         units.append([r1(ax), r1(az), r1(bx), r1(bz), nx, nz, [4.9, 5.4, 6.0, 5.1, 6.6][h], {"ALEX SCOTT & STAFF": 9, "PAUL THE PIEMAN": 1}.get(name, (vi * 3 + k * 5) % 9), (vi + k) % 3, name])
+# the bakery (Paul the Pieman's "BAKERY CAFE"): a wide, tall shopfront in the photos, so it takes in the empty shop beside it,
+# with a flat parapet, and its fascia sign stretches across both
+for i, u in enumerate(units):
+    if u[9] != "PAUL THE PIEMAN": continue
+    nb = next((j for j, o in enumerate(units) if j != i and not o[9] and ((o[0], o[1]) == (u[2], u[3]) or (o[2], o[3]) == (u[0], u[1]))), None)
+    if nb is not None:
+        o = units[nb]; omx, omz = (u[0] + u[2]) / 2, (u[1] + u[3]) / 2
+        if (o[0], o[1]) == (u[2], u[3]): u[2], u[3] = o[2], o[3]
+        else: u[0], u[1] = o[0], o[1]
+        units.pop(nb)
+        mx, mz = (u[0] + u[2]) / 2, (u[1] + u[3]) / 2; L = math.hypot(u[2] - u[0], u[3] - u[1])
+        for sg in signs:
+            if sg[4] == "PAUL THE PIEMAN": sg[0] = round(sg[0] + mx - omx, 1); sg[1] = round(sg[1] + mz - omz, 1); sg[3] = round(min(L - 1, 11), 1)
+    u[6], u[8] = 6.4, 0
+    break
 # the library's front (OSM way 472789110): the long wall facing A'Beckett and the clock, for its round window, "Library" letters and flags
 lib = next(b for b in blds if b["id"] == 472789110)
 best = None
