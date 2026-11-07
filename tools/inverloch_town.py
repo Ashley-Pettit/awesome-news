@@ -144,7 +144,8 @@ for name, la, lo, ty in places:
     t = max(w / 2 / L, min(1 - w / 2 / L, t))
     q = (a[0] + (bb[0] - a[0]) * t, a[1] + (bb[1] - a[1]) * t)
     if any(math.hypot(q[0] - s[0], q[1] - s[1]) < (w + s[3]) / 2 + 0.3 for s in signs): continue  # two listings at one address: the first gets the sign
-    signs.append([q[0], q[1], round(math.atan2(nx, nz), 3), round(w, 1), text, PAL.get(ty, 6), nx, nz])
+    pal = {"PAUL THE PIEMAN": 1, "ALEX SCOTT & STAFF": 2, "STOCKDALE & LEGGO": 5, "BARRY PLANT": 4}.get(text, PAL.get(ty, 6))  # as in photos: the bakery's gold on green, Alex Scott's red
+    signs.append([q[0], q[1], round(math.atan2(nx, nz), 3), round(w, 1), text, pal, nx, nz])
     used.append(text); b["kind"] = 0 if b["kind"] == 2 else b["kind"]
 
 # ---- verandahs: along the street side of shops on the main streets
@@ -193,7 +194,7 @@ best = min(range(len(hl) - 1), key=lambda i: seg_dist(HOTEL, hl[i], hl[i + 1])[0
 hdir = math.atan2(hl[best + 1][0] - hl[best][0], hl[best + 1][1] - hl[best][1])
 # ---- the clock: on the library side of A'Beckett, in front of the library (Google Maps: library 16 A'Beckett, opposite 5 and 7)
 ab = [p for l in mains.get("abeckett street", []) for p in l]
-CLOCK = (4.0, 17.0)
+CLOCK = (24.0, 27.0)  # on the garden bed at the A'Beckett kerb, library side, west of Reilly Street (Wikimedia Commons photo "Inverloch Victoria.jpg")
 d, q = poly_dist(CLOCK, ab)
 # ---- houses: the map has few homes, so streets away from the centre get houses either side, facing the road
 houses = []
@@ -266,10 +267,10 @@ for vi, v in enumerate(ver):
         name = ""
         for sg in signs:
             if seg_dist((sg[0] - nx * 3.15, sg[1] - nz * 3.15), (ax, az), (bx, bz))[0] < 1.2: name = sg[4]
-        units.append([r1(ax), r1(az), r1(bx), r1(bz), nx, nz, [4.9, 5.4, 6.0, 5.1, 6.6][h], (vi * 3 + k * 5) % 9, (vi + k) % 3, name])
+        units.append([r1(ax), r1(az), r1(bx), r1(bz), nx, nz, [4.9, 5.4, 6.0, 5.1, 6.6][h], {"ALEX SCOTT & STAFF": 9, "PAUL THE PIEMAN": 1}.get(name, (vi * 3 + k * 5) % 9), (vi + k) % 3, name])
 data = {"note": "Inverloch town centre. Map data (c) OpenStreetMap contributors, ODbL; business locations from Google Maps.",
         "b": [[round(b["h"], 1), b["kind"], flat(b["pts"])] for b in blds_out], "u": units,
-        "r": roads, "a": areas, "s": signs, "v": ver, "h": houses, "t": trees, "g": glass, "ho": [r1(HOTEL[0]), r1(HOTEL[1]), round(hdir, 3)], "c": [CLOCK[0], CLOCK[1], round(math.atan2(-(q[0] - CLOCK[0]), -(q[1] - CLOCK[1])) if False else math.atan2(q[0] - CLOCK[0], q[1] - CLOCK[1]), 3)]}
+        "r": roads, "a": areas, "s": signs, "v": ver, "h": houses, "t": trees, "g": glass, "ho": [r1(HOTEL[0]), r1(HOTEL[1]), round(hdir, 3)], "c": [CLOCK[0], CLOCK[1], -2.356]}  # double-sided, faces north-west and south-east (Street View, Travel Victoria and Commons photos); the navy gear on the south-east side
 json.dump(data, open(OUT, "w"), separators=(",", ":"), ensure_ascii=False)
 print("buildings", len(blds), "roads", len(roads), "areas", len(areas), "signs", len(signs), "verandahs", len(ver), "houses", len(houses), "trees", len(trees), "bytes", len(json.dumps(data, separators=(",", ":"))))
 print([s[4] for s in signs])
