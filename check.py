@@ -1,22 +1,25 @@
-import json, os, time, urllib.request, urllib.parse
+import json, os, urllib.request, urllib.parse
 os.makedirs("out", exist_ok=True)
-S, W_, N, E = -38.6385, 145.7205, -38.6290, 145.7350
-q = f"""[out:json][timeout:90];
-(
-  way["building"]({S},{W_},{N},{E}); relation["building"]({S},{W_},{N},{E});
-  way["highway"]({S},{W_},{N},{E});
-  way["leisure"]({S},{W_},{N},{E}); way["landuse"]({S},{W_},{N},{E}); relation["landuse"]({S},{W_},{N},{E});
-  way["natural"]({S},{W_},{N},{E}); relation["natural"]({S},{W_},{N},{E});
-  way["amenity"]({S},{W_},{N},{E}); way["man_made"]({S},{W_},{N},{E}); way["barrier"]({S},{W_},{N},{E}); way["area:highway"]({S},{W_},{N},{E});
-  node["amenity"]({S},{W_},{N},{E}); node["shop"]({S},{W_},{N},{E}); node["tourism"]({S},{W_},{N},{E}); node["natural"]({S},{W_},{N},{E});
-  node["man_made"]({S},{W_},{N},{E}); node["highway"]({S},{W_},{N},{E}); node["leisure"]({S},{W_},{N},{E}); node["office"]({S},{W_},{N},{E}); node["historic"]({S},{W_},{N},{E});
-);
-out body; >; out skel qt;"""
-for host in ("https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter", "https://maps.mail.ru/osm/tools/overpass/api/interpreter"):
+UA = {"User-Agent": "AwesomeNewsTownModel/1.0 (github.com/Ashley-Pettit/awesome-news)"}
+def get(u): return urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=40).read()
+found = {}
+for q in ["Inverloch clock", "Inverloch A'Beckett Street", "Inverloch town centre", "Inverloch Victoria street", "Inverloch shops", "Inverloch Rotary", "Inverloch"]:
+    u = "https://commons.wikimedia.org/w/api.php?" + urllib.parse.urlencode({"action": "query", "generator": "search", "gsrsearch": q, "gsrnamespace": 6, "gsrlimit": 40,
+        "prop": "imageinfo", "iiprop": "url|extmetadata", "iiurlwidth": 900, "format": "json"})
     try:
-        req = urllib.request.Request(host, data=urllib.parse.urlencode({"data": q}).encode(), headers={"User-Agent": "AwesomeNews town model (github.com/Ashley-Pettit/awesome-news)"})
-        d = urllib.request.urlopen(req, timeout=120).read()
-        open("out/inverloch-osm.json", "wb").write(d)
-        print("ok", host, len(d)); break
+        d = json.loads(get(u))
+        for p in (d.get("query", {}).get("pages", {}) or {}).values():
+            ii = (p.get("imageinfo") or [{}])[0]
+            found[p["title"]] = {"thumb": ii.get("thumburl"), "desc": (ii.get("extmetadata", {}).get("ImageDescription", {}) or {}).get("value", "")[:200]}
     except Exception as e:
-        print("fail", host, e); time.sleep(3)
+        print("fail", q, e)
+json.dump(found, open("out/list.json", "w"), indent=1)
+n = 0
+for t, v in found.items():
+    if not v["thumb"] or not any(k in (t + v["desc"]).lower() for k in ("clock", "beckett", "town", "street", "shops", "main", "centre", "center", "rotary", "hub", "library", "esplanade")): continue
+    try:
+        open(f"out/img{n:02d}.jpg", "wb").write(get(v["thumb"])); v["file"] = f"img{n:02d}.jpg"; n += 1
+    except Exception as e: print("img fail", t, e)
+    if n >= 30: break
+json.dump(found, open("out/list.json", "w"), indent=1)
+print("found", len(found), "downloaded", n)
