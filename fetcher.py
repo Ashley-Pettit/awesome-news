@@ -354,6 +354,50 @@ def clean(text, limit=None):
         text = text[:limit].rsplit(" ", 1)[0].rstrip(",;:.") + "…"
     return text
 
+# A story with no text of its own (most news search results, some feeds) gets the publisher's own short summary: the
+# description each page gives out for link previews (og:description), so the reader and Listen have something to go on.
+# Only that sentence or two is taken, never the article, and it links back to the publisher as always.
+META_DESC = [re.compile(rf"<meta[^>]+(?:property|name)=[\"']{k}[\"'][^>]*content=[\"']([^\"']+)", re.I) for k in ("og:description", "twitter:description", "description")] + \
+            [re.compile(rf"<meta[^>]+content=[\"']([^\"']+)[\"'][^>]*(?:property|name)=[\"']{k}[\"']", re.I) for k in ("og:description", "twitter:description", "description")]
+
+
+def page_blurb(url):
+    """(description, image) from a story's own page, or ("", "")."""
+    if not url.startswith("http") or "news.google.com" in url:
+        return "", ""
+    try:
+        a = get(url, timeout=10, limit=400_000).decode("utf-8", "replace")
+    except Exception:
+        return "", ""
+    desc = next((clean(m.group(1)) for r in META_DESC for m in [r.search(a)] if m), "")
+    im = OG_RE.search(a)
+    im = html.unescape(im.group(1) or im.group(2)) if im else ""
+    return desc[:320], (im if im.startswith("https://") else "")
+
+
+def fill_blurbs(items, most=120):
+    """Give stories with no text their publisher's summary (and photo, if they have none). Leaves out a site's stock
+    description (the same words on every page) and one that only repeats the headline."""
+    todo = [st for st in items if len(clean(st.get("summary") or "")) < 40][:most]
+    if not todo:
+        return 0
+    with cf.ThreadPoolExecutor(12) as ex:
+        got = list(ex.map(lambda st: page_blurb(st["url"]), todo))
+    seen = {}
+    for d, _ in got:
+        if d:
+            seen[d] = seen.get(d, 0) + 1
+    n = 0
+    for st, (d, im) in zip(todo, got):
+        t = re.sub(r"\W+", " ", st["title"].lower()).strip()
+        if d and len(d) >= 40 and seen[d] == 1 and re.sub(r"\W+", " ", d.lower()).strip() != t:
+            st["summary"] = d
+            n += 1
+        if im and not st.get("image"):
+            st["image"] = im
+    return n
+
+
 
 def parse_date(s):
     if not s:
@@ -1504,6 +1548,18 @@ def main():
     for sub in ("feeds", "text"):
         shutil.rmtree(os.path.join(a.out, sub), ignore_errors=True)
         os.makedirs(os.path.join(a.out, sub), exist_ok=True)
+    try:  # stories with no text of their own: the publisher's own summary (not the ones whose full text we have)
+        bare = {}
+        for items in sections.values():
+            for st in items:
+                if st["id"] not in text_ref and st["id"] not in ptext_ref and st["id"] not in feed_ref:
+                    bare.setdefault(st["id"], []).append(st)
+        print("summaries added:", fill_blurbs([v[0] for v in bare.values()]))
+        for v in bare.values():  # the same story in other sections
+            for st in v[1:]:
+                st["summary"], st["image"] = v[0].get("summary", ""), st.get("image") or v[0].get("image", "")
+    except Exception as e:
+        errors.append(f"summaries: {e}"[:160])
     stamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
     counts = {}
     for name, items in sections.items():

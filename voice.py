@@ -241,7 +241,7 @@ def rain_part(w, date, start=5):
 
 
 # The local apps' own openings (OPEN_KEY in app.html, local/brands.json): key -> (whose weather, what Emma calls the app).
-BRAND_OPENS = {"fence": ("moo", "This is Moorooka News"), "wire": ("logan", "This is The Logan Wire"), "inlet": ("inv", "This is Inverloch News")}
+BRAND_OPENS = {"fence": ("moo", "This is Moorooka News"), "wire": ("logan", "This is The Logan Wire"), "inlet": ("inv", "This is The Coastline News")}
 
 
 def opening(region, w, brand=None):

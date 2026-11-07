@@ -230,7 +230,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
 .lb-logan b { display: block; font-family: var(--display); font-size: 1rem; letter-spacing: -0.01em; }
 .lb-logan small { display: block; font-size: 0.76rem; color: var(--muted); margin-top: 1px; }
 .lb-lgwrap { position: relative; }
-/* The local apps (Moorooka News, The Logan Wire, Inverloch News), side by side under Listen */
+/* The local apps (Moorooka News, The Logan Wire, The Coastline News), side by side under Listen */
 /* ...folded into one "Local news apps" row until it's tapped open */
 .lb-apps > summary { list-style: none; cursor: pointer; }
 .lb-apps > summary::-webkit-details-marker { display: none; }
@@ -1112,6 +1112,33 @@ body.bsfly #wBody, body.bsfly #bsCtl, body.bsfly #bsDrive { display: none !impor
 body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
 #weather .bs-flybtn { display: inline-flex; }  /* Explore: for everyone */
 body.wxlisten #weather .bs-flybtn { display: none !important; }
+/* While Listen plays the weather: Explore the scene, or straight back to the news, just above the player buttons */
+.bs-wxacts { display: none; }
+body.wxlisten:not(.bsfly) #weather .bs-wxacts { display: flex; justify-content: center; gap: 10px; position: absolute; left: 0; right: 0; z-index: 4;
+  bottom: calc(max(14px, env(safe-area-inset-bottom, 0px)) + 92px); padding: 0 16px; pointer-events: none; }
+body.wxintro #weather .bs-wxacts { opacity: 0; }
+.bs-wxa { pointer-events: auto; display: inline-flex; align-items: center; gap: 7px; height: 42px; padding: 0 16px; border-radius: 999px; font: 700 0.88rem var(--ui); color: var(--bs-ink);
+  background: var(--bs-scrim); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border: 1px solid var(--bs-line); cursor: pointer; }
+.bs-wxa.main { background: #ffffff; color: #1b1830; border-color: transparent; }
+.bs-wxa svg { width: 18px; height: 18px; }
+.bs-wxa:active { transform: scale(0.96); }
+.bs-wxa:focus-visible { outline: 2px solid var(--bs-ink); outline-offset: 2px; }
+body.wxlisten #weather .bs-hud { padding-bottom: calc(max(12px, env(safe-area-inset-bottom, 0px)) + 142px) !important; }
+/* Explore's on-screen controls: a stick to move (left), a stick to look (right), Up and Down top right */
+.bs-fly-x { left: 16px; right: auto; }
+.bs-ud { pointer-events: auto; position: absolute; top: calc(14px + env(safe-area-inset-top)); right: 16px; display: flex; flex-direction: column; gap: 8px; }
+.bs-udb { display: grid; justify-items: center; align-content: center; gap: 1px; width: 58px; height: 58px; border: 1px solid var(--bs-line); border-radius: 16px; color: var(--bs-ink);
+  background: var(--bs-scrim); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); font: 700 0.66rem var(--ui); touch-action: none; user-select: none; -webkit-user-select: none; cursor: pointer; }
+.bs-udb svg { width: 22px; height: 22px; }
+.bs-udb.on { background: rgba(255, 255, 255, 0.35); }
+.bs-joy { pointer-events: auto; position: absolute; bottom: calc(22px + env(safe-area-inset-bottom)); width: 132px; height: 132px; border-radius: 50%; touch-action: none; user-select: none; -webkit-user-select: none;
+  background: rgba(10, 12, 28, 0.32); border: 1.5px solid rgba(255, 255, 255, 0.35); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.bs-joy[data-joy="move"] { left: max(18px, env(safe-area-inset-left)); }
+.bs-joy[data-joy="look"] { right: max(18px, env(safe-area-inset-right)); }
+.bs-joy i { position: absolute; left: 50%; top: 50%; width: 58px; height: 58px; margin: -29px 0 0 -29px; border-radius: 50%; background: rgba(255, 255, 255, 0.82); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35); }
+.bs-joy span { position: absolute; left: 0; right: 0; top: -22px; text-align: center; font: 700 0.7rem var(--ui); color: var(--bs-ink); text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6); }
+.bs-fly-tip { top: calc(64px + env(safe-area-inset-top)); bottom: auto; max-width: calc(100% - 200px); }
+@media (max-width: 360px) { .bs-joy { width: 112px; height: 112px; } }
 .bs-src { font-size: 0.62rem; color: var(--bs-dim); opacity: 0.75; margin: 2px 2px 0; text-align: right; }
 .bs-note { font-size: 0.8rem; line-height: 1.4; color: var(--bs-dim); margin: 0 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.8em; }
 .bs-scrubrow { display: flex; align-items: center; gap: 10px; }
@@ -1352,7 +1379,7 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
       </div>
       <div class="lb-catch" id="lbCatch" role="status" hidden></div>
       <div class="lb-catch lb-drive" id="lbDrive" role="status" hidden></div>
-      <div class="lb-lgwrap" id="lbLgWrap"><details class="lb-apps"><summary class="lb-logan lb-appsum"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>Local news apps</b><small>Moorooka, Logan and Inverloch</small></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div class="lb-subs"><a class="lb-logan lb-sub" href="moorooka/" data-sub="moorooka/"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>Moorooka News</b><small>Local news first</small></span></a><a class="lb-logan lb-sub" href="logan/" data-sub="logan/"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>The Logan Wire</b><small>Local news first</small></span></a><a class="lb-logan lb-sub" href="inverloch/" data-sub="inverloch/"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>Inverloch News</b><small>Local news first</small></span></a></div></details></div>
+      <div class="lb-lgwrap" id="lbLgWrap"><details class="lb-apps"><summary class="lb-logan lb-appsum"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>Local news apps</b><small>Moorooka, Logan and the Bass Coast</small></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div class="lb-subs"><a class="lb-logan lb-sub" href="moorooka/" data-sub="moorooka/"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>Moorooka News</b><small>Local news first</small></span></a><a class="lb-logan lb-sub" href="logan/" data-sub="logan/"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>The Logan Wire</b><small>Local news first</small></span></a><a class="lb-logan lb-sub" href="inverloch/" data-sub="inverloch/"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>The Coastline News</b><small>Local news first</small></span></a></div></details></div>
       <button class="topsearch" type="button" data-open-search aria-label="Search all news">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
         <span id="topSearchHint">Search all news</span><kbd>/</kbd></button>
@@ -1517,6 +1544,16 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
   <div class="bs-fly" id="bsFly" hidden>
     <p class="bs-fly-tip" id="bsFlyTip"></p>
     <button class="bs-fly-x" type="button" id="bsFlyX">Exit explore</button>
+    <div class="bs-ud" role="group" aria-label="Fly up or down">
+      <button type="button" class="bs-udb" data-ud="1" aria-label="Fly up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg><span>Up</span></button>
+      <button type="button" class="bs-udb" data-ud="-1" aria-label="Fly down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><span>Down</span></button>
+    </div>
+    <div class="bs-joy" data-joy="move" aria-hidden="true"><i></i><span>Move</span></div>
+    <div class="bs-joy" data-joy="look" aria-hidden="true"><i></i><span>Look</span></div>
+  </div>
+  <div class="bs-wxacts" id="bsWxActs">
+    <button type="button" class="bs-wxa" id="bsExplore"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>Explore</button>
+    <button type="button" class="bs-wxa main" id="bsToNews"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Back to the news</button>
   </div>
   <div id="bsNoGl" hidden><p>The 3D sky can't draw on this device, but the forecast below still works.</p></div>
   <main class="bs-hud" id="wBody"></main>
@@ -2027,7 +2064,9 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
     };
     // Top stories: the ones with a proper article to read (a headline and one line isn't worth a listen),
     // unless there are hardly any.
-    const tops = briefing().filter(listenable), deep = tops.filter(i => depth(best(i) || i) > 0);
+    // Stories with nothing but a headline (no article, no summary) are kept for the end, after everything else.
+    const bare = i => { const b = best(i) || i; return depth(b) === 0 && (b.summary || "").trim().length < 40; };
+    const tops = briefing().filter(i => listenable(i) && !bare(i)), deep = tops.filter(i => depth(best(i) || i) > 0);
     if (!logan) (deep.length >= 3 ? deep : tops).forEach(i => add(i, "top"));
     // Full articles first: stories with the whole article (or a long feed excerpt) come well ahead of
     // short ones, which only fill in when a section runs out.
@@ -2035,7 +2074,7 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
     const likes = store.get("beta.likes", {}) || {}, likeOf = sc => likes[sc.id === "local" ? "local news" : sc.id === "headlines" ? "more headlines" : sc.label] || 0;
     const lanes = (logan ? [{ id: "logan", label: "Logan" }] : enabledSections()).slice().sort((a, b) => (lead(b) - lead(a)) || (likeOf(b) - likeOf(a))).map(sc => ({ sc, list: items(sc.id).filter(i => listenable(i) && !(Number(S.negCut) && isNegative(i))).slice(0, 30 * lead(sc))
       .map((i, n) => { const d = depth(best(i) || i); return { i, k: n + (d === 2 ? 0 : d === 1 ? 10 : 60) }; }).sort((a, b) => a.k - b.k).map(x => x.i) }));
-    for (let r = 0; secs < target && r < 40; r++) for (const { sc, list } of lanes) for (let j = 0; j < lead(sc); j++) { if (secs >= target) break; add(list[r * lead(sc) + j], sc.id === "local" ? "local news" : sc.id === "headlines" ? "more headlines" : sc.label); }
+    for (const pass of [0, 1]) for (let r = 0; secs < target && r < 40; r++) for (const { sc, list } of lanes) for (let j = 0; j < lead(sc); j++) { if (secs >= target) break; const it = list[r * lead(sc) + j]; if (!pass && it && bare(it)) continue; add(it, sc.id === "local" ? "local news" : sc.id === "headlines" ? "more headlines" : sc.label); }
     return { ids: out, secOf, secs };
   }
   // ---- News video screen ----
@@ -2264,7 +2303,14 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
     if (p.kind === "wk") wxShowDay(p.date);  // the week ahead: the weather steps through each day as it's read
     else if (p.kind === "warn" || p.kind === "wxnow") wxListenOn();  // the temperature now, weather warnings: still on the weather screen
     else if (p.kind === "traffic" && state.wx && BS.W.drive) { BS.drive = true; BS.W.driveSet(L.commute); bsPlace(); document.body.classList.add("wxdrive"); wxListenOn(); }  // your drive: the 3D motorway
-    else if (p.kind !== "open") wxListenOff();
+    else if (p.kind !== "open") {
+      // Exploring the weather when it finishes: the news waits until you tap Back to the news.
+      if (BS.fly && document.body.classList.contains("wxlisten") && L.kind === "drive") {
+        L.exploreHold = true; pauseListen();
+        const tip = $("bsFlyTip"); tip.textContent = "The news is paused. Tap Back to the news when you're ready."; tip.classList.remove("dim");
+      }
+      else wxListenOff();
+    }
     const bw = $("bsWarn"); if (bw) { bw.hidden = p.kind !== "warn"; if (p.kind === "warn") bw.innerHTML = `<b>Weather warning</b>${esc(p.text.replace(/^Weather warning\.\s*/, ""))}`; }
     // Once a story itself is being read (not just its headline), it counts as heard.
     if (L.kind === "drive" && !["open", "wxnow", "cue", "title", "wk", "warn", "traffic", "sfx"].includes(p.kind)) heardAdd(L.queue[L.at]);
@@ -2330,6 +2376,7 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
   }
   function wxListenOff() {
     clearInterval(L.wxT); L.wxT = 0; clearTimeout(L.wxR);
+    if (BS.fly && document.body.classList.contains("wxlisten")) { L.exploreHold = false; bsFlyOff(); }
     if (BS.drive) { BS.drive = false; document.body.classList.remove("wxdrive"); setTimeout(bsPlace, 700); }  // back to the place once it's faded
     if (!document.body.classList.contains("wxlisten")) return;
     const el = $("weather"); el.classList.remove("open");  // fades out
@@ -4356,6 +4403,18 @@ const handle = async (m, post) => {
     L.token++; L.sid++; hush(); L.paused = false; L.back = null; L.skipped = true;
     L.at--; playStory();
   }
+  // From the weather (or your drive), straight to the first story.
+  function backToNews() {
+    const inOpen = ["open", "wxnow", "warn", "wk", "traffic"];
+    if (BS.fly) { const hold = L.exploreHold; L.exploreHold = false; bsFlyOff(); if (hold) { wxListenOff(); if (L.on && L.paused) resumeListen(); return; } }
+    if (L.on && L.kind === "drive" && inOpen.includes(L.parts?.[L.part]?.kind)) {
+      let n = L.part + 1;
+      while (n < L.parts.length && inOpen.includes(L.parts[n].kind)) n++;
+      if (n < L.parts.length) { const tk = ++L.token; hush(); L.paused = false; clearInterval(L.wxT); L.wxT = 0; document.body.classList.remove("wxweek"); L.part = n; updatePlayer(); armDog(); speakNext(tk); return; }
+      L.token++; L.sid++; hush(); L.paused = false; L.skipped = true; nextStory(); return;
+    }
+    wxListenOff();
+  }
   function skipListen() {
     // In the opening: skip the weather (and any warning) to your drive, or your drive to the first story, in order.
     const grp = k => ["open", "wxnow", "warn", "wk"].includes(k) ? "wx" : k === "traffic" ? "tr" : "";
@@ -4631,6 +4690,8 @@ const handle = async (m, post) => {
     // Customise: the news keeps playing; Settings opens over it, and the Listen card brings the player back.
     if (t.closest("#npCust")) { npClose(); state.sTab = "news"; openSettings(); return; }  // the News tab: your interests and local area
     if (t.closest("#bsSkip")) { skipWeather(); return; }
+    if (t.closest("#bsToNews")) { backToNews(); return; }
+    if (t.closest("#bsExplore")) { bsFlyOn(); return; }
     const pk2 = t.closest("[data-prev-k]");
     if (pk2) { state.prevSel[pk2.dataset.prevK] = pk2.dataset.prevV; pk2.parentElement.querySelectorAll(".bchip").forEach(b => b.setAttribute("aria-pressed", String(b === pk2))); return; }
     if (t.closest("[data-prev-go]")) { previewGo(); return; }
@@ -6277,11 +6338,32 @@ const handle = async (m, post) => {
     const inv = BS.W.inv?.visible && !BS.drive && BS.W.invTown?.visible;  // Inverloch: start where the photos of the Rotary clock are taken, looking up A'Beckett Street
     const start = inv ? { pos: new B.THREE.Vector3(...BS_INV_SPOT.pos), yaw: BS_INV_SPOT.yaw, pitch: BS_INV_SPOT.pitch }
       : { pos: cam.position.clone(), yaw: Math.atan2(-dir.x, -dir.z), pitch: Math.asin(bsClamp(dir.y, -1, 1)) };
-    const F = BS.fly = { ...start, pos: start.pos.clone(), start, keys: new Set(), stick: { x: 0, y: 0 }, touches: new Map(), drag: null };
+    const F = BS.fly = { ...start, pos: start.pos.clone(), start, keys: new Set(), stick: { x: 0, y: 0 }, lookStick: { x: 0, y: 0 }, vert: 0, touches: new Map(), drag: null };
     const canvas = $("bsGl"), touch = matchMedia("(pointer: coarse)").matches;
     document.body.classList.add("bsfly"); $("bsFly").hidden = false;
     const tip = $("bsFlyTip"); tip.classList.remove("dim");
-    tip.textContent = touch ? "Drag on the left to move, on the right to look around" : "Click to look with the mouse · WASD to move · Space up, C down · Shift for speed · R to reset";
+    tip.textContent = touch ? "Left stick to move, right stick to look. Up and Down are top right." : "Click to look with the mouse · WASD to move · Space up, C down · Shift for speed · R to reset";
+    $("bsFlyX").textContent = document.body.classList.contains("wxlisten") ? "Back to the news" : "Exit explore";
+    // The on-screen sticks: drag the knob; it springs back when you let go.
+    F.joys = [...document.querySelectorAll("#bsFly .bs-joy")].map(el => {
+      const knob = el.querySelector("i"), v = el.dataset.joy === "move" ? F.stick : F.lookStick; let id = null;
+      const set = e => { const r = el.getBoundingClientRect(), R = r.width / 2 - 14; let dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+        const d = Math.hypot(dx, dy); if (d > R) { dx *= R / d; dy *= R / d; }
+        knob.style.transform = `translate(${dx}px, ${dy}px)`; v.x = dx / R; v.y = -dy / R; };
+      const end = () => { id = null; knob.style.transform = ""; v.x = 0; v.y = 0; };
+      const h = { pointerdown: e => { id = e.pointerId; try { el.setPointerCapture(id); } catch {} set(e); tip.classList.add("dim"); e.preventDefault(); },
+                  pointermove: e => { if (e.pointerId === id) { set(e); e.preventDefault(); } },
+                  pointerup: e => { if (e.pointerId === id) end(); }, pointercancel: e => { if (e.pointerId === id) end(); } };
+      Object.entries(h).forEach(([k, f]) => el.addEventListener(k, f));
+      return { el, h, end };
+    });
+    F.uds = [...document.querySelectorAll("#bsFly .bs-udb")].map(el => {
+      const go = e => { F.vert = +el.dataset.ud; el.classList.add("on"); try { el.setPointerCapture(e.pointerId); } catch {} e.preventDefault(); };
+      const stop = () => { F.vert = 0; el.classList.remove("on"); };
+      const h = { pointerdown: go, pointerup: stop, pointercancel: stop, lostpointercapture: stop, contextmenu: e => e.preventDefault() };
+      Object.entries(h).forEach(([k, f]) => el.addEventListener(k, f));
+      return { el, h, end: stop };
+    });
     clearTimeout(F.tipT); F.tipT = setTimeout(() => tip.classList.add("dim"), 6000);
     const look = (dx, dy, k) => { F.yaw -= dx * k; F.pitch = bsClamp(F.pitch - dy * k, -1.45, 1.45); };
     const typing = e => /^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName || "");
@@ -6308,7 +6390,7 @@ const handle = async (m, post) => {
     addEventListener("keydown", F.on.keydown); addEventListener("keyup", F.on.keyup); addEventListener("blur", F.on.blur);
     document.addEventListener("mousemove", F.on.mousemove);
     ["pointerdown", "pointermove", "pointerup", "pointercancel"].forEach(k => canvas.addEventListener(k, F.on[k]));
-    $("bsFlyX").onclick = () => bsFlyOff();
+    $("bsFlyX").onclick = () => { if (document.body.classList.contains("wxlisten")) backToNews(); else bsFlyOff(); };
     $("bsFlyX").focus({ preventScroll: true });
   }
   function bsFlyOff() {
@@ -6318,8 +6400,10 @@ const handle = async (m, post) => {
     document.removeEventListener("mousemove", F.on.mousemove);
     ["pointerdown", "pointermove", "pointerup", "pointercancel"].forEach(k => canvas.removeEventListener(k, F.on[k]));
     if (document.pointerLockElement === canvas) document.exitPointerLock?.();
+    for (const j of [...(F.joys || []), ...(F.uds || [])]) { j.end(); Object.entries(j.h).forEach(([k, f]) => j.el.removeEventListener(k, f)); }
     clearTimeout(F.tipT); BS.fly = null;
     document.body.classList.remove("bsfly"); $("bsFly").hidden = true;
+    if (L.exploreHold) { L.exploreHold = false; wxListenOff(); if (L.on && L.paused) resumeListen(); }  // the news waited while you explored
     $("bsFlyBtn")?.focus({ preventScroll: true });
   }
   function bsFlyTick(dt) {
@@ -6327,7 +6411,9 @@ const handle = async (m, post) => {
     const sp = (has("ShiftLeft", "ShiftRight") ? 34 : 11) * Math.min(dt, 0.1);
     const f = (has("KeyW", "ArrowUp") ? 1 : 0) - (has("KeyS", "ArrowDown") ? 1 : 0) + F.stick.y;
     const r = (has("KeyD", "ArrowRight") ? 1 : 0) - (has("KeyA", "ArrowLeft") ? 1 : 0) + F.stick.x;
-    const u = (has("Space", "KeyE") ? 1 : 0) - (has("KeyC", "KeyQ", "ControlLeft") ? 1 : 0);
+    const u = (has("Space", "KeyE") ? 1 : 0) - (has("KeyC", "KeyQ", "ControlLeft") ? 1 : 0) + F.vert;
+    const lk = Math.min(dt, 0.1);  // the look stick turns you, faster the further it's pushed
+    F.yaw -= F.lookStick.x * Math.abs(F.lookStick.x) * 2.4 * lk; F.pitch = bsClamp(F.pitch + F.lookStick.y * Math.abs(F.lookStick.y) * 1.6 * lk, -1.45, 1.45);
     const sy = Math.sin(F.yaw), cy = Math.cos(F.yaw);
     F.pos.x = bsClamp(F.pos.x + (-sy * f + cy * r) * sp, -420, 420);
     F.pos.z = bsClamp(F.pos.z + (-cy * f - sy * r) * sp, -420, 200);

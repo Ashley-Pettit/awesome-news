@@ -32,7 +32,8 @@ def gnews(q):
     return "https://news.google.com/rss/search?" + urllib.parse.urlencode({"q": q, "hl": "en-AU", "gl": "AU", "ceid": "AU:en"})
 
 
-INV_PLACES = ["Inverloch", "Wonthaggi", "Cape Paterson", "Venus Bay", "Tarwin Lower", "Anderson Inlet", "Bunurong", "Kongwak", "Pound Creek", "Bass Coast"]
+INV_PLACES = ["Inverloch", "Wonthaggi", "Cape Paterson", "Venus Bay", "Tarwin Lower", "Anderson Inlet", "Bunurong", "Kongwak", "Pound Creek", "Bass Coast",
+              "Phillip Island", "Cowes", "San Remo", "Newhaven", "Rhyll", "Grantville", "Corinella", "Coronet Bay", "Dalyston", "Kilcunda", "Cape Woolamai"]  # all around the Bass Coast
 MOO_SUBURBS = ["Moorooka", "Yeronga", "Yeerongpilly", "Annerley", "Salisbury", "Rocklea", "Tarragindi", "Coopers Plains", "Moorvale", "Tennyson", "Fairfield"]
 LOGAN_SUBURBS = ["Logan Central", "Logan Village", "Logan Hospital", "Logan Reserve", "Logan City", "Loganlea", "Loganholme", "Woodridge", "Kingston", "Slacks Creek",
                  "Springwood", "Underwood", "Daisy Hill", "Shailer Park", "Beenleigh", "Eagleby", "Waterford", "Marsden", "Crestmead", "Browns Plains", "Regents Park",
@@ -67,10 +68,11 @@ PLACES = {
     "inv": {
         "label": "Inverloch", "centre": (-38.63, 145.73), "km": 0.0,
         "words": re.compile(r"\b(" + "|".join(INV_PLACES) + r")\b", re.I),
-        "sure": re.compile(r"\b(Inverloch|Wonthaggi|Cape Paterson|Venus Bay|Tarwin Lower|Anderson Inlet|Bunurong|Bass Coast)\b", re.I),
+        "sure": re.compile(r"\b(Inverloch|Wonthaggi|Cape Paterson|Venus Bay|Tarwin Lower|Anderson Inlet|Bunurong|Bass Coast|Phillip Island|San Remo|Grantville|Corinella|Coronet Bay|Dalyston|Kilcunda|Cape Woolamai)\b", re.I),
         "region": r"\b(Victoria|Vic|VIC|Gippsland)\b",
-        "search": [gnews("Inverloch when:30d"), gnews("(" + " OR ".join(f'"{s}"' for s in INV_PLACES[1:7]) + ") when:14d")],
-        "council": [gnews("site:basscoast.vic.gov.au Inverloch when:60d")],
+        "search": [gnews("Inverloch when:30d"), gnews("(" + " OR ".join(f'"{s}"' for s in INV_PLACES[1:7]) + ") when:14d"),
+                   gnews('("Phillip Island" OR "San Remo" OR Cowes OR Grantville OR Corinella OR Kilcunda OR "Bass Coast") Victoria when:14d')],
+        "council": [gnews("site:basscoast.vic.gov.au when:45d")],
         "events": None,
     },
 }
@@ -305,6 +307,10 @@ def searched(urls, place, now, errors, max_age=timedelta(days=30)):
     with cf.ThreadPoolExecutor(6) as ex:
         for x, real in zip(out, ex.map(lambda x: F.gnews_real_url(x["url"]) or "", out)):
             x["url"] = real or x["url"]
+    try:
+        F.fill_blurbs(out)  # the publisher's own short summary, so the story isn't empty in the app
+    except Exception as e:
+        errors.append(f"summaries: {e}"[:160])
     return out
 
 
