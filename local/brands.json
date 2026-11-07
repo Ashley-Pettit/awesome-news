@@ -12,7 +12,9 @@
       "near": "\\b(Moorooka|Yeronga|Yeerongpilly|Annerley|Salisbury|Rocklea|Tarragindi|Coopers Plains|Moorvale|Tennyson|Fairfield|Holland Park|Beaudesert Road|Ipswich Road)\\b",
       "keep": "\\b(Brisbane|south ?side|south-east Queensland|SEQ|Queensland|Qld|Translink|Schrinner|Crisafulli)\\b",
       "away": "\\b(Sunshine Coast|Gold Coast|Noosa|Cairns|Townsville|Mackay|Rockhampton|Bundaberg|Toowoomba|Gladstone|Hervey Bay|Mount Isa|Far North|North Queensland|Central Queensland|Darling Downs|Whitsunday)",
-      "trust": ""
+      "trust": "",
+      "board_url": "",
+      "board_key": ""
     }
   },
   "logan": {
