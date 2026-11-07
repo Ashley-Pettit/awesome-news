@@ -232,6 +232,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
 .lb-logan b { display: block; font-family: var(--display); font-size: 1rem; letter-spacing: -0.01em; }
 .lb-logan small { display: block; font-size: 0.76rem; color: var(--muted); margin-top: 1px; }
 .lb-lgwrap { position: relative; }
+.lb-explore[hidden] { display: none; }
 /* The local apps (Moorooka News, The Logan Wire, The Coastline News), side by side under Listen */
 /* ...folded into one "Local news apps" row until it's tapped open */
 .lb-apps > summary { list-style: none; cursor: pointer; }
@@ -1376,6 +1377,7 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
       <div class="lb-catch" id="lbCatch" role="status" hidden></div>
       <div class="lb-catch lb-drive" id="lbDrive" role="status" hidden></div>
       <div class="lb-lgwrap" id="lbLgWrap"><details class="lb-apps"><summary class="lb-logan lb-appsum"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>Local news apps</b><small>Moorooka, Logan and the Bass Coast</small></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div class="lb-subs"><a class="lb-logan lb-sub" href="moorooka/" data-sub="moorooka/"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>Moorooka News</b><small>Local news first</small></span></a><a class="lb-logan lb-sub" href="logan/" data-sub="logan/"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>The Logan Wire</b><small>Local news first</small></span></a><a class="lb-logan lb-sub" href="inverloch/" data-sub="inverloch/"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>The Coastline News</b><small>Local news first</small></span></a></div></details></div>
+      <button class="lb-logan lb-explore" type="button" id="lbExplore" hidden><span class="lb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg></span><span><b>Virtually explore Inverloch</b><small>Walk around the town centre in 3D</small></span></button>
       <button class="topsearch" type="button" data-open-search aria-label="Search all news">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
         <span id="topSearchHint">Search all news</span><kbd>/</kbd></button>
@@ -2755,6 +2757,7 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
   window.addEventListener("resize", () => { inkAt = null; placeInk(); });
   document.fonts?.ready.then(() => { inkAt = null; placeInk(); });
   function renderHeader() {
+    { const xb = $("lbExplore"); if (xb) xb.hidden = S.region !== "inv"; }  // Inverloch: a way straight into the 3D town
     showVersion();
     $("eyebrow").textContent = state.showSaved ? "Saved" : greeting();
     $("title").textContent = APP_NAME;
@@ -2923,7 +2926,7 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
   function hideSheet(id, fromPop) {
     const el = $(id);
     if (id === "weather" && document.body.classList.contains("wxlisten")) { wxListenOff(); return; }
-    if (id === "weather") { bsFlyOff(); previewEnd(); }
+    if (id === "weather") { BS.exploreOnly = false; bsFlyOff(); previewEnd(); }
     if (!el.classList.contains("open")) return;
     el.classList.remove("open");
     setTimeout(() => { if (!el.classList.contains("open")) el.hidden = true; }, 320);
@@ -4682,6 +4685,7 @@ const handle = async (m, post) => {
     // Customise: the news keeps playing; Settings opens over it, and the Listen card brings the player back.
     if (t.closest("#npCust")) { npClose(); state.sTab = "news"; openSettings(); return; }  // the News tab: your interests and local area
     if (t.closest("#bsSkip")) { skipWeather(); return; }
+    if (t.closest("#lbExplore")) { exploreInverloch(); return; }
     const pk2 = t.closest("[data-prev-k]");
     if (pk2) { state.prevSel[pk2.dataset.prevK] = pk2.dataset.prevV; pk2.parentElement.querySelectorAll(".bchip").forEach(b => b.setAttribute("aria-pressed", String(b === pk2))); return; }
     if (t.closest("[data-prev-go]")) { previewGo(); return; }
@@ -6437,6 +6441,7 @@ const handle = async (m, post) => {
     clearTimeout(F.tipT); BS.fly = null;
     document.body.classList.remove("bsfly"); $("bsFly").hidden = true;
     if (L.exploreHold) { L.exploreHold = false; wxListenOff(); if (L.on && L.paused) resumeListen(); }  // the news waited while you explored
+    if (BS.exploreOnly) { BS.exploreOnly = false; if (!$("weather").hidden) hideSheet("weather"); }  // came from "Virtually explore Inverloch": straight back home
     $("bsFlyBtn")?.focus({ preventScroll: true });
   }
   function bsFlyTick(dt) {
@@ -6564,6 +6569,15 @@ const handle = async (m, post) => {
   }
   // Inverloch: the town and the surf beach take turns; Moorooka: the landmarks and the bowls club. Each time the weather opens, the other one.
   const bsTurn = k => { const v = !store.get(k, false); store.set(k, v); return v; };
+  // "Virtually explore Inverloch": the weather's 3D town, straight into Explore
+  function exploreInverloch() {
+    if (!state.wx) { toast("The 3D town needs the weather, which is still loading. Try again in a moment."); return; }
+    openWeather(); if ($("weather").hidden) return;
+    BS.invBeach = false; BS.exploreOnly = true; if (BS.B) bsPlace();
+    const t0 = Date.now(), go = () => { if ($("weather").hidden) return;
+      if (BS.B && BS.W?.invSpot) { BS.invBeach = false; bsPlace(); if (!BS.fly) bsFlyOn(); } else if (Date.now() - t0 < 20000) setTimeout(go, 200); };
+    go();
+  }
   function openWeather() {
     if (!state.wx) { toast("The weather isn't available right now"); return; }
     BS.view = { mode: "live", ms: Date.now(), play: true, day: null };  // plays on from now each time it opens
