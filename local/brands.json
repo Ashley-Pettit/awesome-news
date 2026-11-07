@@ -33,5 +33,23 @@
       "trust": "^(MyCity Logan|Logan City Council)",
       "only": true
     }
+  },
+  "inv": {
+    "dir": "inverloch",
+    "name": "Inverloch News",
+    "short": "Inverloch News",
+    "tagline": "Awesome News, with Inverloch's local news first",
+    "region": "inv",
+    "open_key": "inlet",
+    "prefix": "inlet:",
+    "local": {
+      "extra": "community-inv",
+      "near": "\\b(Inverloch|Wonthaggi|Cape Paterson|Venus Bay|Tarwin Lower|Tarwin|Pound Creek|Kongwak|Anderson Inlet|Bunurong|Eagles Nest|Bass Coast|Leongatha|Kilcunda|Harmers Haven|Screw Creek|Ayr Creek)\\b",
+      "keep": "\\b(Gippsland|South Gippsland|Phillip Island|San Remo|Korumburra|Bass Strait|Latrobe Valley|Morwell|Traralgon|Melbourne|Victoria|Victorian|Allan|VicRoads|Vic)\\b",
+      "away": "\\b(Ballarat|Bendigo|Geelong|Shepparton|Mildura|Warrnambool|Wodonga|Horsham|Swan Hill|Echuca|Wangaratta|Mallee|Wimmera|Surf Coast|Mornington Peninsula|Great Ocean Road|East Gippsland|Bairnsdale|Lakes Entrance|Sale)\\b",
+      "trust": "^(Sentinel-Times)",
+      "board_url": "",
+      "board_key": ""
+    }
   }
 }

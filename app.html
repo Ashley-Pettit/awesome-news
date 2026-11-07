@@ -230,8 +230,9 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
 .lb-logan b { display: block; font-family: var(--display); font-size: 1rem; letter-spacing: -0.01em; }
 .lb-logan small { display: block; font-size: 0.76rem; color: var(--muted); margin-top: 1px; }
 .lb-lgwrap { position: relative; }
-/* The local apps (Moorooka News, The Logan Wire), side by side under Listen */
+/* The local apps (Moorooka News, The Logan Wire, Inverloch News), side by side under Listen */
 .lb-subs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.lb-subs .lb-sub:last-child:nth-child(odd) { grid-column: 1 / -1; }
 .lb-subs .lb-sub { margin-top: 0; min-width: 0; text-decoration: none; padding: 10px 12px 10px 10px; gap: 10px; }
 .lb-subs .lb-sub > span:last-child { min-width: 0; }
 .lb-subs .lb-ic { width: 34px; height: 34px; flex: none; }
@@ -1344,7 +1345,7 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
       </div>
       <div class="lb-catch" id="lbCatch" role="status" hidden></div>
       <div class="lb-catch lb-drive" id="lbDrive" role="status" hidden></div>
-      <div class="lb-lgwrap lb-subs" id="lbLgWrap"><a class="lb-logan lb-sub" href="moorooka/" data-sub="moorooka/"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>Moorooka News</b><small>Local news first</small></span></a><a class="lb-logan lb-sub" href="logan/" data-sub="logan/"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>The Logan Wire</b><small>Local news first</small></span></a></div>
+      <div class="lb-lgwrap lb-subs" id="lbLgWrap"><a class="lb-logan lb-sub" href="moorooka/" data-sub="moorooka/"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>Moorooka News</b><small>Local news first</small></span></a><a class="lb-logan lb-sub" href="logan/" data-sub="logan/"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>The Logan Wire</b><small>Local news first</small></span></a><a class="lb-logan lb-sub" href="inverloch/" data-sub="inverloch/"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>Inverloch News</b><small>Local news first</small></span></a></div>
       <button class="topsearch" type="button" data-open-search aria-label="Search all news">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
         <span id="topSearchHint">Search all news</span><kbd>/</kbd></button>
@@ -2258,7 +2259,7 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
   function wxListenIntro() {
     if (!state.wx || document.body.classList.contains("wxlisten") || !$("weather").hidden) return;
     document.body.classList.add("wxlisten", "wxintro");
-    BS.mooAlt = Math.random() < 0.5;
+    BS.mooAlt = Math.random() < 0.5; BS.invBeach = Math.random() < 0.5;
     // The day from 5:15am in 10-minute steps, one every 0.2 seconds for the sky (50 minutes a second: the 8 or so seconds
     // of weather talk covers about 5:15am to noon); the words update every 2 seconds.
     // In the morning and afternoon it's today; from 6pm it's tomorrow.
@@ -2585,7 +2586,7 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
   const boardName = () => store.get("board.name", "");
   function renderBoard() {
     if (!BOARD.posts && !BOARD.err) { boardLoad(); }
-    const head = `<div class="bd-head"><h2>Community board</h2><p>Jobs going, things wanted, and notes for your neighbours around Moorooka. Posts stay up for 30 days.</p></div>`;
+    const head = `<div class="bd-head"><h2>Community board</h2><p>Jobs going, things wanted, and notes for your neighbours around ${esc(regionLabel())}. Posts stay up for 30 days.</p></div>`;
     const kinds = [["all", "All"], ...Object.entries(BOARD_KINDS)];
     const bar = `<div class="bd-bar"><div class="bd-kinds" role="group" aria-label="Show">${kinds.map(([k, l]) => `<button type="button" data-bd-kind="${k}" aria-pressed="${BOARD.kind === k}">${l}</button>`).join("")}</div>`
       + (BOARD.form ? "" : `<button class="pill-btn" type="button" data-bd-new>Write a post</button>`) + `</div>`;
@@ -5122,8 +5123,10 @@ const handle = async (m, post) => {
     const mb = mo && !dr && !!W.mooBowls && !!BS.mooAlt;  // Moorooka: half the time the bowls club instead of the landmarks
     W.bris.visible = !vic && !lo && !mo && !dr; if (W.logan) W.logan.visible = lo && !dr; if (W.moo) W.moo.visible = (mo && !dr && !mb) || dm; if (W.mooTraffic) W.mooTraffic.visible = dm; if (W.drive) W.drive.visible = dr && !di && !dm; if (W.driveInv) W.driveInv.visible = di;
     if (W.mooBowls) W.mooBowls.visible = mb;
+    const it = vic && !dr && !!W.invTown && !BS.invBeach;  // Inverloch: the town centre, or half the time the surf beach
+    if (W.invTown) { W.invTown.visible = it; W.invBeach.visible = !it; } if (W.water) W.water.visible = !it;
     const B = BS.B; if (B) { if (!B.camHome) B.camHome = [B.camBase.clone(), B.camLook.clone()];  // Moorooka is seen from a little higher up, looking over the roundabout
-      if (di) { B.camBase.set(-1.75, 8.5, 44); B.camLook.set(-1.75, 3, -110); } else if (dm) { B.camBase.set(0, 17, 22); B.camLook.set(0, 1, -110); } else if (dr) { B.camBase.set(7.6, 13, 50); B.camLook.set(7.6, 2, -90); } else if (mb) { B.camBase.set(-38, 26, 78); B.camLook.set(-4, 2, -12); } else if (mo) { B.camBase.set(0, 15, 46); B.camLook.set(0, 5, -60); } else { B.camBase.copy(B.camHome[0]); B.camLook.copy(B.camHome[1]); } }
+      if (di) { B.camBase.set(-1.75, 8.5, 44); B.camLook.set(-1.75, 3, -110); } else if (dm) { B.camBase.set(0, 17, 22); B.camLook.set(0, 1, -110); } else if (dr) { B.camBase.set(7.6, 13, 50); B.camLook.set(7.6, 2, -90); } else if (mb) { B.camBase.set(-38, 26, 78); B.camLook.set(-4, 2, -12); } else if (it) { B.camBase.set(-6, 10.5, -30); B.camLook.set(-16, 6, -100); } else if (mo) { B.camBase.set(0, 15, 46); B.camLook.set(0, 5, -60); } else { B.camBase.copy(B.camHome[0]); B.camLook.copy(B.camHome[1]); } }
     W.inv.visible = vic && !dr;
   }
   function bsBuild(THREE) {
@@ -5213,7 +5216,7 @@ const handle = async (m, post) => {
         " col+=uSunCol*pow(max(dot(R,uSunDir),0.0),140.0)*uSunGlow*2.2; col+=vec3(0.8,0.86,1.0)*pow(max(dot(R,uMoonDir),0.0),180.0)*uMoon*1.2;",
         " col+=vec3(uFlash*0.7); float dist=length(cameraPosition.xz-vW.xz); col=mix(col,uHorizon,smoothstep(90.0,480.0,dist));",
         " gl_FragColor=vec4(col,0.86); }"].join("\n") }));
-    water.rotation.x = -Math.PI / 2; water.renderOrder = 2; scene.add(water);
+    water.rotation.x = -Math.PI / 2; water.renderOrder = 2; scene.add(water); W.water = water;
     // ---- Brisbane: the river, the CBD, the Story Bridge, the Wheel ----
     const bris = new THREE.Group(); scene.add(bris); W.bris = bris;
     // banks and the Kangaroo Point cliffs
@@ -5267,14 +5270,16 @@ const handle = async (m, post) => {
     wheel.position.set(-20, 8.4, -14); wheel.rotation.y = 0.3; bris.add(wheel); W.wheel = wheel;
     const post = new THREE.Mesh(new THREE.BoxGeometry(0.6, 8.4, 0.6), new THREE.MeshStandardMaterial({ color: 0x9aa3b3 })); post.position.set(-20, 4.2, -14); bris.add(post);
 
-    // ---- Inverloch (shown for Victoria): Anderson Inlet and the surf beach, the Bunurong cliffs and the
-    // Eagles Nest rock stack, Norfolk Island pines on the foreshore, the jetty, the surf club, and the
-    // green South Gippsland hills behind the town.
+    // ---- Inverloch (shown for Victoria), two views like the real place, half the time each: the town centre (the
+    // Rotary clock, the A'Beckett Street shops, the Esplanade Hotel, gum trees; no sea, as the beach is a walk away) and the
+    // surf beach (dunes and coastal scrub, the surf club, the Bunurong cliffs and Eagles Nest), with the green South Gippsland hills behind both.
     const inv = new THREE.Group(); inv.visible = false; scene.add(inv); W.inv = inv;
+    const bch = new THREE.Group(), twn = new THREE.Group(); inv.add(bch, twn); W.invBeach = bch; W.invTown = twn;
+    const beachLights = [], townLights = [];
     const sand = new THREE.MeshStandardMaterial({ color: 0xd8c7a0, roughness: 1 }), grass = new THREE.MeshStandardMaterial({ color: 0x4c7a3c, roughness: 1 });
     const rock = new THREE.MeshStandardMaterial({ color: 0x9a7650, roughness: 1, flatShading: true }), rockDark = new THREE.MeshStandardMaterial({ color: 0x4a4038, roughness: 1, flatShading: true });
-    const beach = new THREE.Mesh(new THREE.BoxGeometry(260, 0.9, 26), sand); beach.position.set(-30, 0.35, -46); inv.add(beach);
-    const foam = new THREE.Mesh(new THREE.BoxGeometry(250, 0.12, 1.4), new THREE.MeshBasicMaterial({ color: 0xf4f7f8, transparent: true, opacity: 0.75 })); foam.position.set(-30, 0.82, -32.5); inv.add(foam); W.invFoam = foam;
+    const beach = new THREE.Mesh(new THREE.BoxGeometry(260, 0.9, 26), sand); beach.position.set(-30, 0.35, -46); bch.add(beach);
+    const foam = new THREE.Mesh(new THREE.BoxGeometry(250, 0.12, 1.4), new THREE.MeshBasicMaterial({ color: 0xf4f7f8, transparent: true, opacity: 0.75 })); foam.position.set(-30, 0.82, -32.5); bch.add(foam); W.invFoam = foam;
     const land = new THREE.Mesh(new THREE.BoxGeometry(900, 2.2, 220), grass); land.position.set(0, 1.1, -168); inv.add(land);
     // the hills: long, low and green
     for (let i = 0; i < 9; i++) { const h = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 12), grass);
@@ -5287,41 +5292,43 @@ const handle = async (m, post) => {
       const body = new THREE.Mesh(new THREE.BoxGeometry(w, hh, d), wallMat); body.position.set(x, 2.2 + hh / 2, z); inv.add(body);
       const roof = new THREE.Mesh(new THREE.ConeGeometry(Math.max(w, d) * 0.78, 1.8, 4), roofMat); roof.position.set(x, 2.2 + hh + 0.9, z); roof.rotation.y = Math.PI / 4; inv.add(roof);
       houseLights.push(x + (rnd(i * 29) - 0.5) * w * 0.6, 2.2 + hh * 0.5, z + d / 2 + 0.1); }
-    // the jetty into the inlet, with lamps
-    const jetty = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.5, 34), new THREE.MeshStandardMaterial({ color: 0x6e5a46, roughness: 1 })); jetty.position.set(-20, 1.5, -18); inv.add(jetty);
-    for (let z = -32; z <= -2; z += 5) [-0.9, 0.9].forEach(dx => { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 2.4, 6), rockDark); p.position.set(-20 + dx, 0.3, z); inv.add(p); });
-    for (let z = -30; z <= -4; z += 8) houseLights.push(-20, 2.6, z);
+    // dunes and coastal scrub (tea-tree, banksia) between the beach and the houses on the rise behind
+    const duneM = new THREE.MeshStandardMaterial({ color: 0x9a9864, roughness: 1, flatShading: true }), scrubM = new THREE.MeshStandardMaterial({ color: 0x5b6e3e, roughness: 1, flatShading: true }), scrubD = new THREE.MeshStandardMaterial({ color: 0x46572f, roughness: 1, flatShading: true });
+    for (let i = 0; i < 12; i++) { const d = new THREE.Mesh(new THREE.SphereGeometry(1, 14, 8), duneM); d.scale.set(18 + rnd(i * 7 + 1) * 14, 3 + rnd(i * 5 + 2) * 2, 9 + rnd(i * 3 + 4) * 5); d.position.set(-150 + i * 17 + rnd(i * 9) * 6, 0.6, -62 - rnd(i * 13) * 4); bch.add(d); }
+    for (let i = 0; i < 70; i++) { const x = -150 + rnd(i * 17 + 5) * 190, z = -60 - rnd(i * 19 + 7) * 22; if (x > 2 && x < 22 && z > -64) continue;  // clear round the surf club
+      const s2 = new THREE.Mesh(new THREE.DodecahedronGeometry(1, 0), i % 3 ? scrubM : scrubD); s2.scale.set(1.6 + rnd(i * 23) * 2.2, 1 + rnd(i * 29) * 1.3, 1.4 + rnd(i * 31) * 1.8); s2.position.set(x, 4.2 + rnd(i * 37) * 1.8, z); bch.add(s2); }
     // the surf club, with its red and yellow flags
-    const club = new THREE.Mesh(new THREE.BoxGeometry(12, 4.5, 6), new THREE.MeshStandardMaterial({ color: 0xf2efe8, roughness: .8 })); club.position.set(12, 3, -57); inv.add(club);
-    const clubRoof = new THREE.Mesh(new THREE.BoxGeometry(13, 0.5, 7), roofMat); clubRoof.position.set(12, 5.5, -57); inv.add(clubRoof);
-    for (let i = 0; i < 4; i++) houseLights.push(8 + i * 2.6, 3.2, -53.9);
+    const club = new THREE.Mesh(new THREE.BoxGeometry(12, 4.5, 6), new THREE.MeshStandardMaterial({ color: 0xf2efe8, roughness: .8 })); club.position.set(12, 3, -57); bch.add(club);
+    const clubRoof = new THREE.Mesh(new THREE.BoxGeometry(13, 0.5, 7), roofMat); clubRoof.position.set(12, 5.5, -57); bch.add(clubRoof);
+    for (let i = 0; i < 4; i++) beachLights.push(8 + i * 2.6, 3.2, -53.9);
     W.invFlags = [];
-    [[-16, -45], [7, -45]].forEach(([x, z]) => { const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 6, 6), new THREE.MeshStandardMaterial({ color: 0xdddddd })); pole.position.set(x, 3.6, z); inv.add(pole);
+    [[-16, -45], [7, -45]].forEach(([x, z]) => { const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 6, 6), new THREE.MeshStandardMaterial({ color: 0xdddddd })); pole.position.set(x, 3.6, z); bch.add(pole);
       const flag = new THREE.Group(); [[0xd8262b, 0], [0xf3c623, -0.7]].forEach(([c, y]) => { const f = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 0.7), new THREE.MeshStandardMaterial({ color: c, side: THREE.DoubleSide })); f.position.set(0.9, y, 0); flag.add(f); });
-      flag.position.set(x, 6.1, z); inv.add(flag); W.invFlags.push(flag); });
+      flag.position.set(x, 6.1, z); bch.add(flag); W.invFlags.push(flag); });
     // Norfolk Island pines along the foreshore
     const pine = new THREE.MeshStandardMaterial({ color: 0x29452c, roughness: 1 });
     [-138, -112, -90, -74, 44, 60].forEach((x, i) =>  // Norfolk pines, kept clear of the town centre
        { const g = new THREE.Group(), hgt = 15 + rnd(i * 41) * 6;
       const tr = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.5, hgt, 6), trunkMat2()); tr.position.y = hgt / 2; g.add(tr);
       for (let k = 0; k < 6; k++) { const tier = new THREE.Mesh(new THREE.ConeGeometry(3.4 - k * 0.45, 2.6, 8), pine); tier.position.y = hgt * 0.35 + k * (hgt * 0.11); g.add(tier); }
-      g.position.set(x, 1, -60 - rnd(i * 43) * 6); inv.add(g); });
+      g.position.set(x, 1, -60 - rnd(i * 43) * 6); bch.add(g); });
     function trunkMat2() { return trunkMat2.m || (trunkMat2.m = new THREE.MeshStandardMaterial({ color: 0x4a3a30, roughness: 1 })); }
     // the Bunurong coast: sandstone cliffs to the right, and the Eagles Nest rock stack in the water
     for (let i = 0; i < 7; i++) { const c = new THREE.Mesh(new THREE.DodecahedronGeometry(1, 0), rock);
-      c.scale.set(16 + rnd(i * 3) * 10, 8 + rnd(i * 5) * 7, 14 + rnd(i * 7) * 8); c.position.set(38 + i * 17, 2, -50 - i * 8 - rnd(i * 9) * 6); inv.add(c);
-      const top = new THREE.Mesh(new THREE.DodecahedronGeometry(1, 0), grass); top.scale.set(c.scale.x * 0.9, 2, c.scale.z * 0.9); top.position.set(c.position.x, c.position.y + c.scale.y * 0.8, c.position.z - 2); inv.add(top); }
+      c.scale.set(16 + rnd(i * 3) * 10, 8 + rnd(i * 5) * 7, 14 + rnd(i * 7) * 8); c.position.set(38 + i * 17, 2, -50 - i * 8 - rnd(i * 9) * 6); bch.add(c);
+      const top = new THREE.Mesh(new THREE.DodecahedronGeometry(1, 0), grass); top.scale.set(c.scale.x * 0.9, 2, c.scale.z * 0.9); top.position.set(c.position.x, c.position.y + c.scale.y * 0.8, c.position.z - 2); bch.add(top); }
     const nest = new THREE.Group();
     [[4.2, 0, 5], [3.6, 5, 4.6], [3.2, 10, 3.6], [2.6, 14.5, 2.4]].forEach(([r, y, h]) => { const s = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.85, r, h, 7), rock); s.position.y = y + h / 2; s.rotation.y = y; nest.add(s); });
     const cap = new THREE.Mesh(new THREE.DodecahedronGeometry(2.6, 0), rockDark); cap.position.y = 17.4; cap.scale.set(1.1, 0.6, 1); nest.add(cap);
-    nest.position.set(12, -0.5, -24); inv.add(nest);
+    nest.position.set(12, -0.5, -24); bch.add(nest);
     // flat rock platforms just off the beach
-    for (let i = 0; i < 6; i++) { const r = new THREE.Mesh(new THREE.CylinderGeometry(2 + rnd(i * 3) * 3, 3 + rnd(i * 5) * 3, 0.7, 7), rockDark); r.position.set(4 + rnd(i * 7) * 22, 0.1, -14 - rnd(i * 11) * 14); inv.add(r); }
+    for (let i = 0; i < 6; i++) { const r = new THREE.Mesh(new THREE.CylinderGeometry(2 + rnd(i * 3) * 3, 3 + rnd(i * 5) * 3, 0.7, 7), rockDark); r.position.set(4 + rnd(i * 7) * 22, 0.1, -14 - rnd(i * 11) * 14); bch.add(r); }
     // The Rotary clock from A'Beckett Street, matched to photos: a gold gear-shaped clock (blue band, gold spokes, a white
     // Roman-numeral dial) with a navy gear behind it, on twin teal poles that carry a black gaff-rigged ketch on top. Its
     // plaza sits in the town centre with the four mosaic blocks and grasses. The hands show the scene's time and the
     // faces glow at night.
     {
+      const houseLights = townLights, inv = twn;  // everything in town goes in the town view
       const clk = new THREE.Group(), teal = new THREE.MeshStandardMaterial({ color: 0x3b8f86, roughness: .5, metalness: .3 });
       const gold = new THREE.MeshStandardMaterial({ color: 0xffb53a, roughness: .45, metalness: 0, emissive: 0x8a5200, emissiveIntensity: .6 }), black = new THREE.MeshStandardMaterial({ color: 0x15171a, roughness: .6, side: THREE.DoubleSide });
       const tower = new THREE.Group(); tower.scale.setScalar(0.4); clk.add(tower);  // the clock at its real size: a little taller than the street lamps
@@ -5493,9 +5500,17 @@ const handle = async (m, post) => {
         faceMat.emissiveIntensity = lit * 0.85;
       };
     }
-    const hl = new THREE.BufferGeometry(); hl.setAttribute("position", new THREE.Float32BufferAttribute(houseLights, 3));
+    // the town view stands on land all round: lawns and the streets running off, the beach out of sight
+    { const g = new THREE.Mesh(new THREE.BoxGeometry(900, 2.2, 170), grass); g.position.set(0, 1.1, 27); twn.add(g);
+      const tr = new THREE.MeshStandardMaterial({ color: 0x3e4146, roughness: .95 }), rd = new THREE.Mesh(new THREE.BoxGeometry(7, 0.12, 150), tr); rd.position.set(0, 2.24, -2); twn.add(rd);
+      const hm = new THREE.MeshStandardMaterial({ color: 0xece4d6, roughness: .9 }), rm = new THREE.MeshStandardMaterial({ color: 0x3e4650, roughness: .8 });
+      for (let i = 0; i < 30; i++) { const side = i % 2 ? 1 : -1, x = side * (14 + rnd(i * 7 + 3) * 90), z = -50 + Math.floor(i / 2) * 7 + rnd(i * 11) * 3, w = 5 + rnd(i * 13) * 3, hh = 2.6 + rnd(i * 17) * 1.4;
+        if (Math.abs(x) < 30 && z > -20) continue;  // the view down Reilly Street stays clear
+        const hb = new THREE.Mesh(new THREE.BoxGeometry(w, hh, 5), hm); hb.position.set(x, 2.2 + hh / 2, z); twn.add(hb);
+        const rf = new THREE.Mesh(new THREE.ConeGeometry(w * 0.78, 1.8, 4), rm); rf.position.set(x, 2.2 + hh + 0.9, z); rf.rotation.y = Math.PI / 4; twn.add(rf);
+        townLights.push(x, 2.2 + hh * 0.5, z + 2.6); } }
     W.invLights = new THREE.PointsMaterial({ color: 0xffd9a0, size: 0.7, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: true });
-    inv.add(new THREE.Points(hl, W.invLights));
+    [[inv, houseLights], [bch, beachLights], [twn, townLights]].forEach(([g, pts]) => { const hl = new THREE.BufferGeometry(); hl.setAttribute("position", new THREE.Float32BufferAttribute(pts, 3)); g.add(new THREE.Points(hl, W.invLights)); });
 
     // ---- Logan (shown for Logan news): the Logan River with gum trees on the bank and a koala in one,
     // the motorway bridge, the council's building at Logan Central, suburbs of tin roofs over the hills,
@@ -6223,7 +6238,7 @@ const handle = async (m, post) => {
   function bsFlyOn() {
     const B = BS.B; if (!B || BS.fly) return;
     const cam = B.camera, dir = new B.THREE.Vector3().subVectors(B.camLook, B.camBase).normalize();
-    const inv = BS.W.inv?.visible && !BS.drive;  // Inverloch: start where the photos of the Rotary clock are taken, looking up A'Beckett Street
+    const inv = BS.W.inv?.visible && !BS.drive && BS.W.invTown?.visible;  // Inverloch: start where the photos of the Rotary clock are taken, looking up A'Beckett Street
     const start = inv ? { pos: new B.THREE.Vector3(...BS_INV_SPOT.pos), yaw: BS_INV_SPOT.yaw, pitch: BS_INV_SPOT.pitch }
       : { pos: cam.position.clone(), yaw: Math.atan2(-dir.x, -dir.z), pitch: Math.asin(bsClamp(dir.y, -1, 1)) };
     const F = BS.fly = { ...start, pos: start.pos.clone(), start, keys: new Set(), stick: { x: 0, y: 0 }, touches: new Map(), drag: null };
@@ -6395,7 +6410,7 @@ const handle = async (m, post) => {
   function openWeather() {
     if (!state.wx) { toast("The weather isn't available right now"); return; }
     BS.view = { mode: "live", ms: Date.now(), play: true, day: null };  // plays on from now each time it opens
-    BS.mooAlt = Math.random() < 0.5;  // Moorooka: the landmarks or the bowls club, half the time each
+    BS.mooAlt = Math.random() < 0.5; BS.invBeach = Math.random() < 0.5;  // Inverloch: the town or the beach. Moorooka: the landmarks or the bowls club, half the time each
     if (!BS.tick) BS.tick = setInterval(() => { if (!$("weather").hidden) bsTick(); }, 1000);
     renderWeather();
     showSheet("weather");
@@ -6908,7 +6923,7 @@ const handle = async (m, post) => {
   const isTester = () => /^(rod|rodney|ash|ashley)$/i.test((S.name || "").trim());
   state.prevSel = { place: "moo", sky: "rain", hour: "11", drive: "off" };
   const PREV_OPTS = {
-    place: [["moo", "Moorooka streets"], ["bowls", "Moorooka bowls club"], ["qld", "Brisbane"], ["logan", "Logan"], ["inv", "Inverloch"]],
+    place: [["moo", "Moorooka streets"], ["bowls", "Moorooka bowls club"], ["qld", "Brisbane"], ["logan", "Logan"], ["inv", "Inverloch town"], ["invbeach", "Inverloch beach"]],
     sky: [["auto", "As forecast"], ["sun", "Sunny"], ["cloud", "Cloudy"], ["rain", "Rain"], ["storm", "Storm"]],
     hour: [["now", "Now"], ["6", "6am"], ["11", "Midday"], ["18", "Sunset"], ["21", "Night"]],
     drive: [["off", "No drive"], ["mooClear", "Beaudesert Rd, clear"], ["mooHeavy", "Beaudesert Rd, heavy"], ["motorway", "Motorway"], ["inv", "Into Inverloch"]] };
@@ -6935,9 +6950,9 @@ const handle = async (m, post) => {
   }
   function previewGo() {
     const p = state.prevSel;
-    BS.prev = { place: p.place === "bowls" ? "moo" : p.place, sky: p.sky };
+    BS.prev = { place: p.place === "bowls" ? "moo" : p.place === "invbeach" ? "inv" : p.place, sky: p.sky };
     openWeather(); if ($("weather").hidden) { BS.prev = null; return; }
-    BS.mooAlt = p.place === "bowls";
+    BS.mooAlt = p.place === "bowls"; BS.invBeach = p.place === "invbeach";
     if (p.hour !== "now") { const d = new Date(); d.setHours(+p.hour, 0, 0, 0); BS.view = { mode: "day", ms: d.getTime(), play: false, day: BS.D ? bsKey(d.getTime()) : null }; }
     const now = Date.now(), fake = {
       mooClear: { toWork: true, base: 21, est: 23, extra: 0, planned: true, leaveMs: now + 20 * 60000, leaveAt: "7:45am", arriveAt: "8:08am", km: 19, from: "Moorooka", to: "Logan City Council", events: [], more: 0 },
