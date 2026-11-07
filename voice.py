@@ -489,7 +489,7 @@ def plan(data, vkey):
 # pieces made the old way are kept (so nothing goes missing) and remade in the background, newest stories first.
 STYLEV = 9
 PACE = 1.02  # her overall pace: 2% quicker than the voice's own
-SENT = re.compile(r"(?<=[.!?…])[\"”’)]?\s+(?=[A-Z0-9\"“‘(])")
+SENT_SPLIT = re.compile(r"(?<=[.!?…])[\"”’)]?\s+(?=[A-Z0-9\"“‘(])")
 
 
 # Some outlets start a story in capitals ("A MAN has been charged", "IT was a night to remember", "THE INVERLOCH
@@ -526,7 +526,7 @@ def unshout(say, forms):
 def speak(model, np, say, seed, head):
     import random
     rng = random.Random(seed)
-    parts = [p for p in SENT.split(say) if p.strip()] or [say]
+    parts = [p for p in SENT_SPLIT.split(say) if p.strip()] or [say]
     out, sr = [], 24000
     for n, sent in enumerate(parts):
         words = len(sent.split())
