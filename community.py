@@ -32,6 +32,8 @@ def gnews(q):
     return "https://news.google.com/rss/search?" + urllib.parse.urlencode({"q": q, "hl": "en-AU", "gl": "AU", "ceid": "AU:en"})
 
 
+INV_PLACES = ["Inverloch", "Wonthaggi", "Cape Paterson", "Venus Bay", "Tarwin Lower", "Anderson Inlet", "Bunurong", "Kongwak", "Pound Creek", "Bass Coast",
+              "Phillip Island", "Cowes", "San Remo", "Newhaven", "Rhyll", "Grantville", "Corinella", "Coronet Bay", "Dalyston", "Kilcunda", "Cape Woolamai"]  # all around the Bass Coast
 MOO_SUBURBS = ["Moorooka", "Yeronga", "Yeerongpilly", "Annerley", "Salisbury", "Rocklea", "Tarragindi", "Coopers Plains", "Moorvale", "Tennyson", "Fairfield"]
 LOGAN_SUBURBS = ["Logan Central", "Logan Village", "Logan Hospital", "Logan Reserve", "Logan City", "Loganlea", "Loganholme", "Woodridge", "Kingston", "Slacks Creek",
                  "Springwood", "Underwood", "Daisy Hill", "Shailer Park", "Beenleigh", "Eagleby", "Waterford", "Marsden", "Crestmead", "Browns Plains", "Regents Park",
@@ -50,10 +52,28 @@ PLACES = {
     },
     "logan": {
         "label": "Logan", "centre": (-27.66, 153.12), "km": 14.0,
-        "words": re.compile(r"\b(" + "|".join(LOGAN_SUBURBS) + r")\b|\bT6 Beenleigh\b|\bBeenleigh line\b", re.I),
-        "search": [],  # the Logan section already carries Logan's news (council, police, local sites, a news search)
+        "words": re.compile(r"\b(Logan|" + "|".join(LOGAN_SUBURBS) + r")\b|\bT6 Beenleigh\b|\bBeenleigh line\b", re.I),
+        # Stories naming Logan or its suburbs from any outlet, on top of the Logan section's own (council, police, local sites).
+        "sure": re.compile(r"\b(Logan|Loganlea|Loganholme|Beenleigh|Woodridge|Slacks Creek|Browns Plains|Jimboomba|Yarrabilba|Shailer Park|Daisy Hill|"
+                           r"Eagleby|Crestmead|Park Ridge|Edens Landing|Holmview|Meadowbrook|Bethania|Rochedale South|Boronia Heights|Chambers Flat)\b", re.I),
+        "not": re.compile(r"\b(Utah|Cache Valley|Herald Journal|KSL|Deseret|Idaho|Colorado|5280\w*|Ohio|West Virginia|Iowa|Kansas|fall foliage|"
+                          r"Logan (Paul|Roy|Sargeant|Lerman|Henderson|Scott|Airport)|Wolverine)\b", re.I),
+        "search": [gnews('"Logan City" OR "City of Logan" OR "Logan Council" when:14d'),
+                   gnews("(" + " OR ".join(f'"{s}"' for s in ["Beenleigh", "Woodridge", "Loganholme", "Browns Plains", "Jimboomba", "Yarrabilba", "Springwood", "Slacks Creek", "Shailer Park", "Park Ridge"]) + ") Queensland when:14d"),
+                   gnews("Logan Queensland when:7d")],
         "council": [],
         "events": "logan",
+    },
+    # Inverloch, Victoria: a local news search only (Translink, QLDTraffic and the Queensland councils' events don't reach it).
+    "inv": {
+        "label": "Inverloch", "centre": (-38.63, 145.73), "km": 0.0,
+        "words": re.compile(r"\b(" + "|".join(INV_PLACES) + r")\b", re.I),
+        "sure": re.compile(r"\b(Inverloch|Wonthaggi|Cape Paterson|Venus Bay|Tarwin Lower|Anderson Inlet|Bunurong|Bass Coast|Phillip Island|San Remo|Grantville|Corinella|Coronet Bay|Dalyston|Kilcunda|Cape Woolamai)\b", re.I),
+        "region": r"\b(Victoria|Vic|VIC|Gippsland)\b",
+        "search": [gnews("Inverloch when:30d"), gnews("(" + " OR ".join(f'"{s}"' for s in INV_PLACES[1:7]) + ") when:14d"),
+                   gnews('("Phillip Island" OR "San Remo" OR Cowes OR Grantville OR Corinella OR Kilcunda OR "Bass Coast") Victoria when:14d')],
+        "council": [gnews("site:basscoast.vic.gov.au when:45d")],
+        "events": None,
     },
 }
 NOT_HERE = re.compile(r"\b(Cairns|Townsville|Toowoomba|Sunshine Coast|Noosa|Gold Coast City|Mackay|Rockhampton|Bundaberg|Hervey Bay)\b", re.I)
@@ -270,13 +290,13 @@ def searched(urls, place, now, errors, max_age=timedelta(days=30)):
     out, seen = [], set()
     for it in found:
         title = html.unescape(it["title"])
-        m = re.match(r"^(.*?)\s+[-–]\s+([^-–]{2,60})$", title)
+        m = re.match(r"^(.*)\s[-–]\s(.{2,60})$", title)
         title, src = (m.group(1), m.group(2)) if m else (title, "")
         pub = it["published"] or now
         txt = f"{title} {re.sub(r'<[^>]+>', ' ', it.get('summary') or '')}"
-        if now - pub > max_age or title in seen or not place["words"].search(txt):
+        if now - pub > max_age or title in seen or not place["words"].search(txt) or (place.get("not") and place["not"].search(txt + " " + src)):
             continue
-        if place.get("sure") and not place["sure"].search(txt) and not re.search(r"\b(Brisbane|Queensland|Qld|QLD)\b", txt + " " + src):
+        if place.get("sure") and not place["sure"].search(txt) and not re.search(place.get("region", r"\b(Brisbane|Queensland|Qld|QLD)\b"), txt + " " + src):
             continue  # Salisbury, Fairfield, Tennyson and Kingston are also places elsewhere
         if re.search(r"Police|Crime Stoppers", src) or re.match(r"^\d+\s+[A-Z]", title):
             continue  # police logs (crime is covered by the news itself) and property pages ("94 TAUNTON ST")
@@ -287,6 +307,10 @@ def searched(urls, place, now, errors, max_age=timedelta(days=30)):
     with cf.ThreadPoolExecutor(6) as ex:
         for x, real in zip(out, ex.map(lambda x: F.gnews_real_url(x["url"]) or "", out)):
             x["url"] = real or x["url"]
+    try:
+        F.fill_blurbs(out)  # the publisher's own short summary, so the story isn't empty in the app
+    except Exception as e:
+        errors.append(f"summaries: {e}"[:160])
     return out
 
 
@@ -311,7 +335,7 @@ def build(now, errors):
         ups.sort(key=lambda u: (u["kind"] == "council", bool(u["start"] and u["start"] > soon), sev.get(u["severity"], 1) if not (u["start"] and u["start"] > soon) else 0,
                                 (u["start"] or now).timestamp() if u["start"] and u["start"] > soon else 0))
         news = searched(place["search"], place, now, errors)
-        events = bcc_events(place, now, errors) if place["events"] == "bcc" else logan_events(now, errors)
+        events = bcc_events(place, now, errors) if place["events"] == "bcc" else logan_events(now, errors) if place["events"] == "logan" else []
 
         def ser(x, kind):
             d = {k: v for k, v in x.items() if v not in (None, "", False)}

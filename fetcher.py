@@ -354,6 +354,50 @@ def clean(text, limit=None):
         text = text[:limit].rsplit(" ", 1)[0].rstrip(",;:.") + "…"
     return text
 
+# A story with no text of its own (most news search results, some feeds) gets the publisher's own short summary: the
+# description each page gives out for link previews (og:description), so the reader and Listen have something to go on.
+# Only that sentence or two is taken, never the article, and it links back to the publisher as always.
+META_DESC = [re.compile(rf"<meta[^>]+(?:property|name)=[\"']{k}[\"'][^>]*content=[\"']([^\"']+)", re.I) for k in ("og:description", "twitter:description", "description")] + \
+            [re.compile(rf"<meta[^>]+content=[\"']([^\"']+)[\"'][^>]*(?:property|name)=[\"']{k}[\"']", re.I) for k in ("og:description", "twitter:description", "description")]
+
+
+def page_blurb(url):
+    """(description, image) from a story's own page, or ("", "")."""
+    if not url.startswith("http") or "news.google.com" in url:
+        return "", ""
+    try:
+        a = get(url, timeout=10, limit=400_000).decode("utf-8", "replace")
+    except Exception:
+        return "", ""
+    desc = next((clean(m.group(1)) for r in META_DESC for m in [r.search(a)] if m), "")
+    im = OG_RE.search(a)
+    im = html.unescape(im.group(1) or im.group(2)) if im else ""
+    return desc[:320], (im if im.startswith("https://") else "")
+
+
+def fill_blurbs(items, most=120):
+    """Give stories with no text their publisher's summary (and photo, if they have none). Leaves out a site's stock
+    description (the same words on every page) and one that only repeats the headline."""
+    todo = [st for st in items if len(clean(st.get("summary") or "")) < 40][:most]
+    if not todo:
+        return 0
+    with cf.ThreadPoolExecutor(12) as ex:
+        got = list(ex.map(lambda st: page_blurb(st["url"]), todo))
+    seen = {}
+    for d, _ in got:
+        if d:
+            seen[d] = seen.get(d, 0) + 1
+    n = 0
+    for st, (d, im) in zip(todo, got):
+        t = re.sub(r"\W+", " ", st["title"].lower()).strip()
+        if d and len(d) >= 40 and seen[d] == 1 and re.sub(r"\W+", " ", d.lower()).strip() != t:
+            st["summary"] = d
+            n += 1
+        if im and not st.get("image"):
+            st["image"] = im
+    return n
+
+
 
 def parse_date(s):
     if not s:
@@ -929,6 +973,104 @@ def fetch_tv(now, errors):
 
 
 # ---------------------------------------------------------------------------
+# ABC video (beta): the ABC's own news clips, plain MP4s from the ABC (no YouTube, no ads), from its News
+# Channel page: "News in 90 Seconds", the latest clips and the Video Shorts. Listen (beta) plays them between
+# Emma's stories.
+# ---------------------------------------------------------------------------
+ABC_VIDEO_PAGE = "https://www.abc.net.au/news/video"
+
+
+def abc_page_data(raw):
+    m = re.search(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', raw, re.S)
+    return json.loads(m.group(1)) if m else None
+
+
+def abc_components(o, out):
+    if isinstance(o, dict):
+        c = o.get("component")
+        if isinstance(c, dict) and c.get("name"):
+            out.append(c)
+        for v in o.values():
+            abc_components(v, out)
+    elif isinstance(o, list):
+        for v in o:
+            abc_components(v, out)
+    return out
+
+
+def abc_pick_mp4(sources):
+    mp4 = [s for s in sources or [] if str(s.get("file", "")).startswith("https://mediacore-live-production.akamaized.net/") and s["file"].endswith(".mp4")]
+    if not mp4:
+        return ""
+    sd = [s for s in mp4 if re.search(r"(576|480|360|288)p", s.get("label", ""))]
+    return (sd or mp4)[0]["file"]
+
+
+def fetch_abc_video(now, errors):
+    raw = get(ABC_VIDEO_PAGE, timeout=25, limit=3_000_000).decode("utf-8", "ignore")
+    data = abc_page_data(raw)
+    if not data:
+        raise ValueError("no page data")
+    stamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+    out, seen = [], set()
+
+    def add(vid, title, url, dur, image, link, kind, published=stamp, tall=False):
+        title = clean(title)
+        if not vid or vid in seen or not url or not title or not 15 <= (dur or 0) <= 600 or SPORT_TITLE.search(title) or TV_SKIP.search(title):
+            return
+        seen.add(vid)
+        out.append({"id": f"abcv-{vid}", "title": title, "source": "ABC News", "url": link or "https://www.abc.net.au/news/video",
+                    "image": image or "", "published": published, "summary": "", "kind": kind,
+                    "video": {"url": url, "dur": int(dur), "h": 0, **({"tall": 1} if tall else {})}})
+
+    comps = abc_components(data, [])
+    for c in comps:  # News in 90 Seconds: the day's top stories as a short bulletin
+        p = c.get("props") or {}
+        if c["name"] == "VideoPlayer" and p.get("heading") == "News in 90 Seconds":
+            v = p.get("video") or {}
+            cfg = v.get("config") or {}
+            add(v.get("id"), "ABC News in 90 Seconds", abc_pick_mp4(cfg.get("sources")), (v.get("analyticsData") or {}).get("duration") or 90,
+                cfg.get("image"), (p.get("share") or {}).get("shareLink") or (v.get("share") or {}).get("shareLink"), "bulletin")
+    latest = []
+    for c in comps:  # the latest clips: each one's own page has its MP4
+        p = c.get("props") or {}
+        if c["name"] == "CarouselArticles" and ((p.get("dataLayerPrepared") or {}).get("title") or {}).get("title") == "Just In Video":
+            latest = [x for x in p.get("collection") or [] if (x.get("mediaIndicator") or {}).get("docType") == "Video"][:12]
+
+    def clip(x):
+        link = "https://www.abc.net.au" + x["link"] if x.get("link", "").startswith("/") else x.get("link", "")
+        v = None
+        try:
+            raw = get(link, timeout=20, limit=1_500_000).decode("utf-8", "ignore")
+            m = re.search(r'"id":"%s","title":"[^"]*","uri":"[^"]*","duration":(\d+),"renditions":\[(.*?)\]' % re.escape(str(x.get("id"))), raw)
+            if m:  # a video page: its own clip's copies
+                clips = [(int(h), u) for u, h in re.findall(r'"url":"(https://mediacore-live-production\.akamaized\.net/[^"]+\.mp4)","contentType":"video/mp4"[^{}]*?"height":(\d+)', m.group(2))]
+                ok = [c for c in clips if c[0] <= 576]
+                if ok:
+                    v = {"url": max(ok)[1], "dur": int(m.group(1))}
+            v = v or abc_video(raw)
+        except Exception:
+            pass
+        return x, link, v
+    with cf.ThreadPoolExecutor(6) as ex:
+        for x, link, v in ex.map(clip, latest):
+            if not v or "2011-05-03" in link:  # (the live stream)
+                continue
+            d = re.search(r"/news/(\d{4}-\d\d-\d\d)/", link)
+            add(x.get("id"), x.get("title"), v["url"], v.get("dur") or (x.get("mediaIndicator") or {}).get("duration"),
+                (x.get("image") or {}).get("imgSrc"), link, "clip", f"{d.group(1)}T00:00:00Z" if d else stamp)
+    for c in comps:  # Video Shorts (portrait): explainers, newest first
+        p = c.get("props") or {}
+        if c["name"] == "CarouselVerticalVideo":
+            for x in (p.get("videos") or [])[:10]:
+                card = x.get("card") or {}
+                add(x.get("id"), card.get("title"), abc_pick_mp4((x.get("player") or {}).get("sources")) or
+                    next((s.get("file") for s in (x.get("player") or {}).get("sources") or [] if str(s.get("file", "")).endswith(".mp4")), ""),
+                    card.get("duration"), (card.get("image") or {}).get("imgSrc"), "", "short", stamp, tall=True)
+    return out
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 VAULT_SALT = b"awesome-news-vault-v1"
@@ -1406,6 +1548,18 @@ def main():
     for sub in ("feeds", "text"):
         shutil.rmtree(os.path.join(a.out, sub), ignore_errors=True)
         os.makedirs(os.path.join(a.out, sub), exist_ok=True)
+    try:  # stories with no text of their own: the publisher's own summary (not the ones whose full text we have)
+        bare = {}
+        for items in sections.values():
+            for st in items:
+                if st["id"] not in text_ref and st["id"] not in ptext_ref and st["id"] not in feed_ref:
+                    bare.setdefault(st["id"], []).append(st)
+        print("summaries added:", fill_blurbs([v[0] for v in bare.values()]))
+        for v in bare.values():  # the same story in other sections
+            for st in v[1:]:
+                st["summary"], st["image"] = v[0].get("summary", ""), st.get("image") or v[0].get("image", "")
+    except Exception as e:
+        errors.append(f"summaries: {e}"[:160])
     stamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
     counts = {}
     for name, items in sections.items():
@@ -1432,6 +1586,14 @@ def main():
         counts[name] = len(out_items)
         with open(os.path.join(a.out, "feeds", f"{name}.json"), "w") as f:
             json.dump(doc, f, ensure_ascii=False, separators=(",", ":"))
+    # The Moorooka and Logan apps' community feeds (community.py: Translink changes, roadworks, council notices, local
+    # events, a local news search). Only with the full run: the private copy doesn't carry community.py.
+    if a.regions == "all":
+        try:
+            import community
+            print("community:", json.dumps(community.write(a.out, now, errors)))
+        except Exception as e:
+            errors.append(f"community: {e}"[:160])
     try:
         tv = fetch_tv(now, errors)
     except Exception as e:
@@ -1454,6 +1616,18 @@ def main():
         tv = [it for r in range(8) for lane in lanes.values() if r < len(lane) for it in [lane[r]]]  # channels take turns again
     with open(os.path.join(a.out, "tv.json"), "w") as f:
         json.dump({"updatedAt": stamp, "items": tv}, f, ensure_ascii=False, separators=(",", ":"))
+    try:
+        abcv = fetch_abc_video(now, errors)
+    except Exception as e:
+        abcv = []
+        errors.append(f"ABC video: {e}"[:160])
+    if not abcv and a.archive_from:  # the ABC page didn't load: keep the last good list
+        try:
+            abcv = json.loads(get(a.archive_from.rstrip("/") + f"/data/abc-video.json?v={int(now.timestamp())}", timeout=20)).get("items", [])
+        except Exception:
+            pass
+    with open(os.path.join(a.out, "abc-video.json"), "w") as f:
+        json.dump({"updatedAt": stamp, "items": abcv}, f, ensure_ascii=False, separators=(",", ":"))
     for n, ch in enumerate(chunks, 1):
         with open(os.path.join(a.out, "text", f"t{n:02d}.json"), "w") as f:
             json.dump({"articles": ch}, f, ensure_ascii=False, separators=(",", ":"))
