@@ -978,7 +978,7 @@ body.wxlisten #weather .bs-skip { display: inline-flex; }
 .bs-ctl .bs-ctl-gap { justify-self: end; visibility: hidden; }  /* where Listen has Share: keeps the buttons centred the same */
 body.wxlisten #weather .bs-ctl { display: grid; position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; margin: 0 auto; max-width: 792px; padding: 10px 16px calc(max(14px, env(safe-area-inset-bottom, 0px)) + 14px);  /* lined up with the news player's buttons to the pixel */
   background: linear-gradient(to top, rgba(8, 10, 24, 0.55), rgba(8, 10, 24, 0)); }
-body.wxlisten #weather .bs-skip:not(.bs-weekbtn), body.wxlisten #weather .bs-stop { display: none; }
+body.wxlisten #weather .bs-skip:not(.bs-weekbtn):not(.bs-flybtn), body.wxlisten #weather .bs-stop { display: none; }
 body.wxlisten #weather .bs-hud { padding-bottom: calc(max(12px, env(safe-area-inset-bottom, 0px)) + 86px); }
 body.wxlisten.wxdrive #bsDrive { padding-bottom: calc(max(14px, env(safe-area-inset-bottom, 0px)) + 86px); }
 body.wxintro #weather .bs-ctl { opacity: 0; pointer-events: none; }
@@ -995,7 +995,7 @@ body.wxdrive #bsDrive { display: flex; flex-direction: column; gap: 10px; positi
   padding: calc(env(safe-area-inset-top, 0px) + 22px) max(16px, env(safe-area-inset-right, 0px)) max(14px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
 body.wxdrive #weather .bs-now, body.wxdrive #weather .bs-rain, body.wxdrive #weather .bs-panel, body.wxdrive #weather .bs-place { visibility: hidden; }
 .dv-top { min-height: 40px; display: flex; flex-direction: column; justify-content: center; padding-right: 120px; }
-body.wxlisten .dv-top { padding-right: 104px; }  /* only the Week button up there */
+body.wxlisten .dv-top { padding-right: 208px; }  /* Explore and Week up there */
 .dv-top h1 { margin: 0; font-family: var(--display); font-weight: 800; font-size: 1.7rem; line-height: 1; letter-spacing: -0.02em; text-shadow: 0 1px 12px rgba(0, 0, 0, .35); }
 .dv-top p { margin: 5px 0 0; font-size: 0.8rem; color: var(--bs-dim); }
 .dv-now { margin-top: 10px; text-shadow: 0 1px 2px rgba(0, 0, 0, .55), 0 2px 18px rgba(0, 0, 0, .45); }
@@ -1112,19 +1112,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
 body.bsfly #wBody, body.bsfly #bsCtl, body.bsfly #bsDrive { display: none !important; }
 body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
 #weather .bs-flybtn { display: inline-flex; }  /* Explore: for everyone */
-body.wxlisten #weather .bs-flybtn { display: none !important; }
-/* While Listen plays the weather: Explore the scene, or straight back to the news, just above the player buttons */
-.bs-wxacts { display: none; }
-body.wxlisten:not(.bsfly) #weather .bs-wxacts { display: flex; justify-content: center; gap: 10px; position: absolute; left: 0; right: 0; z-index: 4;
-  bottom: calc(max(14px, env(safe-area-inset-bottom, 0px)) + 92px); padding: 0 16px; pointer-events: none; }
-body.wxintro #weather .bs-wxacts { opacity: 0; }
-.bs-wxa { pointer-events: auto; display: inline-flex; align-items: center; gap: 7px; height: 42px; padding: 0 16px; border-radius: 999px; font: 700 0.88rem var(--ui); color: var(--bs-ink);
-  background: var(--bs-scrim); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border: 1px solid var(--bs-line); cursor: pointer; }
-.bs-wxa.main { background: #ffffff; color: #1b1830; border-color: transparent; }
-.bs-wxa svg { width: 18px; height: 18px; }
-.bs-wxa:active { transform: scale(0.96); }
-.bs-wxa:focus-visible { outline: 2px solid var(--bs-ink); outline-offset: 2px; }
-body.wxlisten #weather .bs-hud { padding-bottom: calc(max(12px, env(safe-area-inset-bottom, 0px)) + 142px) !important; }
+/* While Listen plays the weather: Explore sits up top beside Week (its "Back to the news" only shows once you're exploring) */
 /* Explore's on-screen controls: a stick to move (left), a stick to look (right), Up and Down top right */
 .bs-fly-x { left: 16px; right: auto; }
 .bs-ud { pointer-events: auto; position: absolute; top: calc(14px + env(safe-area-inset-top)); right: 16px; display: flex; flex-direction: column; gap: 8px; }
@@ -1551,10 +1539,6 @@ body.wxlisten #weather .bs-hud { padding-bottom: calc(max(12px, env(safe-area-in
     </div>
     <div class="bs-joy" data-joy="move" aria-hidden="true"><i></i><span>Move</span></div>
     <div class="bs-joy" data-joy="look" aria-hidden="true"><i></i><span>Look</span></div>
-  </div>
-  <div class="bs-wxacts" id="bsWxActs">
-    <button type="button" class="bs-wxa" id="bsExplore"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>Explore</button>
-    <button type="button" class="bs-wxa main" id="bsToNews"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Back to the news</button>
   </div>
   <div id="bsNoGl" hidden><p>The 3D sky can't draw on this device, but the forecast below still works.</p></div>
   <main class="bs-hud" id="wBody"></main>
@@ -2337,7 +2321,7 @@ body.wxlisten #weather .bs-hud { padding-bottom: calc(max(12px, env(safe-area-in
   function wxListenIntro() {
     if (!state.wx || document.body.classList.contains("wxlisten") || !$("weather").hidden) return;
     document.body.classList.add("wxlisten", "wxintro");
-    BS.mooAlt = Math.random() < 0.5; BS.invBeach = Math.random() < 0.5;
+    BS.mooAlt = bsTurn("brief.sceneMoo"); BS.invBeach = bsTurn("brief.sceneInv");
     // The day from 5:15am in 10-minute steps, one every 0.2 seconds for the sky (50 minutes a second: the 8 or so seconds
     // of weather talk covers about 5:15am to noon); the words update every 2 seconds.
     // In the morning and afternoon it's today; from 6pm it's tomorrow.
@@ -4691,8 +4675,6 @@ const handle = async (m, post) => {
     // Customise: the news keeps playing; Settings opens over it, and the Listen card brings the player back.
     if (t.closest("#npCust")) { npClose(); state.sTab = "news"; openSettings(); return; }  // the News tab: your interests and local area
     if (t.closest("#bsSkip")) { skipWeather(); return; }
-    if (t.closest("#bsToNews")) { backToNews(); return; }
-    if (t.closest("#bsExplore")) { bsFlyOn(); return; }
     const pk2 = t.closest("[data-prev-k]");
     if (pk2) { state.prevSel[pk2.dataset.prevK] = pk2.dataset.prevV; pk2.parentElement.querySelectorAll(".bchip").forEach(b => b.setAttribute("aria-pressed", String(b === pk2))); return; }
     if (t.closest("[data-prev-go]")) { previewGo(); return; }
@@ -5221,7 +5203,7 @@ const handle = async (m, post) => {
     const mb = mo && !dr && !!W.mooBowls && !!BS.mooAlt;  // Moorooka: half the time the bowls club instead of the landmarks
     W.bris.visible = !vic && !lo && !mo && !dr; if (W.logan) W.logan.visible = lo && !dr; if (W.moo) W.moo.visible = (mo && !dr && !mb) || dm; if (W.mooTraffic) W.mooTraffic.visible = dm; if (W.drive) W.drive.visible = dr && !di && !dm; if (W.driveInv) W.driveInv.visible = di;
     if (W.mooBowls) W.mooBowls.visible = mb;
-    const it = vic && !dr && !!W.invTown && !BS.invBeach;  // Inverloch: the town centre, or half the time the surf beach
+    const it = vic && !dr && !!W.invTown && !BS.invBeach;  // Inverloch: the town centre, or (every other time) the surf beach
     if (W.invTown) { W.invTown.visible = it; W.invBeach.visible = !it; } if (W.water) W.water.visible = !it;
     const B = BS.B; if (B) { if (!B.camHome) B.camHome = [B.camBase.clone(), B.camLook.clone()];  // Moorooka is seen from a little higher up, looking over the roundabout
       if (di) { B.camBase.set(-1.75, 8.5, 44); B.camLook.set(-1.75, 3, -110); } else if (dm) { B.camBase.set(0, 17, 22); B.camLook.set(0, 1, -110); } else if (dr) { B.camBase.set(7.6, 13, 50); B.camLook.set(7.6, 2, -90); } else if (mb) { B.camBase.set(-38, 26, 78); B.camLook.set(-4, 2, -12); } else if (it) { B.camBase.set(-6, 10.5, -30); B.camLook.set(-16, 6, -100); } else if (mo) { B.camBase.set(0, 15, 46); B.camLook.set(0, 5, -60); } else { B.camBase.copy(B.camHome[0]); B.camLook.copy(B.camHome[1]); } }
@@ -5368,7 +5350,7 @@ const handle = async (m, post) => {
     wheel.position.set(-20, 8.4, -14); wheel.rotation.y = 0.3; bris.add(wheel); W.wheel = wheel;
     const post = new THREE.Mesh(new THREE.BoxGeometry(0.6, 8.4, 0.6), new THREE.MeshStandardMaterial({ color: 0x9aa3b3 })); post.position.set(-20, 4.2, -14); bris.add(post);
 
-    // ---- Inverloch (shown for Victoria), two views like the real place, half the time each: the town centre (the
+    // ---- Inverloch (shown for Victoria), two views like the real place, taking turns: the town centre (the
     // Rotary clock, the A'Beckett Street shops, the Esplanade Hotel, gum trees; no sea, as the beach is a walk away) and the
     // surf beach (dunes and coastal scrub, the surf club, the Bunurong cliffs and Eagles Nest), with the green South Gippsland hills behind both.
     const inv = new THREE.Group(); inv.visible = false; scene.add(inv); W.inv = inv;
@@ -5415,10 +5397,19 @@ const handle = async (m, post) => {
     for (let i = 0; i < 7; i++) { const c = new THREE.Mesh(new THREE.DodecahedronGeometry(1, 0), rock);
       c.scale.set(16 + rnd(i * 3) * 10, 8 + rnd(i * 5) * 7, 14 + rnd(i * 7) * 8); c.position.set(38 + i * 17, 2, -50 - i * 8 - rnd(i * 9) * 6); bch.add(c);
       const top = new THREE.Mesh(new THREE.DodecahedronGeometry(1, 0), grass); top.scale.set(c.scale.x * 0.9, 2, c.scale.z * 0.9); top.position.set(c.position.x, c.position.y + c.scale.y * 0.8, c.position.z - 2); bch.add(top); }
+    // Eagles Nest: a tall stack of layered sandstone (honey, rust and grey bands) on the rock platform at the foot of the
+    // cliffs. Narrow at the waist, a wider, flat-topped crown, each layer a little off line like weathered rock.
     const nest = new THREE.Group();
-    [[4.2, 0, 5], [3.6, 5, 4.6], [3.2, 10, 3.6], [2.6, 14.5, 2.4]].forEach(([r, y, h]) => { const s = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.85, r, h, 7), rock); s.position.y = y + h / 2; s.rotation.y = y; nest.add(s); });
-    const cap = new THREE.Mesh(new THREE.DodecahedronGeometry(2.6, 0), rockDark); cap.position.y = 17.4; cap.scale.set(1.1, 0.6, 1); nest.add(cap);
-    nest.position.set(12, -0.5, -24); bch.add(nest);
+    const bands = [0xa27a52, 0xb08860, 0x9a744e, 0xbb9468, 0xa98157, 0x93704f].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 1 }));
+    const prof = [3.5, 3.2, 2.85, 2.55, 2.45, 2.5, 2.7, 2.95, 3.15, 3.2];  // radius up the stack: waist low down, crown at the top
+    let ny = 0;
+    prof.forEach((r, k) => { const h = 1.6 + rnd(k * 7 + 3) * 0.8, r2 = prof[k + 1] ?? r * 0.92;
+      const sl = new THREE.Mesh(new THREE.CylinderGeometry(r2, r, h, 16), bands[k % bands.length]);
+      sl.position.set((rnd(k * 5 + 1) - 0.5) * 0.22, ny + h / 2, (rnd(k * 9 + 2) - 0.5) * 0.22); sl.rotation.y = k * 0.35; sl.scale.z = 0.82; nest.add(sl); ny += h; });
+    const crown = new THREE.Mesh(new THREE.CylinderGeometry(2.7, 3.15, 0.9, 16), bands[2]); crown.position.y = ny + 0.45; crown.scale.z = 0.82; nest.add(crown);
+    const tuft = new THREE.Mesh(new THREE.SphereGeometry(1, 10, 6), grass); tuft.scale.set(2.2, 0.5, 1.7); tuft.position.y = ny + 1; nest.add(tuft);  // a little scrub on top
+    const plat = new THREE.Mesh(new THREE.CylinderGeometry(7, 8.5, 0.8, 10), rockDark); plat.position.y = 0.1; plat.scale.z = 0.7; nest.add(plat);  // the rock platform it stands on
+    nest.position.set(14, -0.2, -30); nest.rotation.y = 0.4; nest.scale.setScalar(0.85); bch.add(nest);
     // flat rock platforms just off the beach
     for (let i = 0; i < 6; i++) { const r = new THREE.Mesh(new THREE.CylinderGeometry(2 + rnd(i * 3) * 3, 3 + rnd(i * 5) * 3, 0.7, 7), rockDark); r.position.set(4 + rnd(i * 7) * 22, 0.1, -14 - rnd(i * 11) * 14); bch.add(r); }
     // The Rotary clock from A'Beckett Street, matched to photos: a gold gear-shaped clock (blue band, gold spokes, a white
@@ -6530,10 +6521,12 @@ const handle = async (m, post) => {
     if (!BS.raf) { BS.lastT = performance.now() / 1000; BS.raf = requestAnimationFrame(bsLoop); }
     if (!BS.B) bsLoadThree().then(T => { if (T && !BS.B && !bsBuild(T)) $("bsNoGl").hidden = false; if (!T) $("bsNoGl").hidden = false; });
   }
+  // Inverloch: the town and the surf beach take turns; Moorooka: the landmarks and the bowls club. Each time the weather opens, the other one.
+  const bsTurn = k => { const v = !store.get(k, false); store.set(k, v); return v; };
   function openWeather() {
     if (!state.wx) { toast("The weather isn't available right now"); return; }
     BS.view = { mode: "live", ms: Date.now(), play: true, day: null };  // plays on from now each time it opens
-    BS.mooAlt = Math.random() < 0.5; BS.invBeach = Math.random() < 0.5;  // Inverloch: the town or the beach. Moorooka: the landmarks or the bowls club, half the time each
+    BS.mooAlt = bsTurn("brief.sceneMoo"); BS.invBeach = bsTurn("brief.sceneInv");
     if (!BS.tick) BS.tick = setInterval(() => { if (!$("weather").hidden) bsTick(); }, 1000);
     renderWeather();
     showSheet("weather");
