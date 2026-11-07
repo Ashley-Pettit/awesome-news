@@ -6336,26 +6336,43 @@ const handle = async (m, post) => {
     const tip = $("bsFlyTip"); tip.classList.remove("dim");
     tip.textContent = touch ? "Left stick to move, right stick to look. Up and Down are top right." : "Click to look with the mouse · WASD to move · Space up, C down · Shift for speed · R to reset";
     $("bsFlyX").textContent = document.body.classList.contains("wxlisten") ? "Back to the news" : "Exit explore";
-    // The on-screen sticks: drag the knob; it springs back when you let go.
+    // The on-screen sticks: drag the knob; it springs back when you let go. Touch events (each finger tracked by its own id)
+    // so both sticks and Up/Down work at the same time on a phone; the mouse uses pointer events.
     F.joys = [...document.querySelectorAll("#bsFly .bs-joy")].map(el => {
       const knob = el.querySelector("i"), v = el.dataset.joy === "move" ? F.stick : F.lookStick; let id = null;
-      const set = e => { const r = el.getBoundingClientRect(), R = r.width / 2 - 14; let dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+      const set = p => { const r = el.getBoundingClientRect(), R = r.width / 2 - 14; let dx = p.clientX - (r.left + r.width / 2), dy = p.clientY - (r.top + r.height / 2);
         const d = Math.hypot(dx, dy); if (d > R) { dx *= R / d; dy *= R / d; }
         knob.style.transform = `translate(${dx}px, ${dy}px)`; v.x = dx / R; v.y = -dy / R; };
       const end = () => { id = null; knob.style.transform = ""; v.x = 0; v.y = 0; };
-      const h = { pointerdown: e => { id = e.pointerId; try { el.setPointerCapture(id); } catch {} set(e); tip.classList.add("dim"); e.preventDefault(); },
-                  pointermove: e => { if (e.pointerId === id) { set(e); e.preventDefault(); } },
-                  pointerup: e => { if (e.pointerId === id) end(); }, pointercancel: e => { if (e.pointerId === id) end(); } };
-      Object.entries(h).forEach(([k, f]) => el.addEventListener(k, f));
+      const mine = e => [...e.changedTouches].find(t => t.identifier === id);
+      const h = {
+        touchstart: e => { e.preventDefault(); if (id !== null) return; const t = e.changedTouches[0]; id = t.identifier; set(t); tip.classList.add("dim"); },
+        touchmove: e => { e.preventDefault(); const t = mine(e); if (t) set(t); },
+        touchend: e => { if (mine(e)) end(); }, touchcancel: e => { if (mine(e)) end(); },
+        pointerdown: e => { if (e.pointerType !== "mouse") return; id = "m"; try { el.setPointerCapture(e.pointerId); } catch {} set(e); tip.classList.add("dim"); e.preventDefault(); },
+        pointermove: e => { if (e.pointerType === "mouse" && id === "m") set(e); },
+        pointerup: e => { if (e.pointerType === "mouse" && id === "m") end(); },
+      };
+      Object.entries(h).forEach(([k, f]) => el.addEventListener(k, f, { passive: false }));
       return { el, h, end };
     });
     F.uds = [...document.querySelectorAll("#bsFly .bs-udb")].map(el => {
-      const go = e => { F.vert = +el.dataset.ud; el.classList.add("on"); try { el.setPointerCapture(e.pointerId); } catch {} e.preventDefault(); };
-      const stop = () => { F.vert = 0; el.classList.remove("on"); };
-      const h = { pointerdown: go, pointerup: stop, pointercancel: stop, lostpointercapture: stop, contextmenu: e => e.preventDefault() };
-      Object.entries(h).forEach(([k, f]) => el.addEventListener(k, f));
+      let on = null;
+      const go = () => { F.vert = +el.dataset.ud; el.classList.add("on"); };
+      const stop = () => { on = null; if (F.vert === +el.dataset.ud) F.vert = 0; el.classList.remove("on"); };
+      const h = {
+        touchstart: e => { e.preventDefault(); on = e.changedTouches[0].identifier; go(); },
+        touchend: e => { if ([...e.changedTouches].some(t => t.identifier === on)) stop(); }, touchcancel: e => stop(),
+        pointerdown: e => { if (e.pointerType !== "mouse") return; on = "m"; go(); try { el.setPointerCapture(e.pointerId); } catch {} e.preventDefault(); },
+        pointerup: e => { if (on === "m") stop(); }, lostpointercapture: () => { if (on === "m") stop(); },
+        contextmenu: e => e.preventDefault(),
+      };
+      Object.entries(h).forEach(([k, f]) => el.addEventListener(k, f, { passive: false }));
       return { el, h, end: stop };
     });
+    // No pinch-zoom or page scroll while flying (iPhone Safari)
+    F.noGesture = e => e.preventDefault();
+    ["gesturestart", "gesturechange"].forEach(k => document.addEventListener(k, F.noGesture, { passive: false }));
     clearTimeout(F.tipT); F.tipT = setTimeout(() => tip.classList.add("dim"), 6000);
     const look = (dx, dy, k) => { F.yaw -= dx * k; F.pitch = bsClamp(F.pitch - dy * k, -1.45, 1.45); };
     const typing = e => /^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName || "");
@@ -6393,6 +6410,7 @@ const handle = async (m, post) => {
     ["pointerdown", "pointermove", "pointerup", "pointercancel"].forEach(k => canvas.removeEventListener(k, F.on[k]));
     if (document.pointerLockElement === canvas) document.exitPointerLock?.();
     for (const j of [...(F.joys || []), ...(F.uds || [])]) { j.end(); Object.entries(j.h).forEach(([k, f]) => j.el.removeEventListener(k, f)); }
+    if (F.noGesture) ["gesturestart", "gesturechange"].forEach(k => document.removeEventListener(k, F.noGesture));
     clearTimeout(F.tipT); BS.fly = null;
     document.body.classList.remove("bsfly"); $("bsFly").hidden = true;
     if (L.exploreHold) { L.exploreHold = false; wxListenOff(); if (L.on && L.paused) resumeListen(); }  // the news waited while you explored
