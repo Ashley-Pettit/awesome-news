@@ -348,7 +348,12 @@ def close_to_title(s, title):
 def plan(data, vkey):
     """Every piece to make, most useful first, plus the pieces each story needs to be complete."""
     status = json.load(open(os.path.join(data, "status.json")))
-    feeds = {os.path.basename(p)[:-5]: json.load(open(p)).get("items", []) for p in glob.glob(os.path.join(data, "feeds", "*.json"))}
+    # Every story the app can read out: the sections, plus the local apps' community news (community-moo), which
+    # Awesome News and Moorooka News add to Local news.
+    feeds = {}
+    for p in glob.glob(os.path.join(data, "feeds", "*.json")):
+        d = json.load(open(p))
+        feeds[os.path.basename(p)[:-5]] = d.get("items") or [dict(i, summary=i.get("summary") or "") for i in d.get("news") or [] if i.get("id") and i.get("title")]
     texts, locked = {}, {}
     for p in glob.glob(os.path.join(data, "text", "t*.json")):
         texts.update(json.load(open(p)).get("articles", {}))
@@ -443,8 +448,8 @@ def plan(data, vkey):
     ranked = []
     lead = FOCUS + [x for x in LEAD if x not in FOCUS]
     for s, items in feeds.items():
-        w = 1 if s in lead else 4 if s.startswith("local-") else 2
-        for r, i in enumerate(items[:30]):
+        w = 1 if s in lead else 4 if s.startswith(("local-", "community-")) else 2
+        for r, i in enumerate(items):  # every story in the list, so none is left without Emma's voice
             ranked.append((r * w + (w - 1) - (60 if s in FOCUS else 0), lead.index(s) if s in lead else 99, r, i))
     ranked.sort(key=lambda x: x[:3])
     rounds = [[x[3] for x in ranked[n:n + 25]] for n in range(0, len(ranked), 25)]
