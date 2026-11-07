@@ -56,7 +56,7 @@ PLACES = {
         # Stories naming Logan or its suburbs from any outlet, on top of the Logan section's own (council, police, local sites).
         "sure": re.compile(r"\b(Logan|Loganlea|Loganholme|Beenleigh|Woodridge|Slacks Creek|Browns Plains|Jimboomba|Yarrabilba|Shailer Park|Daisy Hill|"
                            r"Eagleby|Crestmead|Park Ridge|Edens Landing|Holmview|Meadowbrook|Bethania|Rochedale South|Boronia Heights|Chambers Flat)\b", re.I),
-        "not": re.compile(r"\b(Utah|Cache Valley|Herald Journal|KSL|Deseret|Idaho|Colorado|5280\w*|Ohio|West Virginia|Iowa|Kansas|fall foliage|"
+        "not": re.compile(r"\b(Utah|Cache Valley|Herald Journal|KSL|KVNU|Cache Valley Daily|Deseret|Idaho|Colorado|5280\w*|Ohio|West Virginia|Iowa|Kansas|fall foliage|"
                           r"Logan (Paul|Roy|Sargeant|Lerman|Henderson|Scott|Airport)|Wolverine)\b", re.I),
         "search": [gnews('"Logan City" OR "City of Logan" OR "Logan Council" when:14d'),
                    gnews("(" + " OR ".join(f'"{s}"' for s in ["Beenleigh", "Woodridge", "Loganholme", "Browns Plains", "Jimboomba", "Yarrabilba", "Springwood", "Slacks Creek", "Shailer Park", "Park Ridge"]) + ") Queensland when:14d"),
