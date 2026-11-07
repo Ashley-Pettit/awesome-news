@@ -194,7 +194,7 @@ best = min(range(len(hl) - 1), key=lambda i: seg_dist(HOTEL, hl[i], hl[i + 1])[0
 hdir = math.atan2(hl[best + 1][0] - hl[best][0], hl[best + 1][1] - hl[best][1])
 # ---- the clock: on the library side of A'Beckett, in front of the library (Google Maps: library 16 A'Beckett, opposite 5 and 7)
 ab = [p for l in mains.get("abeckett street", []) for p in l]
-CLOCK = (24.0, 27.0)  # on the garden bed at the A'Beckett kerb, library side, west of Reilly Street (Wikimedia Commons photo "Inverloch Victoria.jpg")
+CLOCK = (17.2, 16.6)  # on its garden bed and brick plaza back from the A'Beckett footpath, library side, in front of the library (Wikimedia Commons photo "Inverloch Victoria.jpg"); 19 m from the road's centre so the plaza clears the kerb
 d, q = poly_dist(CLOCK, ab)
 # ---- houses: the map has few homes, so streets away from the centre get houses either side, facing the road
 houses = []
