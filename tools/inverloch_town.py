@@ -268,21 +268,32 @@ for vi, v in enumerate(ver):
         for sg in signs:
             if seg_dist((sg[0] - nx * 3.15, sg[1] - nz * 3.15), (ax, az), (bx, bz))[0] < 1.2: name = sg[4]
         units.append([r1(ax), r1(az), r1(bx), r1(bz), nx, nz, [4.9, 5.4, 6.0, 5.1, 6.6][h], {"ALEX SCOTT & STAFF": 9, "PAUL THE PIEMAN": 1}.get(name, (vi * 3 + k * 5) % 9), (vi + k) % 3, name])
-# the bakery (Paul the Pieman's "BAKERY CAFE"): a wide, tall shopfront in the photos, so it takes in the empty shop beside it,
-# with a flat parapet, and its fascia sign stretches across both
-for i, u in enumerate(units):
-    if u[9] != "PAUL THE PIEMAN": continue
-    nb = next((j for j, o in enumerate(units) if j != i and not o[9] and ((o[0], o[1]) == (u[2], u[3]) or (o[2], o[3]) == (u[0], u[1]))), None)
-    if nb is not None:
-        o = units[nb]; omx, omz = (u[0] + u[2]) / 2, (u[1] + u[3]) / 2
+# the bakery (Paul the Pieman's "BAKERY CAFE"): a huge shopfront, so it takes in the shops either side of it until its front is
+# about 22 m wide (any other shop that loses a unit keeps the rest, and its sign moves there), with a flat parapet and its sign right across
+def ends_at(o, x, z): return (o[0], o[1]) == (x, z) or (o[2], o[3]) == (x, z)
+bi = next((i for i, u in enumerate(units) if u[9] == "PAUL THE PIEMAN"), None)
+if bi is not None:
+    u = units[bi]; omx, omz = (u[0] + u[2]) / 2, (u[1] + u[3]) / 2
+    while math.hypot(u[2] - u[0], u[3] - u[1]) < 22:
+        nb = None
+        for j, o in enumerate(units):
+            if j == bi or o[9] == u[9]: continue
+            if (o[0], o[1]) == (u[2], u[3]) or (o[2], o[3]) == (u[0], u[1]):
+                if not o[9] or sum(1 for q in units if q[9] == o[9]) > 1: nb = j; break
+        if nb is None: break
+        o = units[nb]
         if (o[0], o[1]) == (u[2], u[3]): u[2], u[3] = o[2], o[3]
         else: u[0], u[1] = o[0], o[1]
-        units.pop(nb)
-        mx, mz = (u[0] + u[2]) / 2, (u[1] + u[3]) / 2; L = math.hypot(u[2] - u[0], u[3] - u[1])
-        for sg in signs:
-            if sg[4] == "PAUL THE PIEMAN": sg[0] = round(sg[0] + mx - omx, 1); sg[1] = round(sg[1] + mz - omz, 1); sg[3] = round(min(L - 1, 11), 1)
+        units.pop(nb); bi = units.index(u)
+        if o[9]:  # that shop's sign moves to the middle of what it has left
+            rest = [q for q in units if q[9] == o[9]]
+            rx, rz = sum(q[0] + q[2] for q in rest) / (2 * len(rest)), sum(q[1] + q[3] for q in rest) / (2 * len(rest))
+            for sg in signs:
+                if sg[4] == o[9]: sg[0], sg[1] = round(rx + u[4] * 3.15, 1), round(rz + u[5] * 3.15, 1)
+    mx, mz = (u[0] + u[2]) / 2, (u[1] + u[3]) / 2; L = math.hypot(u[2] - u[0], u[3] - u[1])
+    for sg in signs:
+        if sg[4] == "PAUL THE PIEMAN": sg[0] = round(sg[0] + mx - omx, 1); sg[1] = round(sg[1] + mz - omz, 1); sg[3] = round(L - 1, 1)
     u[6], u[8] = 6.4, 0
-    break
 # the library's front (OSM way 472789110): the long wall facing A'Beckett and the clock, for its round window, "Library" letters and flags
 lib = next(b for b in blds if b["id"] == 472789110)
 best = None
