@@ -242,8 +242,33 @@ for l in mains.get("abeckett street", []):
                 if not any(pip(p, b["pts"]) or poly_dist(p, b["pts"] + b["pts"][:1])[0] < 3 for b in blds) and math.hypot(p[0] - CLOCK[0], p[1] - CLOCK[1]) > 9:
                     trees.append([r1(p[0]), r1(p[1]), 1])
             s += 26
+# ---- only the area round the clock: everything within R metres of it
+R = 170
+cx0, cz0 = CLOCK
+nearc = lambda x, z, r=R: math.hypot(x - cx0, z - cz0) < r
+blds_out = [b for b in blds if nearc(*centroid(b["pts"]))]
+roads = [r for r in roads if any(nearc(r[2][i], r[2][i + 1], R + 40) for i in range(0, len(r[2]), 2))]
+areas = [a for a in areas if any(nearc(a[1][i], a[1][i + 1], R + 30) for i in range(0, len(a[1]), 2))]
+houses = [h for h in houses if nearc(h[0], h[1])]
+trees = [t for t in trees if nearc(t[0], t[1])]
+signs = [sg for sg in signs if nearc(sg[0], sg[1])]
+ver = [v for v in ver if nearc(v[0], v[1])]
+glass = [g for g in glass if nearc(g[0], g[1])]
+# ---- shopfronts: each verandah'd street front split into separate shops, each with its own parapet, colour and windows
+units = []
+for vi, v in enumerate(ver):
+    x1, z1, x2, z2, nx, nz = v; L = math.hypot(x2 - x1, z2 - z1)
+    n = max(1, round(L / 7.5)); w = L / n
+    for k in range(n):
+        t0, t1 = k / n, (k + 1) / n
+        ax, az, bx, bz = x1 + (x2 - x1) * t0, z1 + (z2 - z1) * t0, x1 + (x2 - x1) * t1, z1 + (z2 - z1) * t1
+        h = (vi * 7 + k * 13) % 5
+        name = ""
+        for sg in signs:
+            if seg_dist((sg[0] - nx * 3.15, sg[1] - nz * 3.15), (ax, az), (bx, bz))[0] < 1.2: name = sg[4]
+        units.append([r1(ax), r1(az), r1(bx), r1(bz), nx, nz, [4.9, 5.4, 6.0, 5.1, 6.6][h], (vi * 3 + k * 5) % 9, (vi + k) % 3, name])
 data = {"note": "Inverloch town centre. Map data (c) OpenStreetMap contributors, ODbL; business locations from Google Maps.",
-        "b": [[round(b["h"], 1), b["kind"], flat(b["pts"])] for b in blds],
+        "b": [[round(b["h"], 1), b["kind"], flat(b["pts"])] for b in blds_out], "u": units,
         "r": roads, "a": areas, "s": signs, "v": ver, "h": houses, "t": trees, "g": glass, "ho": [r1(HOTEL[0]), r1(HOTEL[1]), round(hdir, 3)], "c": [CLOCK[0], CLOCK[1], round(math.atan2(-(q[0] - CLOCK[0]), -(q[1] - CLOCK[1])) if False else math.atan2(q[0] - CLOCK[0], q[1] - CLOCK[1]), 3)]}
 json.dump(data, open(OUT, "w"), separators=(",", ":"), ensure_ascii=False)
 print("buildings", len(blds), "roads", len(roads), "areas", len(areas), "signs", len(signs), "verandahs", len(ver), "houses", len(houses), "trees", len(trees), "bytes", len(json.dumps(data, separators=(",", ":"))))
