@@ -353,6 +353,9 @@ def build(now, errors):
 
 def write(out_dir, now, errors):
     docs = build(now, errors)
+    sums = F.own_summaries()  # Claude's own-words summaries for stories with no text (the rating task)
+    for d in docs.values():
+        F.add_own_summaries(d["news"], sums)
     os.makedirs(os.path.join(out_dir, "feeds"), exist_ok=True)
     for pid, d in docs.items():
         with open(os.path.join(out_dir, "feeds", f"community-{pid}.json"), "w") as f:

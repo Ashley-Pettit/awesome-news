@@ -375,6 +375,24 @@ def page_blurb(url):
     return desc[:320], (im if im.startswith("https://") else "")
 
 
+def own_summaries():
+    """Summaries Claude wrote in its own words for stories that had no text at all (the rating task, ratings/summaries.json)."""
+    try:
+        return json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "ratings", "summaries.json"), encoding="utf-8")).get("summaries", {})
+    except Exception:
+        return {}
+
+
+def add_own_summaries(items, sums=None):
+    sums = own_summaries() if sums is None else sums
+    n = 0
+    for st in items:
+        if st.get("id") in sums and len(clean(st.get("summary") or "")) < 40:
+            st["summary"], st["aisum"] = sums[st["id"]], 1  # the app says it's a summary, not the publisher's words
+            n += 1
+    return n
+
+
 def fill_blurbs(items, most=120):
     """Give stories with no text their publisher's summary (and photo, if they have none). Leaves out a site's stock
     description (the same words on every page) and one that only repeats the headline."""
@@ -1554,10 +1572,12 @@ def main():
             for st in items:
                 if st["id"] not in text_ref and st["id"] not in ptext_ref and st["id"] not in feed_ref:
                     bare.setdefault(st["id"], []).append(st)
-        print("summaries added:", fill_blurbs([v[0] for v in bare.values()]))
+        print("summaries added:", fill_blurbs([v[0] for v in bare.values()]), "own:", add_own_summaries([v[0] for v in bare.values()]))
         for v in bare.values():  # the same story in other sections
             for st in v[1:]:
                 st["summary"], st["image"] = v[0].get("summary", ""), st.get("image") or v[0].get("image", "")
+                if v[0].get("aisum"):
+                    st["aisum"] = 1
     except Exception as e:
         errors.append(f"summaries: {e}"[:160])
     stamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")

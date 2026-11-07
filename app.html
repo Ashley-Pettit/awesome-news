@@ -267,6 +267,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
 .lb-listen b { font-size: 1.32rem; }
 .lb-listen small { font-size: 0.8rem; margin-top: 3px; }
 .lb-tv { border-radius: 20px; }
+.aisum { margin: -6px 0 14px; font-size: 0.76rem; color: var(--muted); }
 .devlink { display: block; margin: 12px auto 0; padding: 4px 8px; font: inherit; font-size: 0.76rem; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; background: none; }
 /* ---- Beta ---- */
 .lb-tv { display: none !important; }  /* TV lives in the bottom bar only */
@@ -3205,7 +3206,7 @@ body.wxlisten #weather .bs-hud { padding-bottom: calc(max(12px, env(safe-area-in
         ? `<p class="licence">Republished from <a href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.source)}</a>${/public domain/i.test(lic) ? ", public domain" : ` under ${t.licenceUrl ? `<a href="${esc(t.licenceUrl)}" target="_blank" rel="noopener">${esc(lic)}</a>` : esc(lic)}`}. Text reformatted for this app.${privateMode() ? "" : ` <a href="${esc(i.url)}" target="_blank" rel="noopener">Read the original article</a>.`}</p>`
         : privateMode() ? "" : original(`Open on ${esc(pub)}`, true)) };
     } else {
-      body = { html: `${i.summary ? `<p class="lede">${esc(i.summary)}</p>` : ""}
+      body = { html: `${i.summary ? `<p class="lede">${esc(i.summary)}</p>${i.aisum ? `<p class="aisum">A short summary written by Awesome News, not ${esc(pub)}'s own words.</p>` : ""}` : ""}
         <div class="partial"><strong>The full story is on ${esc(pub)}</strong>${privateMode() ? "The full story couldn't load. Try again in a moment." : `Only a preview can be shown here. Tap below to read the whole article, free.${original(`Read full article`)}`}</div>` };
     }
     $("rBody").innerHTML = readerHTML(i, body);
