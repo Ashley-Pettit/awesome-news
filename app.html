@@ -712,12 +712,15 @@ body.playing .dock .eq { display: flex; }
 .player .pk { font-size: 0.64rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.65; }
 .player .ph { font-family: var(--display); font-weight: 700; font-size: 0.92rem; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .player .pc { display: flex; align-items: center; gap: 2px; }
-.player .pc button { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; color: inherit; }
+.player .pc button { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: inherit; }
 .player .pc button svg { width: 20px; height: 20px; }
 .player .pc .pp { background: var(--bg); color: var(--ink); }
 .player .rate { width: auto; min-width: 42px; padding: 0 6px; font-size: 0.78rem; font-weight: 800; font-variant-numeric: tabular-nums; border-radius: 10px; }
 .player .pbar { position: absolute; left: 0; bottom: 0; height: 3px; background: var(--accent); width: 0; transition: width 0.4s ease; }
 body.locked .player { z-index: 45; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); }
+/* With the Listen bar showing above the menu, the page's last stories and the toasts sit above it, not under it. */
+body.playing:not(.npon):not(.locked) main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 108px); }
+body.playing:not(.npon):not(.locked) .toast { bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 82px); }
 
 /* ---------- Pull to refresh ---------- */
 .ptr { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 8px); left: 50%; z-index: 30; width: 42px; height: 42px; border-radius: 50%;
@@ -1290,6 +1293,8 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
   .player { bottom: calc(var(--dock-h) + 26px); max-width: 380px; }
   body.locked .player { bottom: 16px; }
   .toast { bottom: calc(var(--dock-h) + 30px); }
+  body.playing:not(.npon):not(.locked) main { padding-bottom: 190px; }
+  body.playing:not(.npon):not(.locked) .toast { bottom: calc(var(--dock-h) + 100px); }
 }
 /* ---------- Desktop (900px and wider; phones are untouched) ---------- */
 .rail-wrap { position: relative; }
@@ -4456,7 +4461,7 @@ const handle = async (m, post) => {
   }
   function updatePlayer() {
     const i = findItem(L.queue[L.at]);
-    $("player").hidden = true;  // no mini player bar: the Listen card on the home page brings the player back
+    $("player").hidden = !L.on;  // while Listen is on (playing or paused), its controls sit above the bottom menu once the player is closed
     const lb = $("lbListen");
     const lgOn = L.on && L.kind === "drive" && L.scope === "logan";
     if (lgOn && $("lbLoganFresh")) { $("lbLoganFresh").hidden = false; $("lbLgWrap").classList.add("has-fresh"); }
