@@ -27,6 +27,12 @@ desc = "News that's all about you and what you're interested in. Customise your 
 body = re.sub(r"<title>.*?</title>\s*", "", app, count=1)
 body = re.sub(r'<meta name="claude:[^"]+"[^>]*>\s*', "", body)
 body = re.sub(r'<meta name="theme-color"[^>]*>\s*', "", body)  # the head sets light and dark colours
+# Awesome News shows the same Local news as the local apps when you pick their area (Moorooka), community feed and all.
+if os.path.exists(os.path.join(here, "local", "brands.json")):
+    _areas = {b["region"]: {k: v for k, v in b["local"].items() if v and k != "only"}
+              for b in json.load(open(os.path.join(here, "local", "brands.json"), encoding="utf-8")).values() if b["region"] in ("moo",)}
+    assert body.count("const AREA_FEEDS = {};") == 1
+    body = body.replace("const AREA_FEEDS = {};", f"const AREA_FEEDS = {json.dumps(_areas)};")
 
 head = f"""<!doctype html>
 <html lang="en-AU">

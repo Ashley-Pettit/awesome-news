@@ -1514,6 +1514,7 @@ body.wxlisten #weather .bs-flybtn { display: none !important; }
   // (build.py, from local/brands.json); the main app leaves these empty.
   const DEFAULT_REGION = "qld";
   const LOCAL_APP = null;               // { extra: community feed, near / keep / away / trust: patterns that tailor the Local feed, only: start with just Local }
+  const AREA_FEEDS = {};                 // Awesome News itself: Local news for an area with its own app (Moorooka) is tailored the same way, set by build.py
   const OPEN_KEY = "";                  // Emma's opening for this app ("This is Moorooka News for...")
   const KEY_PREFIX = "";                // keeps each app's settings apart on the same website
   const lead = s => LOCAL_APP && s.id === "local" ? 3 : 1;  // in a local app, Local news gets three turns to every other tab's one
@@ -6855,11 +6856,11 @@ const handle = async (m, post) => {
   // ---- Static files (GitHub Pages) ----
   // A local app's Local feed: the area's own stories first (and local stories found by search), then the wider city's,
   // leaving out stories from elsewhere that only came in with the state's news.
-  async function tailorLocal(feeds, v) {
-    const key = sectionKey("local"), re = x => x ? new RegExp(x, "i") : null;
-    const near = re(LOCAL_APP.near), keep = re(LOCAL_APP.keep), away = re(LOCAL_APP.away), trust = re(LOCAL_APP.trust);
+  async function tailorLocal(feeds, v, cfg, key) {
+    const re = x => x ? new RegExp(x, "i") : null;
+    const near = re(cfg.near), keep = re(cfg.keep), away = re(cfg.away), trust = re(cfg.trust);
     let extra = [];
-    try { if (LOCAL_APP.extra) extra = ((await (await fetch(`data/feeds/${LOCAL_APP.extra}.json?v=${v}`)).json()).news || []).filter(i => i.id && i.url && i.title).map(i => ({ summary: "", ...i })); } catch {}
+    try { if (cfg.extra) extra = ((await (await fetch(`data/feeds/${cfg.extra}.json?v=${v}`)).json()).news || []).filter(i => i.id && i.url && i.title).map(i => ({ summary: "", ...i })); } catch {}
     const seen = new Set(), out = [];
     for (const i of [...(feeds[key]?.items || []), ...extra]) {
       if (seen.has(i.id)) continue;
@@ -6879,7 +6880,8 @@ const handle = async (m, post) => {
         const docs = await Promise.all(names.map(n => fetch(`data/feeds/${n}.json?v=${v}`).then(r => r.ok ? r.json() : null).catch(() => null)));
         const feeds = {};
         names.forEach((n, k) => { if (docs[k]) feeds[n] = docs[k]; });
-        if (LOCAL_APP) await tailorLocal(feeds, v);
+        if (LOCAL_APP) await tailorLocal(feeds, v, LOCAL_APP, sectionKey("local"));
+        else await Promise.all(Object.entries(AREA_FEEDS).filter(([r]) => feeds[`local-${r}`]).map(([r, c]) => tailorLocal(feeds, v, c, `local-${r}`)));  // e.g. Moorooka: the same Local news as Moorooka News
         state.feeds = feeds;
         state.status = st; TV.items = [];
         for (const k in textCache) delete textCache[k];
