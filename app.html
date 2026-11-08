@@ -1123,7 +1123,6 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
 .bs-fly-tip.dim { opacity: 0.35; }
 .bs-fly-x { pointer-events: auto; position: absolute; top: calc(14px + env(safe-area-inset-top)); right: 16px; height: 38px; padding: 0 14px; border: 0; border-radius: 999px; background: var(--bs-scrim); color: var(--bs-ink); font: 700 0.82rem var(--ui); cursor: pointer; backdrop-filter: blur(8px); }
 .bs-fly-x:focus-visible { outline: 2px solid var(--bs-ink); outline-offset: 2px; }
-.bs-fly-x.bs-fly-lock.bs-fly-lockr { bottom: calc(240px + env(safe-area-inset-bottom)); }
 .bs-fly-x.bs-fly-lock { top: auto; bottom: calc(196px + env(safe-area-inset-bottom)); left: 50%; right: auto; transform: translateX(-50%); font-size: 0.78rem; height: 36px; white-space: nowrap; }
 body.bsfly:not(.flypeek) #wBody, body.bsfly #bsCtl, body.bsfly:not(.flypeek) #bsDrive { display: none !important; }
 /* Explore, "Show weather": the weather screen over the view you've flown to, to see how it'll look (look only: tap Hide to fly again) */
@@ -1560,7 +1559,6 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
     <button class="bs-fly-x" type="button" id="bsFlyX">Exit explore</button>
     <button class="bs-fly-x bs-fly-peek" type="button" id="bsFlyPeek" aria-pressed="false">Show weather</button>
     <button class="bs-fly-x bs-fly-lock" type="button" id="bsFlyLock" hidden>Use this view for the weather</button>
-    <button class="bs-fly-x bs-fly-lock bs-fly-lockr" type="button" id="bsFlyLockReset" hidden>Go back to the usual view</button>
     <div class="bs-ud" role="group" aria-label="Fly up or down">
       <button type="button" class="bs-udb" data-ud="1" aria-label="Fly up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg><span>Up</span></button>
       <button type="button" class="bs-udb" data-ud="-1" aria-label="Fly down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><span>Down</span></button>
@@ -6595,9 +6593,8 @@ const handle = async (m, post) => {
       pk.textContent = on ? "Hide weather" : /^drive/.test(BS.sceneKey || "") ? "Show drive screen" : "Show weather"; F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.vert = 0; };
     // With the passphrase entered (or in the private copy): keep the view you've flown to as this place's weather view
     // In the private copy that's for everyone: it goes in the database, and the hourly refresh carries it to the public apps.
-    const lk = $("bsFlyLock"), lkr = $("bsFlyLockReset"), key = BS.sceneKey, what = /^drive/.test(key || "") ? "drive" : "weather", all = state.mode === "claude" && !!state.db;
-    const showReset = () => { lkr.hidden = lk.hidden || !(all ? state.wxCams?.[key] : store.get("brief.wxCam." + key, null)); };
-    lk.hidden = !(A.unlocked || state.mode === "claude") || !key; lk.textContent = all ? `Use this view for the ${what}, for everyone` : `Use this view for the ${what}`; showReset();
+    const lk = $("bsFlyLock"), key = BS.sceneKey, what = /^drive/.test(key || "") ? "drive" : "weather", all = state.mode === "claude" && !!state.db;
+    lk.hidden = !(A.unlocked || state.mode === "claude") || !key; lk.textContent = all ? `Use this view for the ${what}, for everyone` : `Use this view for the ${what}`;
     const keep = async v => {
       if (all) { const next = { ...(state.wxCams || {}) }; if (v) next[key] = v; else delete next[key];
         try { await state.db.doc("meta/wxcams").set({ cams: next, at: new Date().toISOString() }); state.wxCams = next; } catch { toast("That couldn't be saved. Check your connection and try again."); return false; } }
@@ -6605,9 +6602,8 @@ const handle = async (m, post) => {
       return true; };
     lk.onclick = async () => { const p = F.pitch, y = F.yaw, d = [-Math.sin(y) * Math.cos(p), Math.sin(p), -Math.cos(y) * Math.cos(p)], r = v => Math.round(v * 100) / 100;
       const b = [F.pos.x, F.pos.y, F.pos.z].map(r), l = b.map((v, i) => r(v + d[i] * 20));
-      if (!(await keep({ b, l }))) return; showReset();
+      if (!(await keep({ b, l }))) return;
       toast(all ? `Saved for everyone. The ${what} opens on this view here now, and in the public apps within about an hour.` : `Saved. The ${what} opens on this view on this device.`, 7000); };
-    lkr.onclick = async () => { if (!(await keep(null))) return; showReset(); toast(all ? `Back to the usual ${what} view, for everyone.` : `Back to the usual ${what} view on this device.`); };
     // The on-screen sticks: drag the knob; it springs back when you let go. Touch events (each finger tracked by its own id)
     // so both sticks and Up/Down work at the same time on a phone; the mouse uses pointer events.
     F.joys = [...document.querySelectorAll("#bsFly .bs-joy")].map(el => {
