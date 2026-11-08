@@ -5765,7 +5765,8 @@ const handle = async (m, post) => {
         const at = (hx, hz, nx, nz) => { const ry = Math.atan2(nx, nz), c = Math.cos(ry), sn = Math.sin(ry);  // local (x across, z towards the street) to map
           return (lx, ly, lz, rot = 0, sx = 1, sy = 1, sz = 1, rx = 0) => mtx(hx + lx * c + lz * sn, ly, hz - lx * sn + lz * c, ry + rot, sx, sy, sz, rx); };
         const WALL = [0xefe9dc, 0xf6f4ee, 0xc9d3d6, 0xd8c7a3, 0xb7c3ad, 0xa45a42, 0xe5dcc8, 0x9fb1bd], ROOF = [0x333436, 0x6c7378, 0x9a4b34, 0xdcd8cc, 0x4d5257];
-        N.h.forEach(([hx, hz, nx, nz, k]) => { const m = at(hx, hz, nx, nz), w = 12 + k % 5, d = 9 + k % 3, wc = WALL[k % WALL.length], rc = ROOF[(k >> 3) % ROOF.length], two = k % 9 === 0, h = two ? 5.6 : 2.9;
+        N.h.forEach(([hx, hz, nx, nz, k]) => { if (N.home && Math.hypot(hx - N.home[0], hz - N.home[1]) < 19) return;  // leave room round number 11
+          const m = at(hx, hz, nx, nz), w = 12 + k % 5, d = 9 + k % 3, wc = WALL[k % WALL.length], rc = ROOF[(k >> 3) % ROOF.length], two = k % 9 === 0, h = two ? 5.6 : 2.9;
           put(nb, new THREE.BoxGeometry(w, h, d), wc, m(0, G0 + 0.3 + h / 2, 0));
           put(nb, hip(w + 1.2, d + 1.2, 2), rc, m(0, G0 + 0.3 + h, 0));
           for (let i = 0; i < 3; i++) put(nw, new THREE.BoxGeometry(1.6, 1.3, 0.08), 0x2a3640, m(-w / 2 + 2 + i * (w - 4) / 2, G0 + 1.9, d / 2 + 0.03));  // front windows
@@ -5784,7 +5785,7 @@ const handle = async (m, post) => {
         // the upstairs balcony (glass rail, posts), pale Colorbond roofs with solar panels, a double garage with a brown roller
         // door under its own little gable, a two-storey wing behind it, an aggregate driveway that turns to stamped red concrete
         // at the street, a white wildlife-rescue van out front, the red letterbox by a mesh gate, and a garden full of natives
-        if (N.home) { const [hx, hz, nx, nz] = N.home, m = at(hx, hz, nx, nz), F0 = G0 + 0.3, H1 = 2.9, H2 = 2.8, ROOFC = 0xd3cbb6, TIMB = 0x4a3328;
+        if (N.home) { const [hx, hz, nx, nz] = N.home, m = at(hx, hz, nx, nz), _h = (W.invHouse = m(0, 0, 0)), F0 = G0 + 0.3, H1 = 2.9, H2 = 2.8, ROOFC = 0xd3cbb6, TIMB = 0x4a3328;
           const brickM = (() => { const c = document.createElement("canvas"); c.width = c.height = 256; const g = c.getContext("2d"); g.fillStyle = "#e3d9c9"; g.fillRect(0, 0, 256, 256);
             for (let y = 0, r = 0; y < 256; y += 16, r++) for (let x = (r % 2) * -16; x < 256; x += 32) { const v = (x * 7 + y * 13) % 5; g.fillStyle = ["#c9693c", "#c16236", "#d07445", "#b9592f", "#cc6d40"][v]; g.fillRect(x + 1, y + 1, 30, 14); }
             const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(3, 2); t.colorSpace = THREE.SRGBColorSpace; return new THREE.MeshStandardMaterial({ map: t, roughness: .95 }); })();
@@ -5793,6 +5794,11 @@ const handle = async (m, post) => {
           // a gable roof, its ridge running towards the street (gable end at the front), and the triangle that fills a gable end
           const gab = (w, l, h) => { const a = w / 2, b = l / 2, v = [-a, 0, b, 0, h, b, 0, h, -b, -a, 0, b, 0, h, -b, -a, 0, -b, 0, h, b, a, 0, b, a, 0, -b, 0, h, b, a, 0, -b, 0, h, -b];
             const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(v, 3)); g.computeVertexNormals(); return g; };
+          // a gable end as in the photo: pale barge boards up both rakes, a pale band across, dark timber only in the peak
+          const gEnd = (w, h, x, y, z) => { const L = Math.hypot(w / 2, h), an = Math.atan2(h, w / 2);
+            [-1, 1].forEach(sd => put(nb, new THREE.BoxGeometry(L + 0.2, 0.24, 0.14), 0xdcd6c8, m(x + sd * w / 4, y + h / 2, z + 0.02).multiply(new THREE.Matrix4().makeRotationZ(-sd * an))));
+            put(nb, tri(w * 0.86, h * 0.86), 0xe6e1d4, m(x, y + 0.02, z - 0.12)); put(nb, tri(w * 0.6, h * 0.6), TIMB, m(x, y + h * 0.3, z - 0.08));
+            put(nb, new THREE.BoxGeometry(w * 0.62, 0.12, 0.1), 0xdcd6c8, m(x, y + h * 0.3, z - 0.04)); };
           const tri = (w, h) => new THREE.ShapeGeometry(new THREE.Shape([new THREE.Vector2(-w / 2, 0), new THREE.Vector2(w / 2, 0), new THREE.Vector2(0, h)]));
           // the main two-storey block on the left: brick below, brick above set back behind the balcony
           brick(11, H1, 11, -4, F0 + H1 / 2, -0.5); brick(11, H2, 8, -4, F0 + H1 + H2 / 2, -2);
@@ -5802,14 +5808,14 @@ const handle = async (m, post) => {
           { const gl = new THREE.Mesh(new THREE.BoxGeometry(10.8, 0.95, 0.03), new THREE.MeshStandardMaterial({ color: 0xbcd3dc, transparent: true, opacity: .35, roughness: .1 })); gl.applyMatrix4(m(-4, F0 + H1 + 0.55, 5.0)); TG.add(gl); }
           [-6.6, -1.4].forEach(x => put(nw, new THREE.BoxGeometry(3.6, 2.3, 0.06), 0x24323c, m(x, F0 + H1 + 1.3, 2.04)));  // big glass doors onto the balcony
           put(nb, gab(12.8, 12.4, 2.7), ROOFC, m(-4, F0 + H1 + H2, -0.6));  // the big front gable
-          { const t = tri(11.6, 2.45); put(nb, t, TIMB, m(-4, F0 + H1 + H2 + 0.05, 5.45)); }
+          gEnd(12.8, 2.7, -4, F0 + H1 + H2, 5.6);
           put(nb, new THREE.BoxGeometry(12.9, 0.22, 0.14), 0xd8d2c2, m(-4, F0 + H1 + H2 - 0.05, 5.6));  // fascia
           for (let i = 0; i < 4; i++) for (let j = 0; j < 2; j++) put(nb, new THREE.BoxGeometry(1.0, 0.05, 1.65), 0x1d2a44, m(-7.4 + j * 1.1, F0 + H1 + H2 + 2.7 * (1 - (3.4 - j * 1.1) / 6.4) + 0.06, -3.6 + i * 1.75, 0, 1, 1, 1, 0).multiply(new THREE.Matrix4().makeRotationZ(Math.atan2(2.7, 6.4))));  // solar on the left slope
           [-8, -1].forEach(x => put(nw, new THREE.BoxGeometry(1.8, 1.4, 0.06), 0x24323c, m(x, F0 + 1.6, 5.03)));  // downstairs windows
           // the garage on the right, its roller door, and the little gable over it
           brick(7, 2.8, 8, 5, F0 + 1.4, 1);
           for (let i = 0; i < 10; i++) put(nb, new THREE.BoxGeometry(5.2, 0.22, 0.06), i % 2 ? 0x76391f : 0x834327, m(5, F0 + 0.13 + i * 0.235, 5.03));
-          put(nb, gab(7.8, 8.8, 1.5), ROOFC, m(5, F0 + 2.8, 1)); { const t = tri(6.9, 1.3); put(nb, t, TIMB, m(5, F0 + 2.85, 5.36)); }
+          put(nb, gab(7.8, 8.8, 1.5), ROOFC, m(5, F0 + 2.8, 1)); gEnd(7.8, 1.5, 5, F0 + 2.8, 5.4);
           put(nb, new THREE.BoxGeometry(7.9, 0.2, 0.12), 0xd8d2c2, m(5, F0 + 2.75, 5.45));
           // the two-storey wing behind the garage, hipped roof and a TV antenna
           brick(7, H1 + H2, 5, 5, F0 + (H1 + H2) / 2, -5.5); put(nb, hip(7.8, 5.8, 1.6), ROOFC, m(5, F0 + H1 + H2, -5.5));
@@ -5842,21 +5848,32 @@ const handle = async (m, post) => {
           // the driveway: exposed aggregate up to the garage, stamped red concrete out to the street
           put(nb, new THREE.BoxGeometry(6.6, 0.06, 6.2), 0xcdc6b8, m(5.2, G0 + 0.06, 8.1)); put(nb, new THREE.BoxGeometry(7.4, 0.06, 4.3), 0xa45b4a, m(5.2, G0 + 0.065, 13.3));
           for (let i = 0; i < 18; i++) put(nb, new THREE.BoxGeometry(0.9 + (i % 3) * 0.3, 0.005, 0.05), 0x7d4236, m(2.2 + (i * 1.7) % 6, G0 + 0.1, 11.6 + (i * 0.73) % 3.6, i));
-          // a white van parked in front of the garage
-          { const vm = (lx, ly, lz) => m(6.6 + lx, ly, 8.4 + lz); put(nb, new THREE.BoxGeometry(1.9, 1.9, 5.0), 0xf3f3f1, vm(0, G0 + 1.35, 0)); put(nb, new THREE.BoxGeometry(1.92, 0.9, 1.6), 0x2b333a, vm(0, G0 + 1.85, 2.0));
-            put(nb, new THREE.BoxGeometry(1.92, 0.25, 0.1), 0x2b2c2e, vm(0, G0 + 0.55, 2.55)); [[-0.95, 1.6], [0.95, 1.6], [-0.95, -1.6], [0.95, -1.6]].forEach(([a, b]) => put(nb, new THREE.CylinderGeometry(0.36, 0.36, 0.25, 12).rotateZ(Math.PI / 2), 0x17181a, vm(a, G0 + 0.36, b)));
-            [-0.6, 0.6].forEach(a => put(nb, new THREE.BoxGeometry(0.3, 0.15, 0.04), 0xa3161c, vm(a, G0 + 1.0, -2.52)));
-            put(nb, new THREE.BoxGeometry(0.02, 1.5, 0.03), 0xc9c9c6, vm(0, G0 + 1.4, -2.52));  // the split rear doors
-            [-0.5, 0.5].forEach(a => put(nb, new THREE.BoxGeometry(0.7, 0.55, 0.03), 0x2b333a, vm(a, G0 + 1.85, -2.52)));  // rear windows
-            put(nb, new THREE.BoxGeometry(0.5, 0.14, 0.03), 0xf2f2ee, vm(0, G0 + 0.72, -2.53));  // number plate
-            [-1, 1].forEach(sd => { put(nb, new THREE.BoxGeometry(0.06, 0.6, 2.6), 0x2b333a, vm(sd * 0.96, G0 + 1.85, -0.4)); put(nb, new THREE.BoxGeometry(0.2, 0.22, 0.06), 0x222326, vm(sd * 1.08, G0 + 1.8, 1.9)); });  // side windows, mirrors
-            [-0.7, 0.7].forEach(a => put(nb, new THREE.BoxGeometry(0.06, 0.06, 4.4), 0x55595c, vm(a, G0 + 2.33, -0.2)));  // roof racks
-            // "WILDLIFE" in green and yellow, across the back and down both sides (it's a wildlife rescue van)
+          // the white wildlife-rescue van (a long-wheelbase HiAce), nose to the garage and its back to the street as in the photo
+          { const vm = (lx, ly, lz, ry = 0) => m(6.4 + lx, ly, 8.6 + lz, ry);
+            const prof = new THREE.Shape([[2.45, 0.32], [2.5, 0.75], [2.38, 1.08], [2.05, 1.2], [1.55, 2.0], [1.3, 2.08], [-2.45, 2.08], [-2.5, 1.9], [-2.5, 0.32]].map(([x, y]) => new THREE.Vector2(x, y)));
+            const vg = new THREE.ExtrudeGeometry(prof, { depth: 1.88, bevelEnabled: true, bevelSize: 0.05, bevelThickness: 0.05, bevelSegments: 2 }); vg.translate(0, 0, -0.94); vg.rotateY(Math.PI / 2);  // nose to -z
+            put(nb, vg, 0xf4f4f1, vm(0, G0, 0));
+            const dk = 0x232a31, gr = 0x3c4045;
+            // windscreen, front side windows, the long side windows, the back windows
+            { const an = Math.atan2(0.5, 0.8); put(nb, new THREE.BoxGeometry(1.8, 0.92, 0.05), dk, vm(0, G0 + 1.62, -1.83).multiply(new THREE.Matrix4().makeRotationX(-an))); }
+            [-1, 1].forEach(sd => { put(nb, new THREE.BoxGeometry(0.05, 0.62, 0.8), dk, vm(sd * 0.99, G0 + 1.68, -1.05)); put(nb, new THREE.BoxGeometry(0.05, 0.55, 2.6), dk, vm(sd * 0.99, G0 + 1.7, 0.85));
+              put(nb, new THREE.BoxGeometry(0.03, 1.35, 0.02), 0xcfcfcb, vm(sd * 1.0, G0 + 1.25, -0.6)); put(nb, new THREE.BoxGeometry(0.03, 0.02, 1.0), 0xcfcfcb, vm(sd * 1.0, G0 + 0.85, -0.05));  // sliding door seams, handle line
+              put(nb, new THREE.BoxGeometry(0.18, 0.24, 0.1), 0x1f2124, vm(sd * 1.08, G0 + 1.55, -1.45)); put(nb, new THREE.BoxGeometry(0.06, 0.06, 0.18), 0x1f2124, vm(sd * 1.02, G0 + 1.5, -1.5));  // mirrors
+              put(nb, new THREE.BoxGeometry(0.06, 0.12, 4.3), gr, vm(sd * 0.98, G0 + 0.42, 0)); });  // rubbing strips
+            [-0.48, 0.48].forEach(a => put(nb, new THREE.BoxGeometry(0.78, 0.6, 0.05), dk, vm(a, G0 + 1.68, 2.53)));
+            put(nb, new THREE.BoxGeometry(0.02, 1.55, 0.05), 0xcfcfcb, vm(0, G0 + 1.15, 2.54));  // the barn doors' join
+            put(nb, new THREE.BoxGeometry(1.95, 0.24, 0.22), gr, vm(0, G0 + 0.42, 2.55)); put(nb, new THREE.BoxGeometry(1.95, 0.24, 0.22), gr, vm(0, G0 + 0.45, -2.55));  // bumpers
+            [-0.82, 0.82].forEach(a => { put(nl, new THREE.BoxGeometry(0.2, 0.5, 0.06), 0xb81d22, vm(a, G0 + 1.05, 2.55)); put(nl, new THREE.BoxGeometry(0.38, 0.16, 0.06), 0xf2efe6, vm(a, G0 + 0.92, -2.54)); });  // tail lights, headlights
+            put(nb, new THREE.BoxGeometry(1.1, 0.26, 0.05), 0x2b2e31, vm(0, G0 + 0.8, -2.53)); put(nb, new THREE.BoxGeometry(0.5, 0.14, 0.03), 0xf2f2ee, vm(0, G0 + 0.75, 2.67));  // grille, number plate
+            [[-0.92, 1.55], [0.92, 1.55], [-0.92, -1.6], [0.92, -1.6]].forEach(([a, b]) => { put(nb, new THREE.CylinderGeometry(0.37, 0.37, 0.24, 14).rotateZ(Math.PI / 2), 0x17181a, vm(a, G0 + 0.37, b));
+              put(nb, new THREE.CylinderGeometry(0.2, 0.2, 0.26, 10).rotateZ(Math.PI / 2), 0xa9adb1, vm(a, G0 + 0.37, b)); put(nb, new THREE.CylinderGeometry(0.45, 0.45, 0.2, 14, 1, false, 0, Math.PI).rotateZ(Math.PI / 2).rotateX(Math.PI / 2), 0x2b2e31, vm(a * 1.02, G0 + 0.4, b)); });
+            [-0.7, 0.7].forEach(a => put(nb, new THREE.BoxGeometry(0.06, 0.06, 3.8), 0x55595c, vm(a, G0 + 2.18, 0.2))); [-1.3, 0, 1.3].forEach(b => put(nb, new THREE.BoxGeometry(1.5, 0.05, 0.06), 0x55595c, vm(0, G0 + 2.2, b)));  // roof racks
+            // "WILDLIFE" in green and yellow: on the back window (as in the photo) and down both sides
             const wl = (() => { const c = document.createElement("canvas"); c.width = 512; c.height = 96; const g = c.getContext("2d"); g.fillStyle = "#cfe63a"; g.fillRect(0, 0, 512, 96);
               g.fillStyle = "#1f6b3a"; g.fillRect(0, 0, 512, 10); g.fillRect(0, 86, 512, 10); g.font = "900 64px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("WILDLIFE", 256, 50);
               const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return new THREE.MeshStandardMaterial({ map: t, roughness: .6 }); })();
-            const decal = (w, h, x, y, z, ry) => { const d = new THREE.Mesh(new THREE.PlaneGeometry(w, h), wl); d.applyMatrix4(vm(0, 0, 0).multiply(new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, ry, 0)), new THREE.Vector3(1, 1, 1)))); TG.add(d); };
-            decal(1.2, 0.22, 0, G0 + 1.45, -2.53, Math.PI); decal(2.6, 0.45, 0.96, G0 + 1.15, -0.6, Math.PI / 2); decal(2.6, 0.45, -0.96, G0 + 1.15, -0.6, -Math.PI / 2); }
+            const decal = (w, h, x, y, z, ry) => { const d = new THREE.Mesh(new THREE.PlaneGeometry(w, h), wl); d.applyMatrix4(vm(x, y, z, ry)); TG.add(d); };
+            decal(0.62, 0.13, 0.48, G0 + 1.48, 2.57, 0); decal(2.4, 0.42, 1.0, G0 + 1.1, 0.4, Math.PI / 2); decal(2.4, 0.42, -1.0, G0 + 1.1, 0.4, -Math.PI / 2); }
           // the garden: lawn at the street, a deep bed of natives (grey-green, white-flowering), pink daisies, a gum or two
           put(nb, new THREE.BoxGeometry(10.5, 0.04, 5), 0x6a9a4e, m(-4, G0 + 0.04, 12.8)); put(nb, new THREE.BoxGeometry(10.5, 0.2, 5.4), 0x5a4030, m(-4, G0 + 0.1, 7.9));
           for (let i = 0; i < 26; i++) { const x = -9 + (i * 3.7) % 10.4, z = 5.8 + (i * 1.9) % 4.6, s3 = 0.42 + ((i * 7) % 5) * 0.13;
@@ -5870,10 +5887,22 @@ const handle = async (m, post) => {
           put(nb, new THREE.BoxGeometry(0.5, 0.7, 0.03), 0x1f3c8a, m(1.6, G0 + 0.6, 10.67));
           { const gate = new THREE.Mesh(new THREE.BoxGeometry(0.04, 1.1, 1.6), new THREE.MeshStandardMaterial({ color: 0x8c9296, transparent: true, opacity: .55, metalness: .4, roughness: .5 })); gate.applyMatrix4(m(1.9, G0 + 0.55, 9.6)); TG.add(gate); }
           lights(...(() => { const v = new THREE.Vector3(-4, F0 + H1 + 2, 1.8).applyMatrix4(m(0, 0, 0)); return [v.x, v.y, v.z]; })());
+          // a koala climbing the downpipe on the garage's front corner: grey fur, a pale chest, big fluffy ears, a black nose, arms and legs round
+          // the pipe. It inches up and slides back down, now and then turning its head to look at you.
+          { const fur = new THREE.MeshStandardMaterial({ color: 0x8e8c8a, roughness: 1 }), pale = new THREE.MeshStandardMaterial({ color: 0xe9e4dc, roughness: 1 }), nose = new THREE.MeshStandardMaterial({ color: 0x1d1b1a, roughness: .5 });
+            const ko = new THREE.Group(), body = new THREE.Group(); ko.add(body);
+            const sph = (r, mat, x, y, z, sx = 1, sy = 1, sz = 1, par = body) => { const e = new THREE.Mesh(new THREE.SphereGeometry(r, 14, 10), mat); e.position.set(x, y, z); e.scale.set(sx, sy, sz); par.add(e); return e; };
+            sph(0.26, fur, 0, 0, 0.18, 1, 1.35, 0.9); sph(0.17, pale, 0, 0.02, 0.0, 1, 1.2, 0.45);  // body, chest (against the pipe)
+            const head = new THREE.Group(); head.position.set(0, 0.42, 0.14); body.add(head);
+            sph(0.19, fur, 0, 0, 0, 1.1, 1, 1, head); [-1, 1].forEach(sd => { sph(0.11, fur, sd * 0.2, 0.1, 0.02, 1, 1, 0.5, head); sph(0.075, pale, sd * 0.2, 0.1, 0.05, 1, 1, 0.4, head); });
+            sph(0.065, nose, 0, -0.03, 0.18, 0.8, 1.2, 0.8, head); [-1, 1].forEach(sd => sph(0.022, nose, sd * 0.08, 0.05, 0.16, 1, 1, 1, head));
+            const limbs = [[-1, 0.18], [1, 0.18], [-1, -0.25], [1, -0.25]].map(([sd, y]) => { const l = new THREE.Mesh(new THREE.CapsuleGeometry(0.06, 0.24, 4, 8), fur); l.position.set(sd * 0.16, y, -0.02); l.rotation.z = sd * 0.9; body.add(l); return l; });
+            const base = new THREE.Vector3(8.45, 0, 5.68).applyMatrix4(m(0, 0, 0)); ko.position.set(base.x, F0 + 0.6, base.z); ko.scale.setScalar(1.15); ko.rotation.y = Math.atan2(nx, nz) + Math.PI;  // facing the pipe, back to the street
+            TG.add(ko); W.invKoala = { ko, head, limbs, y0: F0 + 0.5, span: 1.5 }; }
           // Explore's "Jump to Norman Rd": on the street out the front, looking at the house
           const sp = new THREE.Vector3(3.5, G0 + 1.9, 25).applyMatrix4(m(0, 0, 0)), tg = new THREE.Vector3(0, F0 + 3.2, 0).applyMatrix4(m(0, 0, 0)), s = toW(sp.x, sp.y, sp.z), l = toW(tg.x, tg.y, tg.z).sub(s);
           W.invNormanSpot = { pos: [s.x, s.y, s.z], yaw: Math.atan2(-l.x, -l.z), pitch: Math.atan2(l.y, Math.hypot(l.x, l.z)) }; }
-        done(nb); done(nl, { roughness: .5 }); done(nt); done(ntl, { flatShading: true, roughness: 1 });
+        done(nb, { side: THREE.DoubleSide }); done(nl, { roughness: .5 }); done(nt); done(ntl, { flatShading: true, roughness: 1 });
         { const gm = done(nw); gm.material.dispose(); gm.material = W.invGlass || gm.material; }  // windows glow at night, like the shops
       }
       // ---- street furniture round the clock's plaza: benches, bins, timber bollards along the kerb, a bike rack; teal lamps along the street
@@ -6957,6 +6986,9 @@ const handle = async (m, post) => {
     if (W.invFoam) W.invFoam.position.z = -32.5 + Math.sin(t * 0.8) * 0.9;
     if (W.inv?.visible && W.invClockTick) W.invClockTick(ms, dt, lit, still);  // the Rotary clock: its hands and lit faces
     if (W.inv?.visible && W.invDrive) W.invDrive(dt, still);
+    if (W.invKoala && W.inv?.visible && !still) { const K = W.invKoala, c = (t * 0.07) % 1, up = c < 0.85 ? c / 0.85 : 1 - (c - 0.85) / 0.15;  // climbs slowly, then slides back down
+      K.ko.position.y = K.y0 + up * K.span; const st = Math.sin(t * 3.2); K.limbs.forEach((l, i) => { l.position.y = (i < 2 ? 0.18 : -0.25) + (i % 2 ? st : -st) * 0.05 * (c < 0.85 ? 1 : 0); });
+      K.head.rotation.y = Math.max(0, Math.sin(t * 0.4)) * 1.3; }
     if (W.invPeople && W.invBeach?.visible && !still) W.invPeople.forEach(p => { const ph = (t * 0.55 + p.k * 0.37) % 1;  // a stick lifted up and onto the teepee every couple of seconds
       if (p.throwing) { const u = ph < 0.55 ? ph / 0.55 : 1 - (ph - 0.55) / 0.45; p.r.rotation.x = -0.4 - u * 2.1; p.l.rotation.x = -0.3 - u * 1.6; }
       else { p.r.rotation.z = 0.12 + Math.max(0, Math.sin(t * 1.3 + p.k)) * 0.15; } });  // the two cars driving along A'Beckett
