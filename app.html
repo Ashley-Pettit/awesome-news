@@ -998,6 +998,11 @@ body.wxintro #weather .bs-ctl { opacity: 0; pointer-events: none; }
 #weather .bs-warn[hidden] { display: none; }
 #weather .bs-warn b { display: block; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.9; margin-bottom: 2px; }
 body.wxweek #weather .bs-weekbtn { display: none; }  /* already hearing it */
+/* Listen's buttons up top: small. The week's weather is just an icon. */
+body.wxlisten #weather .bs-flybtn, body.wxlisten #weather .bs-weekbtn { height: 32px; font-size: 0.74rem; padding: 0 10px; gap: 4px; }
+body.wxlisten #weather .bs-flybtn svg, body.wxlisten #weather .bs-weekbtn svg { width: 15px; height: 15px; }
+#weather .bs-weekbtn { width: 32px; padding: 0 !important; justify-content: center; }
+#weather .bs-weekbtn svg { width: 18px !important; height: 18px !important; }
 /* Listen intro: the weather blurred behind the title, then it sharpens and comes forward */
 #weather .bs-hud { transition: opacity 0.8s ease; }
 /* Your drive, laid out like the weather: where you're going on top, the minutes big, chips, a traffic meter and what's reported */
@@ -1006,7 +1011,7 @@ body.wxdrive #bsDrive { display: flex; flex-direction: column; gap: 10px; positi
   padding: calc(env(safe-area-inset-top, 0px) + 22px) max(16px, env(safe-area-inset-right, 0px)) max(14px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
 body.wxdrive #weather .bs-now, body.wxdrive #weather .bs-rain, body.wxdrive #weather .bs-panel, body.wxdrive #weather .bs-place { visibility: hidden; }
 .dv-top { min-height: 40px; display: flex; flex-direction: column; justify-content: center; padding-right: 120px; }
-body.wxlisten .dv-top { padding-right: 208px; }  /* Explore and Week up there */
+body.wxlisten .dv-top { padding-right: 150px; }  /* Explore and the week icon up there */
 .dv-top h1 { margin: 0; font-family: var(--display); font-weight: 800; font-size: 1.7rem; line-height: 1; letter-spacing: -0.02em; text-shadow: 0 1px 12px rgba(0, 0, 0, .35); }
 .dv-top p { margin: 5px 0 0; font-size: 0.8rem; color: var(--bs-dim); }
 .dv-now { margin-top: 10px; text-shadow: 0 1px 2px rgba(0, 0, 0, .55), 0 2px 18px rgba(0, 0, 0, .45); }
@@ -5127,7 +5132,7 @@ const handle = async (m, post) => {
         <div class="bs-place"><h1>${esc(D.city)}</h1></div>
         <div class="bs-btns">
           <button class="bs-skip bs-flybtn" type="button" id="bsFlyBtn" aria-label="Explore the 3D scene"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>Explore</button>
-          <button class="bs-skip bs-weekbtn" type="button" id="bsWeekBtn" aria-label="Hear the week's weather"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Week</button>
+          <button class="bs-skip bs-weekbtn" type="button" id="bsWeekBtn" aria-label="Hear the week's weather"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8.5" r="3.2"/><path d="M9 2.5v1.3M3 8.5h1.3M4.8 4.3l.9.9M13.2 4.3l-.9.9"/><path d="M8 20h9.5a3.5 3.5 0 0 0 .4-7 5 5 0 0 0-9.6 1.2A3 3 0 0 0 8 20z" fill="currentColor" fill-opacity=".25"/></svg></button>
           <button class="bs-skip" type="button" id="bsSkip" aria-label="Skip the weather">Skip<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 5.5v13l9-6.5zM16 5h3v14h-3z"/></svg></button>
           <button class="bs-x" type="button" data-close="weather" aria-label="Close the weather"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
           <button class="bs-x bs-stop" type="button" id="bsStop" aria-label="Stop listening"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
