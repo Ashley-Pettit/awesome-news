@@ -1604,11 +1604,11 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
     { id: "M365 Roadmap", label: "Microsoft 365 Roadmap" }, { id: "Microsoft", label: "Microsoft blogs" },
     { id: "Office 365 for IT Pros", label: "Office 365 for IT Pros" }, { id: "Windows Central", label: "Windows Central" },
   ];
-  const REGION_FALLBACK = [{ id: "qld", label: "Queensland" }];
+  const REGION_FALLBACK = [{ id: "qld", label: "Brisbane" }];
   // Every state the news update can fetch. Picking one asks the next update to include it.
-  const ALL_REGIONS = [{ id: "qld", label: "Queensland" }, { id: "nsw", label: "New South Wales" }, { id: "vic", label: "Victoria" }, { id: "wa", label: "Western Australia" },
-    { id: "sa", label: "South Australia" }, { id: "tas", label: "Tasmania" }, { id: "act", label: "Canberra" }, { id: "nt", label: "Northern Territory" }, { id: "inv", label: "Inverloch" }, { id: "moo", label: "Moorooka" },
-    ...(DEFAULT_REGION === "logan" ? [{ id: "logan", label: "Logan" }] : [])];
+  // Local news: just these places (the other states were dropped). Brisbane and Sydney are the Queensland and NSW feeds.
+  const ALL_REGIONS = [{ id: "vic", label: "Victoria" }, { id: "nsw", label: "Sydney" }, { id: "qld", label: "Brisbane" }, { id: "logan", label: "Logan" }, { id: "moo", label: "Moorooka" }, { id: "inv", label: "Inverloch" }];
+  const REGION_IDS = ALL_REGIONS.map(r => r.id);
   const FOR_YOU_PER_SECTION = 7;
   const FEATURE_EVERY = 6;
   const MONO = { "ABC": "ABC", "SBS": "SBS", "BBC": "BBC", "M365": "365", "Microsoft": "MS", "Office 365": "IT", "Windows Central": "WC", "Ars": "Ars", "360info": "360", "Global Voices": "GV", "NASA": "NASA", "EFF": "EFF", "Mongabay": "MB", "CrimeReads": "CR", "Oxygen": "OX", "Defrosting Cold Cases": "DCC", "CrimeOnline": "CO", "eBird": "eB", "BirdLife Australia": "BL", "Birds in Backyards": "BB", "Law&Crime": "L&C", "Logan City Council": "LCC", "MyCity Logan": "ML", "Queensland Police": "QPS", "Jimboomba Times": "JT", "Sentinel-Times": "ST", "Australian Geographic": "AG", "Wildlife Victoria": "WV", "New Scientist": "NS", "ScienceDaily": "SD", "Smithsonian": "SM", "The Dodo": "Dodo", "KFF": "KFF", "TechCrunch": "TC", "iTnews": "iT", "The Conversation": "C", "The Guardian": "G", "7NEWS": "7" };
@@ -1632,6 +1632,7 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
   const S = Object.assign({}, defaults, saved || {}, { tabs: Object.assign({}, defaults.tabs, (saved || {}).tabs) });
   S.topics = [];  // "Your topics" is gone: interests (and suggesting a new one) cover it
   if (!saved && DEFAULT_NAME) S.welcomed = true;
+  if (!REGION_IDS.includes(S.region)) S.region = DEFAULT_REGION;  // a state that's no longer offered: back to the default
   const saveSettings = () => { store.set("brief.settings", S); syncPicks(); try { notePicks(); } catch {} };
   // Admin (hidden): the website's full text is published locked. A passphrase entered here
   // unlocks it on this device, and the app then reads like the private Claude copy.
@@ -1789,7 +1790,7 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
   const longDate = iso => new Intl.DateTimeFormat("en-AU", { day: "numeric", month: "long", hour: "numeric", minute: "2-digit", timeZone: TZ }).format(new Date(iso));
   const mono = source => { const k = Object.keys(MONO).find(k => source.startsWith(k)); return k ? MONO[k] : source.slice(0, 2); };
   const publisherOf = source => PUBLISHERS.find(p => source.startsWith(p.id))?.label || source;
-  const regionLabel = () => [...(state.status?.regions || REGION_FALLBACK), ...ALL_REGIONS].find(r => r.id === S.region)?.label || "your area";
+  const regionLabel = () => [...ALL_REGIONS, ...(state.status?.regions || REGION_FALLBACK)].find(r => r.id === S.region)?.label || "your area";
 
   // ======================================================================
   // Icons
@@ -3363,7 +3364,8 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
     </div><p class="hint">Saved on this device only.${n ? ` ${n} full stories in the latest update.` : ""}</p></div>`;
   }
   function renderSettings() {
-    const regions = state.mode === "claude" ? ALL_REGIONS : [...(state.status?.regions || REGION_FALLBACK), ...ALL_REGIONS.filter(r => r.id === "logan")];
+    const have = new Set([...(state.status?.regions || REGION_FALLBACK).map(r => r.id), "logan"]);
+    const regions = state.mode === "claude" ? ALL_REGIONS : ALL_REGIONS.filter(r => have.has(r.id));  // in this order, with these names
     const counts = state.status?.counts || {};
     STABS = BASE_STABS;
     const tab = STABS.some(t => t[0] === state.sTab) ? state.sTab : "news";
