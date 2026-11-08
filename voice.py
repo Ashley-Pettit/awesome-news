@@ -41,8 +41,34 @@ FOCUS = [x for x in re.split(r"[,\s]+", os.environ.get("FOCUS", "")) if re.fullm
 CUE_WAYS = ["Now, {}.", "Next, {}.", "On to {}.", "Moving on to {}.", "Over to {}."]
 CUE = re.compile(r"^(Now, .*|Next, .*|On to .*|Moving on to .*|Over to .*|Here are the top stories\.|Story \d+\.)$")
 
+# Clock times said the way people say them: "10.30am" is "ten thirty in the morning", never "ten point three zero".
+_ONES = "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen".split()
+_TENS = {2: "twenty", 3: "thirty", 4: "forty", 5: "fifty"}
+
+
+def _num(n):
+    return _ONES[n] if n < 20 else _TENS[n // 10] + ("" if n % 10 == 0 else " " + _ONES[n % 10])
+
+
+def _clock(h, m, ap=""):
+    h, m, ap = int(h), int(m or 0), (ap or "").lower().replace(".", "")
+    if ap and h == 12 and m == 0:
+        return "midday" if ap == "pm" else "midnight"
+    said = _num(h) + ("" if m == 0 and ap else " o'clock" if m == 0 else " oh " + _ONES[m] if m < 10 else " " + _num(m))
+    if ap == "am":
+        return said + " in the morning"
+    if ap == "pm":
+        return said + (" in the afternoon" if h == 12 or h < 5 else " in the evening" if h < 9 else " at night")
+    return said
+
+
+TIME_AP = re.compile(r"\b(1[0-2]|0?[1-9])(?:[.:]([0-5]\d))?\s?([ap](?:\.m(?:\.(?=\s+[a-z]|,))?|m))(?![a-z])", re.I)
+TIME_AT = re.compile(r"\b((?:at|until|till|by|before|after|since) )([01]?\d|2[0-3])[.:]([0-5]\d)\b(?![.:]?\d)"
+                     r"(?!\s*(?:per|%|million|billion|trillion|metres|kilo|km|kg|dollars|cents?|points?|seconds|minutes|hours|years|times))", re.I)
 # Said differently from how it's written. Only the sound changes; the key stays on the app's text.
-SAY = [(r"\b7NEWS\b", "Seven News"), (r"\b9News\b", "Nine News"), (r"\b10 News\b", "Ten News"), (r"\biTnews\b", "IT News"),
+SAY = [(TIME_AP, lambda m: _clock(m.group(1), m.group(2), m.group(3))),
+       (TIME_AT, lambda m: m.group(1) + _clock(m.group(2), m.group(3))),
+       (r"\b7NEWS\b", "Seven News"), (r"\b9News\b", "Nine News"), (r"\b10 News\b", "Ten News"), (r"\biTnews\b", "IT News"),
        (r"\$(\d[\d,.]*) ?bn\b", r"$\1 billion"), (r"\b(\d[\d,.]*) ?bn\b", r"\1 billion"), (r"\$(\d[\d,.]*) ?m\b", r"$\1 million"),
        (r"\$(\d[\d,.]*) ?k\b", r"$\1 thousand"), (r"\bkm/h\b", "kilometres an hour"), (r"\bkm\b", "kilometres"),
        (r"\bAI\b", "AI"), (r"\bEVs\b", "E-V's"), (r"\bEV\b", "E-V"), (r"\bQld\b", "Queensland"),
@@ -75,7 +101,7 @@ LEXICON = {
     "Rockhampton": "ɹɒkhˈamptən", "Launceston": "lˈɒnsɛstən", "Geelong": "dʒəlˈɒŋ", "Wagga": "wˈɒɡə", "Kalgoorlie": "kalɡˈʊəli",
     "Wonthaggi": "wɒnθˈaɡi", "Korumburra": "kˌɒɹəmbˈʌɹə", "Traralgon": "tɹəɹˈalɡən", "Pakenham": "pˈakənəm", "Bunurong": "bˈʌnəɹɒŋ",
     "Murrumbidgee": "mˌʌɹəmbˈɪdʒi", "Kosciuszko": "kˌɒziˈɒskəʊ", "Toowong": "tuːwˈɒŋ", "Yeronga": "jəɹˈɒŋɡə", "Rocklea": "ɹˈɒkliː",
-    "Murray": "mˈʌɹi",
+    "Murray": "mˈʌɹi", "Gippsland": "ɡˈɪpslənd", "Gipps": "ɡˈɪps",
     # First Nations
     "Kaurna": "ɡˈɑːnə", "Wurundjeri": "wəɹˈʌndʒəɹi", "Ngunnawal": "nˈʌnəwɒl", "Kulin": "kˈuːlɪn", "Wiradjuri": "wɪɹˈadʒəɹi",
     # people
@@ -96,11 +122,11 @@ def add_lexicon(tok):
             SOUNDS.append((re.compile(rf"\b{re.escape(word)}\b"), re.compile(_B + re.escape(guess)), snd))  # (no end check: "Brisbane's", a linking r)
 
 
-SOUNDSV = 2
+SOUNDSV = 3
 SOUNDW = re.compile(r"\b(Logan|Inverloch)|\b(" + "|".join(map(re.escape, ["Bass", *LEXICON])) + r")\b")
 # Pieces with these words were made before the pronunciation above was fixed: remake them once.
 # Bump SAYV (and add the words) whenever another pronunciation fix is added.
-SAYV, RESAY = 3, re.compile(r"Logan|Queensland|\bQld\b|\bSEQ\b|[$£€]|\b(?:AI|EVs?|ASX|RBA|CEO|LNP|SBS|ABC|BBC|EFF|iTnews)\b")
+SAYV, RESAY = 4, re.compile(r"\d[.:]\d\d|\d ?[ap]\.?m\b|Logan|Queensland|\bQld\b|\bSEQ\b|[$£€]|\b(?:AI|EVs?|ASX|RBA|CEO|LNP|SBS|ABC|BBC|EFF|iTnews)\b")
 # Read as "Expect ... today": "Expect light drizzle today", "Expect clear skies today".
 WMO = {0: "clear skies", 1: "mostly sunny skies", 2: "partly cloudy skies", 3: "cloudy skies", 45: "fog", 48: "fog", 51: "light drizzle", 53: "some drizzle",
        55: "heavy drizzle", 56: "freezing drizzle", 57: "freezing drizzle", 61: "light rain", 63: "rain", 65: "heavy rain", 80: "a few showers", 81: "showers",
