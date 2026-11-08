@@ -758,6 +758,7 @@ body.playing:not(.npon):not(.locked) .toast { bottom: calc(env(safe-area-inset-b
 .bar-btn svg { width: 20px; height: 20px; }
 .bar-btn[aria-pressed="true"] { color: var(--accent); }
 .bar-btn[aria-pressed="true"] svg path { fill: currentColor; }
+.bar-btn:disabled { opacity: .3; cursor: default; }
 .done { font-weight: 700; color: var(--accent); padding: 8px 0 8px 8px; font-size: 0.95rem; }
 .progress { position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; pointer-events: none; }
 .progress i { display: block; height: 100%; width: 0; background: var(--rc, var(--accent)); transition: width 0.12s linear; }
@@ -1506,6 +1507,8 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
     <button class="back" type="button" data-close="reader"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg>Back</button>
     <div class="bar-title" id="rBarTitle"></div>
     <div class="bar-actions">
+      <button class="bar-btn" type="button" id="rPrev" data-step="-1" aria-label="Previous story"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+      <button class="bar-btn" type="button" id="rNext" data-step="1" aria-label="Next story"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
       <button class="bar-btn" type="button" id="rShare" aria-label="Share story" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 12v6.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V12"/></svg></button>
       <button class="bar-btn" type="button" id="rSave" aria-pressed="false" aria-label="Save for later"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11a1 1 0 0 1 1 1V20l-6.5-4-6.5 4V4.5a1 1 0 0 1 1-1z"/></svg></button>
     </div>
@@ -3199,6 +3202,8 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
     state.readerId = id;
     markRead(id);
     $("rBarTitle").textContent = i.source;
+    { const pv = neighbour(i.id, -1), nx = neighbour(i.id, 1); $("rPrev").disabled = !pv; $("rNext").disabled = !nx;  // arrows up top, so you can skip without scrolling to the bottom
+      $("rPrev").title = pv ? "Previous: " + (findItem(pv)?.title || "") : "Start of the list"; $("rNext").title = nx ? "Next: " + (findItem(nx)?.title || "") : "That's everything"; }
     $("reader").style.setProperty("--rc", secColour(i));
     $("rProg").style.width = "0";
     $("rSave").setAttribute("aria-pressed", String(isSaved(id)));
