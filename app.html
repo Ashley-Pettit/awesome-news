@@ -1879,6 +1879,7 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
   // Stories Claude has rated (0 uplifting to 10 tragic): negative from 6, or from 5 and 4 as the dial goes up.
   const negRatedAt = () => { const c = Number(S.negCut) || 0; return c >= 90 ? 4 : c >= 60 ? 5 : 6; };
   const isNegative = i => typeof i.neg === "number" ? i.neg >= negRatedAt() : negScore(i) >= negAt();
+  const NEG_EXEMPT = new Set(["truecrime"]);
   function calmer(list) {
     const cut = Number(S.negCut) || 0;
     if (!cut) return list;
@@ -1913,7 +1914,7 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
     }
     list = allowed(list);
     if (privateMode()) list = list.filter(i => i.text);  // the private copy (or an unlocked website) shows only stories it can open in full
-    list = calmer(list);
+    if (!NEG_EXEMPT.has(id)) list = calmer(list);  // true crime is all bad news by nature: if you picked it, "less negative news" leaves it be
     if (state.mode === "static") {
       if (S.fullOnly) list = list.filter(i => i.text);
       list.sort((a, b) => rank(b) - rank(a));
