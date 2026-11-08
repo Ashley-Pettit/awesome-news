@@ -697,6 +697,8 @@ body.betaon .beta-tag { display: inline-block; }
 .dock a svg { width: 22px; height: 22px; }
 .dock button { position: relative; display: grid; justify-items: center; align-content: center; gap: 3px; font-size: 0.66rem; font-weight: 700; color: var(--muted); letter-spacing: 0.02em; }
 .dock button svg { width: 22px; height: 22px; }
+.dock button[hidden] { display: none; }
+.dock-in:has(#adminBtn:not([hidden])) { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .dock button[aria-pressed="true"], .dock button[aria-current="page"] { color: var(--accent); }
 .dock button[aria-pressed="true"] svg path.f, .dock button[aria-current="page"] svg path.f { fill: currentColor; }
 .dock button:active svg { transform: scale(0.9); }
@@ -1116,6 +1118,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
 .bs-fly-tip.dim { opacity: 0.35; }
 .bs-fly-x { pointer-events: auto; position: absolute; top: calc(14px + env(safe-area-inset-top)); right: 16px; height: 38px; padding: 0 14px; border: 0; border-radius: 999px; background: var(--bs-scrim); color: var(--bs-ink); font: 700 0.82rem var(--ui); cursor: pointer; backdrop-filter: blur(8px); }
 .bs-fly-x:focus-visible { outline: 2px solid var(--bs-ink); outline-offset: 2px; }
+.bs-fly-x.bs-fly-lock.bs-fly-lockr { bottom: calc(240px + env(safe-area-inset-bottom)); }
 .bs-fly-x.bs-fly-lock { top: auto; bottom: calc(196px + env(safe-area-inset-bottom)); left: 50%; right: auto; transform: translateX(-50%); font-size: 0.78rem; height: 36px; white-space: nowrap; }
 body.bsfly #wBody, body.bsfly #bsCtl, body.bsfly #bsDrive { display: none !important; }
 body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
@@ -1405,6 +1408,8 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><path class="f" d="M4 15.5A1.5 1.5 0 0 1 5.5 14H7v6H5.5A1.5 1.5 0 0 1 4 18.5zM20 15.5a1.5 1.5 0 0 0-1.5-1.5H17v6h1.5a1.5 1.5 0 0 0 1.5-1.5z"/></svg><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>Listen</button>
     <button type="button" id="savedBtn" aria-pressed="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path class="f" d="M6.5 3.5h11a1 1 0 0 1 1 1V20l-6.5-4-6.5 4V4.5a1 1 0 0 1 1-1z"/></svg><span class="badge" id="savedBadge" hidden></span>Saved</button>
+    <button type="button" id="adminBtn" hidden aria-label="Admin">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="f" d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path class="ln" d="M9.5 12l2 2 3.5-4"/></svg>Admin</button>
     <button type="button" id="settingsBtn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg>Settings</button>
   </div>
@@ -1545,6 +1550,7 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
     <p class="bs-fly-tip" id="bsFlyTip"></p>
     <button class="bs-fly-x" type="button" id="bsFlyX">Exit explore</button>
     <button class="bs-fly-x bs-fly-lock" type="button" id="bsFlyLock" hidden>Use this view for the weather</button>
+    <button class="bs-fly-x bs-fly-lock bs-fly-lockr" type="button" id="bsFlyLockReset" hidden>Go back to the usual view</button>
     <div class="bs-ud" role="group" aria-label="Fly up or down">
       <button type="button" class="bs-udb" data-ud="1" aria-label="Fly up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg><span>Up</span></button>
       <button type="button" class="bs-udb" data-ud="-1" aria-label="Fly down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><span>Down</span></button>
@@ -1590,6 +1596,7 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
   // (build.py, from local/brands.json); the main app leaves these empty.
   const DEFAULT_REGION = "qld";
   const LOCAL_APP = null;               // { extra: community feed, near / keep / away / trust: patterns that tailor the Local feed, only: start with just Local }
+  const WX_CAMS = {};                    // views an admin kept from Explore for everyone (local/wxcams.json, filled in by build.py)
   const AREA_FEEDS = {};                 // Awesome News itself: Local news for an area with its own app (Moorooka) is tailored the same way, set by build.py
   const OPEN_KEY = "";                  // Emma's opening for this app ("This is Moorooka News for...")
   const KEY_PREFIX = "";                // keeps each app's settings apart on the same website
@@ -2761,6 +2768,7 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
   window.addEventListener("resize", () => { inkAt = null; placeInk(); });
   document.fonts?.ready.then(() => { inkAt = null; placeInk(); });
   function renderHeader() {
+    { const ab = $("adminBtn"); if (ab) ab.hidden = !isAdmin(); }
     { const xb = $("lbExplore"); if (xb) xb.hidden = !(S.region === "inv" || /^rod(ney)?$/i.test((S.name || "").trim())); }  // Inverloch (or Rod, who lives there): a way straight into the 3D town
     showVersion();
     $("eyebrow").textContent = state.showSaved ? "Saved" : greeting();
@@ -3369,7 +3377,7 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
     const have = new Set([...(state.status?.regions || REGION_FALLBACK).map(r => r.id), "logan"]);
     const regions = state.mode === "claude" ? ALL_REGIONS : ALL_REGIONS.filter(r => have.has(r.id));  // in this order, with these names
     const counts = state.status?.counts || {};
-    STABS = BASE_STABS;
+    STABS = isAdmin() ? [...BASE_STABS, ["admin", "Admin"]] : BASE_STABS;
     const tab = STABS.some(t => t[0] === state.sTab) ? state.sTab : "news";
     const panes = {
       news: `<div class="group"><h2>Your interests</h2><div class="card">
@@ -3403,6 +3411,7 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
         <div class="field"><span class="lbl">Appearance</span>${seg("theme", S.theme, [["system", "Auto"], ["light", "Light"], ["dark", "Dark"]])}</div>
       </div><p class="hint">${offlineArticles ? `${Object.keys(offlineArticles).length} full stories are kept on this device, so they still open with no signal.` : "Stories are kept on this device as they load, so they still open with no signal."}</p></div>
 `,
+      admin: adminHTML(),
       listen: `${listenHTML() || `<p class="hint" style="margin-top:20px">This browser can't read stories out loud.</p>`}`,
       app: `${getAppHTML()}
       ${shareHTML()}
@@ -3410,7 +3419,7 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
         <button class="field danger" type="button" id="clearRead">Clear read history <span class="sub" style="color:var(--muted)">${state.read.size} stories</span></button>
         <button class="field danger" type="button" id="clearSaved">Clear saved stories <span class="sub" style="color:var(--muted)">${state.saved.length} saved</span></button>
       </div><p class="hint">Everything you set here stays on this device.</p></div>
-      ${betaHTML()}${commuteOK() ? commuteHTML() : ""}
+      ${commuteOK() ? commuteHTML() : ""}
       <p class="about">Awesome News pulls from free sources only: ABC, SBS, BBC, The Guardian, 7NEWS, The Conversation, 360info, Global Voices, NASA, EFF, Ars Technica, TechCrunch, iTnews and more. Weather from Open-Meteo, tuned to local Bureau stations. Inverloch's 3D town is built from OpenStreetMap (&copy; OpenStreetMap contributors). ${privateMode() ? "Stories open in full right here." : "Stories marked Full are free to republish, so they open in full right here."} No paywalls, no sport.${state.status?.updatedAt ? `<br>Stories last updated ${esc(longDate(state.status.updatedAt))}.` : ""}</p>
 `,
     };
@@ -4703,7 +4712,7 @@ const handle = async (m, post) => {
     if (pk2) { state.prevSel[pk2.dataset.prevK] = pk2.dataset.prevV; pk2.parentElement.querySelectorAll(".bchip").forEach(b => b.setAttribute("aria-pressed", String(b === pk2))); return; }
     if (t.closest("[data-prev-go]")) { previewGo(); return; }
     if (t.closest("[data-tv-new]")) { if (openSheet === "settings") hideSheet("settings"); startTV(); return; }
-    if (t.closest("#appVer")) { state.sTab = "app"; store.set("brief.sTab", "app"); openSettings(); return; }  // the version tag opens Try it out
+    if (t.closest("#appVer") || t.closest("#adminBtn")) { state.sTab = "admin"; store.set("brief.sTab", "admin"); openSettings(); return; }  // Admin: previews, beta, TV
     if (t.closest("#bsWeekBtn")) { weekBrief(); return; }
     if (t.closest("#bsStop") || t.closest("#bsStop2")) { stopListen(); return; }
     if (t.closest("#bsPrev")) { prevStory(); return; }
@@ -4899,6 +4908,7 @@ const handle = async (m, post) => {
     }
     const mine = w?.d?.current ? tuneWx({ ...w, city: w.city || c[0] }, S.region) : null;
     if (L.on && L.scope === "logan") { state.wxHome = mine; return; }  // Logan news is playing: keep its weather until it stops
+    if (BS.prev && state.wxReal !== undefined) { state.wxReal = mine; return; }  // a preview is showing another place's weather: keep that up
     state.wx = mine;
     renderWxChip();
     if (openSheet === "weather") renderWeather();
@@ -5064,6 +5074,8 @@ const handle = async (m, post) => {
   const bsHex = h => [((h >> 16) & 255) / 255, ((h >> 8) & 255) / 255, (h & 255) / 255];
   const bsMix = (a, b, t) => [bsLerp(a[0], b[0], t), bsLerp(a[1], b[1], t), bsLerp(a[2], b[2], t)];
   const bsRnd = seed => { const x = Math.sin(seed * 9301 + 49297) * 233280; return x - Math.floor(x); };
+  // A kept view for a scene: this device's own, else the one kept for everyone (the private copy's database, or WX_CAMS)
+  const wxCamFor = k => k ? (store.get("brief.wxCam." + k, null) || state.wxCams?.[k] || WX_CAMS[k] || null) : null;
   const bsUv = u => u >= 11 ? "extreme" : u >= 8 ? "very high" : u >= 6 ? "high" : u >= 3 ? "moderate" : "low";
   const bsKindOf = c => { const ic = WX(c)[1]; return ic === "fog" ? "cloud" : ic; };
 
@@ -5232,8 +5244,8 @@ const handle = async (m, post) => {
     const B = BS.B; if (B) { if (!B.camHome) B.camHome = [B.camBase.clone(), B.camLook.clone()];  // Moorooka is seen from a little higher up, looking over the roundabout
       if (di) { B.camBase.set(-1.75, 8.5, 44); B.camLook.set(-1.75, 3, -110); } else if (dm) { B.camBase.set(0, 17, 22); B.camLook.set(0, 1, -110); } else if (dr) { B.camBase.set(7.6, 13, 50); B.camLook.set(7.6, 2, -90); } else if (mb) { B.camBase.set(-38, 26, 78); B.camLook.set(-4, 2, -12); } else if (it && W.invTownCam) { B.camBase.copy(W.invTownCam[0]); B.camLook.copy(W.invTownCam[1]); } else if (vic && !dr && W.invBeachCam) { B.camBase.copy(W.invBeachCam[0]); B.camLook.copy(W.invBeachCam[1]); } else if (mo) { B.camBase.set(0, 15, 46); B.camLook.set(0, 5, -60); } else { B.camBase.copy(B.camHome[0]); B.camLook.copy(B.camHome[1]); } }
     // the view a passphrase holder kept from Explore ("Use this view for the weather"), on this device
-    BS.sceneKey = dr ? null : mb ? "mooBowls" : it ? "invTown" : vic ? "invBeach" : lo ? "logan" : mo ? "moo" : "bris";
-    { const sv = BS.sceneKey && store.get("brief.wxCam." + BS.sceneKey, null); if (B && sv?.b && sv?.l) { B.camBase.set(...sv.b); B.camLook.set(...sv.l); } }
+    BS.sceneKey = di ? "driveInv" : dm ? "driveMoo" : dr ? "drive" : mb ? "mooBowls" : it ? "invTown" : vic ? "invBeach" : lo ? "logan" : mo ? "moo" : "bris";
+    { const sv = wxCamFor(BS.sceneKey); if (B && sv?.b && sv?.l) { B.camBase.set(...sv.b); B.camLook.set(...sv.l); } }
     W.inv.visible = vic && !dr;
   }
   function bsBuild(THREE) {
@@ -6563,12 +6575,20 @@ const handle = async (m, post) => {
     tip.textContent = touch ? "Left stick to move, right stick to look. Up and Down are top right." : "Click to look with the mouse · WASD to move · Space up, C down · Shift for speed · R to reset";
     $("bsFlyX").textContent = document.body.classList.contains("wxlisten") ? "Back to the news" : "Exit explore";
     // With the passphrase entered (or in the private copy): keep the view you've flown to as this place's weather view
-    const lk = $("bsFlyLock"); lk.hidden = !(A.unlocked || state.mode === "claude") || !BS.sceneKey;
-    lk.onclick = () => { const p = F.pitch, y = F.yaw, d = [-Math.sin(y) * Math.cos(p), Math.sin(p), -Math.cos(y) * Math.cos(p)], r = v => Math.round(v * 100) / 100;
+    // In the private copy that's for everyone: it goes in the database, and the hourly refresh carries it to the public apps.
+    const lk = $("bsFlyLock"), lkr = $("bsFlyLockReset"), key = BS.sceneKey, what = /^drive/.test(key || "") ? "drive" : "weather", all = state.mode === "claude" && !!state.db;
+    const showReset = () => { lkr.hidden = lk.hidden || !(all ? state.wxCams?.[key] : store.get("brief.wxCam." + key, null)); };
+    lk.hidden = !(A.unlocked || state.mode === "claude") || !key; lk.textContent = all ? `Use this view for the ${what}, for everyone` : `Use this view for the ${what}`; showReset();
+    const keep = async v => {
+      if (all) { const next = { ...(state.wxCams || {}) }; if (v) next[key] = v; else delete next[key];
+        try { await state.db.doc("meta/wxcams").set({ cams: next, at: new Date().toISOString() }); state.wxCams = next; } catch { toast("That couldn't be saved. Check your connection and try again."); return false; } }
+      else store.set("brief.wxCam." + key, v || null);
+      return true; };
+    lk.onclick = async () => { const p = F.pitch, y = F.yaw, d = [-Math.sin(y) * Math.cos(p), Math.sin(p), -Math.cos(y) * Math.cos(p)], r = v => Math.round(v * 100) / 100;
       const b = [F.pos.x, F.pos.y, F.pos.z].map(r), l = b.map((v, i) => r(v + d[i] * 20));
-      store.set("brief.wxCam." + BS.sceneKey, { b, l }); const code = `wxcam ${BS.sceneKey} ${b.join(",")} ${l.join(",")}`;
-      try { navigator.clipboard?.writeText(code)?.catch(() => {}); } catch {}
-      toast(`Saved. The weather opens on this view on this device. To make it everyone's, send Claude: ${code}`, 9000); };
+      if (!(await keep({ b, l }))) return; showReset();
+      toast(all ? `Saved for everyone. The ${what} opens on this view here now, and in the public apps within about an hour.` : `Saved. The ${what} opens on this view on this device.`, 7000); };
+    lkr.onclick = async () => { if (!(await keep(null))) return; showReset(); toast(all ? `Back to the usual ${what} view, for everyone.` : `Back to the usual ${what} view on this device.`); };
     // The on-screen sticks: drag the knob; it springs back when you let go. Touch events (each finger tracked by its own id)
     // so both sticks and Up/Down work at the same time on a phone; the mouse uses pointer events.
     F.joys = [...document.querySelectorAll("#bsFly .bs-joy")].map(el => {
@@ -7314,25 +7334,31 @@ const handle = async (m, post) => {
     return `<div class="field col"><div class="top"><span class="lbl">Update when I open the app<span class="sub">${gh ? (A.ghBad ? "GitHub key isn't working. Paste a new one." : "On. Opening the app updates stories over 3 hours old.") : "Optional, for Ash. Paste a GitHub key to turn this on. Otherwise stories update once a day."}</span></span></div>
         <form class="adminpass" id="ghForm" style="margin-top:0"><input type="password" id="ghTok" placeholder="${gh ? "Saved. Paste to replace" : "GitHub key"}" aria-label="GitHub key" autocomplete="off"><button type="submit">Save</button></form></div>`;
   }
-  function betaHTML() {
-    if (!isTester()) return "";
+  // ---- Admin (Ash and Rod by name, the passphrase, or the private copy): its own tab in Settings, and a button beside Settings ----
+  function isAdmin() { return /^(rod|rodney|ash|ashley)$/i.test((S.name || "").trim()) || !!A.unlocked || state.mode === "claude"; }
+  function adminHTML() {
+    if (!isAdmin()) return "";
     const row = (k, label) => `<div class="beta-row"><span class="beta-l">${label}</span><div class="beta-chips">${PREV_OPTS[k].map(([v, t]) =>
       `<button type="button" class="bchip" data-prev-k="${k}" data-prev-v="${v}" aria-pressed="${state.prevSel[k] === v}">${t}</button>`).join("")}</div></div>`;
-    if (!S.beta) return `<div class="group"><h2>Beta</h2><div class="card">${toggle("data-beta", "1", false, "Beta features", "Try things still being built: videos in Listen, the 3D previews, the new TV")}</div></div>`;
-    return `<div class="group"><h2>Beta</h2><div class="card">${toggle("data-beta", "1", true, "Beta features", "On: Listen and Awesome News TV read long stories short (tap to hear the whole story), play an ABC news clip every few stories between Emma's (ABC News in 90 Seconds, the latest clips and explainers: ad-free, never YouTube), and the previews below")}</div></div>
-    <div class="group"><h2>Try it out (beta)</h2><div class="card beta">
+    const kept = Object.keys({ ...WX_CAMS, ...(state.wxCams || {}) }).length;
+    return `<div class="group"><h2>Preview a scene</h2><div class="card beta">
       ${row("place", "Place")}${row("sky", "Weather")}${row("hour", "Time")}${row("drive", "Drive")}
       <button type="button" class="pill-btn beta-go" data-prev-go>Show it</button>
-      <div class="beta-row"><span class="beta-l">TV</span><div class="beta-chips">
-        <button type="button" class="bchip" data-tv-new>Awesome News TV (no ads)</button><button type="button" class="bchip" data-open-tv>Old TV (YouTube clips)</button></div></div>
+    </div><p class="hint">Opens the 3D weather (or drive) with these picks. Close it to come back here. Your real weather and drive don't change. In Explore, "Use this view" keeps the view you've flown to${state.mode === "claude" ? " for everyone" : " on this device"}${kept ? ` (${kept} kept so far)` : ""}.</p></div>
+    <div class="group"><h2>Beta features</h2><div class="card">${toggle("data-beta", "1", !!S.beta, "Beta features", S.beta ? "On: Listen and TV read long stories short (tap to hear the whole story) and play an ABC news clip every few stories (ad-free, never YouTube)" : "Off. Turn on to try what's still being built: short stories and ABC clips in Listen and TV")}</div></div>
+    <div class="group"><h2>TV</h2><div class="card beta">
+      <div class="beta-chips"><button type="button" class="bchip" data-tv-new>Awesome News TV (no ads)</button><button type="button" class="bchip" data-open-tv>Old TV (YouTube clips)</button></div>
       ${state.mode === "claude" ? "" : `<div class="beta-tog">${toggle("data-skipads", "1", S.skipAds, "Hide YouTube ads", "Old TV: sound off and headlines on screen while an ad plays")}</div>`}
-      ${state.mode === "claude" ? "" : `<div class="beta-tog">${ghFieldHTML()}</div>`}
-    </div><p class="hint">Only for Ash and Rod. Show it opens the 3D weather with these settings; close it to come back here. Your real weather and drive aren't changed. TV has moved here while the new ad-free one is tried out.</p></div>`;
+    </div></div>
+    ${state.mode === "claude" ? "" : `<div class="group"><h2>Updates</h2><div class="card">${ghFieldHTML()}</div></div>`}`;
   }
   function previewGo() {
     const p = state.prevSel;
     BS.prev = { place: p.place === "bowls" ? "moo" : p.place === "invbeach" ? "inv" : p.place, sky: p.sky };
-    openWeather(); if ($("weather").hidden) { BS.prev = null; return; }
+    // the picked place's own forecast (saved with the news) and name, rather than your area's, while the preview is open
+    { const id = BS.prev.place, near = { moo: "qld", inv: "vic" }[id], wx = state.status?.weather || {}, snap = wx[id]?.current ? wx[id] : near && wx[near]?.current ? wx[near] : null;
+      if (snap && CITY[id] && id !== S.region) { state.wxReal = state.wx; state.wx = tuneWx({ at: Date.parse(snap.fetchedAt) || Date.now(), d: snap, snapshot: true, city: CITY[id][0] }, id); } }
+    openWeather(); if ($("weather").hidden) { BS.prev = null; if (state.wxReal !== undefined) { state.wx = state.wxReal; delete state.wxReal; } return; }
     BS.mooAlt = p.place === "bowls"; BS.invBeach = p.place === "invbeach";
     if (p.hour !== "now") { const d = new Date(); d.setHours(+p.hour, 0, 0, 0); BS.view = { mode: "day", ms: d.getTime(), play: false, day: BS.D ? bsKey(d.getTime()) : null }; }
     const now = Date.now(), fake = {
@@ -7351,6 +7377,7 @@ const handle = async (m, post) => {
   }
   function previewEnd() {
     if (!BS.prev) return; BS.prev = null;
+    if (state.wxReal !== undefined) { state.wx = state.wxReal; delete state.wxReal; renderWxChip(); }
     if (BS.drive && !L.on) { BS.drive = false; document.body.classList.remove("wxdrive"); }
     setTimeout(() => { try { bsPlace(); } catch {} }, 400);
   }
@@ -7469,6 +7496,7 @@ const handle = async (m, post) => {
       if (Object.keys(next).length || !state.fromCache) state.feeds = next;  // never swap the saved copy for an empty offline answer
       arrived();
     }, () => { state.loaded = true; render(); toast(state.fromCache ? "You're offline. Showing the stories saved on this device." : "Stories couldn't load. Check your connection and reopen the page.", 6000); });
+    db.doc("meta/wxcams").onSnapshot(snap => { state.wxCams = snap.exists ? (snap.data().cams || {}) : {}; if (BS.B) bsPlace(); }, () => {});  // views kept for everyone
     db.doc("meta/drive").onSnapshot(snap => {  // Ash's drive, worked out on GitHub (see commuteSnap)
       state.driveSnap = snap.exists ? snap.data() : null; COMMUTE_CACHE = null;
       if (commuteSet() && !L.on) commuteNow().then(driveLine);

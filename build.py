@@ -34,6 +34,12 @@ if os.path.exists(os.path.join(here, "local", "brands.json")):
     assert body.count("const AREA_FEEDS = {};") == 1
     body = body.replace("const AREA_FEEDS = {};", f"const AREA_FEEDS = {json.dumps(_areas)};")
 
+# The weather and drive views an admin kept from Explore in the private copy ("Use this view for everyone"), for every app.
+_cams = os.path.join(here, "local", "wxcams.json")
+if os.path.exists(_cams):
+    assert body.count("const WX_CAMS = {};") == 1
+    body = body.replace("const WX_CAMS = {};", f"const WX_CAMS = {json.dumps(json.load(open(_cams, encoding='utf-8')), separators=(',', ':'))};")
+
 head = f"""<!doctype html>
 <html lang="en-AU">
 <head>
