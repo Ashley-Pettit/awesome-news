@@ -1,6 +1,6 @@
 """Inverloch town centre for the 3D weather, from OpenStreetMap (buildings, streets, parks, parking) plus Google Maps
 business locations for the shop signs. Writes a compact JSON (local metres: x east, z south, origin the library)."""
-import json, math, sys
+import json, hashlib, math, os, sys
 OSM, PLACES, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
 el = json.load(open(OSM))["elements"]
 nodes = {e["id"]: (e["lat"], e["lon"]) for e in el if e["type"] == "node"}
@@ -311,9 +311,55 @@ for i in range(len(pts)):
 _, la, lb, lnx, lnz = best
 if la[0] > lb[0]: la, lb = lb, la  # west to east
 LIB = [r1(la[0]), r1(la[1]), r1(lb[0]), r1(lb[1]), round(lnx, 3), round(lnz, 3)]
+# ---- Norman Road (about 1.6 km west of the clock): its own patch, reached from Explore's "Jump to Norman Rd". The streets,
+# house numbers, a few house outlines, the surf beach and the sea from OpenStreetMap (osm/norman-osm.json, the map around it).
+NR = None
+_nf = os.path.join(os.path.dirname(OSM), "norman-osm.json")
+if os.path.exists(_nf):
+    nd = json.load(open(_nf)); NN = {e["id"]: e for e in nd["elements"] if e["type"] == "node"}
+    HOME = xy(-38.6406759, 145.7117292)  # the house: 11 Norman Road
+    R = 260  # metres round it
+    def near(p): return math.hypot(p[0] - HOME[0], p[1] - HOME[1]) < R
+    nroads, nbld, beach, coast = [], [], [], []
+    W = {"tertiary": 9, "residential": 7.5, "service": 4, "path": 1.6, "footway": 1.6, "cycleway": 2.4, "steps": 1.6}
+    for e in nd["elements"]:
+        if e["type"] != "way": continue
+        t = e.get("tags", {}); pts = [xy(NN[n]["lat"], NN[n]["lon"]) for n in e["nodes"] if n in NN]
+        if not pts or not any(math.hypot(p[0] - HOME[0], p[1] - HOME[1]) < R + 200 for p in pts): continue
+        if t.get("highway") in W: nroads.append([W[t["highway"]], flat(pts), t.get("name", "")])
+        elif "building" in t and any(near(p) for p in pts): nbld.append(flat(pts))
+        elif t.get("natural") == "beach": beach = flat(pts)
+        elif t.get("natural") == "coastline" and math.hypot(pts[0][0] - HOME[0], pts[0][1] - HOME[1]) < 800: coast = flat(pts)
+    # every street address round it: a house set back from its street, facing it (11 is drawn in detail, separately)
+    def seg_near(p, pts):
+        best = None
+        for i in range(len(pts) - 1):
+            ax, az = pts[i]; bx, bz = pts[i + 1]; dx, dz = bx - ax, bz - az; L2 = dx * dx + dz * dz or 1
+            tt = max(0, min(1, ((p[0] - ax) * dx + (p[1] - az) * dz) / L2)); qx, qz = ax + dx * tt, az + dz * tt
+            dd = math.hypot(p[0] - qx, p[1] - qz)
+            if best is None or dd < best[0]: best = (dd, qx, qz)
+        return best
+    streets = {}
+    for w_, f_, nm in nroads:
+        if nm and w_ >= 7: streets.setdefault(nm, []).append([(f_[i], f_[i + 1]) for i in range(0, len(f_), 2)])
+    houses_n, home_d = [], None
+    for e in nd["elements"]:
+        t = e.get("tags", {})
+        if e["type"] != "node" or "addr:housenumber" not in t: continue
+        p = xy(e["lat"], e["lon"]); st = t.get("addr:street")
+        if not near(p) or st not in streets: continue
+        bst = min((seg_near(p, pl) for pl in streets[st]), key=lambda b: b[0])
+        dd, qx, qz = bst; nx, nz = (qx - p[0]) / (dd or 1), (qz - p[1]) / (dd or 1)  # towards the street
+        hx, hz = qx - nx * 19, qz - nz * 19  # the house's middle, 19 m back from the street's middle line
+        if st == "Norman Road" and t["addr:housenumber"] == "11": home_d = [r1(hx), r1(hz), round(nx, 3), round(nz, 3)]; continue
+        if any(math.hypot(hx - o[0], hz - o[1]) < 11 for o in houses_n): continue
+        houses_n.append([r1(hx), r1(hz), round(nx, 3), round(nz, 3), int(hashlib.md5(e["id"].__str__().encode()).hexdigest()[:4], 16) % 1000])
+    NR = {"home": home_d, "c": [r1(HOME[0]), r1(HOME[1])], "r": nroads, "b": nbld, "beach": beach, "coast": coast, "h": houses_n}
+    print("Norman Road: roads", len(nroads), "houses", len(houses_n), "outlines", len(nbld), "home", home_d)
+
 data = {"note": "Inverloch town centre. Map data (c) OpenStreetMap contributors, ODbL; business locations from Google Maps.",
         "b": [[round(b["h"], 1), b["kind"], flat(b["pts"])] for b in blds_out], "u": units,
-        "r": roads, "a": areas, "s": signs, "v": ver, "h": houses, "t": trees, "g": glass, "lib": LIB, "ho": [r1(HOTEL[0]), r1(HOTEL[1]), round(hdir, 3)], "c": [CLOCK[0], CLOCK[1], -2.356]}  # double-sided, faces north-west and south-east (Street View, Travel Victoria and Commons photos); the navy gear on the south-east side
+        "r": roads, "a": areas, "s": signs, "v": ver, "h": houses, "t": trees, "g": glass, "lib": LIB, "ho": [r1(HOTEL[0]), r1(HOTEL[1]), round(hdir, 3)], "c": [CLOCK[0], CLOCK[1], -2.356], **({"nr": NR} if NR else {})}  # double-sided, faces north-west and south-east (Street View, Travel Victoria and Commons photos); the navy gear on the south-east side
 json.dump(data, open(OUT, "w"), separators=(",", ":"), ensure_ascii=False)
 print("buildings", len(blds), "roads", len(roads), "areas", len(areas), "signs", len(signs), "verandahs", len(ver), "houses", len(houses), "trees", len(trees), "bytes", len(json.dumps(data, separators=(",", ":"))))
 print([s[4] for s in signs])
