@@ -2332,12 +2332,12 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
     if (!state.wx || document.body.classList.contains("wxlisten") || !$("weather").hidden) return;
     document.body.classList.add("wxlisten", "wxintro");
     BS.mooAlt = bsTurn("brief.sceneMoo"); BS.invBeach = bsTurn("brief.sceneInv");
-    // The day from 5:15am in 10-minute steps, one every 0.2 seconds for the sky (50 minutes a second: the 8 or so seconds
-    // of weather talk covers about 5:15am to noon); the words update every 2 seconds.
+    // The day from 4:45am in 10-minute steps, one every 0.2 seconds for the sky (50 minutes a second: the 8 or so seconds
+    // of weather talk covers about 4:45am to 11:30am); the words update every 2 seconds.
     // In the morning and afternoon it's today; from 6pm it's tomorrow.
     BS.D = bsData(); bsPlace();
     const t = Date.now(), day = bsMins(t) >= 18 * 60 ? (BS.D.days[1] || BS.D.days[0]).date : bsKey(t);
-    BS.view = { mode: "day", ms: bsMidnight(day) + 315 * 60000, play: false, day, jump: 10 * 60, every: 0.2, dawn: 315, acc: 0, n: 0 };
+    BS.view = { mode: "day", ms: bsMidnight(day) + 285 * 60000, play: false, day, jump: 10 * 60, every: 0.2, dawn: 285, acc: 0, n: 0 };
     if (!BS.tick) BS.tick = setInterval(() => { if (!$("weather").hidden) bsTick(); }, 1000);
     const el = $("weather"); el.hidden = false; el.scrollTop = 0;  // shown first, so the 3D sky sizes itself to the screen
     renderWeather();
@@ -5032,7 +5032,7 @@ const handle = async (m, post) => {
   const BS_KIND = { sun: "Sunny", partly: "Partly cloudy", cloud: "Cloudy", rain: "Showers", storm: "Thunderstorms" };
   const BS_ICON = { sun: "i-sun", partly: "i-partly", cloud: "i-cloud", rain: "i-rain", storm: "i-storm" };
   const BS_SPEED = 15 * 60;  // seconds of forecast per second of real time (15 minutes a second)
-  const BS_DAWN = 5 * 60;    // a chosen day (and each replay) starts at 5am
+  const BS_DAWN = 4.5 * 60;  // a chosen day (and each replay) starts at 4:30am
   // ---- astronomy (the suncalc formulas) ----
   const bsRad = Math.PI / 180, bsDayMs = 864e5, J1970 = 2440588, J2000 = 2451545, bsEcl = bsRad * 23.4397;
   const bsToDays = ms => ms / bsDayMs - 0.5 + J1970 - J2000;
@@ -5527,9 +5527,11 @@ const handle = async (m, post) => {
     // the usual view looks from in front of the shops across to the clock, with the library and the Hub behind it.
     {
       const D = INV_TOWN, TG = new THREE.Group(), G0 = 2.2; twn.add(TG); W.invTG = TG;
-      // the usual view, in the map's own metres: where Explore starts, on the library side of the clock, eye level, with the clock on
-      // the left and the bakery across A'Beckett on the right
-      const fa = D.c[2] + 0.4, CAM = [D.c[0] + Math.sin(fa) * 21, G0 + 2.6, D.c[1] + Math.cos(fa) * 21], LOOK = [D.c[0] + 3.5, G0 + 5.2, D.c[1] + 7.5];
+      // the usual view, in the map's own metres: on the library side of the clock at eye level, looking up at it, with the shops
+      // across A'Beckett behind
+      const fa = D.c[2] - 0.1, CAM = [D.c[0] + Math.sin(fa) * 10.5, G0 + 1.8, D.c[1] + Math.cos(fa) * 10.5];  // 10.5 m out in front of the face, eye level
+      const LOOK = (() => { const vx = D.c[0] - CAM[0], vz = D.c[1] - CAM[2], L = Math.hypot(vx, vz), a = 13 * Math.PI / 180, ux = vx / L, uz = vz / L;  // looking 13° left of the clock,
+        return [CAM[0] + (ux * Math.cos(a) + uz * Math.sin(a)) * 20, G0 + 4, CAM[2] + (uz * Math.cos(a) - ux * Math.sin(a)) * 20]; })();  // so it stands top right, clear of the temperature
       const ang = Math.atan2(-(LOOK[0] - CAM[0]), -(LOOK[2] - CAM[2]));  // turned so the view looks along -z, like every other place
       TG.rotation.y = -ang; TG.updateMatrix();
       const camW = new THREE.Vector3(CAM[0], 0, CAM[2]).applyMatrix4(TG.matrix);
