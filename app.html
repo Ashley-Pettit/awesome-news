@@ -697,8 +697,10 @@ body.betaon .beta-tag { display: inline-block; }
 .dock a svg { width: 22px; height: 22px; }
 .dock button { position: relative; display: grid; justify-items: center; align-content: center; gap: 3px; font-size: 0.66rem; font-weight: 700; color: var(--muted); letter-spacing: 0.02em; }
 .dock button svg { width: 22px; height: 22px; }
-.dock button[hidden] { display: none; }
-.dock-in:has(#adminBtn:not([hidden])) { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.s-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.s-head h1 { margin: 0; }
+.s-admin { flex: none; height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 700 0.82rem var(--ui); }
+.s-admin[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
 .dock button[aria-pressed="true"], .dock button[aria-current="page"] { color: var(--accent); }
 .dock button[aria-pressed="true"] svg path.f, .dock button[aria-current="page"] svg path.f { fill: currentColor; }
 .dock button:active svg { transform: scale(0.9); }
@@ -1083,6 +1085,9 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
 .bs-main { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
 .bs-chips { grid-column: 1 / -1; display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
 .bs-chips .bs-chip { padding: 6px 9px; font-size: 0.78rem; }
+.bs-prevbar { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 0 10px; }
+.bs-prevbar .bs-chip { border: 0; color: var(--bs-ink); font-weight: 700; cursor: pointer; }
+.bs-prevbar .bs-chip[aria-pressed="true"] { background: #fff; color: #1b1830; }
 .bs-rain { margin-top: auto; align-self: flex-end; width: min(300px, 74%); box-sizing: border-box; display: grid; gap: 6px; padding: 12px 14px 11px; border-radius: 22px; background: rgba(8, 12, 28, 0.5);
   -webkit-backdrop-filter: blur(18px) saturate(1.3); backdrop-filter: blur(18px) saturate(1.3); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1); font-family: var(--ui); font-size: 0.78rem; color: var(--bs-dim); line-height: 1.3; }
 .bs-rain + .bs-panel { margin-top: 16px; }  /* sits a little above the panel */
@@ -1408,8 +1413,6 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><path class="f" d="M4 15.5A1.5 1.5 0 0 1 5.5 14H7v6H5.5A1.5 1.5 0 0 1 4 18.5zM20 15.5a1.5 1.5 0 0 0-1.5-1.5H17v6h1.5a1.5 1.5 0 0 0 1.5-1.5z"/></svg><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>Listen</button>
     <button type="button" id="savedBtn" aria-pressed="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path class="f" d="M6.5 3.5h11a1 1 0 0 1 1 1V20l-6.5-4-6.5 4V4.5a1 1 0 0 1 1-1z"/></svg><span class="badge" id="savedBadge" hidden></span>Saved</button>
-    <button type="button" id="adminBtn" hidden aria-label="Admin">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="f" d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path class="ln" d="M9.5 12l2 2 3.5-4"/></svg>Admin</button>
     <button type="button" id="settingsBtn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg>Settings</button>
   </div>
@@ -2768,7 +2771,6 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
   window.addEventListener("resize", () => { inkAt = null; placeInk(); });
   document.fonts?.ready.then(() => { inkAt = null; placeInk(); });
   function renderHeader() {
-    { const ab = $("adminBtn"); if (ab) ab.hidden = !isAdmin(); }
     { const xb = $("lbExplore"); if (xb) xb.hidden = !(S.region === "inv" || /^rod(ney)?$/i.test((S.name || "").trim())); }  // Inverloch (or Rod, who lives there): a way straight into the 3D town
     showVersion();
     $("eyebrow").textContent = state.showSaved ? "Saved" : greeting();
@@ -3377,8 +3379,8 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
     const have = new Set([...(state.status?.regions || REGION_FALLBACK).map(r => r.id), "logan"]);
     const regions = state.mode === "claude" ? ALL_REGIONS : ALL_REGIONS.filter(r => have.has(r.id));  // in this order, with these names
     const counts = state.status?.counts || {};
-    STABS = isAdmin() ? [...BASE_STABS, ["admin", "Admin"]] : BASE_STABS;
-    const tab = STABS.some(t => t[0] === state.sTab) ? state.sTab : "news";
+    STABS = BASE_STABS;
+    const tab = STABS.some(t => t[0] === state.sTab) || (state.sTab === "admin" && isAdmin()) ? state.sTab : "news";
     const panes = {
       news: `<div class="group"><h2>Your interests</h2><div class="card">
         <button class="field" type="button" data-open-interests><span class="lbl">Choose what you see<span class="sub clamp">${esc(enabledSections().map(s => s.id === "local" ? `Local (${regionLabel()})` : s.label).join(", "))}</span></span><span class="chev" aria-hidden="true">›</span></button>
@@ -3424,7 +3426,7 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
 `,
     };
     $("sBody").innerHTML = `
-      <h1>Settings</h1>
+      <div class="s-head"><h1>Settings</h1>${isAdmin() ? `<button type="button" class="s-admin" id="sAdmin" aria-pressed="${tab === "admin"}">Admin</button>` : ""}</div>
       <button class="ai-set" type="button" data-ai-settings aria-describedby="aiSetMsg">
         <span class="ai-ic"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.9L12 2.5zM18.5 15l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9.9-2.6z"/></svg></span>
         <span style="flex:1;min-width:0"><b>Think settings are boring?</b><small>Click here to use AI instead and I'll update the settings for you</small></span>
@@ -4711,8 +4713,13 @@ const handle = async (m, post) => {
     const pk2 = t.closest("[data-prev-k]");
     if (pk2) { state.prevSel[pk2.dataset.prevK] = pk2.dataset.prevV; pk2.parentElement.querySelectorAll(".bchip").forEach(b => b.setAttribute("aria-pressed", String(b === pk2))); return; }
     if (t.closest("[data-prev-go]")) { previewGo(); return; }
+    const sc = t.closest("[data-scene]");
+    if (sc) { const [place, drive] = sc.dataset.scene.split("|"); state.prevSel = { place, sky: "auto", hour: "now", drive }; previewGo(); return; }
+    const sk = t.closest("[data-prev-sky]");
+    if (sk && BS.prev) { BS.prev.sky = state.prevSel.sky = sk.dataset.prevSky; document.querySelectorAll("[data-prev-sky]").forEach(b => b.setAttribute("aria-pressed", String(b === sk))); return; }
     if (t.closest("[data-tv-new]")) { if (openSheet === "settings") hideSheet("settings"); startTV(); return; }
-    if (t.closest("#appVer") || t.closest("#adminBtn")) { state.sTab = "admin"; store.set("brief.sTab", "admin"); openSettings(); return; }  // Admin: previews, beta, TV
+    if (t.closest("#appVer")) { state.sTab = "admin"; store.set("brief.sTab", "admin"); openSettings(); return; }  // the version tag opens Admin
+    if (t.closest("#sAdmin")) { state.sTab = state.sTab === "admin" ? "news" : "admin"; store.set("brief.sTab", state.sTab); renderSettings(); return; }  // Admin: previews, beta, TV
     if (t.closest("#bsWeekBtn")) { weekBrief(); return; }
     if (t.closest("#bsStop") || t.closest("#bsStop2")) { stopListen(); return; }
     if (t.closest("#bsPrev")) { prevStory(); return; }
@@ -5118,6 +5125,7 @@ const handle = async (m, post) => {
           <button class="bs-x bs-stop" type="button" id="bsStop" aria-label="Stop listening"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
         </div>
       </header>
+      ${BS.prev ? `<div class="bs-prevbar" role="group" aria-label="Preview weather">${PREV_OPTS.sky.map(([v, t]) => `<button type="button" class="bs-chip" data-prev-sky="${v}" aria-pressed="${(BS.prev.sky || "auto") === v}">${t}</button>`).join("")}</div>` : ""}
       <section class="bs-now">
         <div class="bs-main">
           <div class="bs-when" id="bsWhen"></div>
@@ -7338,13 +7346,17 @@ const handle = async (m, post) => {
   function isAdmin() { return /^(rod|rodney|ash|ashley)$/i.test((S.name || "").trim()) || !!A.unlocked || state.mode === "claude"; }
   function adminHTML() {
     if (!isAdmin()) return "";
-    const row = (k, label) => `<div class="beta-row"><span class="beta-l">${label}</span><div class="beta-chips">${PREV_OPTS[k].map(([v, t]) =>
-      `<button type="button" class="bchip" data-prev-k="${k}" data-prev-v="${v}" aria-pressed="${state.prevSel[k] === v}">${t}</button>`).join("")}</div></div>`;
     const kept = Object.keys({ ...WX_CAMS, ...(state.wxCams || {}) }).length;
-    return `<div class="group"><h2>Preview a scene</h2><div class="card beta">
-      ${row("place", "Place")}${row("sky", "Weather")}${row("hour", "Time")}${row("drive", "Drive")}
-      <button type="button" class="pill-btn beta-go" data-prev-go>Show it</button>
-    </div><p class="hint">Opens the 3D weather (or drive) with these picks. Close it to come back here. Your real weather and drive don't change. In Explore, "Use this view" keeps the view you've flown to${state.mode === "claude" ? " for everyone" : " on this device"}${kept ? ` (${kept} kept so far)` : ""}.</p></div>
+    const go = (place, drive, label, sub) => `<button class="field" type="button" data-scene="${place}|${drive}"><span class="lbl">${label}<span class="sub">${sub}</span></span><span class="chev" aria-hidden="true">›</span></button>`;
+    return `<div class="group"><h2>3D scenes</h2><div class="card">
+      ${go("moo", "off", "Moorooka streets", "The weather in Moorooka")}${go("bowls", "off", "Moorooka bowls club", "Moorooka's other view")}
+      ${go("qld", "off", "Brisbane", "The river and the city")}${go("logan", "off", "Logan", "Logan's weather")}
+      ${go("inv", "off", "Inverloch town", "The Rotary clock and A'Beckett Street")}${go("invbeach", "off", "Inverloch beach", "The surf beach from the sand")}
+    </div></div>
+    <div class="group"><h2>Drives</h2><div class="card">
+      ${go("moo", "mooClear", "Beaudesert Road, clear", "Moorooka to work, no hold-ups")}${go("moo", "mooHeavy", "Beaudesert Road, heavy", "Moorooka to work, a crash on the way")}
+      ${go("qld", "motorway", "Motorway home", "Logan to home in the afternoon")}${go("inv", "inv", "Into Inverloch", "Norman Road to the town centre")}
+    </div><p class="hint">Tap one to open it. In the 3D view, pick the weather along the top and drag the time slider. Close it to come back here. Your real weather and drive don't change. In Explore, "Use this view" keeps the view you've flown to${state.mode === "claude" ? " for everyone" : " on this device"}${kept ? ` (${kept} kept so far)` : ""}.</p></div>
     <div class="group"><h2>Beta features</h2><div class="card">${toggle("data-beta", "1", !!S.beta, "Beta features", S.beta ? "On: Listen and TV read long stories short (tap to hear the whole story) and play an ABC news clip every few stories (ad-free, never YouTube)" : "Off. Turn on to try what's still being built: short stories and ABC clips in Listen and TV")}</div></div>
     <div class="group"><h2>TV</h2><div class="card beta">
       <div class="beta-chips"><button type="button" class="bchip" data-tv-new>Awesome News TV (no ads)</button><button type="button" class="bchip" data-open-tv>Old TV (YouTube clips)</button></div>
