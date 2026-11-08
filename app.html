@@ -1116,6 +1116,7 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
 .bs-fly-tip.dim { opacity: 0.35; }
 .bs-fly-x { pointer-events: auto; position: absolute; top: calc(14px + env(safe-area-inset-top)); right: 16px; height: 38px; padding: 0 14px; border: 0; border-radius: 999px; background: var(--bs-scrim); color: var(--bs-ink); font: 700 0.82rem var(--ui); cursor: pointer; backdrop-filter: blur(8px); }
 .bs-fly-x:focus-visible { outline: 2px solid var(--bs-ink); outline-offset: 2px; }
+.bs-fly-x.bs-fly-lock { top: auto; bottom: calc(196px + env(safe-area-inset-bottom)); left: 50%; right: auto; transform: translateX(-50%); font-size: 0.78rem; height: 36px; white-space: nowrap; }
 body.bsfly #wBody, body.bsfly #bsCtl, body.bsfly #bsDrive { display: none !important; }
 body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
 #weather .bs-flybtn { display: inline-flex; }  /* Explore: for everyone */
@@ -1543,6 +1544,7 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
   <div class="bs-fly" id="bsFly" hidden>
     <p class="bs-fly-tip" id="bsFlyTip"></p>
     <button class="bs-fly-x" type="button" id="bsFlyX">Exit explore</button>
+    <button class="bs-fly-x bs-fly-lock" type="button" id="bsFlyLock" hidden>Use this view for the weather</button>
     <div class="bs-ud" role="group" aria-label="Fly up or down">
       <button type="button" class="bs-udb" data-ud="1" aria-label="Fly up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg><span>Up</span></button>
       <button type="button" class="bs-udb" data-ud="-1" aria-label="Fly down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><span>Down</span></button>
@@ -5229,6 +5231,9 @@ const handle = async (m, post) => {
     if (W.invTown) { W.invTown.visible = it; W.invBeach.visible = !it; } if (W.water) W.water.visible = !it;
     const B = BS.B; if (B) { if (!B.camHome) B.camHome = [B.camBase.clone(), B.camLook.clone()];  // Moorooka is seen from a little higher up, looking over the roundabout
       if (di) { B.camBase.set(-1.75, 8.5, 44); B.camLook.set(-1.75, 3, -110); } else if (dm) { B.camBase.set(0, 17, 22); B.camLook.set(0, 1, -110); } else if (dr) { B.camBase.set(7.6, 13, 50); B.camLook.set(7.6, 2, -90); } else if (mb) { B.camBase.set(-38, 26, 78); B.camLook.set(-4, 2, -12); } else if (it && W.invTownCam) { B.camBase.copy(W.invTownCam[0]); B.camLook.copy(W.invTownCam[1]); } else if (vic && !dr && W.invBeachCam) { B.camBase.copy(W.invBeachCam[0]); B.camLook.copy(W.invBeachCam[1]); } else if (mo) { B.camBase.set(0, 15, 46); B.camLook.set(0, 5, -60); } else { B.camBase.copy(B.camHome[0]); B.camLook.copy(B.camHome[1]); } }
+    // the view a passphrase holder kept from Explore ("Use this view for the weather"), on this device
+    BS.sceneKey = dr ? null : mb ? "mooBowls" : it ? "invTown" : vic ? "invBeach" : lo ? "logan" : mo ? "moo" : "bris";
+    { const sv = BS.sceneKey && store.get("brief.wxCam." + BS.sceneKey, null); if (B && sv?.b && sv?.l) { B.camBase.set(...sv.b); B.camLook.set(...sv.l); } }
     W.inv.visible = vic && !dr;
   }
   function bsBuild(THREE) {
@@ -5552,9 +5557,10 @@ const handle = async (m, post) => {
       const D = INV_TOWN, TG = new THREE.Group(), G0 = 2.2; twn.add(TG); W.invTG = TG;
       // the usual view, in the map's own metres: on the library side of the clock at eye level, looking up at it, with the shops
       // across A'Beckett behind
-      const fa = D.c[2] - 0.22, CAM = [D.c[0] + Math.sin(fa) * 10, G0 + 1.7, D.c[1] + Math.cos(fa) * 10];  // 10 m out in front of the face, eye level (Ash's own view)
-      const LOOK = (() => { const vx = D.c[0] - CAM[0], vz = D.c[1] - CAM[2], L = Math.hypot(vx, vz), a = 9 * Math.PI / 180, ux = vx / L, uz = vz / L;  // looking 9° left of the clock and up,
-        return [CAM[0] + (ux * Math.cos(a) + uz * Math.sin(a)) * 20, G0 + 13, CAM[2] + (uz * Math.cos(a) - ux * Math.sin(a)) * 20]; })();  // so it stands right of centre, clear of the temperature
+      const fa = D.c[2] - 0.22, CAM0 = [D.c[0] + Math.sin(fa) * 10, D.c[1] + Math.cos(fa) * 10], sl = [-Math.cos(fa), Math.sin(fa)];  // 10 m out in front of the face,
+      const CAM = [CAM0[0] + sl[0] * 6, G0 + 4.5, CAM0[1] + sl[1] * 6];  // then 6 m to the left and up at first-floor height, so the bakery shows beside the clock
+      const LOOK = (() => { const vx = D.c[0] - CAM[0], vz = D.c[1] - CAM[2], L = Math.hypot(vx, vz), a = 7 * Math.PI / 180, ux = vx / L, uz = vz / L;  // looking 7° left of the clock,
+        return [CAM[0] + (ux * Math.cos(a) + uz * Math.sin(a)) * 20, G0 + 9, CAM[2] + (uz * Math.cos(a) - ux * Math.sin(a)) * 20]; })();  // so it stands right of centre, clear of the temperature
       const ang = Math.atan2(-(LOOK[0] - CAM[0]), -(LOOK[2] - CAM[2]));  // turned so the view looks along -z, like every other place
       TG.rotation.y = -ang; TG.updateMatrix();
       const camW = new THREE.Vector3(CAM[0], 0, CAM[2]).applyMatrix4(TG.matrix);
@@ -6555,6 +6561,13 @@ const handle = async (m, post) => {
     const tip = $("bsFlyTip"); tip.classList.remove("dim");
     tip.textContent = touch ? "Left stick to move, right stick to look. Up and Down are top right." : "Click to look with the mouse · WASD to move · Space up, C down · Shift for speed · R to reset";
     $("bsFlyX").textContent = document.body.classList.contains("wxlisten") ? "Back to the news" : "Exit explore";
+    // With the passphrase entered (or in the private copy): keep the view you've flown to as this place's weather view
+    const lk = $("bsFlyLock"); lk.hidden = !(A.unlocked || state.mode === "claude") || !BS.sceneKey;
+    lk.onclick = () => { const p = F.pitch, y = F.yaw, d = [-Math.sin(y) * Math.cos(p), Math.sin(p), -Math.cos(y) * Math.cos(p)], r = v => Math.round(v * 100) / 100;
+      const b = [F.pos.x, F.pos.y, F.pos.z].map(r), l = b.map((v, i) => r(v + d[i] * 20));
+      store.set("brief.wxCam." + BS.sceneKey, { b, l }); const code = `wxcam ${BS.sceneKey} ${b.join(",")} ${l.join(",")}`;
+      try { navigator.clipboard?.writeText(code)?.catch(() => {}); } catch {}
+      toast(`Saved. The weather opens on this view on this device. To make it everyone's, send Claude: ${code}`, 9000); };
     // The on-screen sticks: drag the knob; it springs back when you let go. Touch events (each finger tracked by its own id)
     // so both sticks and Up/Down work at the same time on a phone; the mouse uses pointer events.
     F.joys = [...document.querySelectorAll("#bsFly .bs-joy")].map(el => {
