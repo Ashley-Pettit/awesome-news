@@ -6858,16 +6858,24 @@ const handle = async (m, post) => {
     // With the passphrase entered (or in the private copy): keep the view you've flown to as this place's weather view
     // In the private copy that's for everyone: it goes in the database, and the hourly refresh carries it to the public apps.
     const lk = $("bsFlyLock"), key = BS.sceneKey, what = /^drive/.test(key || "") ? "drive" : "weather", all = state.mode === "claude" && !!state.db;
-    lk.hidden = !(A.unlocked || state.mode === "claude") || !key; lk.textContent = all ? `Use this view for the ${what}, for everyone` : `Use this view for the ${what}`;
-    const keep = async v => {
+    lk.hidden = !(A.unlocked || state.mode === "claude") || !key; lk.textContent = `Use this view for the ${what}, for everyone`;
+    let sentAll = false;
+    const keep = async v => { sentAll = false;
       if (all) { const next = { ...(state.wxCams || {}) }; if (v) next[key] = v; else delete next[key];
         try { await state.db.doc("meta/wxcams").set({ cams: next, at: new Date().toISOString() }); state.wxCams = next; } catch { toast("That couldn't be saved. Check your connection and try again."); return false; } }
-      else store.set("brief.wxCam." + key, v || null);
+      else { store.set("brief.wxCam." + key, v || null);
+        // a public app: with the GitHub key saved in Admin, send it to everyone too (filed in the repo, then a quick publish)
+        const tok = store.get("brief.ghToken", ""); if (tok && A.unlocked) try {
+          const r = await fetch(GH_DISPATCH.replace("pages.yml", "keep-view.yml"), { method: "POST", headers: { Authorization: `Bearer ${tok}`, Accept: "application/vnd.github+json" },
+            body: JSON.stringify({ ref: "main", inputs: { scene: key, b: v ? v.b.join(",") : "", l: v ? v.l.join(",") : "" } }) });
+          sentAll = r.ok || r.status === 204; } catch {} }
       return true; };
     lk.onclick = async () => { const p = F.pitch, y = F.yaw, d = [-Math.sin(y) * Math.cos(p), Math.sin(p), -Math.cos(y) * Math.cos(p)], r = v => Math.round(v * 100) / 100;
       const b = [F.pos.x, F.pos.y, F.pos.z].map(r), l = b.map((v, i) => r(v + d[i] * 20));
       if (!(await keep({ b, l }))) return; F.start = { pos: F.pos.clone(), yaw: F.yaw, pitch: F.pitch };
-      toast(all ? `Saved for everyone. The ${what} opens on this view here now, and in the public apps within about an hour.` : `Saved. The ${what} opens on this view on this device.`, 7000); };
+      toast(all ? `Saved for everyone. The ${what} opens on this view here now, and in the public apps within about an hour.`
+        : sentAll ? `Saved for everyone. It's on this device now, and in everyone's app in about 5 minutes.`
+        : `Saved on this device. To make it everyone's, save the GitHub key in Admin, then keep the view again.`, 8000); };
     // The on-screen sticks: drag the knob; it springs back when you let go. Touch events (each finger tracked by its own id)
     // so both sticks and Up/Down work at the same time on a phone; the mouse uses pointer events.
     F.joys = [...document.querySelectorAll("#bsFly .bs-joy")].map(el => {
@@ -7625,7 +7633,7 @@ const handle = async (m, post) => {
   const PREV_SKY = { sun: { rain: 0, cover: .08, storm: 0 }, cloud: { rain: 0, cover: .85, storm: 0 }, rain: { rain: 1, cover: .95, storm: .3 }, storm: { rain: 1, cover: 1, storm: 1 } };
   function ghFieldHTML() {
     const gh = store.get("brief.ghToken", "");
-    return `<div class="field col"><div class="top"><span class="lbl">Update when I open the app<span class="sub">${gh ? (A.ghBad ? "GitHub key isn't working. Paste a new one." : "On. Opening the app updates stories over 3 hours old.") : "Optional, for Ash. Paste a GitHub key to turn this on. Otherwise stories update once a day."}</span></span></div>
+    return `<div class="field col"><div class="top"><span class="lbl">GitHub key<span class="sub">${gh ? (A.ghBad ? "GitHub key isn't working. Paste a new one." : "On. Opening the app updates stories over 3 hours old, and views you keep in Explore go to everyone.") : "Optional, for Ash. Paste a GitHub key (with Actions access to the awesome-news repo) to turn this on: stories over 3 hours old update when you open the app, and views you keep in Explore go to everyone."}</span></span></div>
         <form class="adminpass" id="ghForm" style="margin-top:0"><input type="password" id="ghTok" placeholder="${gh ? "Saved. Paste to replace" : "GitHub key"}" aria-label="GitHub key" autocomplete="off"><button type="submit">Save</button></form></div>`;
   }
   // ---- Admin (Ash and Rod by name, the passphrase, or the private copy): its own tab in Settings, and a button beside Settings ----

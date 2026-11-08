@@ -1,0 +1,55 @@
+name: Keep a 3D view for everyone
+
+# The app's Explore, "Use this view for everyone": an admin's phone asks for this (with its GitHub key), it files the view in
+# local/wxcams.json, then the quick publish puts it in every app.
+on:
+  workflow_dispatch:
+    inputs:
+      scene: { description: "Scene (invTown, invBeach, moo, mooBowls, logan, bris, drive, driveMoo, driveInv)", required: true }
+      b: { description: "Camera position x,y,z (empty to go back to the usual view)", required: false, default: "" }
+      l: { description: "Where it looks x,y,z", required: false, default: "" }
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: keep-view
+  cancel-in-progress: false
+
+jobs:
+  keep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: File the view
+        env:
+          SCENE: ${{ inputs.scene }}
+          B: ${{ inputs.b }}
+          L: ${{ inputs.l }}
+        run: |
+          python3 - <<'PY'
+          import json, os, re, sys
+          scene, b, l = os.environ["SCENE"], os.environ["B"].strip(), os.environ["L"].strip()
+          if scene not in {"invTown", "invBeach", "moo", "mooBowls", "logan", "bris", "drive", "driveMoo", "driveInv"}: sys.exit("unknown scene")
+          num = re.compile(r"^-?\d{1,5}(\.\d{1,3})?$")
+          p = "local/wxcams.json"; cams = json.load(open(p)) if os.path.exists(p) else {}
+          if b:
+              bs, ls = b.split(","), l.split(",")
+              if len(bs) != 3 or len(ls) != 3 or not all(num.match(x.strip()) for x in bs + ls): sys.exit("bad numbers")
+              cams[scene] = {"b": [float(x) for x in bs], "l": [float(x) for x in ls]}
+          else:
+              cams.pop(scene, None)
+          json.dump(cams, open(p, "w"), indent=1, sort_keys=True); open(p, "a").write("\n")
+          PY
+      - name: Commit and publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add local/wxcams.json
+          git diff --cached --quiet && { echo "no change"; exit 0; }
+          git commit -m "Kept 3D view (${{ inputs.scene }}) from the app"
+          for i in 1 2 3; do git pull -q --rebase origin main && git push -q origin HEAD:main && break; sleep 5; done
+          gh workflow run quick.yml --ref main
