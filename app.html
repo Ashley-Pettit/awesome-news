@@ -6579,7 +6579,10 @@ const handle = async (m, post) => {
     const B = BS.B; if (!B || BS.fly) return;
     const cam = B.camera, dir = new B.THREE.Vector3().subVectors(B.camLook, B.camBase).normalize();
     const inv = BS.W.inv?.visible && !BS.drive && BS.W.invTown?.visible;  // Inverloch: start where the photos of the Rotary clock are taken, looking up A'Beckett Street
-    const start = inv && BS.W.invSpot ? { pos: new B.THREE.Vector3(...BS.W.invSpot.pos), yaw: BS.W.invSpot.yaw, pitch: BS.W.invSpot.pitch }
+    // Start from the view last kept for this scene ("Use this view…"), else Inverloch's photo spot, else where the camera is
+    const kept = wxCamFor(BS.sceneKey), kd = kept?.b && kept?.l ? new B.THREE.Vector3(kept.l[0] - kept.b[0], kept.l[1] - kept.b[1], kept.l[2] - kept.b[2]).normalize() : null;
+    const start = kd ? { pos: new B.THREE.Vector3(...kept.b), yaw: Math.atan2(-kd.x, -kd.z), pitch: Math.asin(bsClamp(kd.y, -1, 1)) }
+      : inv && BS.W.invSpot ? { pos: new B.THREE.Vector3(...BS.W.invSpot.pos), yaw: BS.W.invSpot.yaw, pitch: BS.W.invSpot.pitch }
       : { pos: cam.position.clone(), yaw: Math.atan2(-dir.x, -dir.z), pitch: Math.asin(bsClamp(dir.y, -1, 1)) };
     const F = BS.fly = { ...start, pos: start.pos.clone(), start, keys: new Set(), stick: { x: 0, y: 0 }, lookStick: { x: 0, y: 0 }, vert: 0, touches: new Map(), drag: null };
     const canvas = $("bsGl"), touch = matchMedia("(pointer: coarse)").matches;
@@ -6602,7 +6605,7 @@ const handle = async (m, post) => {
       return true; };
     lk.onclick = async () => { const p = F.pitch, y = F.yaw, d = [-Math.sin(y) * Math.cos(p), Math.sin(p), -Math.cos(y) * Math.cos(p)], r = v => Math.round(v * 100) / 100;
       const b = [F.pos.x, F.pos.y, F.pos.z].map(r), l = b.map((v, i) => r(v + d[i] * 20));
-      if (!(await keep({ b, l }))) return;
+      if (!(await keep({ b, l }))) return; F.start = { pos: F.pos.clone(), yaw: F.yaw, pitch: F.pitch };
       toast(all ? `Saved for everyone. The ${what} opens on this view here now, and in the public apps within about an hour.` : `Saved. The ${what} opens on this view on this device.`, 7000); };
     // The on-screen sticks: drag the knob; it springs back when you let go. Touch events (each finger tracked by its own id)
     // so both sticks and Up/Down work at the same time on a phone; the mouse uses pointer events.
