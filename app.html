@@ -6103,7 +6103,7 @@ const handle = async (m, post) => {
         [x, z] = at(0.82, 0.14); plane(3.2, 0.5, tex(512, 80, (g, w, h) => { g.fillStyle = "#26323f"; g.fillRect(0, 0, w, h); g.fillStyle = "#e8edf2"; g.font = "600 34px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("Inverloch Community Hub", w / 2, h / 2 + 2); }), x, G0 + 3.3, z, r);
         // the flags: Aboriginal and Australian, on white poles out the front
         const aborig = tex(240, 160, (g, w, h) => { g.fillStyle = "#111111"; g.fillRect(0, 0, w, h / 2); g.fillStyle = "#c8102e"; g.fillRect(0, h / 2, w, h / 2); g.fillStyle = "#ffcd00"; g.beginPath(); g.arc(w / 2, h / 2, h * 0.27, 0, Math.PI * 2); g.fill(); });
-        const austr = tex(240, 120, (g, w, h) => { g.fillStyle = "#012169"; g.fillRect(0, 0, w, h); const q = w / 2, hq = h / 2;
+        const austr = W.invAustr = tex(240, 120, (g, w, h) => { g.fillStyle = "#012169"; g.fillRect(0, 0, w, h); const q = w / 2, hq = h / 2;
           g.strokeStyle = "#ffffff"; g.lineWidth = 12; g.beginPath(); g.moveTo(0, 0); g.lineTo(q, hq); g.moveTo(q, 0); g.lineTo(0, hq); g.stroke();
           g.strokeStyle = "#c8102e"; g.lineWidth = 4; g.beginPath(); g.moveTo(0, 0); g.lineTo(q, hq); g.moveTo(q, 0); g.lineTo(0, hq); g.stroke();
           g.fillStyle = "#ffffff"; g.fillRect(q / 2 - 10, 0, 20, hq); g.fillRect(0, hq / 2 - 10, q, 20); g.fillStyle = "#c8102e"; g.fillRect(q / 2 - 6, 0, 12, hq); g.fillRect(0, hq / 2 - 6, q, 12);
@@ -6123,17 +6123,25 @@ const handle = async (m, post) => {
       // ---- the war memorial (Memorial Gardens, A'Beckett and Reilly, in front of the Hub): a two-tier white obelisk of cemented beach
       // stones (built 1931 from stones the school children gathered), plaques front and back, a boulder with a bronze plaque either
       // side, a paved square, red roses; poppy wreaths at its foot for the week either side of Anzac Day and Remembrance Day
-      { const mg = bag(), MX = 23.5, MZ = 9, MR = -0.15, mm = (x, y, z, ry = 0) => { const c = Math.cos(MR), sn = Math.sin(MR); return mtx(MX + x * c + z * sn, y, MZ - x * sn + z * c, MR + ry); };
+      { const mg = bag(), MX = 25, MZ = 0.5, MR = -0.15, mm = (x, y, z, ry = 0) => { const c = Math.cos(MR), sn = Math.sin(MR); return mtx(MX + x * c + z * sn, y, MZ - x * sn + z * c, MR + ry); };
         const stone = (() => { const c = document.createElement("canvas"); c.width = c.height = 128; const g = c.getContext("2d"); g.fillStyle = "#ece9e1"; g.fillRect(0, 0, 128, 128);
           for (let i = 0; i < 90; i++) { g.fillStyle = `rgba(150,140,125,${0.08 + rnd(i * 3.1) * 0.12})`; g.beginPath(); g.ellipse(rnd(i * 7.7) * 128, rnd(i * 5.3) * 128, 4 + rnd(i) * 6, 3 + rnd(i * 2) * 4, rnd(i * 9) * 3, 0, Math.PI * 2); g.fill(); }
           const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; if ("colorSpace" in t) t.colorSpace = THREE.SRGBColorSpace; return new THREE.MeshStandardMaterial({ map: t, roughness: .9 }); })();
         const part = (geo, x, y, z) => { const e = new THREE.Mesh(geo, stone); e.applyMatrix4(mm(x, y, z)); TG.add(e); };
-        put(mg, new THREE.BoxGeometry(8, 0.1, 8), 0xd6d2c8, mm(0, G0 + 0.05, 0));  // the paved square
-        for (let i = -3; i <= 3; i++) { put(mg, new THREE.BoxGeometry(8, 0.012, 0.03), 0xb9b4a8, mm(0, G0 + 0.105, i * 1.1)); put(mg, new THREE.BoxGeometry(0.03, 0.012, 8), 0xb9b4a8, mm(i * 1.1, G0 + 0.105, 0)); }
-        part(new THREE.BoxGeometry(2.6, 0.35, 2.6), 0, G0 + 0.27, 0); part(new THREE.BoxGeometry(2.1, 1.0, 2.1), 0, G0 + 0.95, 0);  // the steps and lower tier
-        part(new THREE.BoxGeometry(2.3, 0.14, 2.3), 0, G0 + 1.52, 0); part(new THREE.BoxGeometry(1.6, 1.3, 1.6), 0, G0 + 2.24, 0);  // a cornice, the upper tier
-        part(new THREE.BoxGeometry(1.8, 0.14, 1.8), 0, G0 + 2.95, 0);
-        { const sh = new THREE.CylinderGeometry(0.34, 0.62, 4.6, 4, 1); sh.rotateY(Math.PI / 4); part(sh, 0, G0 + 5.32, 0); const tp = new THREE.ConeGeometry(0.34, 0.6, 4); tp.rotateY(Math.PI / 4); part(tp, 0, G0 + 7.92, 0); }  // the obelisk
+        { const pv = new THREE.CylinderGeometry(4.2, 4.2, 0.1, 40); put(mg, pv, 0xb5654f, mm(0, G0 + 0.06, 0)); }  // the round red-brick forecourt (Street View)
+        { const dx = MX - D.c[0], dz = MZ - D.c[1], L = Math.hypot(dx, dz), t = (5 + (L - 4)) / 2 / L;  // a red-brick path across the lawn to the clock's plaza
+          put(mg, new THREE.BoxGeometry(2, 0.1, L - 8.6), 0xb5654f, mtx(D.c[0] + dx * t, G0 + 0.055, D.c[1] + dz * t, Math.atan2(dx, dz))); }
+        if (W.invAustr) { const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 7.5, 8), new THREE.MeshStandardMaterial({ color: 0xf2f2f2, roughness: .4 })); pole.applyMatrix4(mm(-2.4, G0 + 3.75, -3.2)); TG.add(pole);  // the Australian flag behind it
+          const fg = new THREE.Group(); fg.applyMatrix4(mm(-2.4, G0 + 6.9, -3.2, Math.PI / 2)); const fl = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.8), new THREE.MeshStandardMaterial({ map: W.invAustr, side: THREE.DoubleSide, roughness: .8 })); fl.position.set(0.82, 0, 0); fg.add(fl); TG.add(fg); W.invFlags.push(fg); }
+        for (let i = 0; i < 6; i++) put(mg, new THREE.TorusGeometry(1 + i * 0.6, 0.012, 3, 40).rotateX(Math.PI / 2), 0x8f4c3b, mm(0, G0 + 0.115, 0));
+        part(new THREE.BoxGeometry(2.8, 0.25, 2.8), 0, G0 + 0.22, 0); part(new THREE.BoxGeometry(2.3, 1.0, 2.3), 0, G0 + 0.85, 0);  // the step and the base
+        part(new THREE.BoxGeometry(2.4, 0.12, 2.4), 0, G0 + 1.41, 0);
+        { const sh = new THREE.CylinderGeometry(0.34, 1.0, 2.3, 4, 1); sh.rotateY(Math.PI / 4); part(sh, 0, G0 + 2.62, 0); const tp = new THREE.ConeGeometry(0.34, 0.45, 4); tp.rotateY(Math.PI / 4); part(tp, 0, G0 + 4.0, 0); }  // the stubby obelisk, about 5 m all up
+        // the low white pointed posts round the forecourt
+        for (let i = 0; i < 9; i++) { const a2 = -0.3 + i / 9 * Math.PI * 2; if (Math.abs(Math.sin(a2) - 1) < 0.15) continue; const x = Math.cos(a2) * 3.6, z = Math.sin(a2) * 3.6;
+          const po = new THREE.CylinderGeometry(0.1, 0.13, 0.8, 4).rotateY(Math.PI / 4); put(mg, po, 0xeceae4, mm(x, G0 + 0.5, z)); put(mg, new THREE.ConeGeometry(0.1, 0.22, 4).rotateY(Math.PI / 4), 0xeceae4, mm(x, G0 + 1.0, z));
+          put(mg, new THREE.SphereGeometry(0.03, 6, 4), 0xc21b2a, mm(x + Math.cos(a2) * 0.1, G0 + 0.75, z + Math.sin(a2) * 0.1)); }
+        put(mg, new THREE.BoxGeometry(1.8, 0.08, 0.5), 0x7a5a3c, mm(3.4, G0 + 0.48, -4.6)); put(mg, new THREE.BoxGeometry(1.8, 0.45, 0.06), 0x7a5a3c, mm(3.4, G0 + 0.75, -4.83)); [-0.8, 0.8].forEach(x => put(mg, new THREE.BoxGeometry(0.06, 0.45, 0.5), 0x2d3033, mm(3.4 + x, G0 + 0.24, -4.6)));  // a bench behind
         const plaque = (lines, w, h, bg, fg) => { const c = document.createElement("canvas"); c.width = 512; c.height = Math.round(512 * h / w); const g = c.getContext("2d"); g.fillStyle = bg; g.fillRect(0, 0, c.width, c.height);
           g.strokeStyle = fg; g.lineWidth = 6; g.strokeRect(10, 10, c.width - 20, c.height - 20); g.fillStyle = fg; g.textAlign = "center"; g.textBaseline = "middle";
           let fs = Math.min(56, (c.height - 40) / lines.length * 0.72); const fnt = () => g.font = `700 ${fs}px Georgia, "Times New Roman", serif`; fnt();
@@ -6141,20 +6149,21 @@ const handle = async (m, post) => {
           lines.forEach((t, i) => g.fillText(t, c.width / 2, 20 + (c.height - 40) * (i + 0.5) / lines.length));
           const t = new THREE.CanvasTexture(c); t.anisotropy = 8; if ("colorSpace" in t) t.colorSpace = THREE.SRGBColorSpace; return new THREE.MeshStandardMaterial({ map: t, roughness: .5, metalness: .3 }); };
         const sign = (mat, w, h, x, y, z, ry) => { const e = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat); e.applyMatrix4(mm(x, y, z, ry)); TG.add(e); };
-        sign(plaque(["1939 - 1945", "LEST WE FORGET"], 1.5, 0.6, "#2b2620", "#e3c47a"), 1.5, 0.6, 0, G0 + 0.98, 1.06, 0);
-        sign(plaque(["COMMEMORATING", "INVERLOCH", "VOLUNTEERS", "GREAT WAR 1914-18"], 1.1, 0.95, "#e9e6dc", "#2b2a2a"), 1.1, 0.95, 0, G0 + 2.24, 0.81, 0);
-        sign(plaque(["ERECTED 1931", "FROM BEACH STONES", "GATHERED BY THE", "SCHOOL CHILDREN"], 1.1, 0.95, "#2b2620", "#e3c47a"), 1.1, 0.95, 0, G0 + 2.24, -0.81, Math.PI);
+        sign(plaque(["1939 - 1945", "LEST WE FORGET"], 1.3, 0.55, "#2b2620", "#e3c47a"), 1.5, 0.6, 0, G0 + 0.85, 1.16, 0);
+        sign(plaque(["COMMEMORATING", "INVERLOCH", "VOLUNTEERS", "GREAT WAR 1914-18"], 1.2, 0.85, "#2b2620", "#e3c47a"), 1.3, 0.8, 0, G0 + 0.85, -1.16, Math.PI);
+        sign(plaque(["ERECTED 1931", "FROM BEACH STONES", "GATHERED BY THE", "SCHOOL CHILDREN"], 0.5, 0.42, "#2b2620", "#e3c47a"), 0.5, 0.42, 0, G0 + 2.1, -0.62, Math.PI);
+        sign(plaque(["IN MEMORY"], 0.36, 0.26, "#2b2620", "#e3c47a"), 0.36, 0.26, 0.62, G0 + 2.1, 0, Math.PI / 2);  // the small plaque on the side (Street View)
         // the side boulders with their bronze plaques, a small Anzac centenary plaque, roses round the edge
         [-1, 1].forEach(sd => { const rk = new THREE.Mesh(new THREE.DodecahedronGeometry(0.75, 1), new THREE.MeshStandardMaterial({ color: 0x8e8b86, roughness: 1, flatShading: true }));
-          rk.scale.set(1.1, 0.8, 0.9); rk.applyMatrix4(mm(sd * 3, G0 + 0.55, 0.4)); TG.add(rk);
-          sign(plaque(sd < 0 ? ["1914 - 1918", "THEY SERVED"] : ["1939 - 1975", "THEY SERVED"], 0.7, 0.45, "#3a2f22", "#d9b46a"), 0.7, 0.45, sd * 3, G0 + 0.78, 1.08, -sd * 0.12); });
-        put(mg, new THREE.BoxGeometry(0.08, 0.5, 0.08), 0x3a3d40, mm(1.6, G0 + 0.3, 1.9)); sign(plaque(["ANZAC CENTENARY", "1915 - 2015"], 0.6, 0.32, "#2b2620", "#e3c47a"), 0.6, 0.32, 1.6, G0 + 0.62, 1.95, -0.25);
-        for (let i = 0; i < 10; i++) { const a2 = i / 10 * Math.PI * 2, rr = 3.6, x = Math.cos(a2) * rr, z = Math.sin(a2) * rr * 0.95; if (z > 2.4 && Math.abs(x) < 1.2) continue;
-          put(mg, new THREE.IcosahedronGeometry(0.42, 0), 0x3f6b33, mm(x, G0 + 0.42, z)); for (let k2 = 0; k2 < 4; k2++) put(mg, new THREE.SphereGeometry(0.09, 6, 5), 0xc21b2a, mm(x + Math.cos(k2 * 1.7) * 0.28, G0 + 0.72, z + Math.sin(k2 * 1.7) * 0.28)); }
+          rk.scale.set(1.0, 0.85, 0.8); rk.applyMatrix4(mm(sd * 2.6, G0 + 0.55, 1.6)); TG.add(rk);
+          sign(plaque(sd < 0 ? ["1914 - 1918", "THEY SERVED"] : ["1939 - 1975", "THEY SERVED"], 0.7, 0.45, "#3a2f22", "#d9b46a"), 0.7, 0.45, sd * 2.6, G0 + 0.78, 2.22, -sd * 0.12); });
+        put(mg, new THREE.BoxGeometry(0.08, 0.5, 0.08), 0x3a3d40, mm(1.3, G0 + 0.3, 2.6)); sign(plaque(["ANZAC CENTENARY", "1915 - 2015"], 0.6, 0.32, "#2b2620", "#e3c47a"), 0.6, 0.32, 1.3, G0 + 0.62, 2.65, -0.25);
+        [[-3.2, -3.4], [4.8, -1.2], [-4.6, 0.8]].forEach(([x, z], i) => { put(mg, new THREE.IcosahedronGeometry(0.55, 0), 0x3f6b33, mm(x, G0 + 0.5, z)); for (let k2 = 0; k2 < 5; k2++) put(mg, new THREE.SphereGeometry(0.09, 6, 5), 0xc21b2a, mm(x + Math.cos(k2 * 1.3) * 0.36, G0 + 0.85, z + Math.sin(k2 * 1.3) * 0.36)); });  // roses
+        put(mg, new THREE.BoxGeometry(6, 1.1, 1.0), 0x3f6236, mm(-0.5, G0 + 0.55, -5.4));  // the hedge behind
         // poppy wreaths, only around Anzac Day (25 April) and Remembrance Day (11 November)
         { const d = new Date(), y = d.getFullYear(), near = (mo, da) => Math.abs(d - new Date(y, mo, da)) < 8 * 864e5;
-          if (near(3, 25) || near(10, 11)) [-0.7, 0, 0.7].forEach(x => { put(mg, new THREE.TorusGeometry(0.28, 0.08, 6, 16), 0x2f5a2f, mm(x, G0 + 0.45, 1.42).multiply(new THREE.Matrix4().makeRotationX(-0.25)));
-            for (let k2 = 0; k2 < 8; k2++) { const a2 = k2 / 8 * Math.PI * 2; put(mg, new THREE.SphereGeometry(0.06, 6, 5), 0xd0161f, mm(x + Math.cos(a2) * 0.28, G0 + 0.45 + Math.sin(a2) * 0.27, 1.5)); } }); }
+          if (near(3, 25) || near(10, 11)) [-0.7, 0, 0.7].forEach(x => { put(mg, new THREE.TorusGeometry(0.28, 0.08, 6, 16), 0x2f5a2f, mm(x, G0 + 0.45, 1.55).multiply(new THREE.Matrix4().makeRotationX(-0.25)));
+            for (let k2 = 0; k2 < 8; k2++) { const a2 = k2 / 8 * Math.PI * 2; put(mg, new THREE.SphereGeometry(0.06, 6, 5), 0xd0161f, mm(x + Math.cos(a2) * 0.28, G0 + 0.45 + Math.sin(a2) * 0.27, 1.63)); } }); }
         done(mg, { roughness: .85 }); }
       lights(D.c[0] - 1.4, 2.7, D.c[1] + 4); lights(D.c[0] + 1.4, 2.7, D.c[1] + 4);  // garden lights at its feet
     }
