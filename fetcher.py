@@ -375,12 +375,27 @@ def page_blurb(url):
     return desc[:320], (im if im.startswith("https://") else "")
 
 
-def own_summaries():
-    """Summaries Claude wrote in its own words for stories that had no text at all (the rating task, ratings/summaries.json)."""
+RATINGS_RAW = "https://raw.githubusercontent.com/Ashley-Pettit/awesome-news/main/ratings/"
+
+
+def ratings_file(name):
+    """ratings/<name> from the repo: next to this script when it runs in the repo (the website build), otherwise (the private
+    copy's refresh runs this script on its own) fetched from GitHub, so both apps get the same ratings and summaries."""
     try:
-        return json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "ratings", "summaries.json"), encoding="utf-8")).get("summaries", {})
+        return json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "ratings", name), encoding="utf-8"))
+    except Exception:
+        pass
+    try:
+        import urllib.request
+        with urllib.request.urlopen(urllib.request.Request(RATINGS_RAW + name, headers={"User-Agent": "awesome-news"}), timeout=20) as r:
+            return json.loads(r.read().decode("utf-8"))
     except Exception:
         return {}
+
+
+def own_summaries():
+    """Summaries Claude wrote in its own words for stories that had no text at all (the rating task, ratings/summaries.json)."""
+    return ratings_file("summaries.json").get("summaries", {})
 
 
 def add_own_summaries(items, sums=None):
@@ -1352,10 +1367,7 @@ def main():
 
     # How negative each story is, 0 (uplifting) to 10 (tragic), as rated by Claude (the "Awesome News: rate
     # headlines" scheduled task writes ratings/neg.json). The app's "less negative news" dial uses it.
-    try:
-        neg = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "ratings", "neg.json"), encoding="utf-8")).get("ratings", {})
-    except Exception:
-        neg = {}
+    neg = ratings_file("neg.json").get("ratings", {})
     # Editors' picks: stories on the ABC's Top Stories feed are what its newsroom rates most important right now. The
     # app's briefing leans on that (a free signal of how big a story is, no AI needed).
     top = {url_key(st["url"]) for it in raw.get(ABC_TOP, []) for st in [to_story(it, "ABC News", now)] if st}
