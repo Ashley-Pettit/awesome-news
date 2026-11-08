@@ -1125,7 +1125,13 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
 .bs-fly-x:focus-visible { outline: 2px solid var(--bs-ink); outline-offset: 2px; }
 .bs-fly-x.bs-fly-lock.bs-fly-lockr { bottom: calc(240px + env(safe-area-inset-bottom)); }
 .bs-fly-x.bs-fly-lock { top: auto; bottom: calc(196px + env(safe-area-inset-bottom)); left: 50%; right: auto; transform: translateX(-50%); font-size: 0.78rem; height: 36px; white-space: nowrap; }
-body.bsfly #wBody, body.bsfly #bsCtl, body.bsfly #bsDrive { display: none !important; }
+body.bsfly:not(.flypeek) #wBody, body.bsfly #bsCtl, body.bsfly:not(.flypeek) #bsDrive { display: none !important; }
+/* Explore, "Show weather": the weather screen over the view you've flown to, to see how it'll look (look only: tap Hide to fly again) */
+.bs-fly-x.bs-fly-peek { left: 50%; right: auto; transform: translateX(-50%); }
+body.bsfly.flypeek #wBody, body.bsfly.flypeek #bsDrive { pointer-events: none; }
+body.bsfly.flypeek .bs-joy, body.bsfly.flypeek .bs-ud, body.bsfly.flypeek .bs-fly-tip, body.bsfly.flypeek #bsFlyX { display: none !important; }
+body.bsfly.flypeek .bs-fly-x.bs-fly-peek { top: calc(64px + env(safe-area-inset-top)); left: auto; right: 16px; transform: none; background: #fff; color: #1b1830; }
+body.bsfly.flypeek .bs-fly-x.bs-fly-lock { display: none !important; }
 body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
 #weather .bs-flybtn { display: inline-flex; }  /* Explore: for everyone */
 /* While Listen plays the weather: Explore sits up top beside Week (its "Back to the news" only shows once you're exploring) */
@@ -1552,6 +1558,7 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
   <div class="bs-fly" id="bsFly" hidden>
     <p class="bs-fly-tip" id="bsFlyTip"></p>
     <button class="bs-fly-x" type="button" id="bsFlyX">Exit explore</button>
+    <button class="bs-fly-x bs-fly-peek" type="button" id="bsFlyPeek" aria-pressed="false">Show weather</button>
     <button class="bs-fly-x bs-fly-lock" type="button" id="bsFlyLock" hidden>Use this view for the weather</button>
     <button class="bs-fly-x bs-fly-lock bs-fly-lockr" type="button" id="bsFlyLockReset" hidden>Go back to the usual view</button>
     <div class="bs-ud" role="group" aria-label="Fly up or down">
@@ -6582,6 +6589,10 @@ const handle = async (m, post) => {
     const tip = $("bsFlyTip"); tip.classList.remove("dim");
     tip.textContent = touch ? "Left stick to move, right stick to look. Up and Down are top right." : "Click to look with the mouse · WASD to move · Space up, C down · Shift for speed · R to reset";
     $("bsFlyX").textContent = document.body.classList.contains("wxlisten") ? "Back to the news" : "Exit explore";
+    // Show weather: the weather (or drive) screen laid over this view, to see how it'll look
+    const pk = $("bsFlyPeek"); document.body.classList.remove("flypeek"); pk.setAttribute("aria-pressed", "false"); pk.textContent = /^drive/.test(BS.sceneKey || "") ? "Show drive screen" : "Show weather";
+    pk.onclick = () => { const on = document.body.classList.toggle("flypeek"); pk.setAttribute("aria-pressed", String(on));
+      pk.textContent = on ? "Hide weather" : /^drive/.test(BS.sceneKey || "") ? "Show drive screen" : "Show weather"; F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.vert = 0; };
     // With the passphrase entered (or in the private copy): keep the view you've flown to as this place's weather view
     // In the private copy that's for everyone: it goes in the database, and the hourly refresh carries it to the public apps.
     const lk = $("bsFlyLock"), lkr = $("bsFlyLockReset"), key = BS.sceneKey, what = /^drive/.test(key || "") ? "drive" : "weather", all = state.mode === "claude" && !!state.db;
@@ -6665,6 +6676,7 @@ const handle = async (m, post) => {
   }
   function bsFlyOff() {
     const F = BS.fly; if (!F) return;
+    document.body.classList.remove("flypeek");
     const canvas = $("bsGl");
     removeEventListener("keydown", F.on.keydown); removeEventListener("keyup", F.on.keyup); removeEventListener("blur", F.on.blur);
     document.removeEventListener("mousemove", F.on.mousemove);
