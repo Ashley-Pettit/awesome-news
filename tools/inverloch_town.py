@@ -293,6 +293,7 @@ if bi is not None:
     mx, mz = (u[0] + u[2]) / 2, (u[1] + u[3]) / 2; L = math.hypot(u[2] - u[0], u[3] - u[1])
     for sg in signs:
         if sg[4] == "PAUL THE PIEMAN": sg[0] = round(sg[0] + mx - omx, 1); sg[1] = round(sg[1] + mz - omz, 1); sg[3] = round(L - 1, 1)
+    dl = math.hypot(u[2] - u[0], u[3] - u[1]); u[4], u[5] = round((u[3] - u[1]) / dl * (1 if u[4] * (u[3] - u[1]) > 0 else -1), 3), round(-(u[2] - u[0]) / dl * (1 if u[4] * (u[3] - u[1]) > 0 else -1), 3)  # its outward normal, for the straightened front
     u[6], u[8] = 6.4, 0
 # the library's front (OSM way 472789110): the long wall facing A'Beckett and the clock, for its round window, "Library" letters and flags
 lib = next(b for b in blds if b["id"] == 472789110)
