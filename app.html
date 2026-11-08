@@ -2758,7 +2758,7 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
   window.addEventListener("resize", () => { inkAt = null; placeInk(); });
   document.fonts?.ready.then(() => { inkAt = null; placeInk(); });
   function renderHeader() {
-    { const xb = $("lbExplore"); if (xb) xb.hidden = S.region !== "inv"; }  // Inverloch: a way straight into the 3D town
+    { const xb = $("lbExplore"); if (xb) xb.hidden = !(S.region === "inv" || /^rod(ney)?$/i.test((S.name || "").trim())); }  // Inverloch (or Rod, who lives there): a way straight into the 3D town
     showVersion();
     $("eyebrow").textContent = state.showSaved ? "Saved" : greeting();
     $("title").textContent = APP_NAME;
@@ -5215,7 +5215,7 @@ const handle = async (m, post) => {
   // Which place the 3D view shows: Logan for Logan news, Inverloch for Victoria, Brisbane everywhere else.
   function bsPlace() {
     const W = BS.W; if (!W.bris || !W.inv) return;
-    const pl = BS.prev?.place || (typeof wxPlace === "function" ? wxPlace() : S.region), vic = ["vic", "inv"].includes(pl), lo = pl === "logan", mo = pl === "moo";
+    const pl = BS.exploreOnly ? "inv" : BS.prev?.place || (typeof wxPlace === "function" ? wxPlace() : S.region), vic = ["vic", "inv"].includes(pl), lo = pl === "logan", mo = pl === "moo";
     const dr = !!(BS.drive && W.drive);  // the traffic part of Listen: the motorway instead of the place
     if (BS.orbit && !BS.orbit.on) { BS.orbit.ty = 0; BS.orbit.tp = 0; }  // a new place starts from the usual view
     const di = dr && !!W.driveInv && !!BS.driveVic;  // a drive in Victoria: the road into Inverloch
