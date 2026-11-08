@@ -343,6 +343,12 @@ def get(url, timeout=20, limit=None):
         return r.read(limit) if limit else r.read()
 
 
+# Plugs for the publisher's own app, emails or podcasts, wherever they sit in a summary or story.
+APP_PLUG = re.compile(r"(?:Follow (?:live updates|our live coverage)\.?\s*)?Get our [^.]{0,60}?(?:email|app|podcast)s?(?:\s*,\s*[^.]{0,40}?(?:app|podcast|email)s?)*(?:\s*(?:or|and)\s*[^.]{0,30}?(?:podcast|app|email)s?)?\b"
+                      r"|\b(?:read |find |see |get |there'?s )?more (?:on|in) (?:the |our )?[^.]{0,25}\bapp\b[.!]?"
+                      r"|\b(?:download|open|get) (?:the |our )?[^.]{0,25}\bapp\b(?: (?:today|now|for free))?[.!]?", re.I)
+
+
 def clean(text, limit=None):
     if not text:
         return ""
@@ -350,6 +356,7 @@ def clean(text, limit=None):
     text = re.sub(r"\s+", " ", text).strip()
     text = re.sub(r"(Continue reading\.*|Read more\.*|The post .* appeared first on .*)$", "", text).strip()
     text = re.sub(r"^(Follow (?:live updates|our live coverage)\.?\s*)?(Get our [^.]*?(?:email|app|podcast)s?\s*(?:,\s*)?(?:free app or daily news podcast)?\s*)", "", text).strip()
+    text = APP_PLUG.sub(" ", text); text = re.sub(r"\s{2,}", " ", text).strip()  # "Get our ... free app or daily news podcast", "More on the ABC app" and the like, anywhere
     if limit and len(text) > limit:
         text = text[:limit].rsplit(" ", 1)[0].rstrip(",;:.") + "…"
     return text
@@ -785,7 +792,7 @@ JUNK_PARA = re.compile(r"^(-\s*)?(Read more|Related|Advertisement|Loading|Share 
 
 
 # Lines that aren't the story: "Download the 7NEWS app", "Watch the video above", sign-ups, follow us (JUNK in app.html).
-NOT_STORY = re.compile(r"""\b(download (the|our) [^.]{0,30}app|know the news with|download (it |the app )?(today|now)(?=[.!]?$)|(stream|watch)[^.]{0,40}\b(7plus|9now|10 ?play|iview|sbs on demand)|watch the (video|full|latest|interview|moment|clip)|(the )?video (above|below)|click here|tap here|get (the )?(latest|breaking) news|news alerts|sign up|subscribe|newsletter|follow us|follow [^.]{0,25} on (facebook|instagram|x|twitter|tiktok|threads|youtube)|got a (news )?tip|send us (your|a) (tip|story)|contact the newsroom|all rights reserved|copyright)\b|©|^(watch|listen|video|more|related|recommended|trending|popular|read next)\b[:\s-]""", re.I)
+NOT_STORY = re.compile(r"""\b(download (the|our) [^.]{0,30}app|know the news with|download (it |the app )?(today|now)(?=[.!]?$)|(stream|watch)[^.]{0,40}\b(7plus|9now|10 ?play|iview|sbs on demand)|watch the (video|full|latest|interview|moment|clip)|(the )?video (above|below)|click here|tap here|get (the )?(latest|breaking) news|news alerts|sign up|subscribe|newsletter|follow us|follow [^.]{0,25} on (facebook|instagram|x|twitter|tiktok|threads|youtube)|got a (news )?tip|send us (your|a) (tip|story)|contact the newsroom|all rights reserved|copyright|more (on|in) (the |our )?[^.]{0,25}app|(on|in) (the |our )?[^.]{0,20}app( (today|now))?[.!]?$)\b|©|^(watch|listen|video|more|related|recommended|trending|popular|read next)\b[:\s-]""", re.I)
 
 
 # ABC News stories often carry the ABC's own video (no YouTube, no ads: the ABC has none). The page lists each clip's
