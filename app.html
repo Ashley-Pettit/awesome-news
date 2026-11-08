@@ -1129,7 +1129,13 @@ body.wxreveal .np > * { opacity: 0; transition: opacity 0.6s ease; }
 .bs-fly-tip.dim { opacity: 0.35; }
 .bs-fly-x { pointer-events: auto; position: absolute; top: calc(14px + env(safe-area-inset-top)); right: 16px; height: 38px; padding: 0 14px; border: 0; border-radius: 999px; background: var(--bs-scrim); color: var(--bs-ink); font: 700 0.82rem var(--ui); cursor: pointer; backdrop-filter: blur(8px); }
 .bs-fly-x:focus-visible { outline: 2px solid var(--bs-ink); outline-offset: 2px; }
-.bs-fly-x.bs-fly-lock { top: auto; bottom: calc(196px + env(safe-area-inset-bottom)); left: 50%; right: auto; transform: translateX(-50%); font-size: 0.78rem; height: 36px; white-space: nowrap; }
+/* Explore: the time stays put (daylight) until you drag this, just above the sticks */
+.bs-fly-time { pointer-events: auto; position: absolute; left: 16px; right: 16px; bottom: calc(186px + env(safe-area-inset-bottom)); display: flex; align-items: center; gap: 10px; max-width: 520px; margin: 0 auto;
+  padding: 6px 12px; border-radius: 999px; background: var(--bs-scrim); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.bs-fly-time input { flex: 1; min-width: 0; accent-color: #b8a6ff; }
+.bs-fly-time output { flex: none; min-width: 58px; text-align: right; font: 700 0.8rem var(--ui); color: var(--bs-ink); }
+body.bsfly.flypeek .bs-fly-time { display: none; }
+.bs-fly-x.bs-fly-lock { top: auto; bottom: calc(240px + env(safe-area-inset-bottom)); left: 50%; right: auto; transform: translateX(-50%); font-size: 0.78rem; height: 36px; white-space: nowrap; }
 body.bsfly:not(.flypeek) #wBody, body.bsfly #bsCtl, body.bsfly:not(.flypeek) #bsDrive { display: none !important; }
 /* Explore, "Show weather": the weather screen over the view you've flown to, to see how it'll look (look only: tap Hide to fly again) */
 .bs-fly-x.bs-fly-peek { left: 50%; right: auto; transform: translateX(-50%); }
@@ -1568,6 +1574,7 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
     <p class="bs-fly-tip" id="bsFlyTip"></p>
     <button class="bs-fly-x" type="button" id="bsFlyX">Exit explore</button>
     <button class="bs-fly-x bs-fly-peek" type="button" id="bsFlyPeek" aria-pressed="false">Show weather</button>
+    <div class="bs-fly-time"><input type="range" id="bsFlyTime" min="0" max="1439" step="5" aria-label="Time of day"><output id="bsFlyTimeOut" for="bsFlyTime"></output></div>
     <button class="bs-fly-x bs-fly-jump" type="button" id="bsFlyJump" hidden>Jump to Norman Rd</button>
     <button class="bs-fly-x bs-fly-lock" type="button" id="bsFlyLock" hidden>Use this view for the weather</button>
     <div class="bs-ud" role="group" aria-label="Fly up or down">
@@ -6766,6 +6773,11 @@ const handle = async (m, post) => {
     const start = kd ? { pos: new B.THREE.Vector3(...kept.b), yaw: Math.atan2(-kd.x, -kd.z), pitch: Math.asin(bsClamp(kd.y, -1, 1)) }
       : inv && BS.W.invSpot ? { pos: new B.THREE.Vector3(...BS.W.invSpot.pos), yaw: BS.W.invSpot.yaw, pitch: BS.W.invSpot.pitch }
       : { pos: cam.position.clone(), yaw: Math.atan2(-dir.x, -dir.z), pitch: Math.asin(bsClamp(dir.y, -1, 1)) };
+    // The time stands still while exploring: now if it's daylight, otherwise midday. The slider above the sticks changes it.
+    BS.flyView = BS.view; { const v = BS.view, day = v.day || bsKey(v.ms), mins = bsMins(v.ms), m2 = mins >= 7 * 60 && mins <= 17 * 60 ? mins : 12 * 60;
+      BS.view = { mode: "day", day, ms: bsMidnight(day) + m2 * 60000, play: false }; bsApply(true);
+      const ti = $("bsFlyTime"), to = $("bsFlyTimeOut"); ti.value = m2; to.textContent = bsTime(BS.view.ms);
+      ti.oninput = () => { BS.view.ms = bsMidnight(BS.view.day) + (+ti.value) * 60000; to.textContent = bsTime(BS.view.ms); bsApply(true); }; }
     const F = BS.fly = { ...start, pos: start.pos.clone(), start, keys: new Set(), stick: { x: 0, y: 0 }, lookStick: { x: 0, y: 0 }, vert: 0, touches: new Map(), drag: null };
     const canvas = $("bsGl"), touch = matchMedia("(pointer: coarse)").matches;
     document.body.classList.add("bsfly"); $("bsFly").hidden = false;
@@ -6860,6 +6872,7 @@ const handle = async (m, post) => {
   }
   function bsFlyOff() {
     const F = BS.fly; if (!F) return;
+    if (BS.flyView) { BS.view = { ...BS.flyView, ms: BS.flyView.mode === "live" ? Date.now() : BS.flyView.ms }; BS.flyView = null; try { bsApply(true); } catch {} }
     document.body.classList.remove("flypeek");
     const canvas = $("bsGl");
     removeEventListener("keydown", F.on.keydown); removeEventListener("keyup", F.on.keyup); removeEventListener("blur", F.on.blur);
