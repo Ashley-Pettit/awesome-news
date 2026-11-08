@@ -5566,7 +5566,8 @@ const handle = async (m, post) => {
       const camW = new THREE.Vector3(CAM[0], 0, CAM[2]).applyMatrix4(TG.matrix);
       TG.position.set(-camW.x, 0, 12 - camW.z); TG.updateMatrix(); TG.updateMatrixWorld(true);
       const toW = (x, y, z) => new THREE.Vector3(x, y, z).applyMatrix4(TG.matrix);
-      W.invTownCam = [toW(CAM[0], CAM[1], CAM[2]), toW(LOOK[0], LOOK[1], LOOK[2])];
+      // the weather's view: Ash's own Explore view ("Use this view for the weather"), in scene metres, so it sits where he flew to
+      W.invTownCam = [new THREE.Vector3(7.94, 7.57, 8.56), new THREE.Vector3(-1.53, 7.02, -9.05)];
       const lights = (x, y, z) => { const v = toW(x, y, z); townLights.push(v.x, v.y, v.z); };
       const P = f => { const a = []; for (let i = 0; i < f.length; i += 2) a.push(new THREE.Vector2(f[i], -f[i + 1])); return a; };
       const pts2 = f => { const a = []; for (let i = 0; i < f.length; i += 2) a.push([f[i], f[i + 1]]); return a; };
