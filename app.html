@@ -5226,7 +5226,7 @@ const handle = async (m, post) => {
     const it = vic && !dr && !!W.invTown && !BS.invBeach;  // Inverloch: the town centre, or (every other time) the surf beach
     if (W.invTown) { W.invTown.visible = it; W.invBeach.visible = !it; } if (W.water) W.water.visible = !it;
     const B = BS.B; if (B) { if (!B.camHome) B.camHome = [B.camBase.clone(), B.camLook.clone()];  // Moorooka is seen from a little higher up, looking over the roundabout
-      if (di) { B.camBase.set(-1.75, 8.5, 44); B.camLook.set(-1.75, 3, -110); } else if (dm) { B.camBase.set(0, 17, 22); B.camLook.set(0, 1, -110); } else if (dr) { B.camBase.set(7.6, 13, 50); B.camLook.set(7.6, 2, -90); } else if (mb) { B.camBase.set(-38, 26, 78); B.camLook.set(-4, 2, -12); } else if (it && W.invTownCam) { B.camBase.copy(W.invTownCam[0]); B.camLook.copy(W.invTownCam[1]); } else if (mo) { B.camBase.set(0, 15, 46); B.camLook.set(0, 5, -60); } else { B.camBase.copy(B.camHome[0]); B.camLook.copy(B.camHome[1]); } }
+      if (di) { B.camBase.set(-1.75, 8.5, 44); B.camLook.set(-1.75, 3, -110); } else if (dm) { B.camBase.set(0, 17, 22); B.camLook.set(0, 1, -110); } else if (dr) { B.camBase.set(7.6, 13, 50); B.camLook.set(7.6, 2, -90); } else if (mb) { B.camBase.set(-38, 26, 78); B.camLook.set(-4, 2, -12); } else if (it && W.invTownCam) { B.camBase.copy(W.invTownCam[0]); B.camLook.copy(W.invTownCam[1]); } else if (vic && !dr && W.invBeachCam) { B.camBase.copy(W.invBeachCam[0]); B.camLook.copy(W.invBeachCam[1]); } else if (mo) { B.camBase.set(0, 15, 46); B.camLook.set(0, 5, -60); } else { B.camBase.copy(B.camHome[0]); B.camLook.copy(B.camHome[1]); } }
     W.inv.visible = vic && !dr;
   }
   function bsBuild(THREE) {
@@ -5372,7 +5372,7 @@ const handle = async (m, post) => {
 
     // ---- Inverloch (shown for Victoria), two views like the real place, taking turns: the town centre (the
     // Rotary clock, the A'Beckett Street shops, the Esplanade Hotel, gum trees; no sea, as the beach is a walk away) and the
-    // surf beach (dunes and coastal scrub, the surf club, the Bunurong cliffs and Eagles Nest), with the green South Gippsland hills behind both.
+    // surf beach seen from the sand (driftwood teepees with people, shade tents, the surf club's flags, dunes and scrub, the Bunurong cliffs), with the green South Gippsland hills behind both.
     const inv = new THREE.Group(); inv.visible = false; scene.add(inv); W.inv = inv;
     const bch = new THREE.Group(), twn = new THREE.Group(); inv.add(bch, twn); W.invBeach = bch; W.invTown = twn;
     const beachLights = [], townLights = [];
@@ -5402,7 +5402,7 @@ const handle = async (m, post) => {
     const clubRoof = new THREE.Mesh(new THREE.BoxGeometry(13, 0.5, 7), roofMat); clubRoof.position.set(12, 5.5, -57); bch.add(clubRoof);
     for (let i = 0; i < 4; i++) beachLights.push(8 + i * 2.6, 3.2, -53.9);
     W.invFlags = [];
-    [[-16, -45], [7, -45]].forEach(([x, z]) => { const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 6, 6), new THREE.MeshStandardMaterial({ color: 0xdddddd })); pole.position.set(x, 3.6, z); bch.add(pole);
+    [[-6, -35], [4.2, -36]].forEach(([x, z]) => { const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 6, 6), new THREE.MeshStandardMaterial({ color: 0xdddddd })); pole.position.set(x, 3.6, z); bch.add(pole);
       const flag = new THREE.Group(); [[0xd8262b, 0], [0xf3c623, -0.7]].forEach(([c, y]) => { const f = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 0.7), new THREE.MeshStandardMaterial({ color: c, side: THREE.DoubleSide })); f.position.set(0.9, y, 0); flag.add(f); });
       flag.position.set(x, 6.1, z); bch.add(flag); W.invFlags.push(flag); });
     // Norfolk Island pines along the foreshore
@@ -5415,21 +5415,42 @@ const handle = async (m, post) => {
     function trunkMat2() { return trunkMat2.m || (trunkMat2.m = new THREE.MeshStandardMaterial({ color: 0x4a3a30, roughness: 1 })); }
     // the Bunurong coast: sandstone cliffs to the right, and the Eagles Nest rock stack in the water
     for (let i = 0; i < 7; i++) { const c = new THREE.Mesh(new THREE.DodecahedronGeometry(1, 0), rock);
-      c.scale.set(16 + rnd(i * 3) * 10, 8 + rnd(i * 5) * 7, 14 + rnd(i * 7) * 8); c.position.set(38 + i * 17, 2, -50 - i * 8 - rnd(i * 9) * 6); bch.add(c);
+      c.scale.set(16 + rnd(i * 3) * 10, 5 + rnd(i * 5) * 4, 14 + rnd(i * 7) * 8); c.position.set(38 + i * 17, 1, -50 - i * 8 - rnd(i * 9) * 6);  // low, so they don't crowd the view from the sand bch.add(c);
       const top = new THREE.Mesh(new THREE.DodecahedronGeometry(1, 0), grass); top.scale.set(c.scale.x * 0.9, 2, c.scale.z * 0.9); top.position.set(c.position.x, c.position.y + c.scale.y * 0.8, c.position.z - 2); bch.add(top); }
-    // Eagles Nest: a tall stack of layered sandstone (honey, rust and grey bands) on the rock platform at the foot of the
-    // cliffs. Narrow at the waist, a wider, flat-topped crown, each layer a little off line like weathered rock.
-    const nest = new THREE.Group();
-    const bands = [0xa27a52, 0xb08860, 0x9a744e, 0xbb9468, 0xa98157, 0x93704f].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 1 }));
-    const prof = [3.5, 3.2, 2.85, 2.55, 2.45, 2.5, 2.7, 2.95, 3.15, 3.2];  // radius up the stack: waist low down, crown at the top
-    let ny = 0;
-    prof.forEach((r, k) => { const h = 1.6 + rnd(k * 7 + 3) * 0.8, r2 = prof[k + 1] ?? r * 0.92;
-      const sl = new THREE.Mesh(new THREE.CylinderGeometry(r2, r, h, 16), bands[k % bands.length]);
-      sl.position.set((rnd(k * 5 + 1) - 0.5) * 0.22, ny + h / 2, (rnd(k * 9 + 2) - 0.5) * 0.22); sl.rotation.y = k * 0.35; sl.scale.z = 0.82; nest.add(sl); ny += h; });
-    const crown = new THREE.Mesh(new THREE.CylinderGeometry(2.7, 3.15, 0.9, 16), bands[2]); crown.position.y = ny + 0.45; crown.scale.z = 0.82; nest.add(crown);
-    const tuft = new THREE.Mesh(new THREE.SphereGeometry(1, 10, 6), grass); tuft.scale.set(2.2, 0.5, 1.7); tuft.position.y = ny + 1; nest.add(tuft);  // a little scrub on top
-    const plat = new THREE.Mesh(new THREE.CylinderGeometry(7, 8.5, 0.8, 10), rockDark); plat.position.y = 0.1; plat.scale.z = 0.7; nest.add(plat);  // the rock platform it stands on
-    nest.position.set(14, -0.2, -30); nest.rotation.y = 0.4; nest.scale.setScalar(0.85); bch.add(nest);
+    // ---- on the sand (as in the Visit Gippsland photos): two driftwood teepees with people adding sticks to them, a couple of
+    // beach shade tents, and the surf club's flags flying. Seen from the sand at eye level, looking along the beach.
+    W.invBeachCam = [new THREE.Vector3(-40, 2.4, -46.5), new THREE.Vector3(-2.4, 2.3, -32.8)];  // standing on the sand, looking along the beach towards the water
+    const drift = [0x9c8f7d, 0x8a7b68, 0xb3a690, 0x776a59].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 1 }));
+    const teepee = (x, z, k) => { const g = new THREE.Group(), n = 26, hgt = 3.4 + rnd(k * 3) * 0.6;
+      for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2 + rnd(k * 31 + i) * 0.3, r = 1.7 + rnd(k * 17 + i * 3) * 0.9, L = Math.hypot(r, hgt) * (0.9 + rnd(k * 7 + i) * 0.55);  // many poke out past the top, as they do
+        const st = new THREE.Mesh(new THREE.CylinderGeometry(0.035 + rnd(i * 5 + k) * 0.03, 0.06 + rnd(i * 7 + k) * 0.05, L, 5), drift[i % drift.length]);
+        const bx = Math.cos(a) * r, bz = Math.sin(a) * r, tx = (rnd(i * 13 + k) - 0.5) * 0.9, tz = (rnd(i * 19 + k) - 0.5) * 0.9;  // from the ground to near the top
+        const dir = new THREE.Vector3(tx - bx, hgt, tz - bz).normalize(); st.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+        st.position.set(bx + dir.x * L / 2, dir.y * L / 2, bz + dir.z * L / 2); g.add(st); }
+      for (let i = 0; i < 7; i++) { const st = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.07, 1.6 + rnd(i * 11 + k) * 2.2, 5), drift[(i + 1) % drift.length]);  // sticks lying round it
+        st.rotation.set(Math.PI / 2, 0, rnd(i * 23 + k) * Math.PI); st.position.set((rnd(i * 29 + k) - 0.5) * 7, 0.05, (rnd(i * 37 + k) - 0.5) * 6); g.add(st); }
+      g.position.set(x, 0.8, z); g.rotation.set((rnd(k * 41) - 0.5) * 0.12, rnd(k * 43) * 3, (rnd(k * 47) - 0.5) * 0.12); bch.add(g); return g; };  // a little lopsided
+    teepee(-25.9, -44, 1); teepee(-18.1, -36.4, 2);
+    // people: simple figures, one at each teepee lifting a stick onto it, others watching
+    W.invPeople = [];
+    const skinM = new THREE.MeshStandardMaterial({ color: 0xd9a988, roughness: .8 }), pantsM = new THREE.MeshStandardMaterial({ color: 0x3a4a63, roughness: .9 });
+    const person = (x, z, face, shirt, throwing, k) => { const g = new THREE.Group(), sM = new THREE.MeshStandardMaterial({ color: shirt, roughness: .9 });
+      [-0.11, 0.11].forEach(o => { const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.085, 0.85, 6), pantsM); leg.position.set(o, 0.43, 0); g.add(leg); });
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.17, 0.66, 8), sM); body.position.y = 1.18; g.add(body);
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 8), skinM); head.position.y = 1.66; g.add(head);
+      const arm = (side) => { const a = new THREE.Group(); a.position.set(side * 0.25, 1.45, 0); const m = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.62, 6), skinM); m.position.y = -0.31; a.add(m); g.add(a); return a; };
+      const l = arm(-1), r = arm(1); l.rotation.z = -0.12; r.rotation.z = 0.12;
+      let stick = null; if (throwing) { stick = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.045, 1.8, 5), drift[0]); stick.position.set(0, -0.62, 0.5); stick.rotation.x = Math.PI / 2; r.add(stick); }
+      g.position.set(x, 0.8, z); g.rotation.y = face; bch.add(g); W.invPeople.push({ r, l, throwing, k }); };
+    person(-24.1, -42.1, Math.atan2(-1.8, -1.9), 0xe85d3a, true, 0);   // at the first teepee, facing it
+    person(-28.2, -42.4, Math.atan2(2.3, -1.6), 0xf2f2f2, false, 1);
+    person(-20.1, -34.6, Math.atan2(2.0, -1.8), 0x2f7fc1, true, 2);    // at the second
+    person(-15.6, -35.1, Math.atan2(-2.5, -1.3), 0xf4c542, false, 3);
+    // beach shade tents: half domes, open to the sea
+    [[-9.9, -41.5, 0x2c8fd6], [-7.5, -39.5, 0xf08a24]].forEach(([x, z, c], i) => {
+      const t = new THREE.Mesh(new THREE.SphereGeometry(1, 18, 10, 0, Math.PI, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ color: c, roughness: .8, side: THREE.DoubleSide }));
+      t.scale.set(1.5, 1.15, 1.25); t.rotation.y = Math.PI; t.position.set(x, 0.8, z); bch.add(t);  // the open side faces the water
+      const towel = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.02, 1.7), new THREE.MeshStandardMaterial({ color: i ? 0xffffff : 0xe2405a, roughness: 1 })); towel.position.set(x + 0.4, 0.82, z + 2.2); bch.add(towel); });
     // flat rock platforms just off the beach
     for (let i = 0; i < 6; i++) { const r = new THREE.Mesh(new THREE.CylinderGeometry(2 + rnd(i * 3) * 3, 3 + rnd(i * 5) * 3, 0.7, 7), rockDark); r.position.set(4 + rnd(i * 7) * 22, 0.1, -14 - rnd(i * 11) * 14); bch.add(r); }
     // The Rotary clock from A'Beckett Street, matched to photos: a gold gear-shaped clock (blue band, gold spokes, a white
@@ -6724,7 +6745,10 @@ const handle = async (m, post) => {
     if (W.invFlags && !still) W.invFlags.forEach((f, i) => { f.rotation.y = Math.sin(t * 2.2 + i) * 0.35 + (st.wind || 15) / 60; });
     if (W.invFoam) W.invFoam.position.z = -32.5 + Math.sin(t * 0.8) * 0.9;
     if (W.inv?.visible && W.invClockTick) W.invClockTick(ms, dt, lit, still);  // the Rotary clock: its hands and lit faces
-    if (W.inv?.visible && W.invDrive) W.invDrive(dt, still);  // the two cars driving along A'Beckett
+    if (W.inv?.visible && W.invDrive) W.invDrive(dt, still);
+    if (W.invPeople && W.invBeach?.visible && !still) W.invPeople.forEach(p => { const ph = (t * 0.55 + p.k * 0.37) % 1;  // a stick lifted up and onto the teepee every couple of seconds
+      if (p.throwing) { const u = ph < 0.55 ? ph / 0.55 : 1 - (ph - 0.55) / 0.45; p.r.rotation.x = -0.4 - u * 2.1; p.l.rotation.x = -0.3 - u * 1.6; }
+      else { p.r.rotation.z = 0.12 + Math.max(0, Math.sin(t * 1.3 + p.k)) * 0.15; } });  // the two cars driving along A'Beckett
     if (W.koala && !still) W.koala.rotation.y = Math.sin(t * 0.3) * 0.4;
     r.render(B.scene, cam);
   }
