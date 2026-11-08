@@ -7,7 +7,7 @@ on:
   schedule:
     # About 30 minutes before each copy into the Claude app (6:50am, 7:30am, 4:20pm), as GitHub often starts these late
     - cron: "17 20 * * 0-4"   # 6:17am Brisbane, Monday to Friday
-    - cron: "57 20 * * 0-4"   # 6:57am
+    - cron: "37 20 * * 0-4"   # 6:37am: done in time for the private copy's 6:59am refresh to pick it up
     - cron: "47 5 * * 1-5"    # 3:47pm
   workflow_dispatch:
 
