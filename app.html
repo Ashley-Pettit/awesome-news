@@ -2332,12 +2332,12 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
     if (!state.wx || document.body.classList.contains("wxlisten") || !$("weather").hidden) return;
     document.body.classList.add("wxlisten", "wxintro");
     BS.mooAlt = bsTurn("brief.sceneMoo"); BS.invBeach = bsTurn("brief.sceneInv");
-    // The day from 4:45am in 10-minute steps, one every 0.2 seconds for the sky (50 minutes a second: the 8 or so seconds
-    // of weather talk covers about 4:45am to 11:30am); the words update every 2 seconds.
+    // The day from 5:45am in 10-minute steps, one every 0.2 seconds for the sky (50 minutes a second: the 8 or so seconds
+    // of weather talk covers about 5:45am to 12:30pm); the words update every 2 seconds.
     // In the morning and afternoon it's today; from 6pm it's tomorrow.
     BS.D = bsData(); bsPlace();
     const t = Date.now(), day = bsMins(t) >= 18 * 60 ? (BS.D.days[1] || BS.D.days[0]).date : bsKey(t);
-    BS.view = { mode: "day", ms: bsMidnight(day) + 285 * 60000, play: false, day, jump: 10 * 60, every: 0.2, dawn: 285, acc: 0, n: 0 };
+    BS.view = { mode: "day", ms: bsMidnight(day) + 345 * 60000, play: false, day, jump: 10 * 60, every: 0.2, dawn: 345, acc: 0, n: 0 };
     if (!BS.tick) BS.tick = setInterval(() => { if (!$("weather").hidden) bsTick(); }, 1000);
     const el = $("weather"); el.hidden = false; el.scrollTop = 0;  // shown first, so the 3D sky sizes itself to the screen
     renderWeather();
@@ -5032,7 +5032,7 @@ const handle = async (m, post) => {
   const BS_KIND = { sun: "Sunny", partly: "Partly cloudy", cloud: "Cloudy", rain: "Showers", storm: "Thunderstorms" };
   const BS_ICON = { sun: "i-sun", partly: "i-partly", cloud: "i-cloud", rain: "i-rain", storm: "i-storm" };
   const BS_SPEED = 15 * 60;  // seconds of forecast per second of real time (15 minutes a second)
-  const BS_DAWN = 4.5 * 60;  // a chosen day (and each replay) starts at 4:30am
+  const BS_DAWN = 5.5 * 60;  // a chosen day (and each replay) starts at 5:30am
   // ---- astronomy (the suncalc formulas) ----
   const bsRad = Math.PI / 180, bsDayMs = 864e5, J1970 = 2440588, J2000 = 2451545, bsEcl = bsRad * 23.4397;
   const bsToDays = ms => ms / bsDayMs - 0.5 + J1970 - J2000;
