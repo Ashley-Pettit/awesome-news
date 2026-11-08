@@ -5527,7 +5527,9 @@ const handle = async (m, post) => {
     // the usual view looks from in front of the shops across to the clock, with the library and the Hub behind it.
     {
       const D = INV_TOWN, TG = new THREE.Group(), G0 = 2.2; twn.add(TG); W.invTG = TG;
-      const CAM = [6, 10, 9], LOOK = [42, 3.5, 47];  // the usual view, in the map's own metres: like the classic photo, from the library side looking at the clock's face, the bakery and Alex Scott across the road
+      // the usual view, in the map's own metres: where Explore starts, on the library side of the clock, eye level, with the clock on
+      // the left and the bakery across A'Beckett on the right
+      const fa = D.c[2] + 0.4, CAM = [D.c[0] + Math.sin(fa) * 21, G0 + 2.6, D.c[1] + Math.cos(fa) * 21], LOOK = [D.c[0] + 3.5, G0 + 5.2, D.c[1] + 7.5];
       const ang = Math.atan2(-(LOOK[0] - CAM[0]), -(LOOK[2] - CAM[2]));  // turned so the view looks along -z, like every other place
       TG.rotation.y = -ang; TG.updateMatrix();
       const camW = new THREE.Vector3(CAM[0], 0, CAM[2]).applyMatrix4(TG.matrix);
@@ -5709,6 +5711,25 @@ const handle = async (m, post) => {
           if (Math.hypot(x - D.c[0], z - D.c[1]) > 140 || Math.hypot(x - D.c[0], z - D.c[1]) < 16 || nearOther(x, z, ab, 3)) return;
           carAt(x, z, r - sd * (Math.PI / 2 - 0.5), CARS[(n * 31) % CARS.length], n % 6 === 0); }); }); }
       done(cars, { roughness: .35, metalness: .3 });
+      // ---- two cars driving along A'Beckett, one each way, on the left as in Australia; they loop back round when they reach the end
+      W.invDrive = null;
+      if (ab) { const P = ab.pts, segs = []; let tot = 0;
+        for (let i = 0; i < P.length - 1; i++) { const [ax, az] = P[i], [bx, bz] = P[i + 1], L = Math.hypot(bx - ax, bz - az); segs.push([ax, az, (bx - ax) / L, (bz - az) / L, tot, L]); tot += L; }
+        // each moving car is its own mesh, so it can move
+        const mk = (c, kind) => { const own = bag(), m = mtx(0, G0 + 0.08, 0, 0);
+          put(own, carGeo.body, c, m); put(own, kind ? carGeo.ute : carGeo.cabin, 0x1d2630, m);
+          put(own, new THREE.BoxGeometry(kind ? 1.4 : 2.3, 0.06, kind ? 1.45 : 1.38), c, m.clone().multiply(new THREE.Matrix4().makeTranslation(kind ? 0.15 : -0.6, kind ? 1.5 : 1.45, 0)));
+          [[1.35, 0.92], [1.35, -0.92], [-1.4, 0.92], [-1.4, -0.92]].forEach(([a, b]) => { const mm = m.clone().multiply(new THREE.Matrix4().makeTranslation(a, 0.33, b)); put(own, wheel, 0x17181a, mm); put(own, hub, 0xa9adb1, mm); });
+          [0.6, -0.6].forEach(b => { put(own, new THREE.BoxGeometry(0.06, 0.14, 0.32), 0xf4f1e6, m.clone().multiply(new THREE.Matrix4().makeTranslation(2.27, 0.62, b)));
+            put(own, new THREE.BoxGeometry(0.06, 0.16, 0.3), 0xa3161c, m.clone().multiply(new THREE.Matrix4().makeTranslation(-2.29, 0.66, b))); });
+          return done(own, { roughness: .35, metalness: .3 }); };
+        const drive = [[0x8f1d22, 1, 0.12, false], [0xe8e4da, -1, 0.6, true]].map(([c, dir, f, kind]) => ({ mesh: mk(c, kind), dir, s: f * tot }));
+        const place = d => { let s = ((d.s % tot) + tot) % tot, g = segs[0]; for (const q of segs) if (s >= q[4]) g = q;
+          const t = s - g[4], ux = g[2] * d.dir, uz = g[3] * d.dir, x = g[0] + g[2] * t + uz * 2.3, z = g[1] + g[3] * t - ux * 2.3;  // 2.3 m left of the centre line
+          d.mesh.position.set(x, 0, z); d.mesh.rotation.y = Math.atan2(ux, uz) - Math.PI / 2; };
+        drive.forEach(place); W.invDriveCars = drive;
+        W.invDrive = (dt, still) => { if (still) return; drive.forEach(d => { d.s += d.dir * 8.5 * Math.min(dt, 0.1); place(d); }); };  // about 30 km/h
+      }
       // ---- the shop signs: on the verandah fascia, and painted on the parapet above
       const SIGN = [["#7a1f1f", "#ffffff"], ["#1f3f2c", "#f6c945"], ["#c7342c", "#ffffff"], ["#2e8b57", "#ffffff"], ["#d8312b", "#ffffff"], ["#1f3f7a", "#ffffff"], ["#15161a", "#ffffff"], ["#f2f2ee", "#1b1830"], ["#6b2d6b", "#ffffff"]];
       const REAL = {  // as they really look (Street View, Travel Victoria): the bakery's gold on green with its red badges, Alex Scott's red
@@ -6701,6 +6722,7 @@ const handle = async (m, post) => {
     if (W.invFlags && !still) W.invFlags.forEach((f, i) => { f.rotation.y = Math.sin(t * 2.2 + i) * 0.35 + (st.wind || 15) / 60; });
     if (W.invFoam) W.invFoam.position.z = -32.5 + Math.sin(t * 0.8) * 0.9;
     if (W.inv?.visible && W.invClockTick) W.invClockTick(ms, dt, lit, still);  // the Rotary clock: its hands and lit faces
+    if (W.inv?.visible && W.invDrive) W.invDrive(dt, still);  // the two cars driving along A'Beckett
     if (W.koala && !still) W.koala.rotation.y = Math.sin(t * 0.3) * 0.4;
     r.render(B.scene, cam);
   }
