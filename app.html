@@ -5743,7 +5743,7 @@ const handle = async (m, post) => {
       if (ab) { const BAN = [[0xd23a5c, 0x2d4fa0], [0x2d4fa0, 0xd23a5c], [0xe8e4f0, 0xd23a5c]]; let k = 0;
         ab.pts.forEach((p, i) => { if (i === ab.pts.length - 1) return; const [ax, az] = p, [bx, bz] = ab.pts[i + 1], L = Math.hypot(bx - ax, bz - az), ux = (bx - ax) / L, uz = (bz - az) / L;
           for (let s = 4; s < L; s += 9) [-1, 1].forEach(sd => { const x = ax + ux * s - uz * 10.4 * sd, z = az + uz * s + ux * 10.4 * sd;
-            if (Math.hypot(x - D.c[0], z - D.c[1]) > 70 || Math.hypot(x - D.c[0], z - D.c[1]) < 4 || nearOther(x, z, ab, 1)) return;
+            if (Math.hypot(x - D.c[0], z - D.c[1]) > 70 || Math.hypot(x - D.c[0], z - D.c[1]) < 18 || nearOther(x, z, ab, 1)) return;  // none near the clock: they'd stand in front of it
             const [c1, c2] = BAN[k++ % 3]; put(fu, new THREE.CylinderGeometry(0.06, 0.07, 8.5, 6), 0xf2f2f2, mtx(x, G0 + 4.25, z, 0));
             put(fu, new THREE.BoxGeometry(0.04, 1.4, 0.8), c1, mtx(x + ux * 0.45, G0 + 7.5, z + uz * 0.45, Math.atan2(ux, uz)));
             put(fu, new THREE.BoxGeometry(0.04, 1.0, 0.8), c2, mtx(x + ux * 0.45, G0 + 6.3, z + uz * 0.45, Math.atan2(ux, uz))); }); }); }
