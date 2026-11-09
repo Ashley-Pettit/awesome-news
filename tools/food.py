@@ -9,7 +9,8 @@ from datetime import datetime, timezone, timedelta
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.join(HERE, "..", "app.html")
-EDITS = os.path.join(HERE, "..", "local", "food-edits.json")   # Admin's ticks in the app ("Delivers", order link, phone), by place id
+EDITS = os.path.join(HERE, "..", "local", "food-edits.json")
+EXTRA = os.path.join(HERE, "..", "local", "food-extra.json")   # places found by hand (web research) that deliver themselves; geocoded once   # Admin's ticks in the app ("Delivers", order link, phone), by place id
 UA = "Mozilla/5.0 (compatible; awesome-news-food/1.0; +https://github.com/Ashley-Pettit/awesome-news)"
 # Chains that take orders and deliver through their own website
 BRANDS = {r"^domino'?s": "https://www.dominos.com.au/", r"^pizza hut": "https://www.pizzahut.com.au/", r"^red rooster": "https://www.redrooster.com.au/"}
@@ -117,6 +118,53 @@ def check_site(url):
     return out
 
 
+def slug(name):
+    return re.sub(r"[^a-z0-9]+", "", H.unescape(name).lower().replace("&", "and"))
+
+
+def geocode(addr):
+    """OpenStreetMap's Nominatim, politely (one a second, named client)."""
+    q = urllib.parse.urlencode({"q": addr, "format": "json", "limit": 1, "countrycodes": "au"})
+    req = urllib.request.Request("https://nominatim.openstreetmap.org/search?" + q, headers={"User-Agent": UA})
+    time.sleep(1.1)
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r:
+            j = json.load(r)
+        return (float(j[0]["lat"]), float(j[0]["lon"])) if j else None
+    except Exception as e:
+        print("  geocode", addr, e, file=sys.stderr); return None
+
+
+def extras(out):
+    """Lay the hand-found delivery places over the list: the same place (by name, within 300 m) gets their details,
+    others are added. Coordinates are looked up once and kept in the file."""
+    if not os.path.exists(EXTRA): return
+    ex = json.load(open(EXTRA, encoding="utf-8")); changed = False
+    for x in ex:
+        if "la" not in x and x.get("a"):
+            g = geocode(re.sub(r"^(?:shop|unit|suite)\s*\S+[,/ ]+", "", x["a"], flags=re.I))
+            if g: x["la"], x["lo"] = round(g[0], 5), round(g[1], 5); changed = True
+        if "la" not in x: continue
+        d = 2 * 6371000 * math.asin(math.sqrt(math.sin(math.radians(x["la"] - LAT) / 2) ** 2 + math.cos(math.radians(LAT)) * math.cos(math.radians(x["la"])) * math.sin(math.radians(x["lo"] - LON) / 2) ** 2))
+        if d > R * 1.25: print("  too far", x["n"], int(d), file=sys.stderr); continue
+        s = slug(x["n"]); hit = None
+        for p in out:
+            ps = slug(p["n"]); near = abs(p["la"] - x["la"]) < 0.003 and abs(p["lo"] - x["lo"]) < 0.003
+            if near and (ps == s or (min(len(ps), len(s)) >= 5 and (ps.startswith(s) or s.startswith(ps)))): hit = p; break
+        add = {k: x[k] for k in ("dd", "ol", "p", "c", "a") if x.get(k)}
+        if hit:
+            for k, v in add.items():
+                if k in ("c", "a") and hit.get(k): continue
+                hit[k] = v
+        else:
+            p = {"id": "x" + s[:24], "n": x["n"], "k": x.get("k", "takeaway"), "la": x["la"], "lo": x["lo"], "m": int(d), **add}
+            if p["k"] in ("takeaway", "restaurant", "cafe", "bakery"): p["t"] = 1
+            if p["k"] in ("restaurant", "cafe", "pub", "bar"): p["d"] = 1
+            out.append(p)
+    if changed:
+        json.dump(ex, open(EXTRA, "w", encoding="utf-8"), indent=1, ensure_ascii=False); open(EXTRA, "a").write("\n")
+
+
 def main():
     seen, out = set(), []
     for el in fetch():
@@ -125,6 +173,7 @@ def main():
         key = (p["n"].lower(), round(p["la"], 3), round(p["lo"], 3))
         if key in seen: continue
         seen.add(key); out.append(p)
+    extras(out)
     out.sort(key=lambda p: p["m"])
     for p in out:
         for pat, url in BRANDS.items():
@@ -155,7 +204,7 @@ def write_edits():
 
 def edit(pid, dd, ol, ph):
     """One place's Admin edit from the app (food-edit.yml): dd "1" delivers itself, "0" doesn't, "" not sure."""
-    if not re.match(r"^[nwr]\d{1,12}$", pid): sys.exit("bad place id")
+    if not re.match(r"^(?:[nwr]\d{1,12}|x[a-z0-9]{1,24})$", pid): sys.exit("bad place id")
     if ol and not re.match(r"^https://[^\s<>\"']{3,200}$", ol): sys.exit("bad order link")
     if ph and not re.match(r"^[\d +()-]{6,20}$", ph): sys.exit("bad phone")
     ed = json.load(open(EDITS, encoding="utf-8")) if os.path.exists(EDITS) else {}
