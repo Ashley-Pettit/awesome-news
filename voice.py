@@ -20,6 +20,7 @@ import glob
 import hashlib
 import json
 import os
+import random
 import re
 import sys
 import time
@@ -205,10 +206,19 @@ def ordinal(n):
     return f"{n}{'th' if 11 <= n % 100 <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')}"
 
 
-def rain_line(p, when):
+def vary(options, *seed):
+    """One of several ways to say the same thing, picked by the day (and place and part), so Emma doesn't use the
+    same words every morning but says the same thing all day."""
+    return random.Random("|".join(str(x) for x in seed)).choice(options)
+
+
+def rain_line(p, when, seed=""):
     """Rain said like a person would: "It's going to rain today", not "a 100 percent chance". rainLine() in app.html."""
-    return (f" It's going to rain {when}." if p >= 90 else f" Rain is likely {when}." if p >= 70
-            else f" There's a {p} percent chance of rain.")
+    if p >= 90:
+        return " " + vary([f"It's going to rain {when}.", f"Expect rain {when}.", f"Rain is on the way {when}."], seed, "rain90")
+    if p >= 70:
+        return " " + vary([f"Rain is likely {when}.", f"There's a good chance of rain {when}.", f"Rain looks likely {when}."], seed, "rain70")
+    return " " + vary([f"There's a {p} percent chance of rain.", f"The chance of rain is {p} percent.", f"There's a {p} percent chance of a shower."], seed, "rainp")
 
 
 def clock(h):
@@ -232,14 +242,17 @@ def rain_when(w, date, when, start=5):
             spans[-1][1] = h
         else:
             spans.append([h, h])
-    what = "Storms are" if any(c >= 95 for _, c in wet) else "Rain is"
+    storms = any(c >= 95 for _, c in wet)
+    what, noun = ("Storms are", "storms") if storms else ("Rain is", "rain")
     day = f" {when}" if when != "today" else ""
+    alt = random.Random(f"{date}|{when}|rainwhen").random() < 0.5  # Emma's two ways of putting it, by the day
     if len(wet) >= 14:
-        return f" {what} forecast most of the day{day}."
+        return f" Expect {noun} most of the day{day}." if alt else f" {what} forecast most of the day{day}."
     if len(spans) > 2:
-        return f" {what} forecast on and off{day}, from {clock(spans[0][0])} to {clock(spans[-1][1] + 1)}."
+        return (f" Expect {noun} on and off{day}, from {clock(spans[0][0])} to {clock(spans[-1][1] + 1)}." if alt
+                else f" {what} forecast on and off{day}, from {clock(spans[0][0])} to {clock(spans[-1][1] + 1)}.")
     said = " and again ".join(f"from {clock(a)} to {clock(b + 1)}" for a, b in spans)
-    return f" {what} forecast{day} {said}."
+    return f" Expect {noun}{day} {said}." if alt else f" {what} forecast{day} {said}."
 
 
 def rain_say(w, d, n, when):
@@ -250,7 +263,7 @@ def rain_say(w, d, n, when):
     p = (d.get("precipitation_probability_max") or [None] * (n + 1))[n]
     if p is None or p < 20:
         return ""
-    line = rain_line(p, when)
+    line = rain_line(p, when, f"{d['time'][n]}|{when}")
     part = rain_part(w, d["time"][n])
     return line[:-1] + f", most likely {part}." if part and line.endswith(".") else line
 
@@ -270,8 +283,31 @@ def rain_part(w, date, start=5):
 BRAND_OPENS = {"fence": ("moo", "This is Moorooka News"), "wire": ("logan", "This is The Logan Wire"), "inlet": ("inv", "This is Coastline News")}
 
 
+def wx_lead(city, when, seed):
+    """ "First, the weather in Brisbane." The app opens the weather page at "First," so every way starts with it."""
+    if when == "tomorrow":
+        return vary([f"First, tomorrow's weather in {city}.", f"First up, tomorrow's weather in {city}.", f"First, a look at tomorrow in {city}."], seed, "lead")
+    return vary([f"First, the weather in {city}.", f"First up, the weather in {city}.", f"First, let's check the weather in {city}.",
+                 f"First, a look at the weather in {city}."], seed, "lead")
+
+
+def wx_day(sky, hi, lo, when, seed):
+    """The day's forecast in one of several ways (sky is a phrase like "partly cloudy skies" or "light drizzle")."""
+    line = vary([f"Expect {sky} {when}, with a top of {hi} degrees and a low of {lo}.",
+                 f"We're in for {sky} {when}. The top is {hi} degrees and the low {lo}.",
+                 f"Look out for {sky} {when}, with temperatures between {lo} and {hi} degrees.",
+                 f"{when.capitalize()} brings {sky}, with a top of {hi} and a low of {lo}.",
+                 f"There'll be {sky} {when}, heading for a top of {hi} degrees after a low of {lo}.",
+                 f"{sky[:1].upper() + sky[1:]} {when}. A top of {hi} degrees, and a low of {lo}."], seed, "day")
+    if hi >= 33:
+        line += " " + vary([f"It's going to be a hot one.", "A hot one, so keep the water handy.", "A scorcher, so stay cool."], seed, "hot")
+    elif hi <= 17:
+        line += " " + vary(["A cool one, so grab a jumper.", "It's going to be a chilly one.", "Rug up, it's a cool one."], seed, "cool")
+    return line
+
+
 def opening(region, w, brand=None):
-    """The start of the 30-minute listen, from the forecast saved with the news."""
+    """The start of the 30-minute listen, from the forecast saved with the news. The words change from day to day."""
     d = w["daily"]
     off = timedelta(seconds=w.get("utc_offset_seconds", 36000))
     today = (datetime.now(timezone.utc) + off).strftime("%Y-%m-%d")
@@ -281,23 +317,26 @@ def opening(region, w, brand=None):
     day = datetime.strptime(today, "%Y-%m-%d")
     city = fetcher.CITIES[w.get("borrowed") or region][0]  # a suburb using its city's forecast says the city
     brand = brand or ("This is Logan news, from Awesome News," if region == "logan" else "This is Awesome News")  # Logan news has its own opening
-    sky = WMO.get(d["weather_code"][k], "mixed weather")
-    text = (f"{brand} for {day:%A} the {ordinal(day.day)} of {day:%B}. First, the weather in {city}. "
-            f"Expect {sky} today, with a top of {round(d['temperature_2m_max'][k])} degrees and a low of {round(d['temperature_2m_min'][k])}.")
+    sky = lambda n: WMO.get(d["weather_code"][n], "mixed weather")
+    hi = lambda n: round(d["temperature_2m_max"][n])
+    lo = lambda n: round(d["temperature_2m_min"][n])
+    seed = f"{today}|{region}"
+    text = (f"{brand} for {day:%A} the {ordinal(day.day)} of {day:%B}. {wx_lead(city, 'today', seed)} "
+            f"{wx_day(sky(k), hi(k), lo(k), 'today', seed)}")
     text += rain_say(w, d, k, "today")
     # Listening at night (6pm on), the opening gives tomorrow's weather instead.
     night = None
     if k + 1 < len(d["time"]):
         n = k + 1
-        night = (f"{brand} for {day:%A} the {ordinal(day.day)} of {day:%B}. First, tomorrow's weather in {city}. "
-                 f"Expect {WMO.get(d['weather_code'][n], 'mixed weather')} tomorrow, with a top of {round(d['temperature_2m_max'][n])} degrees "
-                 f"and a low of {round(d['temperature_2m_min'][n])}.")
+        nseed = f"{d['time'][n]}|{region}|night"
+        night = (f"{brand} for {day:%A} the {ordinal(day.day)} of {day:%B}. {wx_lead(city, 'tomorrow', nseed)} "
+                 f"{wx_day(sky(n), hi(n), lo(n), 'tomorrow', nseed)}")
         night += rain_say(w, d, n, "tomorrow")
         # Listening just after midnight, before the morning update: tomorrow's own opening.
         nd = day + timedelta(days=1)
-        nxt = (f"{brand} for {nd:%A} the {ordinal(nd.day)} of {nd:%B}. First, the weather in {city}. "
-               f"Expect {WMO.get(d['weather_code'][n], 'mixed weather')} today, with a top of {round(d['temperature_2m_max'][n])} degrees "
-               f"and a low of {round(d['temperature_2m_min'][n])}.")
+        xseed = f"{d['time'][n]}|{region}"
+        nxt = (f"{brand} for {nd:%A} the {ordinal(nd.day)} of {nd:%B}. {wx_lead(city, 'today', xseed)} "
+               f"{wx_day(sky(n), hi(n), lo(n), 'today', xseed)}")
         nxt += rain_say(w, d, n, "today")
         night = (night, {"day": nd.strftime("%Y-%m-%d"), "text": nxt})
     return today, text, night
@@ -317,11 +356,14 @@ def week(w):
     for n in range(k, min(k + 7, len(d["time"]))):
         date = d["time"][n]
         name = "Today" if n == k else "Tomorrow" if n == k + 1 else datetime.strptime(date, "%Y-%m-%d").strftime("%A")
-        t = (f"{name}, {WMO.get(d['weather_code'][n], 'mixed weather')}, with a top of {round(d['temperature_2m_max'][n])} degrees "
-             f"and a low of {round(d['temperature_2m_min'][n])}.")
+        sky, hi, lo, seed = WMO.get(d['weather_code'][n], 'mixed weather'), round(d['temperature_2m_max'][n]), round(d['temperature_2m_min'][n]), f"{today}|{date}|week"
+        t = vary([f"{name}, {sky}, with a top of {hi} degrees and a low of {lo}.", f"{name}, {sky}. A top of {hi} and a low of {lo}.",
+                  f"{name}, expect {sky}, with temperatures from {lo} to {hi} degrees.", f"{name} brings {sky}, with a top of {hi} degrees."], seed, "wk")
         p = (d.get("precipitation_probability_max") or [None] * (n + 1))[n]
         if p is not None:
-            t += " Rain is almost certain." if p >= 90 else " Rain is likely." if p >= 70 else f" A {p} percent chance of rain." if p >= 30 else ""
+            t += (" " + vary(["Rain is almost certain.", "Rain is all but certain.", "Expect rain."], seed, "r90") if p >= 90
+                  else " " + vary(["Rain is likely.", "Rain looks likely.", "There's a good chance of rain."], seed, "r70") if p >= 70
+                  else " " + vary([f"A {p} percent chance of rain.", f"The chance of rain is {p} percent."], seed, "r30") if p >= 30 else "")
         items.append({"date": date, "text": t})
     return {"day": today, "items": items}
 

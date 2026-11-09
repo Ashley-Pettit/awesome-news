@@ -4,11 +4,11 @@ name: Ash's drive
 # what QLDTraffic reports on the way, and keeps it on the "drive" branch as drive.json. A scheduled task copies it
 # into the private Claude copy of the app, which can't reach those services itself.
 on:
-  schedule:
-    # About 30 minutes before each copy into the Claude app (6:50am, 7:30am, 4:20pm), as GitHub often starts these late
-    - cron: "17 20 * * 0-4"   # 6:17am Brisbane, Monday to Friday
-    - cron: "27 20 * * 0-4"   # 6:27am: done in time for the private copy's 6:41am refresh to pick it up
-    - cron: "25 5 * * 1-5"    # 3:25pm: before the private copy's 3:41pm refresh
+  # Live traffic is off for now (the app shows a usual drive time instead, LIVE_TRAFFIC in app.html), so this no longer
+  # runs on a schedule. Put the schedule back to bring it back:
+  #   - cron: "17 20 * * 0-4"   # 6:17am Brisbane, Monday to Friday
+  #   - cron: "27 20 * * 0-4"   # 6:27am
+  #   - cron: "25 5 * * 1-5"    # 3:25pm
   workflow_dispatch:
 
 permissions:

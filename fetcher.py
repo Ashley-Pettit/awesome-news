@@ -29,6 +29,7 @@ import json
 import os
 import re
 import shutil
+import sys
 import time
 import urllib.parse
 import urllib.request
@@ -383,6 +384,45 @@ def page_blurb(url):
 
 
 RATINGS_RAW = "https://raw.githubusercontent.com/Ashley-Pettit/awesome-news/main/ratings/"
+
+
+def judge(sections, has_text, stories=None, ratings=None):
+    """Claude's judgement (the scheduled task's ratings/rate.py): how interesting each story is (int), which stories
+    are the same topic from different outlets (tp), and how negative (neg). Each section keeps one story per topic, the
+    best of them (has text, most interesting, an ABC top story, the fullest summary, newest), and notes how many outlets
+    ran it. Stories rated dull (0 or 1) drop out of a section that has plenty of others. Also used by rate.py apply."""
+    r = ratings or {k: ratings_file(f).get(f2, {}) for k, f, f2 in (("int", "interest.json", "ratings"), ("tp", "topics.json", "topics"), ("neg", "neg.json", "ratings"))}
+    stories = list(stories) if stories is not None else list({id(st): st for items in sections.values() for st in items}.values())
+    groups = {}
+    for st in stories:
+        for k in ("int", "tp", "neg"):
+            if st["id"] in r[k]:
+                st[k] = r[k][st["id"]]
+        if st.get("tp"):
+            groups.setdefault(st["tp"], []).append(st)
+    for g in groups.values():
+        n = len({re.sub(r"\W+", "", (st.get("source") or "").lower())[:12] for st in g})
+        if n > 1:
+            for st in g:
+                st["outlets"] = n
+    def quality(st):
+        return (1 if has_text(st) else 0, st.get("int", 5), 1 if st.get("top") else 0, min(len(st.get("summary") or ""), 300), st.get("published", ""))
+    same = dull = 0
+    for name, items in sections.items():
+        best = {}
+        for st in items:
+            tp = st.get("tp")
+            if tp and (tp not in best or quality(st) > quality(best[tp])):
+                best[tp] = st
+        keep = [st for st in items if not st.get("tp") or best[st["tp"]] is st]
+        same += len(items) - len(keep)
+        lively = [st for st in keep if st.get("int", 5) > 1]
+        if len(lively) >= 8:
+            dull += len(keep) - len(lively)
+            keep = lively
+        sections[name] = keep
+    print("same topic dropped:", same, "dull dropped:", dull, file=sys.stderr)
+    return same, dull
 
 
 def ratings_file(name):
@@ -1426,6 +1466,9 @@ def main():
             paras = feed_paras(st.get("_feed"))
             if sum(len(p) for p in paras) >= len(st["summary"]) + 150:
                 feed_texts[st["id"]] = {"paras": paras, "feed": True}
+
+    # 4c. Claude's judgement from the last scheduled run (ratings/rate.py): one story per topic, dull ones out.
+    judge(sections, lambda st: st["id"] in texts or st["id"] in feed_texts, unique.values())
 
     # 5. Pictures.
     if a.images == "url":

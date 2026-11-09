@@ -1950,7 +1950,10 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
   const colourOf = id => !id || id === "topic" ? "var(--c-topic)" : OWN_COLOUR.has(id) ? `var(--c-${id})`
     : `var(--c-g-${allSections().find(s => s.id === id)?.group || "news"})`;
   // Stories you can read right here get a 6-hour head start in the order.
+  // Claude's interest rating (0 to 10, from the news update) counts like freshness: each point above or below an
+  // ordinary story (5) moves it about three hours.
   const rank = i => Date.parse(i.published) + (state.mode === "static" && i.text ? 6 * 3600e3 : 0)
+    + (typeof i.int === "number" ? (i.int - 5) * 3 * 3600e3 : 0)
     + (i.near && i._sid === "local" ? 5 * 864e5 : 0) + (i.pri ? 4 * 864e5 : 0);  // your suburb's own news before the city's; a topic's favourite sources (The Dodo, eBird) first
   const mutedRe = () => S.muted.length ? new RegExp(`\\b(${S.muted.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "i") : null;
   function allowed(list) {
@@ -2015,10 +2018,11 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
     list = allowed(list);
     if (privateMode()) list = list.filter(i => i.text);  // the private copy (or an unlocked website) shows only stories it can open in full
     if (!NEG_EXEMPT.has(id)) list = calmer(list);  // true crime is all bad news by nature: if you picked it, "less negative news" leaves it be
-    if (state.mode === "static") {
-      if (S.fullOnly) list = list.filter(i => i.text);
-      list.sort((a, b) => rank(b) - rank(a));
-    }
+    if (state.mode === "static" && S.fullOnly) list = list.filter(i => i.text);
+    list.sort((a, b) => rank(b) - rank(a));
+    // One story per topic: the same story from other outlets (Claude's topic, or near-identical headlines) shows once.
+    const shown = new Set();
+    list = list.filter(i => { const g = clusters().of.get(i.id); if (!g) return true; if (shown.has(g)) return false; shown.add(g); return true; });
     return list;
   }
   const enabledSections = () => allSections().filter(isOn);
@@ -2055,6 +2059,8 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
         if (c / Math.min(x.w.size, y.w.size) >= 0.6 && c / (x.w.size + y.w.size - c) >= 0.34) parent[find(m)] = find(n);
       });
     });
+    const byTp = new Map();  // Claude's topic from the news update: same topic, same story
+    list.forEach((x, n) => { const tp = CL.raw.get(x.id)?.tp; if (!tp) return; if (byTp.has(tp)) parent[find(n)] = find(byTp.get(tp)); else byTp.set(tp, n); });
     const groups = new Map();
     list.forEach((x, n) => { const g = find(n); if (!groups.has(g)) groups.set(g, []); groups.get(g).push(x.id); });
     groups.forEach(ids => { if (ids.length > 1) ids.forEach(id => CL.of.set(id, ids)); });
@@ -2097,7 +2103,7 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
   const oneEach = ids => ids.reduce((keep, id) => { if (!keep.some(k => sameStory(k, id))) keep.push(id); return keep; }, []);
   function sourceCount(id) {
     const c = clusters(), ids = c.of.get(id);
-    return ids ? new Set(ids.map(x => publisherOf(c.raw.get(x)?.source || ""))).size : 1;
+    return Math.max(ids ? new Set(ids.map(x => publisherOf(c.raw.get(x)?.source || ""))).size : 1, c.raw.get(id)?.outlets || 1);  // outlets: how many ran it before the update kept one
   }
   // A followed topic: its own news search (fetched for everyone who follows it) plus any story that names it.
   const topicSlug = t => String(t).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
@@ -2156,7 +2162,7 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
     for (const s of enabledSections()) {
       items(s.id).slice(0, 12).forEach((i, n) => {
         const fresh = Date.now() - Date.parse(i.published) < 6 * 3600e3;
-        cands.push({ i, score: (sourceCount(i.id) - 1) * 3 + (i.top ? 3 : 0) + (12 - n) / 4 + (s.id === "local" ? (LOCAL_APP ? 5 : 2) : 0) + (s.id === "headlines" ? 1.5 : 0) + (fresh ? 1.5 : 0) - (Number(S.negCut) && isNegative(i) ? 3 : 0) });
+        cands.push({ i, score: (sourceCount(i.id) - 1) * 3 + (i.top ? 3 : 0) + (typeof i.int === "number" ? (i.int - 5) * 0.8 : 0) + (12 - n) / 4 + (s.id === "local" ? (LOCAL_APP ? 5 : 2) : 0) + (s.id === "headlines" ? 1.5 : 0) + (fresh ? 1.5 : 0) - (Number(S.negCut) && isNegative(i) ? 3 : 0) });
       });
     }
     cands.sort((a, b) => b.score - a.score);
@@ -7820,6 +7826,7 @@ const handle = async (m, post) => {
       for (const k of ["home", "work"]) if (c[k].approx) try { const hit = await geocode(c[k].q); if (hit) { c[k] = { ...hit, label: c[k].label || hit.label }; saveCommute(c); } } catch {} }
     const toWork = hourNow() < 12, a = toWork ? c.home : c.work, b = toWork ? c.work : c.home, key = `${toWork}|${a.lat},${a.lon}|${b.lat},${b.lon}|${c.leave}`;
     if (COMMUTE_CACHE?.key === key && Date.now() - COMMUTE_CACHE.at < 5 * 60000) return COMMUTE_CACHE.v;
+    if (!LIVE_TRAFFIC) return commutePlaceholder(c, toWork, a, b);
     // The Claude copy can't reach the route planner or QLDTraffic (its sandbox blocks other sites): it uses the drive
     // worked out on GitHub on weekday mornings and afternoons (drive.py), copied into its database as meta/drive.
     if (state.mode === "claude") return commuteSnap(c, toWork, a, b);
@@ -7847,6 +7854,17 @@ const handle = async (m, post) => {
       COMMUTE_CACHE = { key, at: Date.now(), v };
       return v;
     } catch { return null; }
+  }
+  // Live traffic is switched off for now (no route planner, QLDTraffic or drive data): the drive shows a usual time,
+  // worked out from the distance, and says so. Set LIVE_TRAFFIC back to true to bring it back.
+  const LIVE_TRAFFIC = false;
+  function commutePlaceholder(c, toWork, a, b) {
+    const R = 6371, rad = x => x * Math.PI / 180, dLat = rad(b.lat - a.lat), dLon = rad(b.lon - a.lon);
+    const km = Math.round(2 * R * Math.asin(Math.sqrt(Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLon / 2) ** 2)) * 1.35 * 10) / 10;
+    const now = Date.now(), plan = toWork ? leaveToday(c.leave) : null, planned = !!plan && plan.getTime() > now - 5 * 60000, leave = planned ? plan : new Date(now);
+    const base = Math.max(3, Math.round(km / 45 * 60)), est = Math.round(base * peakFactor(leave)) + DOOR, arrive = new Date(leave.getTime() + est * 60000);
+    return { toWork, base, est, extra: 0, planned, leaveMs: leave.getTime(), leaveAt: hm(leave), arriveAt: hm(arrive), km, from: a.label, to: b.label,
+      events: [], more: 0, noInc: true, placeholder: true };
   }
   function commuteSnap(c, toWork, a, b) {
     const d = state.driveSnap, r = d?.[toWork ? "work" : "home"], now = Date.now();
@@ -7894,7 +7912,7 @@ const handle = async (m, post) => {
     $("npTraffic").innerHTML = `<div class="tr-top"><b>Your ${driveName(c).replace(/^Drive/, "drive")}</b><span>About ${c.est} min · ${c.km} km</span></div>
       <p class="tr-ok">${leaveText(c) ? `${leaveText(c)}, ` : ""}${c.est} min to get to ${esc(c.to || "work")}, there about ${c.arriveAt}. ${c.base} min with empty roads${c.extra ? `, plus about ${c.extra} for what's reported` : ""}.</p>
       ${c.events.length ? `<ul>${c.events.map(e => `<li><i class="${hot(e.type) ? "hot" : ""}">${esc(e.type === "Congestion" ? "Traffic" : e.type)}</i><span>${esc(e.road || "On your way")}${e.place ? `, ${esc(e.place)}` : ""}<small>${esc([e.what, e.impact, e.delay].filter(x => x && x !== e.type).join(" · "))}</small></span></li>`).join("")}</ul>${c.more ? `<p class="tr-ok">And ${c.more} more.</p>` : ""}`
-        : c.noInc ? "" : `<p class="tr-ok">Nothing reported on your way right now.</p>`}`;
+        : c.placeholder ? `<p class="tr-ok">Live traffic is off for now, so this is the usual time for the trip.</p>` : c.noInc ? "" : `<p class="tr-ok">Nothing reported on your way right now.</p>`}`;
     driveHUD(c);
   }
   // The 3D drive view's words, laid out like the weather page.
@@ -7903,7 +7921,7 @@ const handle = async (m, post) => {
     const ratio = (c.est - DOOR) / Math.max(1, c.base), hot = c.events.filter(e => ["Crash", "Congestion", "Flooding"].includes(e.type));
     const busy = busyOf(c);
     const crash = c.events.find(e => e.type === "Crash"), flood = c.events.find(e => e.type === "Flooding");
-    const what = crash ? `Crash on ${crash.road || "the way"}` : flood ? `Flooding on ${flood.road || "the way"}` : busy > 0.66 ? "Heavy traffic" : busy > 0.33 ? "A bit slow" : "Clear run";
+    const what = c.placeholder ? "Usual time (live traffic off)" : crash ? `Crash on ${crash.road || "the way"}` : flood ? `Flooding on ${flood.road || "the way"}` : busy > 0.66 ? "Heavy traffic" : busy > 0.33 ? "A bit slow" : "Clear run";
     const col = crash || flood || busy > 0.66 ? "#ff5a5f" : busy > 0.33 ? "#ffb347" : "#5bd38a";
     const level = busy > 0.66 ? "Heavy" : busy > 0.33 ? "Moderate" : "Light", n = 14, on = Math.max(1, Math.round(busy * n));
     const barCol = k => k / n < 0.34 ? "#5bd38a" : k / n < 0.67 ? "#ffb347" : "#ff5a5f";
