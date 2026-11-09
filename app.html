@@ -233,6 +233,27 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
 .lb-logan small { display: block; font-size: 0.76rem; color: var(--muted); margin-top: 1px; }
 .lb-lgwrap { position: relative; }
 .lb-explore[hidden] { display: none; }
+.lb-food .lb-ic { background: #c2551f; }
+/* Food in the area (Moorooka): places to eat or drink, from OpenStreetMap */
+.fd-intro { color: var(--muted); font-size: 0.86rem; margin: 2px 0 0; }
+.fd-head { font-family: var(--display); font-size: 1.5rem; letter-spacing: -0.02em; margin: 6px 0 0; }
+.fd-list { list-style: none; margin: 4px 0 0; padding: 0; }
+.fd-item { padding: 13px 0; border-bottom: 1px solid var(--line); }
+.fd-top { display: flex; align-items: baseline; gap: 10px; }
+.fd-name { font-weight: 750; font-size: 1rem; flex: 1; min-width: 0; }
+.fd-dist { font-size: 0.78rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fd-what { font-size: 0.84rem; color: var(--muted); margin-top: 2px; }
+.fd-when { font-size: 0.82rem; margin-top: 4px; font-weight: 600; }
+.fd-when.open { color: #1f8a4c; } .fd-when.shut { color: var(--muted); }
+.fd-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+.fd-tag { font-size: 0.74rem; font-weight: 650; padding: 3px 9px; border-radius: 999px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
+.fd-tag.dine { color: #8a3b12; box-shadow: inset 0 0 0 1px #e6b796; } .fd-tag.take { color: #1d5d8f; box-shadow: inset 0 0 0 1px #a9c9e4; }
+.fd-acts { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; font-size: 0.84rem; font-weight: 700; }
+.fd-acts a { color: var(--accent); }
+.fd-none { color: var(--muted); padding: 28px 0; text-align: center; }
+.fd-foot { color: var(--muted); font-size: 0.76rem; margin-top: 18px; line-height: 1.5; }
+.fd-foot a { color: inherit; text-decoration: underline; }
+#food .sfilters + .sfilters { margin-top: 8px; }
 /* The local apps (Moorooka News, The Logan Wire, Coastline News), side by side under Listen */
 /* ...folded into one "Local news apps" row until it's tapped open */
 .lb-apps > summary { list-style: none; cursor: pointer; }
@@ -1407,6 +1428,7 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
       <div class="lb-catch lb-drive" id="lbDrive" role="status" hidden></div>
       <div class="lb-lgwrap" id="lbLgWrap"><details class="lb-apps"><summary class="lb-logan lb-appsum"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>Local news apps</b><small>Moorooka, Logan and the Bass Coast</small></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div class="lb-subs"><a class="lb-logan lb-sub" href="moorooka/" data-sub="moorooka/"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>Moorooka News</b><small>Local news first</small></span></a><a class="lb-logan lb-sub" href="logan/" data-sub="logan/"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>The Logan Wire</b><small>Local news first</small></span></a><a class="lb-logan lb-sub" href="inverloch/" data-sub="inverloch/"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>Coastline News</b><small>Local news first</small></span></a></div></details></div>
       <button class="lb-logan lb-explore" type="button" id="lbExplore" hidden><span class="lb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg></span><span><b>Virtually explore Inverloch</b><small>Walk around the town centre in 3D</small></span></button>
+      <button class="lb-logan lb-food" type="button" id="lbFood" hidden><span class="lb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3v8M4.5 3v5a2.5 2.5 0 0 0 5 0V3M7 11v10M17 21V3c-2.2 1.2-3.5 3.6-3.5 7v3H17"/></svg></span><span><b>Food in the area</b><small>Places to eat or drink near the Moorooka shops</small></span></button>
       <button class="topsearch" type="button" data-open-search aria-label="Search all news">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
         <span id="topSearchHint">Search all news</span><kbd>/</kbd></button>
@@ -1539,6 +1561,21 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
       <div class="swhen" id="sWhen" hidden></div>
     </div>
     <div id="sBodyRes"></div>
+  </div>
+</section>
+
+<section class="sheet up" id="food" role="dialog" aria-modal="true" aria-label="Food in the area" hidden>
+  <div class="bar"><div class="wrap">
+    <span></span>
+    <div class="bar-title">Food in the area</div>
+    <button class="done" type="button" data-close="food">Done</button>
+  </div></div>
+  <div class="settings">
+    <h1 class="fd-head">Food in the area</h1>
+    <p class="fd-intro">Cafes, restaurants, takeaways, pubs and bars within 2 km of the Moorooka shops, closest first.</p>
+    <div class="sbox"><div class="sfilters" id="fdWhat"></div><div class="sfilters" id="fdHow"></div></div>
+    <ul class="fd-list" id="fdList"></ul>
+    <p class="fd-foot" id="fdFoot"></p>
   </div>
 </section>
 
@@ -2796,7 +2833,8 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
   window.addEventListener("resize", () => { inkAt = null; placeInk(); });
   document.fonts?.ready.then(() => { inkAt = null; placeInk(); });
   function renderHeader() {
-    { const xb = $("lbExplore"); if (xb) xb.hidden = !(S.region === "inv" || /^rod(ney)?$/i.test((S.name || "").trim())); }  // Inverloch (or Rod, who lives there): a way straight into the 3D town
+    { const xb = $("lbExplore"); if (xb) xb.hidden = !(S.region === "inv" || /^rod(ney)?$/i.test((S.name || "").trim())); }
+    { const fb = $("lbFood"); if (fb) fb.hidden = !(S.region === "moo" && MOO_FOOD.p.length); }  // Moorooka: Food in the area  // Inverloch (or Rod, who lives there): a way straight into the 3D town
     showVersion();
     $("eyebrow").textContent = state.showSaved ? "Saved" : greeting();
     $("title").textContent = APP_NAME;
@@ -3644,6 +3682,65 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
     const base = `Searches every headline${state.status?.textChunks?.length || fullOn() ? " and the full text of today's articles" : ""}`;
     return a?.count ? `${base}, plus ${a.count.toLocaleString("en-AU")} older stories back to ${shortDate(a.since)}.` : `${base}.`;
   }
+  // ---- Food in the area (Moorooka): places to eat or drink from OpenStreetMap (tools/food.py, refreshed weekly) ----
+  const FD = { what: "all", dine: false, take: false, open: false };
+  const FD_WHAT = [["all", "All"], ["coffee", "Coffee"], ["meals", "Restaurants"], ["quick", "Takeaway shops"], ["drinks", "Pubs and bars"], ["sweet", "Bakeries and sweets"]];
+  const fdIs = (p, w) => w === "all" || (w === "coffee" && (p.k === "cafe" || p.k === "bubble tea")) || (w === "meals" && (p.k === "restaurant" || p.k === "food court"))
+    || (w === "quick" && (p.k === "takeaway" || p.k === "food court")) || (w === "drinks" && (p.k === "pub" || p.k === "bar")) || (w === "sweet" && (p.k === "bakery" || p.k === "ice cream" || p.k === "bubble tea"));
+  // Opening hours: the common OpenStreetMap forms ("Mo-Fr 07:00-15:00; Sa,Su 08:00-12:00", "24/7", "Mo off"). Gives each weekday
+  // (0 = Monday) its [from, to] minute ranges, or null when it can't be read (then the hours are shown as written).
+  const FD_DAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+  function fdHours(h) {
+    if (!h) return null; h = h.trim();
+    if (h === "24/7") return FD_DAYS.map(() => [[0, 1440]]);
+    const wk = FD_DAYS.map(() => null), tm = x => { const m = /^(\d{1,2}):(\d{2})$/.exec(x); return m ? +m[1] * 60 + +m[2] : NaN; };
+    for (let rule of h.split(/\s*;\s*/)) {
+      if (!rule) continue;
+      if (/^PH\b|^SH\b|week|"|\[/.test(rule)) continue;
+      const m = /^((?:(?:Mo|Tu|We|Th|Fr|Sa|Su)(?:-(?:Mo|Tu|We|Th|Fr|Sa|Su))?)(?:\s*,\s*(?:Mo|Tu|We|Th|Fr|Sa|Su)(?:-(?:Mo|Tu|We|Th|Fr|Sa|Su))?)*)?(?:\s*,\s*PH)?\s*(.*)$/.exec(rule);
+      if (!m) return null;
+      const days = new Set();
+      if (m[1]) for (const part of m[1].split(/\s*,\s*/)) { const [a, b] = part.split("-").map(d => FD_DAYS.indexOf(d)); if (b === undefined) days.add(a); else for (let i = a; ; i = (i + 1) % 7) { days.add(i); if (i === b) break; } }
+      else FD_DAYS.forEach((_, i) => days.add(i));
+      const rest = m[2].trim();
+      if (/^(off|closed)$/i.test(rest)) { days.forEach(d => wk[d] = []); continue; }
+      const spans = [];
+      for (const r of rest.split(/\s*,\s*/)) { const [a, b] = r.split("-"); const f = tm(a), t2 = b === "24:00" ? 1440 : tm(b || ""); if (isNaN(f) || isNaN(t2)) return null; spans.push([f, t2 <= f ? t2 + 1440 : t2]); }
+      days.forEach(d => wk[d] = spans);
+    }
+    return wk.some(Boolean) ? wk.map(x => x || []) : null;
+  }
+  const fdClock = m => { m %= 1440; const h = Math.floor(m / 60), mm = m % 60, ap = h < 12 ? "am" : "pm", h12 = h % 12 || 12; return mm ? `${h12}:${String(mm).padStart(2, "0")}${ap}` : `${h12}${ap}`; };
+  function fdStatus(p, now = new Date()) {   // Brisbane time, whatever the phone's set to
+    const wk = fdHours(p.h); if (!wk) return null;
+    const b = new Date(now.getTime() + (now.getTimezoneOffset() + 600) * 60000), d = (b.getDay() + 6) % 7, m = b.getHours() * 60 + b.getMinutes();
+    for (const [f, t] of wk[d]) if (m >= f && m < t) return { open: true, text: t >= 1440 && (wk[(d + 1) % 7][0]?.[0] === 0 || t - f >= 1440) ? "Open now" : `Open now, closes ${fdClock(t)}` };
+    for (const [f, t] of wk[(d + 6) % 7]) if (t > 1440 && m < t - 1440) return { open: true, text: `Open now, closes ${fdClock(t)}` };
+    for (let i = 0; i < 7; i++) { const dd = (d + i) % 7, sp = wk[dd].filter(([f]) => i || f > m).sort((a, c) => a[0] - c[0]); if (sp.length) return { open: false, text: `Closed, opens ${i === 0 ? "" : i === 1 ? "tomorrow " : ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][dd] + " "}at ${fdClock(sp[0][0])}` }; }
+    return { open: false, text: "Closed" };
+  }
+  const fdDist = m => m < 1000 ? `${Math.max(50, Math.round(m / 50) * 50)} m` : `${(m / 1000).toFixed(1)} km`;
+  const fdKind = p => ({ cafe: "Cafe", restaurant: "Restaurant", takeaway: "Takeaway", "food court": "Food court", pub: "Pub", bar: "Bar", "ice cream": "Ice cream", bakery: "Bakery", "bubble tea": "Bubble tea" }[p.k] || "Food");
+  function fdMap(p) {
+    const q = encodeURIComponent(`${p.n}${p.a ? ", " + p.a : ""}, QLD`);
+    return device.os === "ios" ? `https://maps.apple.com/?q=${encodeURIComponent(p.n)}&ll=${p.la},${p.lo}` : `https://www.google.com/maps/search/?api=1&query=${q}`;
+  }
+  function renderFood() {
+    const all = MOO_FOOD.p, st = new Map(all.map(p => [p, fdStatus(p)]));
+    const list = all.filter(p => fdIs(p, FD.what) && (!FD.dine || p.d === 1) && (!FD.take || p.t === 1) && (!FD.open || st.get(p)?.open));
+    $("fdWhat").innerHTML = FD_WHAT.map(([k, l]) => { const n = all.filter(p => fdIs(p, k)).length; return n || k === "all" ? `<button type="button" data-fd-what="${k}" aria-pressed="${FD.what === k}">${l}<span class="n">${n}</span></button>` : ""; }).join("");
+    $("fdHow").innerHTML = [["dine", "Dine in"], ["take", "Takeaway"], ["open", "Open now"]].map(([k, l]) => `<button type="button" data-fd-how="${k}" aria-pressed="${FD[k]}">${l}</button>`).join("");
+    $("fdList").innerHTML = list.length ? list.map(p => { const s = st.get(p);
+      return `<li class="fd-item"><div class="fd-top"><span class="fd-name">${esc(p.n)}</span><span class="fd-dist">${fdDist(p.m)}</span></div>
+        <div class="fd-what">${esc([fdKind(p), p.c, p.a].filter(Boolean).join(", "))}</div>
+        ${s ? `<div class="fd-when ${s.open ? "open" : "shut"}">${esc(s.text)}</div>` : p.h ? `<div class="fd-when shut">Hours: ${esc(p.h.replace(/;\s*/g, "; "))}</div>` : ""}
+        <div class="fd-tags">${p.d === 1 ? `<span class="fd-tag dine">Dine in</span>` : ""}${p.t === 1 ? `<span class="fd-tag take">Takeaway</span>` : ""}${p.dl ? `<span class="fd-tag">Delivery</span>` : ""}</div>
+        <div class="fd-acts"><a href="${esc(fdMap(p))}" target="_blank" rel="noopener">Directions</a>${p.p ? `<a href="tel:${esc(p.p.replace(/[^\d+]/g, ""))}">Call</a>` : ""}${p.w ? `<a href="${esc(p.w)}" target="_blank" rel="noopener">Website</a>` : ""}</div></li>`; }).join("")
+      : `<li class="fd-none">Nothing matches those filters. Try turning one off.</li>`;
+    $("fdFoot").innerHTML = `Places, hours and dine in or takeaway come from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors and are updated weekly${MOO_FOOD.at ? ` (last on ${esc(MOO_FOOD.at)})` : ""}. Hours can be out of date, so check before you go.`;
+  }
+  function openFood() { renderFood(); showSheet("food"); }
+
   function openSearch() {
     loadArchive().then(() => { if (openSheet === "search") renderSearch(); });
     showSheet("search");
@@ -4737,6 +4834,9 @@ const handle = async (m, post) => {
     if (t.closest("#npCust")) { npClose(); state.sTab = "news"; openSettings(); return; }  // the News tab: your interests and local area
     if (t.closest("#bsSkip")) { skipWeather(); return; }
     if (t.closest("#lbExplore")) { exploreInverloch(); return; }
+    if (t.closest("#lbFood")) { openFood(); return; }
+    const fdw = t.closest("[data-fd-what]"); if (fdw) { FD.what = fdw.dataset.fdWhat; renderFood(); return; }
+    const fdh = t.closest("[data-fd-how]"); if (fdh) { const k = fdh.dataset.fdHow; FD[k] = !FD[k]; if (k === "dine" && FD.dine) FD.take = false; if (k === "take" && FD.take) FD.dine = false; renderFood(); return; }
     const pk2 = t.closest("[data-prev-k]");
     if (pk2) { state.prevSel[pk2.dataset.prevK] = pk2.dataset.prevV; pk2.parentElement.querySelectorAll(".bchip").forEach(b => b.setAttribute("aria-pressed", String(b === pk2))); return; }
     if (t.closest("[data-prev-go]")) { previewGo(); return; }
