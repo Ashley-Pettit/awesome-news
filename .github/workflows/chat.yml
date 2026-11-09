@@ -1,0 +1,41 @@
+name: Neighbourhood chat
+
+# Moorooka's Neighbourhood chat and Jobs: every hour, keep what's been posted (ntfy only holds it for 12 hours) in
+# chat/moo.json on the `chat` branch, as a single commit so removed posts don't linger in history.
+on:
+  schedule:
+    - cron: "11 * * * *"
+  workflow_dispatch:
+    inputs:
+      hide: { description: "Post id to remove (Admin)", required: false, default: "" }
+      unhide: { description: "Post id to put back", required: false, default: "" }
+
+permissions:
+  contents: write
+
+concurrency:
+  group: chat
+  cancel-in-progress: false
+
+jobs:
+  keep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Keep the posts
+        env:
+          HIDE: ${{ inputs.hide }}
+          UNHIDE: ${{ inputs.unhide }}
+        run: |
+          mkdir -p /tmp/chat/chat
+          git fetch -q origin chat 2>/dev/null && git show origin/chat:chat/moo.json > /tmp/chat/chat/moo.json 2>/dev/null || true
+          python3 tools/chat.py /tmp/chat/chat/moo.json
+          if [ -n "$HIDE" ]; then python3 tools/chat.py /tmp/chat/chat/moo.json hide "$HIDE"; fi
+          if [ -n "$UNHIDE" ]; then python3 tools/chat.py /tmp/chat/chat/moo.json unhide "$UNHIDE"; fi
+      - name: Save to the chat branch
+        run: |
+          cd /tmp/chat
+          git init -q -b chat && git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add chat/moo.json && git commit -qm "Neighbourhood chat [skip ci]"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" chat:chat

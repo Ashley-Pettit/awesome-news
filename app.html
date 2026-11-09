@@ -682,6 +682,43 @@ body.betaon .beta-tag { display: inline-block; }
 
 /* ---------- States ---------- */
 .empty { text-align: center; padding: 56px 20px; color: var(--muted); }
+/* Neighbours (Moorooka): an open chat and jobs ("looking for someone to..."), posted by anyone */
+.nb-head { padding: 18px 0 4px; }
+.nb-head h2 { font-family: var(--display); font-size: 1.5rem; letter-spacing: -0.02em; margin: 0 0 4px; }
+.nb-head p { margin: 0; color: var(--muted); font-size: 0.9rem; text-wrap: pretty; }
+.nb-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 14px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); margin: 14px 0 12px; }
+.nb-seg button { padding: 9px 4px; border-radius: 10px; font-weight: 700; font-size: 0.92rem; color: var(--muted); }
+.nb-seg button[aria-selected="true"] { background: var(--accent); color: #fff; }
+.nb-form { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 12px; display: grid; gap: 8px; margin-bottom: 8px; }
+.nb-form label { font-weight: 650; font-size: 0.84rem; display: grid; gap: 4px; }
+.nb-form label small { font-weight: 400; color: var(--muted); }
+.nb-form input, .nb-form textarea { width: 100%; box-sizing: border-box; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--bg); color: var(--ink); padding: 9px 11px; font: inherit; font-size: 16px; }
+.nb-form textarea { min-height: 64px; resize: vertical; }
+.nb-form .nb-acts { display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+.nb-form .nb-note { font-size: 0.76rem; color: var(--muted); margin: 0; }
+.nb-chg { color: var(--accent); font-weight: 700; font-size: inherit; }
+.nb-lead { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.nb-lead span { font-weight: 700; white-space: nowrap; }
+.nb-lead input { flex: 1 1 160px; }
+.nb-list { list-style: none; margin: 0; padding: 0; }
+.nb-msg { padding: 12px 0; border-bottom: 1px solid var(--line); }
+.nb-meta { font-size: 0.78rem; color: var(--muted); }
+.nb-meta b { color: var(--ink); font-size: 0.86rem; margin-right: 6px; }
+.nb-text { margin: 3px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.45; }
+.nb-text a { color: var(--accent); }
+.nb-job { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 13px; margin: 10px 0; list-style: none; }
+.nb-job h3 { margin: 2px 0 4px; font-size: 1.04rem; line-height: 1.3; }
+.nb-job h3 em { font-style: normal; color: var(--muted); font-weight: 600; }
+.nb-job .nb-when { display: inline-block; font-size: 0.74rem; font-weight: 700; padding: 2px 9px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); margin-top: 6px; }
+.nb-job .nb-contact { font-size: 0.86rem; margin: 6px 0 0; }
+.nb-row { display: flex; gap: 14px; margin-top: 8px; font-size: 0.8rem; font-weight: 700; }
+.nb-row button { color: var(--muted); }
+.nb-row button.on { color: var(--accent); }
+.nb-replies { margin: 8px 0 0 10px; padding-left: 10px; border-left: 2px solid var(--line); }
+.nb-replies .nb-msg { padding: 8px 0; border: 0; }
+.nb-replies .nb-form { margin-top: 6px; }
+.nb-empty { color: var(--muted); text-align: center; padding: 26px 0; }
+.nb-foot { font-size: 0.76rem; color: var(--muted); margin: 16px 0 0; }
 /* Community board (Moorooka News): jobs, wanted and notes to neighbours, posted by locals */
 .bd-head { padding: 18px 0 6px; }
 .bd-head h2 { font-family: var(--display); font-size: 1.5rem; letter-spacing: -0.02em; margin: 0 0 4px; }
@@ -2816,9 +2853,123 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
       render(true);
     } catch (err) { btn.disabled = false; toast(err.message || "That didn't post. Try again in a moment."); }
   });
+  // ---- Neighbours (Moorooka): an open chat, and jobs ("I'm looking for someone to..."). Anyone can post, no account.
+  // Posts go straight to a public ntfy.sh topic (it holds them 12 hours); an hourly job (tools/chat.py) keeps them in
+  // chat/moo.json on the repo's `chat` branch for 30 days (jobs 45). Reports hide a post after 3; Admin can remove one.
+  const NB_TOPIC = "awesome-news-moorooka-chat-q7m2", NB_NTFY = "https://ntfy.sh/" + NB_TOPIC,
+    NB_FILE = "https://raw.githubusercontent.com/Ashley-Pettit/awesome-news/chat/chat/moo.json";
+  const NB = { view: store.get("nb.view", "chat"), posts: new Map(), reports: {}, hidden: new Set(), loaded: false, loading: false, err: "", es: null, open: new Set(), jobForm: false };
+  const nbOn = () => S.region === "moo";
+  function nbAdd(ev) {   // one ntfy event or kept post -> the list (same rules as tools/chat.py)
+    let b = ev; if (ev.message !== undefined) { try { b = JSON.parse(ev.message); } catch { return; } if (!b || typeof b !== "object") return; }
+    const str = (k, n) => String(b[k] ?? "").trim().slice(0, n), id = String(ev.id || "").slice(0, 20), time = +ev.time || 0;
+    if (!id || !time) return;
+    if (b.k === "r" && str("r", 20)) { (NB.reports[str("r", 20)] ||= new Set()).add(id); return; }
+    if (b.k === "m" && str("n", 30) && str("t", 500)) NB.posts.set(id, { id, time, k: "m", n: str("n", 30), t: str("t", 500), re: str("re", 20) || "" });
+    if (b.k === "j" && str("n", 30) && str("t", 120)) NB.posts.set(id, { id, time, k: "j", n: str("n", 30), t: str("t", 120), d: str("d", 800), c: str("c", 100), w: str("w", 40) });
+  }
+  async function nbLoad(force) {
+    if (NB.loading || (NB.loaded && !force)) { nbLive(); return; }
+    NB.loading = true; NB.err = "";
+    let ok = 0;
+    try { const r = await fetch(NB_FILE + "?t=" + Math.floor(Date.now() / 120000), { cache: "no-store" }); if (r.ok) { const d = await r.json(); (d.m || []).forEach(nbAdd); Object.entries(d.r || {}).forEach(([k, v]) => v.forEach(x => (NB.reports[k] ||= new Set()).add(x))); (d.h || []).forEach(h => NB.hidden.add(h)); } ok++; } catch {}
+    try { const r = await fetch(NB_NTFY + "/json?poll=1&since=all"); if (r.ok) { (await r.text()).split("\n").forEach(l => { if (!l.trim()) return; try { const ev = JSON.parse(l); if (ev.event === "message") nbAdd(ev); } catch {} }); ok++; } } catch {}
+    NB.loading = false; NB.loaded = true; if (!ok) NB.err = "Neighbours didn't load. Check your connection and try again.";
+    if (currentTab() === "nbr" && !state.showSaved) render(true);
+    nbLive();
+  }
+  function nbLive() {   // new posts as they happen, while the app's open
+    if (NB.es || typeof EventSource !== "function") return;
+    try { NB.es = new EventSource(NB_NTFY + "/sse"); NB.es.onmessage = e => { try { const ev = JSON.parse(e.data); if (ev.event === "message") { nbAdd(ev); nbPaint(); } } catch {} }; } catch {}
+  }
+  const nbGone = p => NB.hidden.has(p.id) || (store.get("nb.hidden", []) || []).includes(p.id) || (NB.reports[p.id]?.size || 0) >= 3 || (store.get("nb.reported", []) || []).includes(p.id);
+  const nbAgo = sec => boardAgo(new Date(sec * 1000).toISOString());
+  const nbLink = t => esc(t).replace(/\bhttps?:\/\/[^\s<]+[^\s<.,;:!?)\]'"]/g, u => `<a href="${u}" target="_blank" rel="noopener nofollow">${u}</a>`);
+  const nbMsg = p => `<li class="nb-msg"><div class="nb-meta"><b>${esc(p.n)}</b>${nbAgo(p.time)}</div><p class="nb-text">${nbLink(p.t)}</p>
+    <div class="nb-row"><button type="button" data-nb-report="${esc(p.id)}">Report</button>${isAdmin() ? `<button type="button" data-nb-remove="${esc(p.id)}">Remove</button>` : ""}</div></li>`;
+  const nbName = () => store.get("board.name", "");
+  function nbListHTML() {
+    const all = [...NB.posts.values()].filter(p => !nbGone(p)).sort((a, b) => b.time - a.time);
+    if (NB.view === "chat") { const ms = all.filter(p => p.k === "m" && !p.re); return ms.length ? ms.map(nbMsg).join("") : `<li class="nb-empty">No messages yet. Say hello to your neighbours.</li>`; }
+    const jobs = all.filter(p => p.k === "j");
+    if (!jobs.length) return `<li class="nb-empty">No jobs posted yet. Need a hand with something? Post it above.</li>`;
+    return jobs.map(j => { const rs = all.filter(p => p.k === "m" && p.re === j.id).reverse(), open = NB.open.has(j.id);
+      return `<li class="nb-job"><div class="nb-meta"><b>${esc(j.n)}</b>${nbAgo(j.time)}</div><h3><em>Looking for someone to</em> ${esc(j.t.replace(/^(i'?m )?looking for someone to\s*/i, ""))}</h3>
+        ${j.d ? `<p class="nb-text">${nbLink(j.d)}</p>` : ""}${j.w ? `<span class="nb-when">${esc(j.w)}</span>` : ""}${j.c ? `<p class="nb-contact"><b>Contact:</b> ${nbLink(j.c)}</p>` : ""}
+        <div class="nb-row"><button type="button" class="${open ? "on" : ""}" data-nb-open="${esc(j.id)}">${open ? "Hide replies" : rs.length ? `Replies (${rs.length})` : "Reply"}</button><button type="button" data-nb-report="${esc(j.id)}">Report</button>${isAdmin() ? `<button type="button" data-nb-remove="${esc(j.id)}">Remove</button>` : ""}</div>
+        ${open ? `<div class="nb-replies"><ul class="nb-list">${rs.map(nbMsg).join("")}</ul><form class="nb-form" data-nb-send="m" data-nb-re="${esc(j.id)}">
+          ${nbName() ? "" : `<label>Your name<input name="n" maxlength="30" required autocomplete="given-name" data-keep="n-${esc(j.id)}"></label>`}
+          <label>Reply<textarea name="t" maxlength="500" required placeholder="I can help, or ask a question" data-keep="r-${esc(j.id)}"></textarea></label>
+          <div class="nb-acts"><p class="nb-note">Everyone can see replies.</p><button class="pill-btn" type="submit">Send</button></div></form></div>` : ""}</li>`; }).join("");
+  }
+  function nbPaint() {   // just the list, so whatever's being typed above it stays put
+    const l = $("nbList"); if (!l || currentTab() !== "nbr") return;
+    const keep = {}; l.querySelectorAll("[data-keep]").forEach(x => keep[x.dataset.keep] = x.value);
+    const f = document.activeElement?.dataset?.keep;
+    l.innerHTML = nbListHTML();
+    l.querySelectorAll("[data-keep]").forEach(x => { if (keep[x.dataset.keep] != null) x.value = keep[x.dataset.keep]; if (x.dataset.keep === f) x.focus(); });
+  }
+  function renderNbr() {
+    if (!NB.loaded) nbLoad();
+    const head = `<div class="nb-head"><h2>Neighbours</h2><p>Chat with people around ${esc(regionLabel())}, or post a job you need done. Anyone can read and post.</p></div>
+      <div class="nb-seg" role="tablist" aria-label="Neighbours">${[["chat", "Chat"], ["jobs", "Jobs"]].map(([k, l]) => `<button type="button" role="tab" data-nb-view="${k}" aria-selected="${NB.view === k}">${l}</button>`).join("")}</div>`;
+    const name = nbName() ? `<p class="nb-note">Posting as <b>${esc(nbName())}</b>. <button type="button" class="nb-chg" data-nb-rename>Change</button></p>`
+      : `<label>Your name<input name="n" maxlength="30" required autocomplete="given-name" placeholder="First name is fine"></label>`;
+    const form = NB.view === "chat"
+      ? `<form class="nb-form" data-nb-send="m">${nbName() ? "" : name}<label>Message<textarea name="t" maxlength="500" required placeholder="Say something to the neighbourhood"></textarea></label>
+          <div class="nb-acts">${nbName() ? name : `<p class="nb-note">Everyone can see this. Be kind.</p>`}<button class="pill-btn" type="submit">Post</button></div></form>`
+      : NB.jobForm ? `<form class="nb-form" data-nb-send="j"><div class="nb-lead"><span>I'm looking for someone to</span><input name="t" maxlength="120" required placeholder="mow my lawn"></div>
+          <label>Details <small>(optional)</small><textarea name="d" maxlength="800" placeholder="Where, how big, what you'll pay"></textarea></label>
+          <label>When <small>(optional)</small><input name="w" maxlength="40" placeholder="This weekend"></label>
+          <label>How to reach you <small>(optional, everyone can see it)</small><input name="c" maxlength="100" placeholder="Reply here, or a phone number"></label>
+          ${nbName() ? "" : name}<div class="nb-acts"><button type="button" class="bd-ghost" data-nb-jobform="0">Cancel</button><button class="pill-btn" type="submit">Post the job</button></div>${nbName() ? name : ""}</form>`
+      : `<button class="pill-btn" type="button" data-nb-jobform="1" style="margin-bottom:8px">Post a job</button>`;
+    const body = NB.err && !NB.posts.size ? emptyHTML("Neighbours didn't load", "Check your connection and try again.", I.sliders, `<button class="pill-btn" type="button" data-nb-retry>Try again</button>`)
+      : !NB.loaded ? `<p class="nb-meta" role="status">Loading…</p>` : `<ul class="nb-list" id="nbList">${nbListHTML()}</ul>`;
+    return head + form + body + `<p class="nb-foot">Posts are public and stay up for 30 days (jobs 45). A post is hidden once three people report it.</p>`;
+  }
+  document.addEventListener("click", async e => {
+    const t = e.target; if (!t.closest || !nbOn()) return;
+    const v = t.closest("[data-nb-view]"); if (v) { NB.view = v.dataset.nbView; store.set("nb.view", NB.view); render(true); return; }
+    const jf = t.closest("[data-nb-jobform]"); if (jf) { NB.jobForm = jf.dataset.nbJobform === "1"; render(true); if (NB.jobForm) document.querySelector('[data-nb-send="j"] input[name="t"]')?.focus(); return; }
+    if (t.closest("[data-nb-rename]")) { store.set("board.name", ""); render(true); return; }
+    if (t.closest("[data-nb-retry]")) { NB.err = ""; NB.loaded = false; render(true); nbLoad(true); return; }
+    const o = t.closest("[data-nb-open]"); if (o) { const id = o.dataset.nbOpen; NB.open.has(id) ? NB.open.delete(id) : NB.open.add(id); nbPaint(); return; }
+    const rp = t.closest("[data-nb-report]");
+    if (rp) { const id = rp.dataset.nbReport, done = store.get("nb.reported", []) || [];
+      if (!confirm("Report this as unsuitable? It's hidden for you now, and for everyone once three people report it.")) return;
+      store.set("nb.reported", [...done, id].slice(-300)); nbPaint();
+      try { await fetch(NB_NTFY, { method: "POST", body: JSON.stringify({ k: "r", r: id }) }); toast("Thanks, it's been reported"); } catch { toast("Hidden for you. The report didn't send, so try again later."); }
+      return; }
+    const rm = t.closest("[data-nb-remove]");
+    if (rm && isAdmin()) { const id = rm.dataset.nbRemove; if (!confirm("Remove this post for everyone?")) return;
+      store.set("nb.hidden", [...(store.get("nb.hidden", []) || []), id].slice(-500)); nbPaint();
+      const tok = store.get("brief.ghToken", ""); let sent = false;
+      if (tok) try { const r = await fetch(GH_DISPATCH.replace("pages.yml", "chat.yml"), { method: "POST", headers: { Authorization: `Bearer ${tok}`, Accept: "application/vnd.github+json" }, body: JSON.stringify({ ref: "main", inputs: { hide: id } }) }); sent = r.ok || r.status === 204; } catch {}
+      toast(sent ? "Removed. It's gone here now, and for everyone in a few minutes." : "Removed on this device. To remove it for everyone, save the GitHub key in Admin, then remove it again.", 7000); }
+  });
+  document.addEventListener("submit", async e => {
+    const f = e.target.closest?.("[data-nb-send]"); if (!f) return; e.preventDefault();
+    const fd = Object.fromEntries(new FormData(f)), k = f.dataset.nbSend, n = (fd.n || nbName()).trim().slice(0, 30);
+    if (!n) { toast("Add your name first"); return; }
+    const body = { k, n, t: (fd.t || "").trim() };
+    if (!body.t) return;
+    if (k === "m" && f.dataset.nbRe) body.re = f.dataset.nbRe;
+    if (k === "j") for (const x of ["d", "w", "c"]) if ((fd[x] || "").trim()) body[x] = fd[x].trim();
+    const btn = f.querySelector('[type="submit"]'); btn.disabled = true;
+    try { const r = await fetch(NB_NTFY, { method: "POST", body: JSON.stringify(body) });
+      if (r.status === 429) throw new Error("Too many posts from your connection today. Try again tomorrow.");
+      if (!r.ok) throw new Error("That didn't post. Try again in a moment.");
+      const ev = await r.json(); nbAdd(ev); store.set("board.name", n);
+      if (k === "j") NB.jobForm = false;
+      f.querySelectorAll("[data-keep]").forEach(x => x.value = "");
+      render(true); toast(k === "j" ? "Job posted" : "Posted");
+    } catch (err) { btn.disabled = false; toast(err.message || "That didn't post. Try again in a moment."); }
+  });
   const tabList = () => {
     const secs = enabledSections(), at = secs.findIndex(s => s.id === "local") + 1;
     if (BOARD.on) secs.splice(at, 0, { id: "board", label: "Community board" });
+    if (nbOn()) secs.splice(at, 0, { id: "nbr", label: "Neighbours" });
     return [{ id: "foryou", label: "For you" }, ...secs, ...S.topics.map(t => ({ id: "topic:" + t, label: t, topic: true }))];
   };
   function currentTab() {
@@ -2969,6 +3120,7 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
       : cur === "foryou" ? renderForYou()
       : cur.startsWith("topic:") ? renderTopic(cur.slice(6))
       : cur === "board" ? renderBoard()
+      : cur === "nbr" ? renderNbr()
       : renderSection(cur);
     const v = $("view");
     v.innerHTML = `<div class="wrap">${body}</div>`;
@@ -2994,6 +3146,7 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
   function selectTab(id) {
     state.tab = id;
     if (id === "board") boardLoad();
+    if (id === "nbr") nbLoad();
     state.showSaved = false;
     store.set("brief.tab3", id);
     try { history.replaceState(history.state, "", "#" + (id.startsWith("topic:") ? "foryou" : id)); } catch {}
