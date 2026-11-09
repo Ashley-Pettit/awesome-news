@@ -1,0 +1,43 @@
+name: Food in the area edit
+
+# Admin in the app ticks a place as delivering itself (or not), with its own order link or phone. The phone asks for this
+# with its GitHub key; it's filed in local/food-edits.json and app.html, then the quick publish puts it in every app.
+on:
+  workflow_dispatch:
+    inputs:
+      id: { description: "Place id (n123, w456)", required: true }
+      dd: { description: "Delivers itself: 1, 0, or empty for not sure", required: false, default: "" }
+      ol: { description: "Its own order link (https://...)", required: false, default: "" }
+      p: { description: "Phone to order on", required: false, default: "" }
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: food
+  cancel-in-progress: false
+
+jobs:
+  edit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: File the edit
+        env:
+          ID: ${{ inputs.id }}
+          DD: ${{ inputs.dd }}
+          OL: ${{ inputs.ol }}
+          PH: ${{ inputs.p }}
+        run: python3 tools/food.py edit "$ID" "$DD" "$OL" "$PH"
+      - name: Commit and publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app.html local/food-edits.json
+          git diff --cached --quiet && { echo "no change"; exit 0; }
+          git commit -m "Food in the area: Admin edit (${{ inputs.id }}) from the app"
+          for i in 1 2 3; do git pull -q --rebase origin main && git push -q origin HEAD:main && break; sleep 5; done
+          gh workflow run quick.yml --ref main
