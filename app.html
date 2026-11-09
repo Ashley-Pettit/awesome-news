@@ -253,7 +253,14 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
 .fd-none { color: var(--muted); padding: 28px 0; text-align: center; }
 .fd-foot { color: var(--muted); font-size: 0.76rem; margin-top: 18px; line-height: 1.5; }
 .fd-foot a { color: inherit; text-decoration: underline; }
-#food .sfilters + .sfilters { margin-top: 8px; }
+.fd-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; border-radius: 14px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); margin-top: 12px; }
+.fd-tabs button { padding: 9px 4px; border-radius: 10px; font-weight: 700; font-size: 0.9rem; color: var(--muted); }
+.fd-tabs button[aria-selected="true"] { background: #c2551f; color: #fff; }
+.fd-tabs .n { display: block; font-size: 0.7rem; font-weight: 600; opacity: 0.8; }
+.fd-note { font-size: 0.8rem; color: var(--muted); margin: 10px 0 0; }
+.fd-order { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 9px; }
+.fd-order a { padding: 7px 13px; border-radius: 999px; font-size: 0.82rem; font-weight: 750; color: #fff; }
+.fd-order .ue { background: #06c167; } .fd-order .dd { background: #eb1700; }
 /* The local apps (Moorooka News, The Logan Wire, Coastline News), side by side under Listen */
 /* ...folded into one "Local news apps" row until it's tapped open */
 .lb-apps > summary { list-style: none; cursor: pointer; }
@@ -1572,8 +1579,8 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
   </div></div>
   <div class="settings">
     <h1 class="fd-head">Food in the area</h1>
-    <p class="fd-intro">Cafes, restaurants, takeaways, pubs and bars within 2 km of the Moorooka shops, closest first.</p>
-    <div class="sbox"><div class="sfilters" id="fdWhat"></div><div class="sfilters" id="fdHow"></div></div>
+    <p class="fd-intro">Within 2 km of the Moorooka shops, closest first.</p>
+    <div class="sbox"><div class="fd-tabs" id="fdTabs" role="tablist" aria-label="How you want it"></div><div class="sfilters" id="fdWhat"></div><p class="fd-note" id="fdNote"></p></div>
     <ul class="fd-list" id="fdList"></ul>
     <p class="fd-foot" id="fdFoot"></p>
   </div>
@@ -3683,7 +3690,10 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
     return a?.count ? `${base}, plus ${a.count.toLocaleString("en-AU")} older stories back to ${shortDate(a.since)}.` : `${base}.`;
   }
   // ---- Food in the area (Moorooka): places to eat or drink from OpenStreetMap (tools/food.py, refreshed weekly) ----
-  const FD = { what: "all", dine: false, take: false, open: false };
+  const FD = { tab: "eat", what: "all", open: false };
+  const FD_TABS = [["eat", "Eat in"], ["take", "Takeaway"], ["deliver", "Delivery"]];
+  const fdTab = (p, t) => t === "eat" ? p.d === 1 : t === "take" ? p.t === 1 || (p.k === "restaurant" && p.t !== 0)
+    : !!p.dl || (["restaurant", "takeaway", "food court"].includes(p.k) && p.t !== 0);
   const FD_WHAT = [["all", "All"], ["coffee", "Coffee"], ["meals", "Restaurants"], ["quick", "Takeaway shops"], ["drinks", "Pubs and bars"], ["sweet", "Bakeries and sweets"]];
   const fdIs = (p, w) => w === "all" || (w === "coffee" && (p.k === "cafe" || p.k === "bubble tea")) || (w === "meals" && (p.k === "restaurant" || p.k === "food court"))
     || (w === "quick" && (p.k === "takeaway" || p.k === "food court")) || (w === "drinks" && (p.k === "pub" || p.k === "bar")) || (w === "sweet" && (p.k === "bakery" || p.k === "ice cream" || p.k === "bubble tea"));
@@ -3726,19 +3736,24 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
     const q = encodeURIComponent(`${p.n}${p.a ? ", " + p.a : ""}, QLD`);
     return device.os === "ios" ? `https://maps.apple.com/?q=${encodeURIComponent(p.n)}&ll=${p.la},${p.lo}` : `https://www.google.com/maps/search/?api=1&query=${q}`;
   }
+  const fdUber = p => `https://www.ubereats.com/au/search?q=${encodeURIComponent(p.n)}`, fdDash = p => `https://www.doordash.com/search/store/${encodeURIComponent(p.n)}/`;
   function renderFood() {
-    const all = MOO_FOOD.p, st = new Map(all.map(p => [p, fdStatus(p)]));
-    const list = all.filter(p => fdIs(p, FD.what) && (!FD.dine || p.d === 1) && (!FD.take || p.t === 1) && (!FD.open || st.get(p)?.open));
-    $("fdWhat").innerHTML = FD_WHAT.map(([k, l]) => { const n = all.filter(p => fdIs(p, k)).length; return n || k === "all" ? `<button type="button" data-fd-what="${k}" aria-pressed="${FD.what === k}">${l}<span class="n">${n}</span></button>` : ""; }).join("");
-    $("fdHow").innerHTML = [["dine", "Dine in"], ["take", "Takeaway"], ["open", "Open now"]].map(([k, l]) => `<button type="button" data-fd-how="${k}" aria-pressed="${FD[k]}">${l}</button>`).join("");
+    const all = MOO_FOOD.p, st = new Map(all.map(p => [p, fdStatus(p)])), inTab = all.filter(p => fdTab(p, FD.tab));
+    const list = inTab.filter(p => fdIs(p, FD.what) && (!FD.open || st.get(p)?.open));
+    $("fdTabs").innerHTML = FD_TABS.map(([k, l]) => `<button type="button" role="tab" data-fd-tab="${k}" aria-selected="${FD.tab === k}">${l}<span class="n">${all.filter(p => fdTab(p, k)).length} places</span></button>`).join("");
+    $("fdWhat").innerHTML = FD_WHAT.map(([k, l]) => { const n = inTab.filter(p => fdIs(p, k)).length; return n || k === "all" ? `<button type="button" data-fd-what="${k}" aria-pressed="${FD.what === k}">${l}<span class="n">${n}</span></button>` : ""; }).join("")
+      + `<button type="button" data-fd-open aria-pressed="${FD.open}">Open now</button>`;
+    $("fdNote").textContent = FD.tab === "deliver" ? "Delivery is through Uber Eats or DoorDash. Tap one to open that place in the app and order there." : FD.tab === "take" ? "Order ahead on Uber Eats or DoorDash and pick it up, or call them." : "";
+    $("fdNote").hidden = FD.tab === "eat";
+    const order = p => FD.tab !== "eat" && p.k !== "pub" && p.k !== "bar" ? `<div class="fd-order"><a class="ue" href="${esc(fdUber(p))}" target="_blank" rel="noopener">${FD.tab === "take" ? "Pick up" : "Order"} on Uber Eats</a><a class="dd" href="${esc(fdDash(p))}" target="_blank" rel="noopener">DoorDash</a></div>` : "";
     $("fdList").innerHTML = list.length ? list.map(p => { const s = st.get(p);
       return `<li class="fd-item"><div class="fd-top"><span class="fd-name">${esc(p.n)}</span><span class="fd-dist">${fdDist(p.m)}</span></div>
         <div class="fd-what">${esc([fdKind(p), p.c, p.a].filter(Boolean).join(", "))}</div>
         ${s ? `<div class="fd-when ${s.open ? "open" : "shut"}">${esc(s.text)}</div>` : p.h ? `<div class="fd-when shut">Hours: ${esc(p.h.replace(/;\s*/g, "; "))}</div>` : ""}
-        <div class="fd-tags">${p.d === 1 ? `<span class="fd-tag dine">Dine in</span>` : ""}${p.t === 1 ? `<span class="fd-tag take">Takeaway</span>` : ""}${p.dl ? `<span class="fd-tag">Delivery</span>` : ""}</div>
-        <div class="fd-acts"><a href="${esc(fdMap(p))}" target="_blank" rel="noopener">Directions</a>${p.p ? `<a href="tel:${esc(p.p.replace(/[^\d+]/g, ""))}">Call</a>` : ""}${p.w ? `<a href="${esc(p.w)}" target="_blank" rel="noopener">Website</a>` : ""}</div></li>`; }).join("")
-      : `<li class="fd-none">Nothing matches those filters. Try turning one off.</li>`;
-    $("fdFoot").innerHTML = `Places, hours and dine in or takeaway come from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors and are updated weekly${MOO_FOOD.at ? ` (last on ${esc(MOO_FOOD.at)})` : ""}. Hours can be out of date, so check before you go.`;
+        ${order(p)}
+        <div class="fd-acts">${FD.tab !== "deliver" ? `<a href="${esc(fdMap(p))}" target="_blank" rel="noopener">Directions</a>` : ""}${p.p ? `<a href="tel:${esc(p.p.replace(/[^\d+]/g, ""))}">Call</a>` : ""}${p.w ? `<a href="${esc(p.w)}" target="_blank" rel="noopener">Website</a>` : ""}</div></li>`; }).join("")
+      : `<li class="fd-none">Nothing matches. Try another tab or turn off Open now.</li>`;
+    $("fdFoot").innerHTML = `Places, hours and dine in or takeaway come from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors and are updated weekly${MOO_FOOD.at ? ` (last on ${esc(MOO_FOOD.at)})` : ""}. Hours can be out of date, and not every place is on Uber Eats or DoorDash, so check before you go.`;
   }
   function openFood() { renderFood(); showSheet("food"); }
 
@@ -4837,7 +4852,8 @@ const handle = async (m, post) => {
     if (t.closest("#lbExplore")) { exploreInverloch(); return; }
     if (t.closest("#lbFood")) { openFood(); return; }
     const fdw = t.closest("[data-fd-what]"); if (fdw) { FD.what = fdw.dataset.fdWhat; renderFood(); return; }
-    const fdh = t.closest("[data-fd-how]"); if (fdh) { const k = fdh.dataset.fdHow; FD[k] = !FD[k]; if (k === "dine" && FD.dine) FD.take = false; if (k === "take" && FD.take) FD.dine = false; renderFood(); return; }
+    const fdt = t.closest("[data-fd-tab]"); if (fdt) { FD.tab = fdt.dataset.fdTab; if (!MOO_FOOD.p.some(p => fdTab(p, FD.tab) && fdIs(p, FD.what))) FD.what = "all"; renderFood(); return; }
+    if (t.closest("[data-fd-open]")) { FD.open = !FD.open; renderFood(); return; }
     const pk2 = t.closest("[data-prev-k]");
     if (pk2) { state.prevSel[pk2.dataset.prevK] = pk2.dataset.prevV; pk2.parentElement.querySelectorAll(".bchip").forEach(b => b.setAttribute("aria-pressed", String(b === pk2))); return; }
     if (t.closest("[data-prev-go]")) { previewGo(); return; }
