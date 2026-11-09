@@ -241,7 +241,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
 .fd-item { padding: 13px 0; border-bottom: 1px solid var(--line); }
 .fd-top { display: flex; align-items: baseline; gap: 10px; }
 .fd-name { font-weight: 750; font-size: 1rem; flex: 1; min-width: 0; }
-.fd-dist { font-size: 0.78rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fd-dist { font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
 .fd-what { font-size: 0.84rem; color: var(--muted); margin-top: 2px; }
 .fd-when { font-size: 0.82rem; margin-top: 4px; font-weight: 600; }
 .fd-when.open { color: #1f8a4c; } .fd-when.shut { color: var(--muted); }
@@ -270,7 +270,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
 .fd-edit input { font: inherit; font-size: 16px; padding: 9px 11px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
 .fd-edit .row { display: flex; gap: 10px; }
 .fd-edit .row button { padding: 8px 16px; border-radius: 999px; font-weight: 750; }
-.fd-edit .save { background: #c2551f; color: #fff; } .fd-edit .cancel { color: var(--muted); }
+.fd-edit .fd-sv { background: #c2551f; color: #fff; } .fd-edit .fd-cn { color: var(--muted); }
 /* The local apps (Moorooka News, The Logan Wire, Coastline News), side by side under Listen */
 /* ...folded into one "Local news apps" row until it's tapped open */
 .lb-apps > summary { list-style: none; cursor: pointer; }
@@ -3761,7 +3761,7 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
     const editor = p => `<div class="fd-edit"><div><div class="seg" role="group" aria-label="Delivers itself">${[["1", "Delivers itself"], ["0", "Doesn't deliver"], ["", "Not sure"]].map(([v, l]) => `<button type="button" data-fd-dd="${v}" aria-pressed="${String(p.dd ?? "") === v}">${l}</button>`).join("")}</div></div>
       <label>Its own order link<input type="url" inputmode="url" data-k="ol" value="${esc(p.ol || "")}" placeholder="https://"></label>
       <label>Phone to order on<input type="tel" data-k="p" value="${esc(p.p || "")}" placeholder="07 3000 0000"></label>
-      <div class="row"><button type="button" class="save" data-fd-save="${esc(p.id)}">Save for everyone</button><button type="button" class="cancel" data-fd-edit="">Cancel</button></div></div>`;
+      <div class="row"><button type="button" class="fd-sv" data-fd-save="${esc(p.id)}">Save for everyone</button><button type="button" class="fd-cn" data-fd-edit="">Cancel</button></div></div>`;
     $("fdList").innerHTML = list.length ? list.map(p => { const s = st.get(p);
       return `<li class="fd-item"><div class="fd-top"><span class="fd-name">${esc(p.n)}</span><span class="fd-dist">${fdDist(p.m)}</span></div>
         <div class="fd-what">${esc([fdKind(p), p.c, p.a].filter(Boolean).join(", "))}</div>
