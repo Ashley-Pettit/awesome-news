@@ -19,6 +19,7 @@ APPS = re.compile(r"ubereats\.com|doordash\.com|menulog\.com|deliveroo", re.I)
 ORDERING = re.compile(r"order|bopple|mryum|meandu|hungryhungry|abacus|tabsquare|mobi2go|square\.site|squareup\.com/store|gloriafood|foodbooking|tuckerfox|ordermate|hey ?you|orderup|deliverect|liven|chownow|toasttab|flipdish|quickorder|menu-?online", re.I)
 DELIVER = re.compile(r"\b(?:we deliver|home delivery|free delivery|delivery (?:available|area|zone|radius|fee|hours|service)|deliver(?:ing)? to|order (?:online )?for delivery|delivery (?:or|and|&) (?:pick ?up|takeaway|collection)|(?:pick ?up|takeaway|collection) (?:or|and|&) delivery)\b", re.I)
 LAT, LON, R = -27.5345, 153.0240, 2000          # the Moorooka shops on Beaudesert Road, 2 km round
+EXTRA_R = 3000                                   # hand-found places (food-extra.json) may be up to 3 km out
 SERVERS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter",
            "https://maps.mail.ru/osm/tools/overpass/api/interpreter"]
 Q = f"""[out:json][timeout:90];
@@ -146,7 +147,7 @@ def extras(out):
             if g: x["la"], x["lo"] = round(g[0], 5), round(g[1], 5); changed = True
         if "la" not in x: continue
         d = 2 * 6371000 * math.asin(math.sqrt(math.sin(math.radians(x["la"] - LAT) / 2) ** 2 + math.cos(math.radians(LAT)) * math.cos(math.radians(x["la"])) * math.sin(math.radians(x["lo"] - LON) / 2) ** 2))
-        if d > R * 1.25: print("  too far", x["n"], int(d), file=sys.stderr); continue
+        if d > EXTRA_R: print("  too far", x["n"], int(d), file=sys.stderr); continue
         s = slug(x["n"]); hit = None
         for p in out:
             ps = slug(p["n"]); near = abs(p["la"] - x["la"]) < 0.003 and abs(p["lo"] - x["lo"]) < 0.003
