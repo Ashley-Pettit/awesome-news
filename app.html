@@ -3694,7 +3694,7 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
     if (!h) return null; h = h.trim();
     if (h === "24/7") return FD_DAYS.map(() => [[0, 1440]]);
     const wk = FD_DAYS.map(() => null), tm = x => { const m = /^(\d{1,2}):(\d{2})$/.exec(x); return m ? +m[1] * 60 + +m[2] : NaN; };
-    for (let rule of h.split(/\s*;\s*/)) {
+    for (const [rule, add] of h.split(/\s*;\s*/).flatMap(r => r.split(/(?<=\d)\s*,\s*(?=(?:Mo|Tu|We|Th|Fr|Sa|Su|PH)\b)/).map((x, i) => [x, i > 0]))) {  // "," between rules adds, ";" overrides
       if (!rule) continue;
       if (/^PH\b|^SH\b|week|"|\[/.test(rule)) continue;
       const m = /^((?:(?:Mo|Tu|We|Th|Fr|Sa|Su)(?:-(?:Mo|Tu|We|Th|Fr|Sa|Su))?)(?:\s*,\s*(?:Mo|Tu|We|Th|Fr|Sa|Su)(?:-(?:Mo|Tu|We|Th|Fr|Sa|Su))?)*)?(?:\s*,\s*PH)?\s*(.*)$/.exec(rule);
@@ -3703,10 +3703,10 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
       if (m[1]) for (const part of m[1].split(/\s*,\s*/)) { const [a, b] = part.split("-").map(d => FD_DAYS.indexOf(d)); if (b === undefined) days.add(a); else for (let i = a; ; i = (i + 1) % 7) { days.add(i); if (i === b) break; } }
       else FD_DAYS.forEach((_, i) => days.add(i));
       const rest = m[2].trim();
-      if (/^(off|closed)$/i.test(rest)) { days.forEach(d => wk[d] = []); continue; }
+      if (/^(off|closed)$/i.test(rest)) { if (!add) days.forEach(d => wk[d] = []); continue; }
       const spans = [];
-      for (const r of rest.split(/\s*,\s*/)) { const [a, b] = r.split("-"); const f = tm(a), t2 = b === "24:00" ? 1440 : tm(b || ""); if (isNaN(f) || isNaN(t2)) return null; spans.push([f, t2 <= f ? t2 + 1440 : t2]); }
-      days.forEach(d => wk[d] = spans);
+      for (const r of rest.split(/\s*,\s*/)) { const [a, b] = r.split("-"); const f = tm(a), t2 = b === "24:00" ? 1440 : tm((b || "").replace(/\+$/, "")); if (isNaN(f) || isNaN(t2)) return null; spans.push([f, t2 <= f ? t2 + 1440 : t2]); }
+      days.forEach(d => wk[d] = add && wk[d] ? wk[d].concat(spans) : spans);
     }
     return wk.some(Boolean) ? wk.map(x => x || []) : null;
   }
@@ -3714,7 +3714,8 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
   function fdStatus(p, now = new Date()) {   // Brisbane time, whatever the phone's set to
     const wk = fdHours(p.h); if (!wk) return null;
     const b = new Date(now.getTime() + (now.getTimezoneOffset() + 600) * 60000), d = (b.getDay() + 6) % 7, m = b.getHours() * 60 + b.getMinutes();
-    for (const [f, t] of wk[d]) if (m >= f && m < t) return { open: true, text: t >= 1440 && (wk[(d + 1) % 7][0]?.[0] === 0 || t - f >= 1440) ? "Open now" : `Open now, closes ${fdClock(t)}` };
+    for (const [f, t] of wk[d]) if (m >= f && m < t) { if (t - f >= 1440) return { open: true, text: "Open 24 hours" };
+      const nx = t >= 1440 ? wk[(d + 1) % 7].find(([f2]) => f2 === 0) : null; return { open: true, text: `Open now, closes ${fdClock(nx ? Math.max(t, 1440 + nx[1]) : t)}` }; }
     for (const [f, t] of wk[(d + 6) % 7]) if (t > 1440 && m < t - 1440) return { open: true, text: `Open now, closes ${fdClock(t)}` };
     for (let i = 0; i < 7; i++) { const dd = (d + i) % 7, sp = wk[dd].filter(([f]) => i || f > m).sort((a, c) => a[0] - c[0]); if (sp.length) return { open: false, text: `Closed, opens ${i === 0 ? "" : i === 1 ? "tomorrow " : ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][dd] + " "}at ${fdClock(sp[0][0])}` }; }
     return { open: false, text: "Closed" };
