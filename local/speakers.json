@@ -23,5 +23,38 @@
   "minutes": 60,
   "brief": 2,
   "skipVideo": true
+ },
+ "rod": {
+  "title": "Awesome News for Rod",
+  "about": "Rod's Awesome News Listen: Inverloch's weather, then Inverloch, the headlines, finance, tech, cars and a little politics in brief, read by Emma. Updated after every news update.",
+  "region": "inv",
+  "sections": [
+   "local-inv",
+   "headlines",
+   "finance",
+   "tech",
+   "cars",
+   "politics"
+  ],
+  "labels": [
+   "Inverloch",
+   "the headlines",
+   "finance",
+   "tech",
+   "cars",
+   "a little politics"
+  ],
+  "skip": [
+   "travel"
+  ],
+  "caps": {
+   "politics": 4
+  },
+  "lead": {
+   "local-inv": 2
+  },
+  "minutes": 60,
+  "brief": 2,
+  "skipVideo": true
  }
 }

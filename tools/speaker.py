@@ -74,7 +74,9 @@ def pick(prof, feeds, ready, minutes, secs_of):
     for sec in prof["sections"]:
         items = sorted(feeds.get(sec, []), key=lambda i: -(ts(i) + (interest(i) - 5) * 3 * 3600))
         items = [x for _, x in sorted(((n + (0 if depth(i) == 2 else 10 if depth(i) else 60) - (interest(i) - 5) * 4, i) for n, i in enumerate(items)), key=lambda t: t[0])]
-        lanes.append((sec, [i for i in items if not set(prof.get("skip", [])) & {i.get("tp", ""), i.get("section", "")}]))
+        items = [i for i in items if not set(prof.get("skip", [])) & {i.get("tp", ""), i.get("section", "")}]
+        cap = prof.get("caps", {}).get(sec)  # "a little politics": only that many from a section
+        lanes.append((sec, items[:cap] if cap else items))
     for dull_ok in (False, True):
         for r in range(40):
             for sec, items in lanes:
