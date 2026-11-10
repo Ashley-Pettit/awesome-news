@@ -71,6 +71,7 @@ button, input, select { font: inherit; color: inherit; }
 /* No accidental zooming on phones: double-taps don't zoom, and text boxes are big enough that iPhones
    don't zoom in when you tap into them. Pinch zoom still works. */
 html, body { touch-action: manipulation; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }  /* iPhone: don't enlarge the text when turned sideways (it stays wrong when turned back) */
 /* No rubber-band bounce: on iPhone it dragged the whole page down and lifted the bottom bar off the bottom (pull to refresh still works) */
 html, body { overscroll-behavior-y: none; }
 @media (pointer: coarse) { input, select, textarea { font-size: max(16px, 1em) !important; } }
@@ -3011,6 +3012,22 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
     inkAt = to;
   }
   window.addEventListener("resize", () => { inkAt = null; placeInk(); });
+  // Turning an iPhone sideways and back: Safari reports the new size late and can leave the page nudged sideways, the
+  // full-screen layers (player, weather) the old height, and the player's moving picture mid-animation at the old
+  // size. A few times over the next second: put the page back, make those layers lay out again, restart the picture.
+  (() => {
+    let last = innerWidth > innerHeight;
+    const settle = () => {
+      if (scrollX) scrollTo(0, scrollY);
+      for (const el of [$("np"), $("weather")]) { if (!el || el.hidden) continue; el.style.transform = "translateZ(0)"; void el.offsetHeight; el.style.transform = ""; }
+      const img = $("npImg"); if (img && img.classList.contains("on")) { img.style.animation = "none"; void img.offsetWidth; img.style.animation = ""; }
+      const B = BS?.B; if (B && !$("weather").hidden) { const r = B.renderer, w = r.domElement.clientWidth, h = r.domElement.clientHeight; if (w && h) { r.setSize(w, h, false); B.camera.aspect = w / h; B.camera.fov = w / h < 0.8 ? 76 : 60; B.camera.updateProjectionMatrix(); } }
+    };
+    const turned = () => [80, 350, 800, 1500].forEach(ms => setTimeout(settle, ms));
+    addEventListener("orientationchange", turned);
+    screen.orientation?.addEventListener?.("change", turned);
+    addEventListener("resize", () => { const now = innerWidth > innerHeight; if (now !== last) { last = now; turned(); } });
+  })();
   document.fonts?.ready.then(() => { inkAt = null; placeInk(); });
   function renderHeader() {
     { const xb = $("lbExplore"); if (xb) xb.hidden = !(S.region === "inv" || /^rod(ney)?$/i.test((S.name || "").trim())); }
