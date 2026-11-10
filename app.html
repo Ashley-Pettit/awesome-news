@@ -2179,6 +2179,9 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
   // A story covered by several outlets is read once, from whichever version has the most text.
   const DRIVE_WORDS = 420;  // longer stories are trimmed for the car, with the rest left in the app
   // scope "logan": the same, just stories about the City of Logan (its own feed), no top stories.
+  // Claude's 0 to 10 interest rating (from the news update), or the best rating among the same story's other
+  // versions; an ordinary story (5) when there's none yet.
+  const interest = i => { const r = [i, ...siblings(i.id).map(findItem)].map(x => x?.int).filter(v => typeof v === "number"); return r.length ? Math.max(...r) : 5; };
   function driveList(scope) {
     const target = 60 * 60, out = [], seen = new Set(), secOf = new Map(), logan = scope === "logan";
     const depth = i => i.text ? 2 : i.feed ? 1 : 0;
@@ -2198,14 +2201,16 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
     // Stories with nothing but a headline (no article, no summary) are kept for the end, after everything else.
     const bare = i => { const b = best(i) || i; return depth(b) === 0 && (b.summary || "").trim().length < 40; };
     const tops = briefing().filter(i => listenable(i) && !bare(i)), deep = tops.filter(i => depth(best(i) || i) > 0);
+    // The top stories: the briefing's order, with the more interesting ones (Claude's rating) moved up.
+    tops.splice(0, tops.length, ...tops.map((i, n) => ({ i, k: n - (interest(i) - 5) * 1.5 })).sort((a, b) => a.k - b.k).map(x => x.i));
     if (!logan) (deep.length >= 3 ? deep : tops).forEach(i => add(i, "top"));
     // Full articles first: stories with the whole article (or a long feed excerpt) come well ahead of
     // short ones, which only fill in when a section runs out.
     // Beta: kinds of stories you've said "more like this" to come round first.
     const likes = store.get("beta.likes", {}) || {}, likeOf = sc => likes[sc.id === "local" ? "local news" : sc.id === "headlines" ? "more headlines" : sc.label] || 0;
     const lanes = (logan ? [{ id: "logan", label: "Logan" }] : enabledSections()).slice().sort((a, b) => (lead(b) - lead(a)) || (likeOf(b) - likeOf(a))).map(sc => ({ sc, list: items(sc.id).filter(i => listenable(i) && !(Number(S.negCut) && isNegative(i))).slice(0, 30 * lead(sc))
-      .map((i, n) => { const d = depth(best(i) || i); return { i, k: n + (d === 2 ? 0 : d === 1 ? 10 : 60) }; }).sort((a, b) => a.k - b.k).map(x => x.i) }));
-    for (const pass of [0, 1]) for (let r = 0; secs < target && r < 40; r++) for (const { sc, list } of lanes) for (let j = 0; j < lead(sc); j++) { if (secs >= target) break; const it = list[r * lead(sc) + j]; if (!pass && it && bare(it)) continue; add(it, sc.id === "local" ? "local news" : sc.id === "headlines" ? "more headlines" : sc.label); }
+      .map((i, n) => { const d = depth(best(i) || i); return { i, k: n + (d === 2 ? 0 : d === 1 ? 10 : 60) - (interest(i) - 5) * 4 }; }).sort((a, b) => a.k - b.k).map(x => x.i) }));
+    for (const pass of [0, 1]) for (let r = 0; secs < target && r < 40; r++) for (const { sc, list } of lanes) for (let j = 0; j < lead(sc); j++) { if (secs >= target) break; const it = list[r * lead(sc) + j]; if (!pass && it && (bare(it) || interest(it) <= 2)) continue; add(it, sc.id === "local" ? "local news" : sc.id === "headlines" ? "more headlines" : sc.label); }
     return { ids: out, secOf, secs };
   }
   // ---- News video screen ----
