@@ -1,11 +1,27 @@
 {
  "ash": {
   "title": "Awesome News for Ash",
-  "about": "Ash's Awesome News Listen, about an hour: Brisbane's weather, then Brisbane, Moorooka, headlines, tech and AI news, read by Emma. Updated after every news update.",
+  "about": "Ash's Awesome News Listen: Brisbane's weather, then Brisbane, Moorooka, headlines, tech and AI news in brief, read by Emma. Updated after every news update.",
   "region": "qld",
-  "sections": ["local-qld", "local-moo", "headlines", "tech", "ai"],
-  "labels": ["Brisbane", "Moorooka", "the headlines", "tech", "AI"],
-  "skip": ["travel"],
-  "minutes": 60
+  "sections": [
+   "local-qld",
+   "local-moo",
+   "headlines",
+   "tech",
+   "ai"
+  ],
+  "labels": [
+   "Brisbane",
+   "Moorooka",
+   "the headlines",
+   "tech",
+   "AI"
+  ],
+  "skip": [
+   "travel"
+  ],
+  "minutes": 60,
+  "brief": 2,
+  "skipVideo": true
  }
 }

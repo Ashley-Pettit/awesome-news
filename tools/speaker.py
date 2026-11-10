@@ -98,11 +98,9 @@ def build(site, name, prof):
         p = os.path.join(data, "feeds", sec + ".json")
         if os.path.exists(p):
             d = json.load(open(p))
-            feeds[sec] = [dict(i, section=sec) for i in (d.get("items") or [])]
+            feeds[sec] = [dict(i, section=sec) for i in (d.get("items") or [])
+                          if not (prof.get("skipVideo") and i.get("video") and (i.get("source") or "").startswith("ABC"))]  # ABC's video stories
     feeds.setdefault("headlines", [])
-    if "headlines" not in prof["sections"]:
-        p = os.path.join(data, "feeds", "headlines.json")
-        feeds["headlines"] = json.load(open(p)).get("items", []) if os.path.exists(p) else []
 
     mp3 = lambda k: os.path.join(vdir, k + ".mp3")
     good = {}
@@ -116,7 +114,10 @@ def build(site, name, prof):
             except OSError:
                 good[k] = False
         return good[k]
-    pieces_of = lambda sid: (stories.get(sid) or {}).get("o") or []
+    more = voice.key_of(voice.MORE)
+    # Brief: the headline and the first couple of pieces (a sentence or three), never "There's more on that one".
+    keep = prof.get("brief")
+    pieces_of = lambda sid: [k for k in ((stories.get(sid) or {}).get("o") or []) if k != more][: (1 + keep) if keep else None]
     ready = {sid for sid in stories if pieces_of(sid) and all(ok(k) for k in pieces_of(sid))}
     rate = {}
 
