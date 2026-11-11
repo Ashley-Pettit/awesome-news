@@ -12,6 +12,8 @@ Inverloch scenes (the Rotary clock, A'Beckett Street, Norman Road, the surf beac
 
 Nothing here is downloaded until someone opens the model. `build.py` copies this folder into the site.
 
+The Logan map in `logan3d/` is opened and flown by the same code (`TOWN_MODELS` in `app.html`).
+
 ## How the app uses it
 
 `app.html` (search for `townModelOpen`) opens the weather's 3D view on Inverloch, goes into Explore, and lays the
