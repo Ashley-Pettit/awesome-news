@@ -1443,6 +1443,9 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
   transform: translate(-50%, 12px); opacity: 0; pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease;
   width: max-content; max-width: min(92vw, 420px); padding: 11px 16px; border-radius: 12px; background: var(--ink); color: var(--bg); font-size: 0.85rem; font-weight: 550; box-shadow: 0 8px 24px var(--shade); }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
+/* Explore fills the bottom of the screen with its sticks, sliders and buttons: there, a message shows under the top buttons instead */
+body.bsfly .toast { top: calc(env(safe-area-inset-top, 0px) + 112px); bottom: auto !important; transform: translate(-50%, -12px); }
+body.bsfly .toast.show { transform: translate(-50%, 0); }
 
 @media (min-width: 640px) {
   .lead .h { font-size: 1.9rem; }
