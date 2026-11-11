@@ -1286,7 +1286,12 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
 .bs-joy span { position: absolute; left: 0; right: 0; top: -22px; text-align: center; font: 700 0.7rem var(--ui); color: var(--bs-ink); text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6); }
 .bs-fly-tip { top: calc(64px + env(safe-area-inset-top)); bottom: auto; max-width: calc(100% - 200px); }
 @media (max-width: 360px) { .bs-joy { width: 112px; height: 112px; } }
-@media (hover: hover) and (pointer: fine) { .bs-joy { display: none !important; } }  /* desktop: the keys and the mouse move you; Up and Down stay */
+/* Desktop: the keys and the mouse move you, so no sticks or Up and Down buttons; the controls are listed bottom left instead */
+@media (hover: hover) and (pointer: fine) {
+  .bs-joy, .bs-ud { display: none !important; }
+  .bs-fly-tip, .bs-fly-tip.dim { display: block !important; top: auto; right: auto; left: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); transform: none; max-width: 300px;
+    white-space: pre-line; text-align: left; font-size: 0.78rem; line-height: 1.55; opacity: 0.92; pointer-events: none; }
+}
 .bs-src { font-size: 0.62rem; color: var(--bs-dim); opacity: 0.75; margin: 2px 2px 0; text-align: right; }
 .bs-note { font-size: 0.8rem; line-height: 1.4; color: var(--bs-dim); margin: 0 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.8em; }
 .bs-scrubrow { display: flex; align-items: center; gap: 10px; }
@@ -7316,7 +7321,7 @@ const handle = async (m, post) => {
     const canvas = $("bsGl"), touch = matchMedia("(pointer: coarse)").matches;
     document.body.classList.add("bsfly"); $("bsFly").hidden = false;
     const tip = $("bsFlyTip"); tip.classList.remove("dim");
-    tip.textContent = touch ? "Left stick to move, right stick to look. Up and Down are top right." : "Drag to look · WASD or arrows to move · Space up, C down · Shift for speed · R to reset";
+    tip.textContent = touch ? "Left stick to move, right stick to look. Up and Down are top right." : "Drag to look around\nW A S D to move\n↑ ↓ to go higher or lower\nShift to go faster\nR to start again · Esc to exit";
     $("bsFlyX").textContent = document.body.classList.contains("wxlisten") ? "Back to the news" : "Exit explore";
     // Inverloch: jump between the clock and Norman Road (about 1.6 km west), and back
     { const jb = $("bsFlyJump"), ns = BS.W.invNormanSpot, cs = BS.W.invSpot; jb.hidden = !(BS.sceneKey === "invTown" && ns && cs); let there = false; jb.textContent = "Jump to Norman Rd";
@@ -7434,9 +7439,9 @@ const handle = async (m, post) => {
   function bsFlyTick(dt) {
     const F = BS.fly, k = F.keys, has = (...c) => c.some(x => k.has(x));
     const sp = (has("ShiftLeft", "ShiftRight") ? 34 : 11) * (F.speed ? F.speed() : 1) * Math.min(dt, 0.1);  // the whole-town model flies faster the higher you are
-    const f = (has("KeyW", "ArrowUp") ? 1 : 0) - (has("KeyS", "ArrowDown") ? 1 : 0) + F.stick.y;
+    const f = (has("KeyW") ? 1 : 0) - (has("KeyS") ? 1 : 0) + F.stick.y;
     const r = (has("KeyD", "ArrowRight") ? 1 : 0) - (has("KeyA", "ArrowLeft") ? 1 : 0) + F.stick.x;
-    const u = (has("Space", "KeyE") ? 1 : 0) - (has("KeyC", "KeyQ", "ControlLeft") ? 1 : 0) + F.vert;
+    const u = (has("Space", "KeyE", "ArrowUp") ? 1 : 0) - (has("KeyC", "KeyQ", "ControlLeft", "ArrowDown") ? 1 : 0) + F.vert;  // the up and down arrows: higher or lower
     const lk = Math.min(dt, 0.1);  // the look stick turns you, faster the further it's pushed
     F.yaw -= F.lookStick.x * Math.abs(F.lookStick.x) * 2.4 * lk; F.pitch = bsClamp(F.pitch + F.lookStick.y * Math.abs(F.lookStick.y) * 1.6 * lk, -1.45, 1.45);
     const sy = Math.sin(F.yaw), cy = Math.cos(F.yaw);
@@ -7446,7 +7451,7 @@ const handle = async (m, post) => {
     if (F.walk) { if (u) F.eye = bsClamp((F.eye || 3.5) + u * 3 * lk, 1.5, 30);  // Up and Down: eyes higher or lower above the ground
       F.pos.y += (F.walk() - F.pos.y) * Math.min(1, lk * 10); }  // walking in the whole-town model: your eyes follow the ground, up hill and down
     else F.pos.y = bsClamp(F.pos.y + u * sp, F.floor ? F.floor() : 1.4, F.ceil || 180);
-    if (F.heightAt) { const h = Math.max(0, F.heightAt()), t = h < 10 ? `${h.toFixed(1)} m` : h < 10000 ? `${Math.round(h)} m` : `${(h / 1000).toFixed(1)} km`; if (t !== F.hText) { F.hText = t; $("bsHeight").textContent = `${t} up`; } }
+    if (F.heightAt) { const h = Math.max(0, F.heightAt()), t = h < 10 ? `${h.toFixed(1)} m` : h < 10000 ? `${Math.round(h)} m` : `${(h / 1000).toFixed(1)} km`; if (t !== F.hText) { F.hText = t; $("bsHeight").textContent = t; } }
   }
   function bsStrike() {
     const W = BS.W, a = W.bolt.geometry.attributes.position; let x = -170 + Math.random() * 340; const z = -240 - Math.random() * 80, y = 78, seg = (y - 2) / 15;
@@ -7689,8 +7694,8 @@ const handle = async (m, post) => {
           modeBox.querySelectorAll("button").forEach(bn => bn.setAttribute("aria-pressed", String((bn.dataset.townMode === "walk") === walk)));
           if (document.pointerLockElement) document.exitPointerLock?.();
           F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.vert = 0; F.keys.clear();
-          tip.textContent = walk ? (touch ? "Left stick to walk, right stick to look around." : "Drag to look · WASD or arrows to walk · Shift to run · R to reset")
-            : (touch ? "Fly with the sticks, or drag the view: pinch to zoom, two fingers to turn. Up and Down are between the sticks." : "Drag to move · scroll to zoom · right-drag to turn · WASD, Space and C fly too");
+          tip.textContent = walk ? (touch ? "Left stick to walk, right stick to look around." : "Drag to look around\nW A S D to walk\n↑ ↓ to go higher or lower\nShift to run\nR to start again · Esc to exit")
+            : (touch ? "Fly with the sticks, or drag the view: pinch to zoom, two fingers to turn. Up and Down are between the sticks." : "Hold the left button and drag to move\nHold the right button and drag to turn\nScroll to zoom\nW A S D to fly · ↑ ↓ for height\nShift to go faster · Esc to exit");
           tip.classList.remove("dim"); clearTimeout(F.tipT); F.tipT = setTimeout(() => tip.classList.add("dim"), 7000);
           T.tween = to ? { a: { x: F.pos.x, y: F.pos.y, z: F.pos.z, yaw: F.yaw, pitch: F.pitch }, b: to, t0: performance.now(), ms: 900 } : null; };
         // Fly: up and back from where you're standing, so the same spot stays in view. Walk: down to the ground you're looking at.
