@@ -7316,7 +7316,7 @@ const handle = async (m, post) => {
     const canvas = $("bsGl"), touch = matchMedia("(pointer: coarse)").matches;
     document.body.classList.add("bsfly"); $("bsFly").hidden = false;
     const tip = $("bsFlyTip"); tip.classList.remove("dim");
-    tip.textContent = touch ? "Left stick to move, right stick to look. Up and Down are top right." : "Click to look with the mouse · WASD to move · Space up, C down · Shift for speed · R to reset";
+    tip.textContent = touch ? "Left stick to move, right stick to look. Up and Down are top right." : "Drag to look · WASD or arrows to move · Space up, C down · Shift for speed · R to reset";
     $("bsFlyX").textContent = document.body.classList.contains("wxlisten") ? "Back to the news" : "Exit explore";
     // Inverloch: jump between the clock and Norman Road (about 1.6 km west), and back
     { const jb = $("bsFlyJump"), ns = BS.W.invNormanSpot, cs = BS.W.invSpot; jb.hidden = !(BS.sceneKey === "invTown" && ns && cs); let there = false; jb.textContent = "Jump to Norman Rd";
@@ -7394,7 +7394,8 @@ const handle = async (m, post) => {
       blur: () => F.keys.clear(),
       mousemove: e => { if (document.pointerLockElement === canvas) look(e.movementX, e.movementY, 0.0024); },
       pointerdown: e => {
-        if (e.pointerType === "mouse") { if (canvas.requestPointerLock) { try { const p = canvas.requestPointerLock(); p?.catch?.(() => {}); } catch {} } F.drag = { x: e.clientX, y: e.clientY }; return; }
+        // desktop: drag to look (no mouse capture, so the buttons can always be clicked)
+        if (e.pointerType === "mouse") { F.drag = { x: e.clientX, y: e.clientY }; try { canvas.setPointerCapture(e.pointerId); } catch {} canvas.style.cursor = "grabbing"; return; }
         try { canvas.setPointerCapture(e.pointerId); } catch {}
         F.touches.set(e.pointerId, { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, move: e.clientX < innerWidth / 2 }); tip.classList.add("dim"); },
       pointermove: e => {
@@ -7403,7 +7404,7 @@ const handle = async (m, post) => {
         if (t.move) { F.stick.x = bsClamp((e.clientX - t.sx) / 55, -1, 1); F.stick.y = bsClamp(-(e.clientY - t.sy) / 55, -1, 1); }
         else look(e.clientX - t.x, e.clientY - t.y, 0.006);
         t.x = e.clientX; t.y = e.clientY; e.preventDefault(); },
-      pointerup: e => { F.drag = null; const t = F.touches.get(e.pointerId); if (t?.move) { F.stick.x = 0; F.stick.y = 0; } F.touches.delete(e.pointerId); },
+      pointerup: e => { F.drag = null; canvas.style.cursor = ""; const t = F.touches.get(e.pointerId); if (t?.move) { F.stick.x = 0; F.stick.y = 0; } F.touches.delete(e.pointerId); },
     };
     F.on.pointercancel = F.on.pointerup;
     addEventListener("keydown", F.on.keydown); addEventListener("keyup", F.on.keyup); addEventListener("blur", F.on.blur);
@@ -7593,7 +7594,8 @@ const handle = async (m, post) => {
   // latitude, longitude, metres back, tilt and bearing).
   const TOWNS = {
     inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=3", assets: TOWN3D, place: "inv", up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
-    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=1", assets: TOWN3D + "moorooka/", place: "moo", up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5] },
+    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=1", assets: TOWN3D + "moorooka/", place: "moo", up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
+      walkStart: { x: -269.8, z: -991.4, yaw: -1.623 } },  // Ash's pick for where Moorooka starts: the Beaudesert Road footpath, looking at the house he chose
     logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=1", assets: TOWN3D + "logan/", place: "logan", up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
       start: "council", wait: 90000, ceil: 110000, fast: 600, far: 150000, out: 130000, stride: 0.02, pad: 80000, stand: [0.45, 400], floodLook: [-27.69, 153.17, 12000, 55, -35] },
   };
@@ -7687,7 +7689,7 @@ const handle = async (m, post) => {
           modeBox.querySelectorAll("button").forEach(bn => bn.setAttribute("aria-pressed", String((bn.dataset.townMode === "walk") === walk)));
           if (document.pointerLockElement) document.exitPointerLock?.();
           F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.vert = 0; F.keys.clear();
-          tip.textContent = walk ? (touch ? "Left stick to walk, right stick to look around." : "Click to look with the mouse · WASD to walk · Shift to run · R to reset")
+          tip.textContent = walk ? (touch ? "Left stick to walk, right stick to look around." : "Drag to look · WASD or arrows to walk · Shift to run · R to reset")
             : (touch ? "Fly with the sticks, or drag the view: pinch to zoom, two fingers to turn. Up and Down are between the sticks." : "Drag to move · scroll to zoom · right-drag to turn · WASD, Space and C fly too");
           tip.classList.remove("dim"); clearTimeout(F.tipT); F.tipT = setTimeout(() => tip.classList.add("dim"), 7000);
           T.tween = to ? { a: { x: F.pos.x, y: F.pos.y, z: F.pos.z, yaw: F.yaw, pitch: F.pitch }, b: to, t0: performance.now(), ms: 900 } : null; };
@@ -7776,8 +7778,9 @@ const handle = async (m, post) => {
 
         // Inverloch: start on foot at the clock, as Explore always has (R comes back here); with no clock, from the air.
         // Moorooka: on foot at the first of its places, the shops on Beaudesert Road.
-        // Logan: from the air, over the council's administration centre.
-        if (cfg.start) go(places.find(p => p.id === cfg.start) || places[0], false);
+        // Logan: from the air, over the council's administration centre. Moorooka: on foot at Ash's pick (walkStart).
+        if (cfg.walkStart) go({ walk: { ...cfg.walkStart, pitch: 0.02 }, fly: above(cfg.walkStart.x, cfg.walkStart.z, cfg.walkStart.yaw) }, true);
+        else if (cfg.start) go(places.find(p => p.id === cfg.start) || places[0], false);
         else if (places[0] && (mine.length || !inv)) go(places[0], true); else { setMode(false); F.pos.set(cfg.air[0], cfg.air[1], cfg.air[2]); F.yaw = cfg.air[3]; F.pitch = cfg.air[4]; }
         F.start = { pos: F.pos.clone(), yaw: F.yaw, pitch: F.pitch };
         modeBox.hidden = false; T.on = true; box.hidden = false;
