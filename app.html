@@ -1282,6 +1282,11 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
 .bs-town-ask { pointer-events: auto; position: absolute; top: calc(112px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 3; width: min(300px, calc(100% - 32px));
   padding: 12px 14px; border-radius: 14px; background: rgba(16, 18, 34, 0.92); color: #fff; text-align: center; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
 .bs-town-ask[hidden] { display: none; }
+/* Logan only: a standing note in the bottom right corner, small, under the Look stick (on a computer, under the sliders) */
+.bs-town-note { position: absolute; right: 12px; bottom: calc(5px + env(safe-area-inset-bottom)); margin: 0; padding: 1px 7px; border-radius: 999px; pointer-events: none;
+  background: rgba(16, 18, 34, 0.62); color: rgba(255, 255, 255, 0.95); font: 600 0.62rem/1.35 var(--ui); white-space: nowrap; }
+.bs-town-note[hidden] { display: none; }
+@media (hover: hover) and (pointer: fine) { .bs-town-note { right: 16px; bottom: calc(1px + env(safe-area-inset-bottom)); padding: 0 7px; font-size: 0.6rem; } }
 .bs-town-ask p { margin: 0 0 10px; font: 600 0.86rem/1.4 var(--ui); }
 .bs-town-ask div { display: flex; gap: 8px; }
 .bs-town-ask button { flex: 1; min-height: 40px; border: 0; border-radius: 10px; background: rgba(255, 255, 255, 0.16); color: #fff; font: 700 0.86rem var(--ui); cursor: pointer; }
@@ -1754,6 +1759,7 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button>
     <div class="bs-town-list bs-town-floods" id="bsTownFloods" role="menu" aria-label="Floods to show on the map" hidden></div>
     <div class="bs-slides" role="group" aria-label="Share, time and tide"><button class="bs-fly-x" type="button" id="bsShareBtn">Share</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false">Time</button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button></div>
+    <p class="bs-town-note" id="bsTownNote" hidden></p>
     <div class="bs-town-ask" id="bsTownAsk" role="alertdialog" aria-labelledby="bsTownAskText" hidden><p id="bsTownAskText"></p><div><button type="button" data-ask="yes">Yes</button><button type="button" data-ask="no">No</button></div></div>
     <div class="bs-fly-time bs-town-tide bs-town-rise" id="bsTownRise" hidden><span>Water</span><input type="range" id="bsTownRiseIn" min="0" max="1" step="0.01" value="1" aria-label="Flood water level"><output id="bsTownRiseOut" for="bsTownRiseIn"></output></div>
     <button class="bs-fly-x bs-fly-jump" type="button" id="bsFlyJump" hidden>Jump to Norman Rd</button>
@@ -7709,7 +7715,8 @@ const handle = async (m, post) => {
     moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=1", assets: TOWN3D + "moorooka/", place: "moo", up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
       walkStart: { x: -269.8, z: -991.4, yaw: -1.623 } },  // Ash's pick for where Moorooka starts: the Beaudesert Road footpath, looking at the house he chose
     logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=2", assets: TOWN3D + "logan/", place: "logan", up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
-      start: "council", wait: 90000, ceil: 110000, fast: 600, far: 150000, out: 130000, stride: 0.02, pad: 80000, stand: [0.45, 400], floodLook: [-27.69, 153.17, 12000, 55, -35] },
+      start: "council", wait: 90000, ceil: 110000, fast: 600, far: 150000, out: 130000, stride: 0.02, pad: 80000, stand: [0.45, 400], floodLook: [-27.69, 153.17, 12000, 55, -35],
+      note: "Prototype - not official council flood mapping" },  // shown small in the bottom right corner the whole time the model is open
   };
   function townModelLoad(cfg) {
     if (window[cfg.lib]) return Promise.resolve(window[cfg.lib]);
@@ -7919,6 +7926,7 @@ const handle = async (m, post) => {
           esc: () => { if (!ask.hidden) { closeAsk(); return true; } if (!list.hidden) { openList(false); return true; } if (!fl.hidden) { fl.hidden = true; fb.setAttribute("aria-expanded", "false"); return true; } return false; },
           r: () => { T.tween = null; F.eye = EYE; if (T.walk !== startWalk) setMode(startWalk); F.pos.copy(F.start.pos); F.yaw = F.start.yaw; F.pitch = F.start.pitch; } };
         modeBox.hidden = false; T.on = true; box.hidden = false;
+        { const note = $("bsTownNote"); note.textContent = cfg.note || ""; note.hidden = !cfg.note; }  // Logan's standing note
         F.heightAt = () => F.pos.y - ground(); $("bsHeight").hidden = false;  // the height shown top left
         // a model that names places (Logan's) keeps them out from under the buttons along the top and, on a phone, the sliders and sticks
         if (m.setLabelObstacles) { const lay = () => { const w = box.clientWidth, h = box.clientHeight; m.setLabelObstacles([[0, 0, w, 104], ...(touch ? [[0, h - 300, w, h]] : [])]); };
@@ -8243,7 +8251,7 @@ const handle = async (m, post) => {
     try { T.model?.dispose(); } catch {}
     const box = $("bsTown"); box.hidden = true; box.textContent = "";
     document.body.classList.remove("bstown", "bswalk"); $("bsHeight").hidden = true; $("bsTownTide").hidden = true; $("bsTideBtn").hidden = true; $("bsTownMode").hidden = true; $("bsTownList").hidden = true;
-    $("bsTownFlood").hidden = true; $("bsTownFlood").textContent = "Flood"; $("bsTownFloods").hidden = true; $("bsTownRise").hidden = true; $("bsTownAsk").hidden = true;
+    $("bsTownFlood").hidden = true; $("bsTownFlood").textContent = "Flood"; $("bsTownFloods").hidden = true; $("bsTownRise").hidden = true; $("bsTownAsk").hidden = true; $("bsTownNote").hidden = true;
   }
   // "Virtually explore Inverloch": the whole-town model, on foot at the clock. "Virtually explore Moorooka": the suburb,
   // on foot at the shops. "Virtually explore Logan": the whole city, from the air over the council's administration centre.
