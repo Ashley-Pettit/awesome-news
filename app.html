@@ -3305,6 +3305,7 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
         if (e.key === "l") { listenToggle("story"); return; }
       } else if (!openSheet && e.key === "l") { listenToggle("dock"); return; }
     }
+    if (e.key === "Escape" && BS.fly?.hot?.esc?.()) { e.stopPropagation(); return; }  // Explore: Esc closes an open list before it closes Explore
     if (e.key === "Escape" && !$("tvs").hidden) { closeTV(); return; }
     if (e.key === "Escape" && openSheet) hideSheet(openSheet);
     if (e.key === "Enter" && e.target.matches?.("a.link[data-open]:not([href])")) e.target.click();
@@ -7298,6 +7299,10 @@ const handle = async (m, post) => {
     canvas.addEventListener("touchmove", e => { if (BS.fly) return; const t = e.touches[0]; if (last) { BS.ptr.tx = bsClamp(BS.ptr.tx - (t.clientX - last.clientX) / 160, -1.2, 1.2); BS.ptr.ty = bsClamp(BS.ptr.ty - (t.clientY - last.clientY) / 200, -1, 1); } last = t; }, { passive: true });
     return true;
   }
+  // The controls list (desktop, bottom left). "?" hides it to one line and back; remembered on this device.
+  function bsTip(text) { const tip = $("bsFlyTip"); if (text != null) tip.dataset.full = text; let off = false; try { off = localStorage.getItem("an-tipoff") === "1"; } catch {}
+    tip.textContent = off ? "? to show the controls" : tip.dataset.full || ""; }
+  function bsTipToggle() { let off = false; try { off = localStorage.getItem("an-tipoff") === "1"; localStorage.setItem("an-tipoff", off ? "0" : "1"); } catch {} bsTip(); }
   // ---- Explore: fly round the 3D scene with game controls ----
   // Computer: click the scene to look with the mouse (Esc gives the mouse back), WASD or the arrow keys to move, Space or E up,
   // C or Q down, Shift to go faster, R back to the start. Phone: drag on the left half to move, the right half to look.
@@ -7321,7 +7326,8 @@ const handle = async (m, post) => {
     const canvas = $("bsGl"), touch = matchMedia("(pointer: coarse)").matches;
     document.body.classList.add("bsfly"); $("bsFly").hidden = false;
     const tip = $("bsFlyTip"); tip.classList.remove("dim");
-    tip.textContent = touch ? "Left stick to move, right stick to look. Up and Down are top right." : "Drag to look around\nW A S D to move\n↑ ↓ to go higher or lower\nShift to go faster\nR to start again · Esc to exit";
+    if (touch) tip.textContent = "Left stick to move, right stick to look. Up and Down are top right.";
+    else bsTip("Drag to look around\nW A S D to move · Shift to go faster\n↑ ↓ or E Q for height\nR to start again · Esc to exit\n? to hide this list");
     $("bsFlyX").textContent = document.body.classList.contains("wxlisten") ? "Back to the news" : "Exit explore";
     // Inverloch: jump between the clock and Norman Road (about 1.6 km west), and back
     { const jb = $("bsFlyJump"), ns = BS.W.invNormanSpot, cs = BS.W.invSpot; jb.hidden = !(BS.sceneKey === "invTown" && ns && cs); let there = false; jb.textContent = "Jump to Norman Rd";
@@ -7392,8 +7398,13 @@ const handle = async (m, post) => {
     const look = (dx, dy, k) => { F.yaw -= dx * k; F.pitch = bsClamp(F.pitch - dy * k, -1.45, 1.45); };
     const typing = e => /^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName || "");
     F.on = {
-      keydown: e => { if (typing(e)) return; if (e.code === "Escape" && document.pointerLockElement !== canvas) { bsFlyOff(); return; }
-        if (e.code === "KeyR") { F.pos.copy(F.start.pos); F.yaw = F.start.yaw; F.pitch = F.start.pitch; }
+      keydown: e => { if (typing(e)) return;
+        if (e.code === "Escape" && document.pointerLockElement !== canvas) { bsFlyOff(); return; }
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        if (e.key === "?") { bsTipToggle(); return; }
+        if (e.code === "KeyF" && F.hot?.f) { F.hot.f(); return; }  // walk or fly (the town models)
+        if (e.code === "KeyJ") { if (F.hot?.j) F.hot.j(); else if (!$("bsFlyJump").hidden) $("bsFlyJump").click(); return; }  // jump to a place
+        if (e.code === "KeyR") { if (F.hot?.r) F.hot.r(); else { F.pos.copy(F.start.pos); F.yaw = F.start.yaw; F.pitch = F.start.pitch; } }
         F.keys.add(e.code); if (/^(Space|Arrow)/.test(e.code)) e.preventDefault(); },
       keyup: e => F.keys.delete(e.code),
       blur: () => F.keys.clear(),
@@ -7448,7 +7459,7 @@ const handle = async (m, post) => {
     const lim = F.lim || [-420, 420, -420, 200];  // the area you can fly in (Norman Road has its own)
     F.pos.x = bsClamp(F.pos.x + (-sy * f + cy * r) * sp, lim[0], lim[1]);
     F.pos.z = bsClamp(F.pos.z + (-cy * f - sy * r) * sp, lim[2], lim[3]);
-    if (F.walk) { if (u) F.eye = bsClamp((F.eye || 3.5) + u * 3 * lk, 1.5, 30);  // Up and Down: eyes higher or lower above the ground
+    if (F.walk) { if (u) F.eye = bsClamp((F.eye || 3) + u * 3 * lk, 1.5, 30);  // Up and Down: eyes higher or lower above the ground
       F.pos.y += (F.walk() - F.pos.y) * Math.min(1, lk * 10); }  // walking in the whole-town model: your eyes follow the ground, up hill and down
     else F.pos.y = bsClamp(F.pos.y + u * sp, F.floor ? F.floor() : 1.4, F.ceil || 180);
     if (F.heightAt) { const h = Math.max(0, F.heightAt()), t = h < 10 ? `${h.toFixed(1)} m` : h < 10000 ? `${Math.round(h)} m` : `${(h / 1000).toFixed(1)} km`; if (t !== F.hText) { F.hText = t; $("bsHeight").textContent = t; } }
@@ -7664,7 +7675,7 @@ const handle = async (m, post) => {
         onError: msg => fail(msg) });
       return m.ready.then(() => {
         if (T.dead || BS.fly !== F) { try { m.dispose(); } catch {} return; }
-        const EYE = 3.5, touch = matchMedia("(pointer: coarse)").matches;  // walking: your eyes 3.5 m up to start, for a clear view over the cars and fences (Up and Down change it)
+        const EYE = 3, touch = matchMedia("(pointer: coarse)").matches;  // walking: your eyes 3 m up to start, for a clear view over the cars and fences (Up and Down change it)
         F.eye = EYE;
         // the ground, or the water over it: the sea and the inlet (Inverloch), or a flood that's on the map (Logan)
         const b = m.bounds(), ground = (x = F.pos.x, z = F.pos.z) => Math.max(m.groundAt(x, z), m.waterAt ? m.waterAt(x, z) : m.waterLevel());
@@ -7694,8 +7705,10 @@ const handle = async (m, post) => {
           modeBox.querySelectorAll("button").forEach(bn => bn.setAttribute("aria-pressed", String((bn.dataset.townMode === "walk") === walk)));
           if (document.pointerLockElement) document.exitPointerLock?.();
           F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.vert = 0; F.keys.clear();
-          tip.textContent = walk ? (touch ? "Left stick to walk, right stick to look around." : "Drag to look around\nW A S D to walk\n↑ ↓ to go higher or lower\nShift to run\nR to start again · Esc to exit")
-            : (touch ? "Fly with the sticks, or drag the view: pinch to zoom, two fingers to turn. Up and Down are between the sticks." : "Hold the left button and drag to move\nHold the right button and drag to turn\nScroll to zoom\nW A S D to fly · ↑ ↓ for height\nShift to go faster · Esc to exit");
+          // one set of controls for every town model (Inverloch, Moorooka, Logan)
+          if (touch) tip.textContent = walk ? "Left stick to walk, right stick to look around." : "Fly with the sticks, or drag the view: pinch to zoom, two fingers to turn. Up and Down are between the sticks.";
+          else bsTip(walk ? "Drag to look around\nW A S D to walk · Shift to run\n↑ ↓ or E Q for height\nF to fly · J to jump to a place\nR to start again · Esc to exit\n? to hide this list"
+            : "Left button drag to move\nRight button drag to turn\nScroll to zoom\nW A S D to fly · Shift to go faster\n↑ ↓ or E Q for height\nF to walk · J to jump to a place\nR to start again · Esc to exit\n? to hide this list");
           tip.classList.remove("dim"); clearTimeout(F.tipT); F.tipT = setTimeout(() => tip.classList.add("dim"), 7000);
           T.tween = to ? { a: { x: F.pos.x, y: F.pos.y, z: F.pos.z, yaw: F.yaw, pitch: F.pitch }, b: to, t0: performance.now(), ms: 900 } : null; };
         // Fly: up and back from where you're standing, so the same spot stays in view. Walk: down to the ground you're looking at.
@@ -7787,7 +7800,12 @@ const handle = async (m, post) => {
         if (cfg.walkStart) go({ walk: { ...cfg.walkStart, pitch: 0.02 }, fly: above(cfg.walkStart.x, cfg.walkStart.z, cfg.walkStart.yaw) }, true);
         else if (cfg.start) go(places.find(p => p.id === cfg.start) || places[0], false);
         else if (places[0] && (mine.length || !inv)) go(places[0], true); else { setMode(false); F.pos.set(cfg.air[0], cfg.air[1], cfg.air[2]); F.yaw = cfg.air[3]; F.pitch = cfg.air[4]; }
-        F.start = { pos: F.pos.clone(), yaw: F.yaw, pitch: F.pitch };
+        F.start = { pos: F.pos.clone(), yaw: F.yaw, pitch: F.pitch }; const startWalk = T.walk;
+        // the keys (desktop): F walk or fly, J the places list, R back to the start at 3 m
+        F.hot = { f: () => { const walk = !T.walk; setMode(walk, walk ? walkFromHere() : above(F.pos.x, F.pos.z, F.yaw)); },
+          j: () => openList(list.hidden),
+          esc: () => { if (!list.hidden) { openList(false); return true; } if (!fl.hidden) { fl.hidden = true; fb.setAttribute("aria-expanded", "false"); return true; } return false; },
+          r: () => { T.tween = null; F.eye = EYE; if (T.walk !== startWalk) setMode(startWalk); F.pos.copy(F.start.pos); F.yaw = F.start.yaw; F.pitch = F.start.pitch; } };
         modeBox.hidden = false; T.on = true; box.hidden = false;
         F.heightAt = () => F.pos.y - ground(); $("bsHeight").hidden = false;  // the height shown top left
       });
@@ -7882,7 +7900,7 @@ const handle = async (m, post) => {
   function townModelOff() {
     const T = BS.town; if (!T) return;
     BS.town = null; T.dead = true; T.on = false; T.ungest?.();
-    if (BS.fly) { const F = BS.fly; F.walk = F.speed = F.floor = null; F.ceil = 0; F.lim = null; }  // Explore, if it carries on, is its old self
+    if (BS.fly) { const F = BS.fly; F.walk = F.speed = F.floor = F.hot = null; F.ceil = 0; F.lim = null; }  // Explore, if it carries on, is its old self
     try { T.model?.dispose(); } catch {}
     const box = $("bsTown"); box.hidden = true; box.textContent = "";
     document.body.classList.remove("bstown", "bswalk"); $("bsHeight").hidden = true; $("bsTownTide").hidden = true; $("bsTownMode").hidden = true; $("bsTownList").hidden = true;
