@@ -1286,6 +1286,7 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
 .bs-joy span { position: absolute; left: 0; right: 0; top: -22px; text-align: center; font: 700 0.7rem var(--ui); color: var(--bs-ink); text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6); }
 .bs-fly-tip { top: calc(64px + env(safe-area-inset-top)); bottom: auto; max-width: calc(100% - 200px); }
 @media (max-width: 360px) { .bs-joy { width: 112px; height: 112px; } }
+@media (hover: hover) and (pointer: fine) { .bs-joy { display: none !important; } }  /* desktop: the keys and the mouse move you; Up and Down stay */
 .bs-src { font-size: 0.62rem; color: var(--bs-dim); opacity: 0.75; margin: 2px 2px 0; text-align: right; }
 .bs-note { font-size: 0.8rem; line-height: 1.4; color: var(--bs-dim); margin: 0 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.8em; }
 .bs-scrubrow { display: flex; align-items: center; gap: 10px; }
@@ -8487,6 +8488,9 @@ const handle = async (m, post) => {
     const today = new Intl.DateTimeFormat("en-AU", { day: "numeric", month: "short", timeZone: "Australia/Brisbane" }).format(new Date());
     const [d, m, hm] = built.split(" ");  // "4 Nov 11:41": just the time on the day it was built
     el.textContent = !built ? "v dev" : `${d} ${m}` === today ? `v ${hm}` : `v ${d} ${m}`;
+    // Ash: the commit it was built from instead (the same short id as in the update notes), to check it's the latest
+    const commit = document.querySelector('meta[name="an-commit"]')?.content || "";
+    if (commit && /^ash(ley)?$/i.test((S.name || "").trim())) el.textContent = commit;
     el.title = `Version built ${built || "here"}${id ? " (" + id + ")" : ""}`;
   }
   // The page's build (stamped by build.py) against the latest on the site. Never mid-listen: it waits until you stop.
