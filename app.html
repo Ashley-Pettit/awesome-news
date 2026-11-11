@@ -235,6 +235,15 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
 .lb-lgwrap { position: relative; }
 .lb-explore[hidden] { display: none; }
 .lb-food .lb-ic { background: #c2551f; }
+/* The #explore link: a loading screen over everything until the 3D town is up, so the app doesn't jump about underneath */
+.ex-load { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; align-content: center; gap: 18px; padding: 24px; text-align: center;
+  background: radial-gradient(120% 90% at 50% 30%, #2b5f8a 0%, #12324d 55%, #0b1d2e 100%); color: #fff; transition: opacity 0.5s ease; }
+.ex-load.gone { opacity: 0; pointer-events: none; }
+.ex-load b { font: 750 1.3rem/1.25 var(--display, var(--ui)); letter-spacing: -0.01em; }
+.ex-load small { font: 500 0.9rem var(--ui); opacity: 0.75; }
+.ex-load i { width: 46px; height: 46px; border-radius: 50%; border: 4px solid rgba(255, 255, 255, 0.22); border-top-color: #ffd36b; animation: exspin 0.9s linear infinite; }
+@keyframes exspin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .ex-load i { animation-duration: 2.4s; } }
 .lb-home { text-decoration: none; color: inherit; } .lb-home .lb-ic { background: #3d4a5c; } .lb-home[hidden] { display: none; }
 /* Food in the area (Moorooka): places to eat or drink, from OpenStreetMap */
 .fd-intro { color: var(--muted); font-size: 0.86rem; margin: 2px 0 0; }
@@ -1894,6 +1903,10 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
   const sharedStory = linkQ && /^https?:\/\//.test(linkQ.get("u") || "") ? { id: pendingStory, url: linkQ.get("u"), title: linkQ.get("t") || "A shared story", source: linkQ.get("s") || "", summary: "", published: !isNaN(Date.parse(linkQ.get("d") || "")) ? linkQ.get("d") : new Date().toISOString() } : null;
   let pendingTV = rawHash === "tv";  // link from the Claude copy's TV button
   let pendingExplore = rawHash === "explore";  // a link straight into Explore (Coastline News: …/inverloch/#explore)
+  // …with a loading screen over the app until the 3D town is up
+  const exLoad = pendingExplore ? (() => { const d = document.createElement("div"); d.className = "ex-load"; d.setAttribute("role", "status");
+    d.innerHTML = `<i aria-hidden="true"></i><b>Loading Inverloch 3D model</b><small>This takes a few seconds</small>`; document.body.appendChild(d); return d; })() : null;
+  const exLoadDone = () => { if (!exLoad || exLoad.classList.contains("gone")) return; exLoad.classList.add("gone"); setTimeout(() => exLoad.remove(), 600); };
   const hash = pendingStory || pendingTV || pendingExplore ? "" : rawHash;
   const state = {
     tab: hash || store.get("brief.tab3", "foryou"),
@@ -8424,8 +8437,11 @@ const handle = async (m, post) => {
       if (pendingStory) { const id = pendingStory; pendingStory = ""; history.replaceState(null, "", location.pathname); if (findItem(id)) openReader(id); else loadArchive()?.then?.(() => findItem(id) ? openReader(id) : toast("That story isn't in the news here any more")).catch(() => toast("That story isn't in the news here any more")); }
       if (pendingTV) { pendingTV = false; try { history.replaceState(null, "", location.pathname); } catch {} openTV(); }
       if (pendingExplore) { pendingExplore = false; try { history.replaceState(null, "", location.pathname); } catch {}
-        const t0 = Date.now(), go = () => { if (state.wx) exploreInverloch(); else if (Date.now() - t0 < 20000) setTimeout(go, 300); else toast("Explore needs the weather, which didn't load. Try again in a moment."); };
-        go(); }
+        const t0 = Date.now(), go = () => { if (state.wx) exploreInverloch(); else if (Date.now() - t0 < 20000) setTimeout(go, 300); else { exLoadDone(); toast("Explore needs the weather, which didn't load. Try again in a moment."); } };
+        go();
+        // the loading screen goes once the town's up and you've arrived at the clock (or if it didn't start)
+        const watch = () => { const T = BS.town; if (T?.on) setTimeout(exLoadDone, 1100); else if (Date.now() - t0 > 45000 || (T && T.dead) || (Date.now() - t0 > 3000 && !T && state.wx)) exLoadDone(); else setTimeout(watch, 250); };
+        watch(); }
       afterPics("offline", saveOffline);
       if (!state.wx) loadWeather();
     } catch {
