@@ -110,11 +110,16 @@ jobs:
           FOCUS: ${{ inputs.focus }}
         run: python voice.py _site/data --shard ${{ matrix.shard }}/8 --reuse-from https://ashley-pettit.github.io/awesome-news/ --budget "$BUDGET"
 
+      # One file per shard: uploading the ~1,800 separate audio files kept failing on GitHub's side and slowed every run
+      - name: Pack the audio
+        run: tar -C _site/data -cf voice-${{ matrix.shard }}.tar voice
+
       - uses: actions/upload-artifact@v4
         with:
           name: voice-${{ matrix.shard }}
-          path: _site/data/voice
+          path: voice-${{ matrix.shard }}.tar
           retention-days: 1
+          compression-level: 0   # MP3s don't shrink
 
   publish:
     needs: [news, voice]
@@ -141,8 +146,12 @@ jobs:
         continue-on-error: true
         with:
           pattern: voice-*
-          path: _site/data/voice
+          path: _voice
           merge-multiple: true
+
+      - name: Unpack the audio
+        continue-on-error: true
+        run: for t in _voice/*.tar; do [ -f "$t" ] && tar -C _site/data -xf "$t"; done; ls _site/data/voice | wc -l
 
       # Always publish the newest app: a quick publish may have put out a newer page while this run was busy,
       # and this run mustn't put the older one back. The 3D models (town3d) come with it: the newest page names
