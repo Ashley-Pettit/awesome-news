@@ -1,6 +1,6 @@
 # Logan 3D model
 
-The whole-city map behind **Virtually explore Logan** (in The Logan Wire, and for anyone whose news area is Logan)
+The whole-city map behind **Virtually explore Logan** (in The Logan Wire, for anyone whose news area is Logan, and from the link `…/logan/#explore`)
 and **Admin > 3D scenes > Logan 3D model**. It is separate from the weather's own Logan scene (the river, the koala,
 the motorway bridge), which is built inside `app.html`.
 
@@ -30,14 +30,14 @@ over the weather's. If the map cannot load, Virtually explore Logan carries on i
 Every frame the app passes the camera Explore is moving to `model.setCamera(...)`, and the time slider to
 `model.setMinutes(...)`.
 
-- **Fly** (how it opens, over the council's administration centre): the sticks fly, and the view itself can be
+- **Fly** (how it opens, over the council's administration centre, behind the loading screen): the sticks fly, and the view itself can be
   dragged (pinch or scroll to zoom, two fingers or right-drag to turn). You can pull back far enough to see the
   whole city.
 - **Walk**: puts you down on the ground you were looking at, with your eyes 3 m up. The council precinct is the
   place to do it; elsewhere the buildings are plain blocks.
 - **Jump to…** lists the whole city, the council's administration centre and the map's other places.
 - **Flood** lists the January 1974, March 2017 and February 2022 floods and an estimated 1% AEP flood. Choosing one
-  lays its water over the map (`model.setFlood(id)`), rising to its peak. If none of the water is in view, the
+  lays its water over the map (`model.setFlood(id)`), rising to its peak, and says what the flood was. If none of the water is in view, the
   camera glides to the lower Logan River, where the floods are widest. The **Water** slider then lowers the water
   from its peak by up to 8 m (`model.setFloodLevel(...)`). On foot, you stand on the water's surface.
 
@@ -67,4 +67,5 @@ script changes, bump the `?v=` on `logan-model.js` in `app.html` (in `TOWN_MODEL
 
 Map and flood data © State of Queensland, CC BY 4.0.
 Elevation © Commonwealth of Australia (Geoscience Australia), CC BY 4.0. Rainfall, design rainfall and river
-heights © Commonwealth of Australia (Bureau of Meteorology), CC BY 4.0. The map shows this credit on screen.
+heights © Commonwealth of Australia (Bureau of Meteorology), CC BY 4.0. The app shows these credits in Settings, under About (the map's own credit line is hidden,
+as Inverloch's is).

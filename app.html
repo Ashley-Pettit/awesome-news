@@ -235,6 +235,16 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
 .lb-lgwrap { position: relative; }
 .lb-explore[hidden] { display: none; }
 .lb-food .lb-ic { background: #c2551f; }
+/* The #explore link: a loading screen over everything until the 3D town is up, so the app doesn't jump about underneath */
+.ex-load { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; align-content: center; gap: 18px; padding: 24px; text-align: center;
+  background: radial-gradient(120% 90% at 50% 30%, #2b5f8a 0%, #12324d 55%, #0b1d2e 100%); color: #fff; transition: opacity 0.5s ease; }
+.ex-load.gone { opacity: 0; pointer-events: none; }
+.ex-load b { font: 750 1.3rem/1.25 var(--display, var(--ui)); letter-spacing: -0.01em; }
+.ex-load small { font: 500 0.9rem var(--ui); opacity: 0.75; }
+.ex-load i { width: 46px; height: 46px; border-radius: 50%; border: 4px solid rgba(255, 255, 255, 0.22); border-top-color: #ffd36b; animation: exspin 0.9s linear infinite; }
+@keyframes exspin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .ex-load i { animation-duration: 2.4s; } }
+.lb-home { text-decoration: none; color: inherit; } .lb-home .lb-ic { background: #3d4a5c; } .lb-home[hidden] { display: none; }
 /* Food in the area (Moorooka): places to eat or drink, from OpenStreetMap */
 .fd-intro { color: var(--muted); font-size: 0.86rem; margin: 2px 0 0; }
 .fd-head { font-family: var(--display); font-size: 1.5rem; letter-spacing: -0.02em; margin: 6px 0 0; }
@@ -1224,6 +1234,7 @@ body.bsfly.flypeek .bs-fly-x.bs-fly-lock { display: none !important; }
 body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
 /* The whole-town models (Admin > 3D scenes > Inverloch 3D model, Logan 3D model): their own canvas over the weather's, flown with Explore's controls.
    It never takes a touch or click itself, so the sticks, the mouse look and the keys all work as they do in Explore. */
+.inv-embed-credit, .lgn-embed-credit { display: none !important; }  /* the 3D models' map, elevation and flood credits are in Settings, under About */
 #bsTown { position: absolute; inset: 0; z-index: 0; pointer-events: none; --inv-credit-bottom: calc(236px + env(safe-area-inset-bottom)); }
 body.bstown #bsFlyPeek, body.bstown #bsFlyLock { display: none !important; }
 /* Walk or Fly, at the top. Walking: the sticks, with your eyes following the ground. Flying: the sticks and Up and Down, or drag the
@@ -1237,26 +1248,27 @@ body.bstown:not(.bswalk) #bsTown { pointer-events: auto; touch-action: none; cur
 .bs-town-tide span { flex: none; font: 700 0.8rem var(--ui); color: var(--bs-ink); }
 .bs-town-tide output { min-width: 68px; }
 body.bstown .bs-fly-time.bs-town-tide { bottom: calc(236px + env(safe-area-inset-bottom)); }
-/* Up and Down sit between the sticks, in reach of both thumbs (flying only: walking follows the ground) */
+/* Up and Down sit between the sticks, in reach of both thumbs (walking, they raise or lower your eyes above the ground) */
 body.bstown .bs-ud { top: auto; right: auto; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom)); transform: translateX(-50%); }
-body.bstown.bswalk .bs-ud { display: none; }
+body.bstown .bs-fly-tip { display: none; }  /* the 3D town: no "Left stick to walk…" tip, the sticks are labelled */
+/* How high you are above the ground: small, top left under Exit, out of the way */
+.bs-height { position: absolute; top: calc(68px + env(safe-area-inset-top)); left: 16px; z-index: 2; padding: 4px 10px; border-radius: 999px; pointer-events: none;
+  background: rgba(16, 18, 34, 0.6); color: #fff; font: 700 0.78rem var(--ui); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.bs-height[hidden] { display: none; }
 /* Jump: top right, opening a list of places */
 body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); }
 .bs-town-list { pointer-events: auto; position: absolute; top: calc(60px + env(safe-area-inset-top)); right: 16px; z-index: 2; display: grid; gap: 2px; width: min(270px, calc(100% - 32px));
   max-height: min(62%, 440px); overflow-y: auto; padding: 6px; border-radius: 14px; background: rgba(16, 18, 34, 0.9); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
 .bs-town-list button { min-height: 40px; padding: 6px 12px; border: 0; border-radius: 10px; background: none; color: #fff; font: 600 0.86rem var(--ui); text-align: left; cursor: pointer; }
 .bs-town-list button:hover, .bs-town-list button:focus-visible { background: rgba(255, 255, 255, 0.18); outline: none; }
-/* The Logan model's floods: a Flood button under Exit explore, its list of floods, and (with a flood on) the water level above the time */
-.bs-fly-x.bs-town-flood { top: calc(60px + env(safe-area-inset-top)); }
+/* The Logan model's floods: a Flood button under Jump, its list of floods, and (with a flood on) the water level above the time */
+.bs-fly-x.bs-town-flood { top: calc(60px + env(safe-area-inset-top)); left: auto; right: 16px; }
 .bs-fly-x.bs-town-flood[aria-pressed="true"] { background: #fff; color: #1b1830; }
-.bs-town-list.bs-town-floods { top: calc(106px + env(safe-area-inset-top)); right: auto; left: 16px; }
+.bs-town-list.bs-town-floods { top: calc(106px + env(safe-area-inset-top)); }
 .bs-town-list button small { display: block; margin-top: 2px; font: 500 0.74rem/1.3 var(--ui); color: rgba(255, 255, 255, 0.78); }
 .bs-town-list button[aria-checked="true"] { background: rgba(255, 255, 255, 0.14); }
 .bs-town-list p { margin: 4px 12px 6px; font: 500 0.72rem/1.4 var(--ui); color: rgba(255, 255, 255, 0.78); }
 .bs-town-rise output { min-width: 88px; }
-/* The model's credit line sits just above the time, or above the tide (Inverloch, flying) or the flood's water level when they show */
-body.bstown.bsnotide #bsTown { --inv-credit-bottom: calc(236px + env(safe-area-inset-bottom)); }
-body.bstown.bsflood #bsTown { --inv-credit-bottom: calc(286px + env(safe-area-inset-bottom)); }
 #weather .bs-flybtn { display: inline-flex; }  /* Explore: for everyone */
 /* While Listen plays the weather: Explore sits up top beside Week (its "Back to the news" only shows once you're exploring) */
 /* Explore's on-screen controls: a stick to move (left), a stick to look (right), Up and Down top right */
@@ -1517,6 +1529,7 @@ body.bstown.bsflood #bsTown { --inv-credit-bottom: calc(286px + env(safe-area-in
       <div class="lb-catch" id="lbCatch" role="status" hidden></div>
       <div class="lb-catch lb-drive" id="lbDrive" role="status" hidden></div>
       <div class="lb-lgwrap" id="lbLgWrap"><details class="lb-apps"><summary class="lb-logan lb-appsum"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>Local news apps</b><small>Moorooka, Logan and the Bass Coast</small></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div class="lb-subs"><a class="lb-logan lb-sub" href="moorooka/" data-sub="moorooka/"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>Moorooka News</b><small>Local news first</small></span></a><a class="lb-logan lb-sub" href="logan/" data-sub="logan/"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>The Logan Wire</b><small>Local news first</small></span></a><a class="lb-logan lb-sub" href="inverloch/" data-sub="inverloch/"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>Coastline News</b><small>Local news first</small></span></a></div></details></div>
+      <a class="lb-logan lb-home" id="lbHome" href="https://ashley-pettit.github.io/awesome-news/" hidden><span class="lb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5.5 9.5V20h13V9.5"/></svg></span><span><b>Back to Awesome&#32;News</b><small>All the news, not just the local</small></span></a>
       <button class="lb-logan lb-explore" type="button" id="lbExplore" hidden><span class="lb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg></span><span><b>Virtually explore Inverloch</b><small>Walk around the town centre in 3D</small></span></button>
       <button class="lb-logan lb-food" type="button" id="lbFood" hidden><span class="lb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3v8M4.5 3v5a2.5 2.5 0 0 0 5 0V3M7 11v10M17 21V3c-2.2 1.2-3.5 3.6-3.5 7v3H17"/></svg></span><span><b>Food in the area</b><small>Places to eat or drink near the Moorooka shops</small></span></button>
       <button class="topsearch" type="button" data-open-search aria-label="Search all news">
@@ -1704,6 +1717,7 @@ body.bstown.bsflood #bsTown { --inv-credit-bottom: calc(286px + env(safe-area-in
     <button class="bs-fly-x bs-fly-peek" type="button" id="bsFlyPeek" aria-pressed="false">Show weather</button>
     <div class="bs-fly-time"><input type="range" id="bsFlyTime" min="0" max="1439" step="5" aria-label="Time of day"><output id="bsFlyTimeOut" for="bsFlyTime"></output></div>
     <div class="bs-fly-time bs-town-tide" id="bsTownTide" hidden><span>Tide</span><input type="range" id="bsTownTideIn" step="0.05" aria-label="Tide level"><output id="bsTownTideOut" for="bsTownTideIn"></output></div>
+    <div class="bs-height" id="bsHeight" hidden aria-hidden="true"></div>
     <div class="bs-town-mode" id="bsTownMode" role="group" aria-label="Walk or fly" hidden><button type="button" data-town-mode="walk" aria-pressed="true">Walk</button><button type="button" data-town-mode="fly" aria-pressed="false">Fly</button></div>
     <div class="bs-town-list" id="bsTownList" role="menu" aria-label="Places to jump to" hidden></div>
     <button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button>
@@ -1906,7 +1920,15 @@ body.bstown.bsflood #bsTown { --inv-credit-bottom: calc(286px + env(safe-area-in
   let pendingStory = linkQ?.get("story") || "";
   const sharedStory = linkQ && /^https?:\/\//.test(linkQ.get("u") || "") ? { id: pendingStory, url: linkQ.get("u"), title: linkQ.get("t") || "A shared story", source: linkQ.get("s") || "", summary: "", published: !isNaN(Date.parse(linkQ.get("d") || "")) ? linkQ.get("d") : new Date().toISOString() } : null;
   let pendingTV = rawHash === "tv";  // link from the Claude copy's TV button
-  const hash = pendingStory || pendingTV ? "" : rawHash;
+  let pendingExplore = rawHash === "explore";  // a link straight into Explore (Coastline News: …/inverloch/#explore; The Logan Wire: …/logan/#explore)
+  // Opening Inverloch's 3D town or Logan's 3D map (the #explore link, or the Explore button): a loading screen over everything until the town
+  // is up and the view has settled, so nothing jumps or jitters while it loads
+  let exLoad = null;
+  const exLoadShow = kind => { if (exLoad) return; const d = exLoad = document.createElement("div"); d.className = "ex-load"; d.setAttribute("role", "status");
+    d.innerHTML = `<i aria-hidden="true"></i><b>Loading ${kind === "logan" ? "Logan" : "Inverloch"} 3D model</b><small>This takes a few seconds</small>`; document.body.appendChild(d); };
+  const exLoadDone = () => { const d = exLoad; if (!d) return; exLoad = null; d.classList.add("gone"); setTimeout(() => d.remove(), 600); };
+  if (pendingExplore) exLoadShow(exploreWhich());
+  const hash = pendingStory || pendingTV || pendingExplore ? "" : rawHash;
   const state = {
     tab: hash || store.get("brief.tab3", "foryou"),
     showSaved: hash === "saved",
@@ -3730,7 +3752,7 @@ body.bstown.bsflood #bsTown { --inv-credit-bottom: calc(286px + env(safe-area-in
         <button class="field danger" type="button" id="clearSaved">Clear saved stories <span class="sub" style="color:var(--muted)">${state.saved.length} saved</span></button>
       </div><p class="hint">Everything you set here stays on this device.</p></div>
       ${commuteOK() ? commuteHTML() : ""}
-      <p class="about">Awesome News pulls from free sources only: ABC, SBS, BBC, The Guardian, 7NEWS, The Conversation, 360info, Global Voices, NASA, EFF, Ars Technica, TechCrunch, iTnews and more. Weather from Open-Meteo, tuned to local Bureau stations. Inverloch's 3D town is built from OpenStreetMap (&copy; OpenStreetMap contributors). ${privateMode() ? "Stories open in full right here." : "Stories marked Full are free to republish, so they open in full right here."} No paywalls, no sport.${state.status?.updatedAt ? `<br>Stories last updated ${esc(longDate(state.status.updatedAt))}.` : ""}</p>
+      <p class="about">Awesome News pulls from free sources only: ABC, SBS, BBC, The Guardian, 7NEWS, The Conversation, 360info, Global Voices, NASA, EFF, Ars Technica, TechCrunch, iTnews and more. Weather from Open-Meteo, tuned to local Bureau stations. Inverloch's 3D town is built from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> map data (&copy; OpenStreetMap contributors, ODbL) and Geoscience Australia elevation data (CC BY 4.0). Logan's 3D map is built from Queensland Government map and flood data (&copy; State of Queensland, CC BY 4.0), Geoscience Australia elevation data (CC BY 4.0), and Bureau of Meteorology rainfall and river heights (CC BY 4.0); its floods are a guide only. ${privateMode() ? "Stories open in full right here." : "Stories marked Full are free to republish, so they open in full right here."} No paywalls, no sport.${state.status?.updatedAt ? `<br>Stories last updated ${esc(longDate(state.status.updatedAt))}.` : ""}</p>
 `,
     };
     $("sBody").innerHTML = `
@@ -6494,7 +6516,7 @@ const handle = async (m, post) => {
         [x, z] = at(0.72, 2.2); const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.7, 0), new THREE.MeshStandardMaterial({ color: 0x9b968c, roughness: 1, flatShading: true })); rock.position.set(x, G0 + 0.5, z); rock.scale.set(1, 1.3, 0.8); TG.add(rock);
       }
       // the Rotary clock on its garden bed at the corner of A'Beckett and Reilly, library side; it reads from both sides (north-west and south-east). Explore starts in front of it.
-      { const fx = Math.sin(D.c[2] + 0.4), fz = Math.cos(D.c[2] + 0.4), s = toW(D.c[0] + fx * 13, G0 + 2.1, D.c[1] + fz * 13), l = toW(D.c[0], G0 + 4.5, D.c[1]).sub(s);
+      { const fx = Math.sin(D.c[2] + 0.4), fz = Math.cos(D.c[2] + 0.4), s = toW(D.c[0] + fx * 13, G0 + 4.2, D.c[1] + fz * 13), l = toW(D.c[0], G0 + 4.8, D.c[1]).sub(s);
         W.invSpot = { pos: [s.x, s.y, s.z], yaw: Math.atan2(-l.x, -l.z), pitch: Math.atan2(l.y, Math.hypot(l.x, l.z)) }; }
       W.invClock.position.set(D.c[0], 2.15, D.c[1]); W.invClock.rotation.y = D.c[2]; TG.add(W.invClock);
       // ---- the war memorial (Memorial Gardens, A'Beckett and Reilly, in front of the Hub): a two-tier white obelisk of cemented beach
@@ -7415,8 +7437,10 @@ const handle = async (m, post) => {
     const lim = F.lim || [-420, 420, -420, 200];  // the area you can fly in (Norman Road has its own)
     F.pos.x = bsClamp(F.pos.x + (-sy * f + cy * r) * sp, lim[0], lim[1]);
     F.pos.z = bsClamp(F.pos.z + (-cy * f - sy * r) * sp, lim[2], lim[3]);
-    if (F.walk) F.pos.y += (F.walk() - F.pos.y) * Math.min(1, lk * 10);  // walking in the whole-town model: your eyes follow the ground, up hill and down
+    if (F.walk) { if (u) F.eye = bsClamp((F.eye || 3.5) + u * 3 * lk, 1.5, 30);  // Up and Down: eyes higher or lower above the ground
+      F.pos.y += (F.walk() - F.pos.y) * Math.min(1, lk * 10); }  // walking in the whole-town model: your eyes follow the ground, up hill and down
     else F.pos.y = bsClamp(F.pos.y + u * sp, F.floor ? F.floor() : 1.4, F.ceil || 180);
+    if (F.heightAt) { const h = Math.max(0, F.heightAt()), t = h < 10 ? `${h.toFixed(1)} m` : h < 10000 ? `${Math.round(h)} m` : `${(h / 1000).toFixed(1)} km`; if (t !== F.hText) { F.hText = t; $("bsHeight").textContent = `${t} up`; } }
   }
   function bsStrike() {
     const W = BS.W, a = W.bolt.geometry.attributes.position; let x = -170 + Math.random() * 340; const z = -240 - Math.random() * 80, y = 78, seg = (y - 2) / 15;
@@ -7579,6 +7603,17 @@ const handle = async (m, post) => {
     openWeather(); if ($("weather").hidden) return;
     BS.invBeach = false; BS.exploreOnly = kind === "logan" ? "logan" : true; if (BS.B) bsPlace();
     const T = BS.town = { on: false, model: null, dead: false, keep: !!viaExplore, kind, cfg };
+    exLoadShow(kind);
+    // the loading screen goes once the town's up and the view has held still for a moment (or if it didn't start)
+    { let onAt = 0, last = "", still = 0;
+      const watch = () => {
+        if (BS.town !== T || T.dead || Date.now() - t0 > 45000) { exLoadDone(); return; }
+        if (T.on) { const F = BS.fly, at = performance.now(); onAt ||= at;
+          const k = F ? [F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch].map(v => v.toFixed(2)).join() : "";
+          if (k !== last) { last = k; still = at; }
+          if (at - onAt > 1200 && at - still > 700) { exLoadDone(); return; } }
+        setTimeout(watch, 120); };
+      setTimeout(watch, 120); }
     const t0 = Date.now(), go = () => {
       if (T.dead) return;
       if ($("weather").hidden) { townModelOff(); return; }
@@ -7610,7 +7645,8 @@ const handle = async (m, post) => {
         onError: msg => fail(msg) });
       return m.ready.then(() => {
         if (T.dead || BS.fly !== F) { try { m.dispose(); } catch {} return; }
-        const EYE = 3, touch = matchMedia("(pointer: coarse)").matches;  // walking: your eyes 3 m up, for a clear view over the cars and fences
+        const EYE = 3.5, touch = matchMedia("(pointer: coarse)").matches;  // walking: your eyes 3.5 m up to start, for a clear view over the cars and fences (Up and Down change it)
+        F.eye = EYE;
         // the ground, or the water over it: the sea and the inlet (Inverloch), or a flood that's on the map (Logan)
         const b = m.bounds(), ground = (x = F.pos.x, z = F.pos.z) => Math.max(m.groundAt(x, z), m.waterAt ? m.waterAt(x, z) : m.waterLevel());
         // where you can go: inside the model (flying over Logan, far enough outside it to see the whole city); flying, above the ground and the water, and faster the higher you are
@@ -7633,7 +7669,7 @@ const handle = async (m, post) => {
 
         // ---- Walk or Fly ----
         const tideBox = $("bsTownTide"), tideIn = $("bsTownTideIn"), tideOut = $("bsTownTideOut");
-        const setMode = (walk, to) => { T.walk = walk; document.body.classList.toggle("bswalk", walk); F.walk = walk ? () => ground() + EYE : null; tideBox.hidden = walk || !m.tide; F.lim = walk ? inner : outer;
+        const setMode = (walk, to) => { T.walk = walk; document.body.classList.toggle("bswalk", walk); F.walk = walk ? () => ground() + F.eye : null; tideBox.hidden = walk || !m.tide; F.lim = walk ? inner : outer;
           modeBox.querySelectorAll("button").forEach(bn => bn.setAttribute("aria-pressed", String((bn.dataset.townMode === "walk") === walk)));
           if (document.pointerLockElement) document.exitPointerLock?.();
           F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.vert = 0; F.keys.clear();
@@ -7645,7 +7681,7 @@ const handle = async (m, post) => {
         const walkFromHere = () => { const cp = Math.cos(F.pitch), d = [-Math.sin(F.yaw) * cp, Math.sin(F.pitch), -Math.cos(F.yaw) * cp]; let x = F.pos.x, z = F.pos.z;
           if (d[1] < -0.05) for (let t = 0; t < cfg.far; t += Math.max(5, t * cfg.stride)) { const px = F.pos.x + d[0] * t, pz = F.pos.z + d[2] * t; if (F.pos.y + d[1] * t <= ground(px, pz) + 1) { x = px; z = pz; break; } }
           x = bsClamp(x, inner[0], inner[1]); z = bsClamp(z, inner[2], inner[3]);
-          return { x, y: ground(x, z) + EYE, z, yaw: F.yaw, pitch: -0.04 }; };
+          return { x, y: ground(x, z) + F.eye, z, yaw: F.yaw, pitch: -0.04 }; };
         modeBox.onclick = e => { const bn = e.target.closest("[data-town-mode]"); if (!bn) return; const walk = bn.dataset.townMode === "walk"; if (walk === T.walk) return;
           setMode(walk, walk ? walkFromHere() : above(F.pos.x, F.pos.z, F.yaw)); };
 
@@ -7681,7 +7717,7 @@ const handle = async (m, post) => {
 
         // ---- Jump: a list of places. Walking, it stands you there; flying, it shows the place from above. ----
         const go = (p, walk) => { T.tween = null; if (walk !== T.walk) setMode(walk);
-          if (walk) { F.pos.set(p.walk.x, ground(p.walk.x, p.walk.z) + EYE, p.walk.z); F.yaw = p.walk.yaw; F.pitch = p.walk.pitch; }
+          if (walk) { F.pos.set(p.walk.x, ground(p.walk.x, p.walk.z) + F.eye, p.walk.z); F.yaw = p.walk.yaw; F.pitch = p.walk.pitch; }
           else { const v = typeof p.fly === "function" ? p.fly() : p.fly; F.pos.set(v.x, v.y, v.z); F.yaw = v.yaw; F.pitch = v.pitch; } };
         list.innerHTML = places.map((p, i) => `<button type="button" role="menuitem" data-town-go="${i}">${esc(p.name[0].toUpperCase() + p.name.slice(1))}</button>`).join("");
         const openList = on => { list.hidden = !on; jump.setAttribute("aria-expanded", String(on)); if (on) { fl.hidden = true; fb.setAttribute("aria-expanded", "false"); list.querySelector("button")?.focus({ preventScroll: true }); } };
@@ -7701,7 +7737,7 @@ const handle = async (m, post) => {
           const draw = () => { fl.innerHTML = `<button type="button" role="menuitemradio" aria-checked="${!now}" data-town-flood="">No flood</button>`
             + events.map(e => `<button type="button" role="menuitemradio" aria-checked="${e.id === now}" data-town-flood="${esc(e.id)}">${esc(e.name)}<small>${e.kind === "design" ? "Estimated from rainfall" : "As recorded on the river gauges"} · about ${Math.round(e.areaKm2)} km² under water</small></button>`).join("")
             + `<p>A guide only. For property, insurance or planning decisions, use Logan City Council's flood maps.</p>`; };
-          const shown = id => { now = id; draw(); fb.setAttribute("aria-pressed", String(!!id)); riseBox.hidden = !id; document.body.classList.toggle("bsflood", !!id); };
+          const shown = id => { now = id; draw(); fb.setAttribute("aria-pressed", String(!!id)); riseBox.hidden = !id; };
           // somewhere to see a flood from: back and up from a place, looking down at it (metres back, tilt from straight down, bearing: 0 is from the south)
           const lookFrom = (lat, lon, back, tilt, bearing) => { const [tx, tz] = m.fromLatLon(lat, lon), p = tilt * Math.PI / 180, a = bearing * Math.PI / 180, g = m.groundAt(tx, tz);
             const x = tx + back * Math.sin(p) * Math.sin(a), z = tz + back * Math.sin(p) * Math.cos(a), y = g + back * Math.cos(p);
@@ -7709,13 +7745,13 @@ const handle = async (m, post) => {
           const pick = async id => { const e = events.find(x => x.id === id), was = now; shown(e ? id : "");
             try { await m.setFlood(e ? id : null); } catch { if (!T.dead && now === id) { shown(""); toast("That flood couldn't load. Check your connection and try again."); } return; }
             if (T.dead || !e || now !== id) return;
-            tip.textContent = `${e.name}. ${e.note} About ${Math.round(e.areaKm2)} km² of Logan under water.`; tip.classList.remove("dim"); clearTimeout(F.tipT); F.tipT = setTimeout(() => tip.classList.add("dim"), 10000);
+            toast(`${e.name}. ${e.note} About ${Math.round(e.areaKm2)} km² of Logan under water.`, 8000);
             if (was) return;  // swapping one flood for another: the view stays where you put it
             // turning the water on: if none of it is in view, glide to where the floods are widest (on foot, you're told instead)
             const R = reach(), d = look3(), cx = F.pos.x + d[0] * R, cz = F.pos.z + d[2] * R; let wet = false;
             for (let i = -3; i <= 3 && !wet; i++) for (let j = -3; j <= 3; j++) if (m.waterAt(cx + i * R * 0.25, cz + j * R * 0.25) > -1e5) { wet = true; break; }
             if (wet) return;
-            if (T.walk) toast("No flood water here. Tap Fly, or jump to somewhere by the river.", 6000);
+            if (T.walk) toast(`${e.name}: no flood water here. Tap Fly, or jump to somewhere by the river.`, 8000);
             else T.tween = { a: { x: F.pos.x, y: F.pos.y, z: F.pos.z, yaw: F.yaw, pitch: F.pitch }, b: lookFrom(...cfg.floodLook), t0: performance.now(), ms: 1800 }; };
           fb.hidden = false; fb.setAttribute("aria-pressed", "false"); openFloods(false);
           fb.onclick = async () => { if (!fl.hidden) { openFloods(false); return; }
@@ -7729,8 +7765,8 @@ const handle = async (m, post) => {
         if (cfg.start) go(places.find(p => p.id === cfg.start) || places[0], false);
         else if (places[0] && mine.length) go(places[0], true); else { setMode(false); F.pos.set(300, 620, 2350); F.yaw = 0.04; F.pitch = -0.4; }
         F.start = { pos: F.pos.clone(), yaw: F.yaw, pitch: F.pitch };
-        document.body.classList.toggle("bsnotide", !m.tide);
         modeBox.hidden = false; T.on = true; box.hidden = false;
+        F.heightAt = () => F.pos.y - ground(); $("bsHeight").hidden = false;  // the height shown top left
       });
     }).catch(e => fail(e?.message && !/^no (model|script)$/.test(e.message) ? e.message
       : state.mode === "claude" ? `The ${cfg.what} only loads in the website version of the app.` : `The ${cfg.what} couldn't load. Check your connection and try again.`));
@@ -7826,14 +7862,15 @@ const handle = async (m, post) => {
     if (BS.fly) { const F = BS.fly; F.walk = F.speed = F.floor = null; F.ceil = 0; F.lim = null; }  // Explore, if it carries on, is its old self
     try { T.model?.dispose(); } catch {}
     const box = $("bsTown"); box.hidden = true; box.textContent = "";
-    document.body.classList.remove("bstown", "bswalk", "bsflood", "bsnotide"); $("bsTownTide").hidden = true; $("bsTownMode").hidden = true; $("bsTownList").hidden = true;
+    document.body.classList.remove("bstown", "bswalk"); $("bsHeight").hidden = true; $("bsTownTide").hidden = true; $("bsTownMode").hidden = true; $("bsTownList").hidden = true;
     $("bsTownFlood").hidden = true; $("bsTownFloods").hidden = true; $("bsTownRise").hidden = true;
   }
   // "Virtually explore Inverloch": the whole-town model, on foot at the clock. "Virtually explore Logan": the whole city, from the
   // air over the council's administration centre. (If the model can't load, the weather's own scene of the place.)
   // Who gets which: Inverloch for Inverloch news (and for Rod, who lives there); Logan for Logan news, as in The Logan Wire.
   function exploreWhich() { return S.region === "inv" ? "inv" : S.region === "logan" ? "logan" : /^rod(ney)?$/i.test((S.name || "").trim()) ? "inv" : ""; }
-  function exploreTown() { const k = exploreWhich(); if (k) townModelOpen(true, k); }
+  // any: from the #explore link, which opens Inverloch where the app has no model of its own area.
+  function exploreTown(any) { const k = exploreWhich() || (any ? "inv" : ""); if (k) townModelOpen(true, k); }
   function openWeather() {
     if (!state.wx) { toast("The weather isn't available right now"); return; }
     BS.view = { mode: "live", ms: Date.now(), play: true, day: null };  // plays on from now each time it opens
@@ -8067,7 +8104,8 @@ const handle = async (m, post) => {
   // Loading data: Claude database (private copy) or files (GitHub Pages)
   // ======================================================================
   $("brandmark").src = APP_ICON;
-  if (LOCAL_APP && $("lbLgWrap")) $("lbLgWrap").hidden = true;  // the local apps link to each other only from Awesome News
+  if (LOCAL_APP && $("lbLgWrap")) $("lbLgWrap").hidden = true;
+  if (LOCAL_APP && $("lbHome")) $("lbHome").hidden = false;  // a local app's way back to the main app  // the local apps link to each other only from Awesome News
   state.prevVisit = store.get("brief.lastVisit", 0);
   const markVisit = () => store.set("brief.lastVisit", Date.now());
   document.addEventListener("visibilitychange", () => { if (document.hidden) markVisit(); });
@@ -8496,6 +8534,9 @@ const handle = async (m, post) => {
       if (!openSheet) render(true);
       if (pendingStory) { const id = pendingStory; pendingStory = ""; history.replaceState(null, "", location.pathname); if (findItem(id)) openReader(id); else loadArchive()?.then?.(() => findItem(id) ? openReader(id) : toast("That story isn't in the news here any more")).catch(() => toast("That story isn't in the news here any more")); }
       if (pendingTV) { pendingTV = false; try { history.replaceState(null, "", location.pathname); } catch {} openTV(); }
+      if (pendingExplore) { pendingExplore = false; try { history.replaceState(null, "", location.pathname); } catch {}
+        const t0 = Date.now(), go = () => { if (state.wx) exploreTown(true); else if (Date.now() - t0 < 20000) setTimeout(go, 300); else { exLoadDone(); toast("Explore needs the weather, which didn't load. Try again in a moment."); } };
+        go(); }
       afterPics("offline", saveOffline);
       if (!state.wx) loadWeather();
     } catch {
