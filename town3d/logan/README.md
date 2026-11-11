@@ -5,10 +5,14 @@ and **Admin > 3D scenes > Logan 3D model**. It is separate from the weather's ow
 the motorway bridge), which is built inside `app.html`.
 
 It covers the City of Logan and its surrounds, 53 km by 45: LiDAR terrain at true scale, every street, about
-174,000 surveyed buildings, bushland, the railway and suburb boundaries. The 320 m around the council's
-administration centre on Wembley Road is in detail: every house with its roof, windows and fences, real street
-surfaces with lane lines and footpaths, the railway and its wiring, car parks, street lights, bus shelters, trees
-where the vegetation survey records them, and the named schools, parks and streets.
+174,000 surveyed buildings, bushland, the railway and suburb boundaries. Close up, anywhere in the city, the
+streets turn from a map's coloured lines into asphalt with kerbs and lane lines, and the buildings show windows
+(some lit at night). The 320 m around the council's administration centre on Wembley Road is in detail: every
+house with its roof, windows and fences, real street surfaces with lane lines, stop lines, arrows and footpaths,
+the railway and its wiring, car parks with their bays, street lights, bus shelters with a bus at one, cars, utes
+and vans parked and on the road (those being driven have their lights on at night), trees where the vegetation
+survey records them, and the named schools, parks and streets. The vehicles, road markings and windows are
+generated to look right, not surveyed.
 
 | File | What it is |
 | --- | --- |
