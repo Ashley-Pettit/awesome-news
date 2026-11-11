@@ -1222,6 +1222,11 @@ body.bsfly.flypeek .bs-joy, body.bsfly.flypeek .bs-ud, body.bsfly.flypeek .bs-fl
 body.bsfly.flypeek .bs-fly-x.bs-fly-peek { top: calc(64px + env(safe-area-inset-top)); left: auto; right: 16px; transform: none; background: #fff; color: #1b1830; }
 body.bsfly.flypeek .bs-fly-x.bs-fly-lock { display: none !important; }
 body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
+/* The whole-town model (Admin > 3D scenes > Inverloch 3D model): its own canvas over the weather's, flown with Explore's controls.
+   It never takes a touch or click itself, so the sticks, the mouse look and the keys all work as they do in Explore. */
+#bsTown { position: absolute; inset: 0; z-index: 0; pointer-events: none; --inv-credit-bottom: calc(236px + env(safe-area-inset-bottom)); }
+body.bstown #bsFlyPeek, body.bstown #bsFlyLock { display: none !important; }
+body.bstown .bs-fly-x.bs-fly-jump { max-width: calc(100% - 110px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #weather .bs-flybtn { display: inline-flex; }  /* Explore: for everyone */
 /* While Listen plays the weather: Explore sits up top beside Week (its "Back to the news" only shows once you're exploring) */
 /* Explore's on-screen controls: a stick to move (left), a stick to look (right), Up and Down top right */
@@ -1661,6 +1666,7 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
     <symbol id="i-storm" viewBox="0 0 24 24"><path d="M7 14.5h10.3a4 4 0 0 0 .7-7.94A5.6 5.6 0 0 0 7.2 5.3 4.6 4.6 0 0 0 7 14.5z" fill="currentColor"/><path d="M13 13l-3.2 5h2.6l-1.2 4.5 4.2-6h-2.7L14.2 13z" fill="#ffd166"/></symbol>
   </defs></svg>
   <canvas id="bsGl" aria-label="Animated 3D view of the sky over the Brisbane River, matching the time and weather shown" role="img"></canvas>
+  <div id="bsTown" hidden></div>
   <div class="bs-drive" id="bsDrive"></div>
   <div class="bs-fly" id="bsFly" hidden>
     <p class="bs-fly-tip" id="bsFlyTip"></p>
@@ -5073,7 +5079,7 @@ const handle = async (m, post) => {
     if (pk2) { state.prevSel[pk2.dataset.prevK] = pk2.dataset.prevV; pk2.parentElement.querySelectorAll(".bchip").forEach(b => b.setAttribute("aria-pressed", String(b === pk2))); return; }
     if (t.closest("[data-prev-go]")) { previewGo(); return; }
     const sc = t.closest("[data-scene]");
-    if (sc) { const [place, drive] = sc.dataset.scene.split("|"); state.prevSel = { place, sky: "auto", hour: "now", drive }; previewGo(); return; }
+    if (sc) { const [place, drive] = sc.dataset.scene.split("|"); if (place === "invmodel") { townModelOpen(); return; } state.prevSel = { place, sky: "auto", hour: "now", drive }; previewGo(); return; }
     const sk = t.closest("[data-prev-sky]");
     if (sk && BS.prev) { BS.prev.sky = state.prevSel.sky = sk.dataset.prevSky; document.querySelectorAll("[data-prev-sky]").forEach(b => b.setAttribute("aria-pressed", String(b === sk))); return; }
     if (t.closest("[data-tv-new]")) { if (openSheet === "settings") hideSheet("settings"); startTV(); return; }
@@ -7343,6 +7349,7 @@ const handle = async (m, post) => {
   }
   function bsFlyOff() {
     const F = BS.fly; if (!F) return;
+    if (BS.town) townModelOff();
     if (BS.flyView) { BS.view = { ...BS.flyView, ms: BS.flyView.mode === "live" ? Date.now() : BS.flyView.ms }; BS.flyView = null; try { bsApply(true); } catch {} }
     document.body.classList.remove("flypeek");
     const canvas = $("bsGl");
@@ -7360,7 +7367,7 @@ const handle = async (m, post) => {
   }
   function bsFlyTick(dt) {
     const F = BS.fly, k = F.keys, has = (...c) => c.some(x => k.has(x));
-    const sp = (has("ShiftLeft", "ShiftRight") ? 34 : 11) * Math.min(dt, 0.1);
+    const sp = (has("ShiftLeft", "ShiftRight") ? 34 : 11) * (F.speed ? F.speed() : 1) * Math.min(dt, 0.1);  // the whole-town model flies faster the higher you are
     const f = (has("KeyW", "ArrowUp") ? 1 : 0) - (has("KeyS", "ArrowDown") ? 1 : 0) + F.stick.y;
     const r = (has("KeyD", "ArrowRight") ? 1 : 0) - (has("KeyA", "ArrowLeft") ? 1 : 0) + F.stick.x;
     const u = (has("Space", "KeyE") ? 1 : 0) - (has("KeyC", "KeyQ", "ControlLeft") ? 1 : 0) + F.vert;
@@ -7370,7 +7377,7 @@ const handle = async (m, post) => {
     const lim = F.lim || [-420, 420, -420, 200];  // the area you can fly in (Norman Road has its own)
     F.pos.x = bsClamp(F.pos.x + (-sy * f + cy * r) * sp, lim[0], lim[1]);
     F.pos.z = bsClamp(F.pos.z + (-cy * f - sy * r) * sp, lim[2], lim[3]);
-    F.pos.y = bsClamp(F.pos.y + u * sp, 1.4, 180);
+    F.pos.y = bsClamp(F.pos.y + u * sp, F.floor ? F.floor() : 1.4, F.ceil || 180);
   }
   function bsStrike() {
     const W = BS.W, a = W.bolt.geometry.attributes.position; let x = -170 + Math.random() * 340; const z = -240 - Math.random() * 80, y = 78, seg = (y - 2) / 15;
@@ -7487,7 +7494,7 @@ const handle = async (m, post) => {
       else { p.r.rotation.z = 0.12 + Math.max(0, Math.sin(t * 1.3 + p.k)) * 0.15; } });  // the two cars driving along A'Beckett
     if (W.koala && !still) W.koala.rotation.y = Math.sin(t * 0.3) * 0.4;
     if (B.sky) B.sky.position.copy(cam.position);  // the sky goes where you go (Norman Road is well outside it otherwise)
-    r.render(B.scene, cam);
+    if (BS.town?.on && BS.fly) townModelFrame(); else r.render(B.scene, cam);  // the whole-town model is on top: no need to draw the weather's scene under it
   }
   function renderWeather() {
     const w = state.wx;
@@ -7500,6 +7507,77 @@ const handle = async (m, post) => {
   }
   // Inverloch: the town and the surf beach take turns; Moorooka: the landmarks and the bowls club. Each time the weather opens, the other one.
   const bsTurn = k => { const v = !store.get(k, false); store.set(k, v); return v; };
+  // ---- The whole-town model (Admin > 3D scenes > Inverloch 3D model) ----
+  // A separate model from the weather's Inverloch (the clock, A'Beckett Street, Norman Road): the whole town, about 8 km
+  // by 7, from OpenStreetMap streets and LiDAR terrain. Its script (town3d/inverloch-model.js, built from the ai-forge
+  // repo, with its own three.js) draws on its own canvas (#bsTown) over the weather's. Explore's controls fly it: every
+  // frame the camera Explore is flying is handed to the model, and the time slider sets its sun.
+  const TOWN3D = "town3d/";
+  function townModelLoad() {
+    if (window.InverlochModel) return Promise.resolve(window.InverlochModel);
+    if (!BS.townLib) BS.townLib = new Promise((ok, bad) => { const s = document.createElement("script"); s.src = TOWN3D + "inverloch-model.js?v=1";
+      s.onload = () => window.InverlochModel ? ok(window.InverlochModel) : bad(new Error("no model")); s.onerror = () => bad(new Error("no script")); document.head.appendChild(s); })
+      .catch(e => { BS.townLib = null; throw e; });
+    return BS.townLib;
+  }
+  function townModelOpen() {
+    if (BS.town) return;
+    state.prevSel = { place: "inv", sky: "auto", hour: "now", drive: "off" };
+    previewGo(); if ($("weather").hidden) return;  // no weather to open the 3D view with: it has said so
+    BS.invBeach = false; BS.exploreOnly = true; if (BS.B) bsPlace();
+    const T = BS.town = { on: false, model: null, dead: false };
+    const t0 = Date.now(), go = () => {
+      if (T.dead) return;
+      if ($("weather").hidden) { townModelOff(); return; }
+      if (BS.B && BS.W?.invSpot) { BS.invBeach = false; bsPlace(); if (!BS.fly) bsFlyOn(); townModelOn(T); }
+      else if (Date.now() - t0 < 20000) setTimeout(go, 200);
+      else { townModelOff(); toast("The 3D view didn't start. Close it and try again."); }
+    };
+    go();
+  }
+  function townModelOn(T) {
+    const F = BS.fly, box = $("bsTown"), tip = $("bsFlyTip"), jump = $("bsFlyJump");
+    if (!F) { townModelOff(); return; }
+    document.body.classList.add("bstown"); jump.hidden = true;
+    const tipText = tip.textContent; tip.textContent = "Loading the town model…"; tip.classList.remove("dim"); clearTimeout(F.tipT);
+    const fail = msg => { if (T.dead) return; toast(msg, 6000); bsFlyOff(); };
+    townModelLoad().then(lib => {
+      if (T.dead) return;
+      const m = T.model = lib.create(box, { assets: TOWN3D,
+        onProgress: (f, label) => { if (!T.on && !T.dead) tip.textContent = `Loading the town model: ${String(label).toLowerCase()}…`; },
+        onError: msg => fail(msg) });
+      return m.ready.then(() => {
+        if (T.dead || BS.fly !== F) { try { m.dispose(); } catch {} return; }
+        const b = m.bounds(), ground = () => Math.max(m.groundAt(F.pos.x, F.pos.z), m.waterLevel());
+        // where you can fly: inside the model, above the ground and the water, and faster the higher you are
+        F.lim = [b[0] + 30, b[1] - 30, b[2] + 30, b[3] - 30]; F.ceil = 4000;
+        F.floor = () => ground() + 1.6;
+        F.speed = () => bsClamp((F.pos.y - ground()) / 22, 1, 30);
+        // start high over the inlet, looking north at the town (R comes back here)
+        F.pos.set(300, 620, 2350); F.yaw = 0.04; F.pitch = -0.4; F.start = { pos: F.pos.clone(), yaw: F.yaw, pitch: F.pitch };
+        // Jump: round the town's places, one tap each
+        const spots = m.spots().slice(), nr = m.roadSpot("Norman Road"); if (nr) spots.splice(1, 0, nr);  // Norman Road second, as in the town's own Explore
+        let at = -1;
+        const label = () => { jump.textContent = "Jump to " + spots[(at + 1) % spots.length].name; };
+        if (spots.length) { jump.hidden = false; label();
+          jump.onclick = () => { at = (at + 1) % spots.length; const s = spots[at]; F.pos.set(s.x, s.y, s.z); F.yaw = s.yaw; F.pitch = s.pitch; label(); }; }
+        T.on = true; box.hidden = false;
+        tip.textContent = tipText; F.tipT = setTimeout(() => tip.classList.add("dim"), 6000);
+      });
+    }).catch(e => fail(e?.message && !/^no (model|script)$/.test(e.message) ? e.message
+      : state.mode === "claude" ? "The town model only loads in the website version of the app." : "The town model couldn't load. Check your connection and try again."));
+  }
+  function townModelFrame() {
+    const T = BS.town, F = BS.fly;
+    T.model.setCamera(F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch); T.model.setMinutes(bsMins(BS.view.ms));
+  }
+  function townModelOff() {
+    const T = BS.town; if (!T) return;
+    BS.town = null; T.dead = true; T.on = false;
+    try { T.model?.dispose(); } catch {}
+    const box = $("bsTown"); box.hidden = true; box.textContent = "";
+    document.body.classList.remove("bstown");
+  }
   // "Virtually explore Inverloch": the weather's 3D town, straight into Explore
   function exploreInverloch() {
     if (!state.wx) { toast("The 3D town needs the weather, which is still loading. Try again in a moment."); return; }
@@ -8056,7 +8134,8 @@ const handle = async (m, post) => {
     return `<div class="group"><h2>3D scenes</h2><div class="card">
       ${go("moo", "off", "Moorooka streets", "The weather in Moorooka")}${go("bowls", "off", "Moorooka bowls club", "Moorooka's other view")}
       ${go("qld", "off", "Brisbane", "The river and the city")}${go("logan", "off", "Logan", "Logan's weather")}
-      ${go("inv", "off", "Inverloch town", "The Rotary clock and A'Beckett Street")}${go("invbeach", "off", "Inverloch beach", "The surf beach from the sand")}
+      ${go("inv", "off", "Inverloch town", "The Rotary clock and A'Beckett Street")}${go("invmodel", "off", "Inverloch 3D model", "The whole town from the air: every street, the inlet and its tides")}
+      ${go("invbeach", "off", "Inverloch beach", "The surf beach from the sand")}
     </div></div>
     <div class="group"><h2>Drives</h2><div class="card">
       ${go("moo", "mooClear", "Beaudesert Road, clear", "Moorooka to work, no hold-ups")}${go("moo", "mooHeavy", "Beaudesert Road, heavy", "Moorooka to work, a crash on the way")}
