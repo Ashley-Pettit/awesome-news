@@ -15,13 +15,19 @@ Nothing here is downloaded until someone opens the model. `build.py` copies this
 ## How the app uses it
 
 `app.html` (search for `townModelOpen`) opens the weather's 3D view on Inverloch, goes into Explore, and lays the
-model's canvas (`#bsTown`) over the weather's.
+model's canvas (`#bsTown`) over the weather's. Both **Virtually explore Inverloch** and Admin's button open it. If the
+model cannot load, Virtually explore Inverloch carries on in the weather's own town.
 
-- **Flying:** Explore's own controls fly it. Each frame the app passes the camera it is flying to
-  `model.setCamera(...)`, and the time slider to `model.setMinutes(...)`.
-- **Bird's-eye view:** the button at the top hands the camera to the model's own controls (drag to move, pinch or
-  scroll to zoom, two fingers or right-drag to turn) and shows a tide slider. Tap it again to fly on from there.
-- **Jump** steps through the clock, Norman Road and the model's own places.
+Every frame the app passes the camera Explore is moving to `model.setCamera(...)`, and the time slider to
+`model.setMinutes(...)`. The app owns the camera in both modes:
+
+- **Walk** (how it opens, at the clock): Explore's sticks and keys, with your eyes 3 m above the ground, following it
+  up hill and down.
+- **Fly**: rises above where you were standing. The sticks fly, Up and Down sit between them, and the view itself
+  can be dragged (pinch or scroll to zoom, two fingers or right-drag to turn). The tide slider shows here.
+  Going back to Walk puts you down on the ground you were looking at.
+- **Jump to…** lists the clock, Norman Rd and the model's own places. Walking, it stands you there; flying, it shows
+  the place from above.
 - **The Rotary clock and number 11 Norman Road** are copied out of the weather's Inverloch when the model opens
   (`townModelGuests`) and stood in the model where they really are. The weather's scenes are not changed. The clock's
   hands and lit faces, the koala, the wombats and the windows' glow keep following the originals.

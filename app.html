@@ -1225,15 +1225,27 @@ body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
 /* The whole-town model (Admin > 3D scenes > Inverloch 3D model): its own canvas over the weather's, flown with Explore's controls.
    It never takes a touch or click itself, so the sticks, the mouse look and the keys all work as they do in Explore. */
 #bsTown { position: absolute; inset: 0; z-index: 0; pointer-events: none; --inv-credit-bottom: calc(236px + env(safe-area-inset-bottom)); }
-body.bstown #bsFlyLock { display: none !important; }
-/* Its bird's-eye view: the model's own drag, pinch and turn controls and a tide slider. Explore's sticks step aside. */
-body.bstown.bsbird #bsTown { pointer-events: auto; --inv-credit-bottom: calc(128px + env(safe-area-inset-bottom)); }
-body.bstown.bsbird .bs-joy, body.bstown.bsbird .bs-ud { display: none !important; }
-body.bstown.bsbird .bs-fly-time { bottom: calc(22px + env(safe-area-inset-bottom)); }
-body.bstown.bsbird .bs-fly-time.bs-town-tide { bottom: calc(74px + env(safe-area-inset-bottom)); }
+body.bstown #bsFlyPeek, body.bstown #bsFlyLock { display: none !important; }
+/* Walk or Fly, at the top. Walking: the sticks, with your eyes following the ground. Flying: the sticks and Up and Down, or drag the
+   view itself (pinch to zoom, two fingers to turn), with the tide slider. */
+.bs-town-mode { pointer-events: auto; position: absolute; top: calc(14px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); display: flex; gap: 2px; padding: 3px;
+  border-radius: 999px; background: var(--bs-scrim); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.bs-town-mode button { height: 32px; padding: 0 14px; border: 0; border-radius: 999px; background: none; color: var(--bs-ink); font: 700 0.82rem var(--ui); cursor: pointer; }
+.bs-town-mode button[aria-pressed="true"] { background: #fff; color: #1b1830; }
+.bs-town-mode button:focus-visible { outline: 2px solid var(--bs-ink); outline-offset: 2px; }
+body.bstown:not(.bswalk) #bsTown { pointer-events: auto; touch-action: none; cursor: grab; --inv-credit-bottom: calc(286px + env(safe-area-inset-bottom)); }
 .bs-town-tide span { flex: none; font: 700 0.8rem var(--ui); color: var(--bs-ink); }
 .bs-town-tide output { min-width: 68px; }
-body.bstown .bs-fly-x.bs-fly-jump { max-width: calc(100% - 110px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.bstown .bs-fly-time.bs-town-tide { bottom: calc(236px + env(safe-area-inset-bottom)); }
+/* Up and Down sit between the sticks, in reach of both thumbs (flying only: walking follows the ground) */
+body.bstown .bs-ud { top: auto; right: auto; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom)); transform: translateX(-50%); }
+body.bstown.bswalk .bs-ud { display: none; }
+/* Jump: top right, opening a list of places */
+body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); }
+.bs-town-list { pointer-events: auto; position: absolute; top: calc(60px + env(safe-area-inset-top)); right: 16px; z-index: 2; display: grid; gap: 2px; width: min(270px, calc(100% - 32px));
+  max-height: min(62%, 440px); overflow-y: auto; padding: 6px; border-radius: 14px; background: rgba(16, 18, 34, 0.9); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.bs-town-list button { min-height: 40px; padding: 6px 12px; border: 0; border-radius: 10px; background: none; color: #fff; font: 600 0.86rem var(--ui); text-align: left; cursor: pointer; }
+.bs-town-list button:hover, .bs-town-list button:focus-visible { background: rgba(255, 255, 255, 0.18); outline: none; }
 #weather .bs-flybtn { display: inline-flex; }  /* Explore: for everyone */
 /* While Listen plays the weather: Explore sits up top beside Week (its "Back to the news" only shows once you're exploring) */
 /* Explore's on-screen controls: a stick to move (left), a stick to look (right), Up and Down top right */
@@ -1681,6 +1693,8 @@ body.bstown .bs-fly-x.bs-fly-jump { max-width: calc(100% - 110px); overflow: hid
     <button class="bs-fly-x bs-fly-peek" type="button" id="bsFlyPeek" aria-pressed="false">Show weather</button>
     <div class="bs-fly-time"><input type="range" id="bsFlyTime" min="0" max="1439" step="5" aria-label="Time of day"><output id="bsFlyTimeOut" for="bsFlyTime"></output></div>
     <div class="bs-fly-time bs-town-tide" id="bsTownTide" hidden><span>Tide</span><input type="range" id="bsTownTideIn" step="0.05" aria-label="Tide level"><output id="bsTownTideOut" for="bsTownTideIn"></output></div>
+    <div class="bs-town-mode" id="bsTownMode" role="group" aria-label="Walk or fly" hidden><button type="button" data-town-mode="walk" aria-pressed="true">Walk</button><button type="button" data-town-mode="fly" aria-pressed="false">Fly</button></div>
+    <div class="bs-town-list" id="bsTownList" role="menu" aria-label="Places to jump to" hidden></div>
     <button class="bs-fly-x bs-fly-jump" type="button" id="bsFlyJump" hidden>Jump to Norman Rd</button>
     <button class="bs-fly-x bs-fly-lock" type="button" id="bsFlyLock" hidden>Use this view for the weather</button>
     <div class="bs-ud" role="group" aria-label="Fly up or down">
@@ -7385,7 +7399,8 @@ const handle = async (m, post) => {
     const lim = F.lim || [-420, 420, -420, 200];  // the area you can fly in (Norman Road has its own)
     F.pos.x = bsClamp(F.pos.x + (-sy * f + cy * r) * sp, lim[0], lim[1]);
     F.pos.z = bsClamp(F.pos.z + (-cy * f - sy * r) * sp, lim[2], lim[3]);
-    F.pos.y = bsClamp(F.pos.y + u * sp, F.floor ? F.floor() : 1.4, F.ceil || 180);
+    if (F.walk) F.pos.y += (F.walk() - F.pos.y) * Math.min(1, lk * 10);  // walking in the whole-town model: your eyes follow the ground, up hill and down
+    else F.pos.y = bsClamp(F.pos.y + u * sp, F.floor ? F.floor() : 1.4, F.ceil || 180);
   }
   function bsStrike() {
     const W = BS.W, a = W.bolt.geometry.attributes.position; let x = -170 + Math.random() * 340; const z = -240 - Math.random() * 80, y = 78, seg = (y - 2) / 15;
@@ -7523,17 +7538,18 @@ const handle = async (m, post) => {
   const TOWN3D = "town3d/";
   function townModelLoad() {
     if (window.InverlochModel) return Promise.resolve(window.InverlochModel);
-    if (!BS.townLib) BS.townLib = new Promise((ok, bad) => { const s = document.createElement("script"); s.src = TOWN3D + "inverloch-model.js?v=2";
+    if (!BS.townLib) BS.townLib = new Promise((ok, bad) => { const s = document.createElement("script"); s.src = TOWN3D + "inverloch-model.js?v=3";
       s.onload = () => window.InverlochModel ? ok(window.InverlochModel) : bad(new Error("no model")); s.onerror = () => bad(new Error("no script")); document.head.appendChild(s); })
       .catch(e => { BS.townLib = null; throw e; });
     return BS.townLib;
   }
-  function townModelOpen() {
+  // viaExplore: from "Virtually explore Inverloch". If the model can't load there, you stay in the weather's own town instead.
+  function townModelOpen(viaExplore) {
     if (BS.town) return;
-    state.prevSel = { place: "inv", sky: "auto", hour: "now", drive: "off" };
-    previewGo(); if ($("weather").hidden) return;  // no weather to open the 3D view with: it has said so
+    if (!state.wx) { toast("The 3D town needs the weather, which is still loading. Try again in a moment."); return; }
+    openWeather(); if ($("weather").hidden) return;
     BS.invBeach = false; BS.exploreOnly = true; if (BS.B) bsPlace();
-    const T = BS.town = { on: false, model: null, dead: false };
+    const T = BS.town = { on: false, model: null, dead: false, keep: !!viaExplore };
     const t0 = Date.now(), go = () => {
       if (T.dead) return;
       if ($("weather").hidden) { townModelOff(); return; }
@@ -7544,11 +7560,14 @@ const handle = async (m, post) => {
     go();
   }
   function townModelOn(T) {
-    const F = BS.fly, box = $("bsTown"), tip = $("bsFlyTip"), jump = $("bsFlyJump"), pk = $("bsFlyPeek");
+    const F = BS.fly, box = $("bsTown"), tip = $("bsFlyTip"), jump = $("bsFlyJump"), list = $("bsTownList"), modeBox = $("bsTownMode");
     if (!F) { townModelOff(); return; }
-    document.body.classList.add("bstown"); jump.hidden = true; pk.hidden = true;
-    const tipText = tip.textContent; tip.textContent = "Loading the town model…"; tip.classList.remove("dim"); clearTimeout(F.tipT);
-    const fail = msg => { if (T.dead) return; toast(msg, 6000); bsFlyOff(); };
+    document.body.classList.add("bstown", "bswalk");
+    const old = { tip: tip.textContent, jump: jump.hidden, jumpText: jump.textContent, jumpClick: jump.onclick };  // Explore's own, for if the model can't load
+    jump.hidden = true; tip.textContent = "Loading the town model…"; tip.classList.remove("dim"); clearTimeout(F.tipT);
+    const fail = msg => { if (T.dead) return; toast(msg, 6000);
+      if (!T.keep) { bsFlyOff(); return; }
+      townModelOff(); jump.hidden = old.jump; jump.textContent = old.jumpText; jump.onclick = old.jumpClick; tip.textContent = old.tip; };  // carry on in the weather's own town
     // The clock and number 11 come across from the weather's Inverloch (below): keep the ground clear where they'll stand
     const D = INV_TOWN, home = D.nr?.home, clearLatLon = [];
     if (BS.W.invClock) { const [lat, lon] = townLL(D.c[0], D.c[1]); clearLatLon.push({ lat, lon, r: 4.5 }); }
@@ -7560,36 +7579,85 @@ const handle = async (m, post) => {
         onError: msg => fail(msg) });
       return m.ready.then(() => {
         if (T.dead || BS.fly !== F) { try { m.dispose(); } catch {} return; }
-        const b = m.bounds(), ground = () => Math.max(m.groundAt(F.pos.x, F.pos.z), m.waterLevel());
-        // where you can fly: inside the model, above the ground and the water, and faster the higher you are
+        const EYE = 3, touch = matchMedia("(pointer: coarse)").matches;  // walking: your eyes 3 m up, for a clear view over the cars and fences
+        const b = m.bounds(), ground = (x = F.pos.x, z = F.pos.z) => Math.max(m.groundAt(x, z), m.waterLevel());
+        // where you can go: inside the model; flying, above the ground and the water, and faster the higher you are
         F.lim = [b[0] + 30, b[1] - 30, b[2] + 30, b[3] - 30]; F.ceil = 4000;
-        F.floor = () => ground() + 1.6;
-        F.speed = () => bsClamp((F.pos.y - ground()) / 22, 1, 30);
-        // start high over the inlet, looking north at the town (R comes back here)
-        F.pos.set(300, 620, 2350); F.yaw = 0.04; F.pitch = -0.4; F.start = { pos: F.pos.clone(), yaw: F.yaw, pitch: F.pitch };
+        F.floor = () => ground() + 3;
+        F.speed = () => T.walk ? 1 : bsClamp((F.pos.y - ground()) / 22, 1, 30);
+        const keepIn = () => { F.pos.x = bsClamp(F.pos.x, F.lim[0], F.lim[1]); F.pos.z = bsClamp(F.pos.z, F.lim[2], F.lim[3]); if (!T.walk) F.pos.y = bsClamp(F.pos.y, F.floor(), F.ceil); };
+        // the view from above a spot on the ground: back and up from it, looking down at it
+        const above = (x, z, yaw) => ({ x: bsClamp(x + Math.sin(yaw) * 230, F.lim[0], F.lim[1]), y: ground(x, z) + 190, z: bsClamp(z + Math.cos(yaw) * 230, F.lim[2], F.lim[3]), yaw, pitch: -0.69 });
+
         // the Rotary clock and number 11 Norman Road, stood in the model where they really are
         let mine = []; try { mine = townModelGuests(T, m); } catch (e) { console.warn("Town model: the clock and Norman Road couldn't be added", e); }
-        // Jump: the clock, Norman Road, then round the model's own places, one tap each (in bird's-eye view it glides there)
-        const spots = [...mine, ...m.spots().map(s => ({ ...s, bird: () => m.flyToPlace(s.id) }))]; let at = -1;
-        const label = () => { jump.textContent = "Jump to " + spots[(at + 1) % spots.length].name; };
-        if (spots.length) { jump.hidden = false; label();
-          jump.onclick = () => { at = (at + 1) % spots.length; const s = spots[at]; if (T.bird) s.bird(); else { F.pos.set(s.x, s.y, s.z); F.yaw = s.yaw; F.pitch = s.pitch; } label(); }; }
-        // Bird's-eye view: the model's own controls (drag to move, pinch or scroll to zoom, two fingers or right-drag to turn)
-        // and a tide slider. Tap again to fly on from where you were looking.
-        const touch = matchMedia("(pointer: coarse)").matches, tideBox = $("bsTownTide"), tideIn = $("bsTownTideIn"), tideOut = $("bsTownTideOut");
+        // Places to jump to: each as somewhere to stand (walking) and a view from above (flying)
+        const places = [...mine.map(g => ({ name: g.name, walk: g.walk, fly: above(g.target[0], g.target[1], g.walk.yaw) })),
+          ...m.spots().map(s => { let dx = s.x - s.tx, dz = s.z - s.tz; const d = Math.hypot(dx, dz) || 1, r = Math.min(30, d); dx /= d; dz /= d;
+            return { name: s.name, water: s.kind === "water", fly: s, walk: { x: s.tx + dx * r, z: s.tz + dz * r, yaw: Math.atan2(dx, dz), pitch: 0.02 } }; })];
+
+        // ---- Walk or Fly ----
+        const tideBox = $("bsTownTide"), tideIn = $("bsTownTideIn"), tideOut = $("bsTownTideOut");
+        const setMode = (walk, to) => { T.walk = walk; document.body.classList.toggle("bswalk", walk); F.walk = walk ? () => ground() + EYE : null; tideBox.hidden = walk;
+          modeBox.querySelectorAll("button").forEach(bn => bn.setAttribute("aria-pressed", String((bn.dataset.townMode === "walk") === walk)));
+          if (document.pointerLockElement) document.exitPointerLock?.();
+          F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.vert = 0; F.keys.clear();
+          tip.textContent = walk ? (touch ? "Left stick to walk, right stick to look around." : "Click to look with the mouse · WASD to walk · Shift to run · R to reset")
+            : (touch ? "Fly with the sticks, or drag the view: pinch to zoom, two fingers to turn. Up and Down are between the sticks." : "Drag to move · scroll to zoom · right-drag to turn · WASD, Space and C fly too");
+          tip.classList.remove("dim"); clearTimeout(F.tipT); F.tipT = setTimeout(() => tip.classList.add("dim"), 7000);
+          T.tween = to ? { a: { x: F.pos.x, y: F.pos.y, z: F.pos.z, yaw: F.yaw, pitch: F.pitch }, b: to, t0: performance.now(), ms: 900 } : null; };
+        // Fly: up and back from where you're standing, so the same spot stays in view. Walk: down to the ground you're looking at.
+        const walkFromHere = () => { const cp = Math.cos(F.pitch), d = [-Math.sin(F.yaw) * cp, Math.sin(F.pitch), -Math.cos(F.yaw) * cp]; let x = F.pos.x, z = F.pos.z;
+          if (d[1] < -0.05) for (let t = 0; t < 7000; t += 5) { const px = F.pos.x + d[0] * t, pz = F.pos.z + d[2] * t; if (F.pos.y + d[1] * t <= ground(px, pz) + 1) { x = px; z = pz; break; } }
+          x = bsClamp(x, F.lim[0], F.lim[1]); z = bsClamp(z, F.lim[2], F.lim[3]);
+          return { x, y: ground(x, z) + EYE, z, yaw: F.yaw, pitch: -0.04 }; };
+        modeBox.onclick = e => { const bn = e.target.closest("[data-town-mode]"); if (!bn) return; const walk = bn.dataset.townMode === "walk"; if (walk === T.walk) return;
+          setMode(walk, walk ? walkFromHere() : above(F.pos.x, F.pos.z, F.yaw)); };
+
+        // ---- flying: drag the view to move, pinch (or scroll) to zoom, two fingers (or right-drag) to turn ----
+        const look3 = () => { const cp = Math.cos(F.pitch); return [-Math.sin(F.yaw) * cp, Math.sin(F.pitch), -Math.cos(F.yaw) * cp]; };
+        const reach = () => { const d = look3(), h = Math.max(2, F.pos.y - ground()); return bsClamp(d[1] < -0.08 ? h / -d[1] : h * 6, 25, 7000); };  // how far off the ground you're looking at is
+        const pan = (dx, dy) => { const k = 1.1547 * reach() / (box.clientHeight || 600), sy = Math.sin(F.yaw), cy = Math.cos(F.yaw), up = k / Math.max(0.35, Math.sin(-F.pitch));
+          F.pos.x += -cy * dx * k - sy * dy * up; F.pos.z += sy * dx * k - cy * dy * up; keepIn(); };
+        const zoomTurn = (scale, turn) => { const R = reach(), d = look3(), L = [F.pos.x + d[0] * R, F.pos.y + d[1] * R, F.pos.z + d[2] * R];  // about the ground in the middle of the view
+          F.yaw += turn; const R2 = bsClamp(R * scale, 20, 9000), e = look3(); F.pos.set(L[0] - e[0] * R2, L[1] - e[1] * R2, L[2] - e[2] * R2); keepIn(); };
+        const ptrs = new Map(); let pinch = null;
+        const gest = {
+          pointerdown: e => { if (T.walk) return; list.hidden = true; jump.setAttribute("aria-expanded", "false"); try { box.setPointerCapture(e.pointerId); } catch {}
+            ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); pinch = null; T.tween = null; tip.classList.add("dim"); e.preventDefault(); },
+          pointermove: e => { const p = ptrs.get(e.pointerId); if (!p || T.walk) return; const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
+            if (ptrs.size === 1) { if (e.pointerType === "mouse" && (e.buttons & 2)) { F.yaw -= dx * 0.005; F.pitch = bsClamp(F.pitch - dy * 0.005, -1.45, 0.4); } else pan(dx, dy); }
+            else if (ptrs.size === 2) { const [p1, p2] = [...ptrs.values()], d = Math.hypot(p2.x - p1.x, p2.y - p1.y) || 1, ang = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+              if (pinch) { const da = ang - pinch.ang; zoomTurn(pinch.d / d, Math.atan2(Math.sin(da), Math.cos(da))); } pinch = { d, ang }; }
+            e.preventDefault(); },
+          pointerup: e => { ptrs.delete(e.pointerId); pinch = null; },
+          wheel: e => { if (T.walk) return; T.tween = null; zoomTurn(Math.exp(bsClamp(e.deltaY, -300, 300) * 0.0015), 0); e.preventDefault(); },
+          contextmenu: e => e.preventDefault(),
+        };
+        gest.pointercancel = gest.pointerup;
+        Object.entries(gest).forEach(([k, f]) => box.addEventListener(k, f, { passive: false }));
+        T.ungest = () => Object.entries(gest).forEach(([k, f]) => box.removeEventListener(k, f));
+
+        // ---- the tide (flying) ----
         const tideName = v => { const f = (v - m.tide.min) / (m.tide.max - m.tide.min); return f < 0.25 ? "Low tide" : f < 0.7 ? "Mid tide" : "High tide"; };
         tideIn.min = m.tide.min; tideIn.max = m.tide.max; tideIn.value = m.tide.initial; tideOut.textContent = tideName(m.tide.initial);
         tideIn.oninput = () => { m.setTide(+tideIn.value); tideOut.textContent = tideName(+tideIn.value); };
-        const bird = on => { T.bird = on; document.body.classList.toggle("bsbird", on); tideBox.hidden = !on;
-          pk.textContent = on ? "Fly around" : "Bird's-eye view"; pk.setAttribute("aria-pressed", String(on));
-          F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.vert = 0; F.keys.clear();
-          if (on) { if (document.pointerLockElement) document.exitPointerLock?.(); m.setMode("bird");
-            tip.textContent = touch ? "Drag to move, pinch to zoom, two fingers to turn. Slide the tide." : "Drag to move · scroll to zoom · right-drag to turn · slide the tide"; }
-          else { const c = m.getCamera(); m.setMode("fly"); F.pos.set(c.x, c.y, c.z); F.yaw = c.yaw; F.pitch = bsClamp(c.pitch, -1.45, 1.45); tip.textContent = tipText; }
-          tip.classList.remove("dim"); clearTimeout(F.tipT); F.tipT = setTimeout(() => tip.classList.add("dim"), 6000); };
-        document.body.classList.remove("flypeek"); pk.hidden = false; pk.textContent = "Bird's-eye view"; pk.setAttribute("aria-pressed", "false"); pk.onclick = () => bird(!T.bird);
-        T.on = true; box.hidden = false;
-        tip.textContent = tipText; F.tipT = setTimeout(() => tip.classList.add("dim"), 6000);
+
+        // ---- Jump: a list of places. Walking, it stands you there; flying, it shows the place from above. ----
+        const go = (p, walk) => { T.tween = null; if (walk !== T.walk) setMode(walk);
+          if (walk) { F.pos.set(p.walk.x, ground(p.walk.x, p.walk.z) + EYE, p.walk.z); F.yaw = p.walk.yaw; F.pitch = p.walk.pitch; }
+          else { F.pos.set(p.fly.x, p.fly.y, p.fly.z); F.yaw = p.fly.yaw; F.pitch = p.fly.pitch; } };
+        list.innerHTML = places.map((p, i) => `<button type="button" role="menuitem" data-town-go="${i}">${esc(p.name[0].toUpperCase() + p.name.slice(1))}</button>`).join("");
+        const openList = on => { list.hidden = !on; jump.setAttribute("aria-expanded", String(on)); if (on) list.querySelector("button")?.focus({ preventScroll: true }); };
+        jump.hidden = !places.length; jump.textContent = "Jump to…"; jump.setAttribute("aria-haspopup", "menu"); openList(false);
+        jump.onclick = () => openList(list.hidden);
+        list.onclick = e => { const bn = e.target.closest("[data-town-go]"); if (!bn) return; const p = places[+bn.dataset.townGo]; openList(false); go(p, T.walk && !p.water);  // the inlet and the strait are best seen from the air
+          jump.focus({ preventScroll: true }); };
+
+        // start on foot at the clock, as Explore always has (R comes back here); with no clock, from the air
+        if (places[0] && mine.length) go(places[0], true); else { setMode(false); F.pos.set(300, 620, 2350); F.yaw = 0.04; F.pitch = -0.4; }
+        F.start = { pos: F.pos.clone(), yaw: F.yaw, pitch: F.pitch };
+        modeBox.hidden = false; T.on = true; box.hidden = false;
       });
     }).catch(e => fail(e?.message && !/^no (model|script)$/.test(e.message) ? e.message
       : state.mode === "claude" ? "The town model only loads in the website version of the app." : "The town model couldn't load. Check your connection and try again."));
@@ -7599,7 +7667,7 @@ const handle = async (m, post) => {
   // The Rotary clock and number 11 Norman Road are copied out of the weather's Inverloch (which is left as it is) and stood in
   // the whole-town model where they really are: their shapes, colours and pictures, on a pad of level ground. The clock's hands,
   // its lit faces, the koala, the wombats and the windows' glow at night keep following the weather's own, frame by frame.
-  // Returns the two as Jump stops.
+  // Returns the two as places to jump to: where to stand (Explore's own spot for each) and where the thing itself is.
   function townModelGuests(T, m) {
     const W = BS.W, THREE = BS.B.THREE, TG = W.invTG, D = INV_TOWN, G0 = 2.2, jumps = [];
     if (!TG || !m.addParts) return jumps;
@@ -7645,7 +7713,7 @@ const handle = async (m, post) => {
       if (parts.length) glows(m.addParts(parts), mats); };
     // a Jump stop from one of Explore's own spots (kept in the weather scene's coordinates): to the town's metres, then the model's
     const stop = (name, sp, place, target) => { const p = v.set(...sp.pos).applyMatrix4(toTG).applyMatrix4(place);
-      jumps.push({ name, x: p.x, y: p.y, z: p.z, yaw: sp.yaw - TG.rotation.y, pitch: sp.pitch, bird: () => m.lookAt(target[0], target[1], 170, 58, 25) }); };
+      jumps.push({ name, target, walk: { x: p.x, z: p.z, yaw: sp.yaw - TG.rotation.y, pitch: sp.pitch } }); };
     const moving = [W.invClock, W.invKoala?.ko, ...(W.invWombats || []).map(w => w.g)].filter(Boolean), skip = new Set();
     moving.forEach(r => r.traverse(o => skip.add(o)));
 
@@ -7666,7 +7734,11 @@ const handle = async (m, post) => {
   }
   function townModelFrame() {
     const T = BS.town, F = BS.fly, m = T.model;
-    if (!T.bird) m.setCamera(F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch);
+    // gliding between walking and flying
+    if (T.tween) { const w = T.tween, k = Math.min(1, (performance.now() - w.t0) / w.ms), e = k * k * (3 - 2 * k), L = (a, b) => a + (b - a) * e, dy = w.b.yaw - w.a.yaw;
+      F.pos.set(L(w.a.x, w.b.x), L(w.a.y, w.b.y), L(w.a.z, w.b.z)); F.yaw = w.a.yaw + Math.atan2(Math.sin(dy), Math.cos(dy)) * e; F.pitch = L(w.a.pitch, w.b.pitch);
+      if (k >= 1) T.tween = null; }
+    m.setCamera(F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch);
     m.setMinutes(bsMins(BS.view.ms));
     // the clock's hands, the koala and the wombats: wherever the weather's own are now
     if (T.live?.length) { const M = T.mtx || (T.mtx = new BS.B.THREE.Matrix4());
@@ -7677,20 +7749,14 @@ const handle = async (m, post) => {
   }
   function townModelOff() {
     const T = BS.town; if (!T) return;
-    BS.town = null; T.dead = true; T.on = false;
+    BS.town = null; T.dead = true; T.on = false; T.ungest?.();
+    if (BS.fly) { const F = BS.fly; F.walk = F.speed = F.floor = null; F.ceil = 0; F.lim = null; }  // Explore, if it carries on, is its old self
     try { T.model?.dispose(); } catch {}
     const box = $("bsTown"); box.hidden = true; box.textContent = "";
-    document.body.classList.remove("bstown", "bsbird"); $("bsTownTide").hidden = true;
+    document.body.classList.remove("bstown", "bswalk"); $("bsTownTide").hidden = true; $("bsTownMode").hidden = true; $("bsTownList").hidden = true;
   }
-  // "Virtually explore Inverloch": the weather's 3D town, straight into Explore
-  function exploreInverloch() {
-    if (!state.wx) { toast("The 3D town needs the weather, which is still loading. Try again in a moment."); return; }
-    openWeather(); if ($("weather").hidden) return;
-    BS.invBeach = false; BS.exploreOnly = true; if (BS.B) bsPlace();
-    const t0 = Date.now(), go = () => { if ($("weather").hidden) return;
-      if (BS.B && BS.W?.invSpot) { BS.invBeach = false; bsPlace(); if (!BS.fly) bsFlyOn(); } else if (Date.now() - t0 < 20000) setTimeout(go, 200); };
-    go();
-  }
+  // "Virtually explore Inverloch": the whole-town model, on foot at the clock. (If the model can't load, the weather's own town.)
+  function exploreInverloch() { townModelOpen(true); }
   function openWeather() {
     if (!state.wx) { toast("The weather isn't available right now"); return; }
     BS.view = { mode: "live", ms: Date.now(), play: true, day: null };  // plays on from now each time it opens
