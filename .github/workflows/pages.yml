@@ -145,13 +145,15 @@ jobs:
           merge-multiple: true
 
       # Always publish the newest app: a quick publish may have put out a newer page while this run was busy,
-      # and this run mustn't put the older one back.
+      # and this run mustn't put the older one back. The 3D models (town3d) come with it: the newest page names
+      # their files, so an older copy of the folder would leave a model added since this run began missing.
       - name: Use the newest app
         continue-on-error: true
         run: |
           git fetch -q --depth=1 origin main
           git checkout FETCH_HEAD -- app.html build.py
           git checkout FETCH_HEAD -- beta sw.js icons manifest.webmanifest local 2>/dev/null || true
+          git checkout FETCH_HEAD -- town3d 2>/dev/null || true
           python build.py _site
 
       # A link-preview page for every story (s/<id>), for sharing.
