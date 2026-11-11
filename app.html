@@ -1920,14 +1920,18 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
   let pendingStory = linkQ?.get("story") || "";
   const sharedStory = linkQ && /^https?:\/\//.test(linkQ.get("u") || "") ? { id: pendingStory, url: linkQ.get("u"), title: linkQ.get("t") || "A shared story", source: linkQ.get("s") || "", summary: "", published: !isNaN(Date.parse(linkQ.get("d") || "")) ? linkQ.get("d") : new Date().toISOString() } : null;
   let pendingTV = rawHash === "tv";  // link from the Claude copy's TV button
-  let pendingExplore = rawHash === "explore";  // a link straight into Explore (Coastline News: …/inverloch/#explore; The Logan Wire: …/logan/#explore)
+  // A link straight into Explore. #explore opens the 3D model of the app's own area (Coastline News: …/inverloch/#explore,
+  // The Logan Wire: …/logan/#explore); in Awesome News, the one "Virtually explore" would open, or Inverloch. #explore-logan
+  // and #explore-inverloch name the model, from any of the apps. Holds which model: "inv", "logan", or "" for none.
+  let pendingExplore = rawHash === "explore-logan" ? "logan" : rawHash === "explore-inverloch" ? "inv" : rawHash !== "explore" ? ""
+    : LOCAL_APP && ["inv", "logan"].includes(DEFAULT_REGION) ? DEFAULT_REGION : exploreWhich() || "inv";
   // Opening Inverloch's 3D town or Logan's 3D map (the #explore link, or the Explore button): a loading screen over everything until the town
   // is up and the view has settled, so nothing jumps or jitters while it loads
   let exLoad = null;
   const exLoadShow = kind => { if (exLoad) return; const d = exLoad = document.createElement("div"); d.className = "ex-load"; d.setAttribute("role", "status");
     d.innerHTML = `<i aria-hidden="true"></i><b>Loading ${kind === "logan" ? "Logan" : "Inverloch"} 3D model</b><small>This takes a few seconds</small>`; document.body.appendChild(d); };
   const exLoadDone = () => { const d = exLoad; if (!d) return; exLoad = null; d.classList.add("gone"); setTimeout(() => d.remove(), 600); };
-  if (pendingExplore) exLoadShow(exploreWhich());
+  if (pendingExplore) exLoadShow(pendingExplore);
   const hash = pendingStory || pendingTV || pendingExplore ? "" : rawHash;
   const state = {
     tab: hash || store.get("brief.tab3", "foryou"),
@@ -7577,12 +7581,12 @@ const handle = async (m, post) => {
   // floods and an estimated 1% AEP flood. Each has its own script (town3d/inverloch-model.js, logan3d/logan-model.js:
   // built from the ai-forge repo, each with its own three.js) that draws on its own canvas (#bsTown) over the weather's.
   // Explore's controls fly it: every frame the camera Explore is flying is handed to the model, and the time slider sets its sun.
-  // ceil: how high you can fly (m). fast: top speed, as a multiple of walking pace. far, out: how far off the ground you're
+  // wait: how long the loading screen stays up at most (ms). ceil: how high you can fly (m). fast: top speed, as a multiple of walking pace. far, out: how far off the ground you're
   // looking at can be, and how far back a pinch can take you (m). stride: how the steps grow when looking for that ground.
   // pad: how far outside the model you can fly (m). stand: where Jump stands you, as a share of the way back to the camera, up to so many metres.
   const TOWN_MODELS = {
-    inv: { dir: "town3d/", js: "inverloch-model.js?v=3", lib: "InverlochModel", what: "town model", ceil: 4000, fast: 30, far: 7000, out: 9000, stride: 0, pad: 0, stand: [1, 30] },
-    logan: { dir: "logan3d/", js: "logan-model.js?v=1", lib: "LoganModel", what: "Logan map", ceil: 110000, fast: 600, far: 150000, out: 130000, stride: 0.02, pad: 80000, stand: [0.45, 400],
+    inv: { dir: "town3d/", js: "inverloch-model.js?v=3", lib: "InverlochModel", what: "town model", wait: 45000, ceil: 4000, fast: 30, far: 7000, out: 9000, stride: 0, pad: 0, stand: [1, 30] },
+    logan: { dir: "logan3d/", js: "logan-model.js?v=1", lib: "LoganModel", what: "Logan map", wait: 90000, ceil: 110000, fast: 600, far: 150000, out: 130000, stride: 0.02, pad: 80000, stand: [0.45, 400],
       start: "council",                          // you start in the air over the council's administration centre
       floodLook: [-27.69, 153.17, 12000, 55, -35] },  // where the floods are widest: the lower Logan from the south-west (latitude, longitude, metres back, tilt, bearing)
   };
@@ -7604,14 +7608,15 @@ const handle = async (m, post) => {
     BS.invBeach = false; BS.exploreOnly = kind === "logan" ? "logan" : true; if (BS.B) bsPlace();
     const T = BS.town = { on: false, model: null, dead: false, keep: !!viaExplore, kind, cfg };
     exLoadShow(kind);
-    // the loading screen goes once the town's up and the view has held still for a moment (or if it didn't start)
+    // the loading screen goes once the town's up, the view has held still for a moment and (Logan) the buildings and trees
+    // around you are all in, so nothing pops in as it lifts (or if it didn't start)
     { let onAt = 0, last = "", still = 0;
       const watch = () => {
-        if (BS.town !== T || T.dead || Date.now() - t0 > 45000) { exLoadDone(); return; }
+        if (BS.town !== T || T.dead || Date.now() - t0 > cfg.wait) { exLoadDone(); return; }
         if (T.on) { const F = BS.fly, at = performance.now(); onAt ||= at;
           const k = F ? [F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch].map(v => v.toFixed(2)).join() : "";
           if (k !== last) { last = k; still = at; }
-          if (at - onAt > 1200 && at - still > 700) { exLoadDone(); return; } }
+          if (at - onAt > 1200 && at - still > 700 && (!T.model?.settled || T.model.settled() || at - onAt > 8000)) { exLoadDone(); return; } }
         setTimeout(watch, 120); };
       setTimeout(watch, 120); }
     const t0 = Date.now(), go = () => {
@@ -7869,8 +7874,7 @@ const handle = async (m, post) => {
   // air over the council's administration centre. (If the model can't load, the weather's own scene of the place.)
   // Who gets which: Inverloch for Inverloch news (and for Rod, who lives there); Logan for Logan news, as in The Logan Wire.
   function exploreWhich() { return S.region === "inv" ? "inv" : S.region === "logan" ? "logan" : /^rod(ney)?$/i.test((S.name || "").trim()) ? "inv" : ""; }
-  // any: from the #explore link, which opens Inverloch where the app has no model of its own area.
-  function exploreTown(any) { const k = exploreWhich() || (any ? "inv" : ""); if (k) townModelOpen(true, k); }
+  function exploreTown() { const k = exploreWhich(); if (k) townModelOpen(true, k); }
   function openWeather() {
     if (!state.wx) { toast("The weather isn't available right now"); return; }
     BS.view = { mode: "live", ms: Date.now(), play: true, day: null };  // plays on from now each time it opens
@@ -8534,8 +8538,8 @@ const handle = async (m, post) => {
       if (!openSheet) render(true);
       if (pendingStory) { const id = pendingStory; pendingStory = ""; history.replaceState(null, "", location.pathname); if (findItem(id)) openReader(id); else loadArchive()?.then?.(() => findItem(id) ? openReader(id) : toast("That story isn't in the news here any more")).catch(() => toast("That story isn't in the news here any more")); }
       if (pendingTV) { pendingTV = false; try { history.replaceState(null, "", location.pathname); } catch {} openTV(); }
-      if (pendingExplore) { pendingExplore = false; try { history.replaceState(null, "", location.pathname); } catch {}
-        const t0 = Date.now(), go = () => { if (state.wx) exploreTown(true); else if (Date.now() - t0 < 20000) setTimeout(go, 300); else { exLoadDone(); toast("Explore needs the weather, which didn't load. Try again in a moment."); } };
+      if (pendingExplore) { const kind = pendingExplore; pendingExplore = ""; try { history.replaceState(null, "", location.pathname); } catch {}
+        const t0 = Date.now(), go = () => { if (state.wx) townModelOpen(true, kind); else if (Date.now() - t0 < 20000) setTimeout(go, 300); else { exLoadDone(); toast("Explore needs the weather, which didn't load. Try again in a moment."); } };
         go(); }
       afterPics("offline", saveOffline);
       if (!state.wx) loadWeather();

@@ -21,6 +21,15 @@ precinct on Wembley Road in detail.
 Nothing here is downloaded until someone opens the map (about 9 MB the first time). `build.py` copies this folder
 into the site.
 
+## Links that open it directly
+
+- `https://ashley-pettit.github.io/awesome-news/logan/#explore`: The Logan Wire, straight into the map.
+- `https://ashley-pettit.github.io/awesome-news/#explore-logan`: the same from Awesome News (or any of the local apps).
+
+Either shows a "Loading Logan 3D model" screen at once, over the whole app, and lifts it only when the map is up, the
+view has held still and the buildings and trees around the camera are all in (`model.settled()`), so nothing jumps or
+pops in. `#explore` on its own opens the model of the app's own area; `#explore-inverloch` names Inverloch's.
+
 ## How the app uses it
 
 The same way as the Inverloch model in `town3d/`, and through the same code: `app.html` (search for `townModelOpen`
