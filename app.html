@@ -7688,7 +7688,7 @@ const handle = async (m, post) => {
   // the camera, up to so many metres) and floodLook (where its floods are widest: the lower Logan from the south-west, as
   // latitude, longitude, metres back, tilt and bearing).
   const TOWNS = {
-    inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=3", assets: TOWN3D, place: "inv", up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
+    inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=6", assets: TOWN3D, place: "inv", up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
     moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=1", assets: TOWN3D + "moorooka/", place: "moo", up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
       walkStart: { x: -269.8, z: -991.4, yaw: -1.623 } },  // Ash's pick for where Moorooka starts: the Beaudesert Road footpath, looking at the house he chose
     logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=2", assets: TOWN3D + "logan/", place: "logan", up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
@@ -7743,13 +7743,15 @@ const handle = async (m, post) => {
     const fail = msg => { if (T.dead) return; toast(msg, 6000);
       if (!T.keep) { bsFlyOff(); return; }
       townModelOff(); jump.hidden = old.jump; jump.textContent = old.jumpText; jump.onclick = old.jumpClick; tip.textContent = old.tip; };  // carry on in the weather's own town
-    // Inverloch: the clock and number 11 come across from the weather's Inverloch (below): keep the ground clear where they'll stand
-    const cfg = T.cfg, inv = cfg.place === "inv", D = INV_TOWN, home = D.nr?.home, clearLatLon = [];
-    if (inv && BS.W.invClock) { const [lat, lon] = townLL(D.c[0], D.c[1]); clearLatLon.push({ lat, lon, r: 4.5 }); }
-    if (inv && home && BS.W.invHouse) { const [lat, lon] = townLL(home[0], home[1]); clearLatLon.push({ lat, lon, r: 24 }); }
+    // Inverloch: the town centre and number 11 come across from the weather's Inverloch (below): keep the ground clear where
+    // they'll stand (and round both, the model draws its small things: cars with proper shapes, letterboxes, bins, power lines)
+    const cfg = T.cfg, inv = cfg.place === "inv", D = INV_TOWN, home = D.nr?.home, clearLatLon = [], clearPolygons = [], detailLatLon = [];
+    if (inv && BS.W.invClock) { const [lat, lon] = townLL(D.c[0], D.c[1]); clearLatLon.push({ lat, lon, r: 4.5 }); detailLatLon.push({ lat, lon, r: 260 }); }
+    if (inv && home && BS.W.invHouse) { const [lat, lon] = townLL(home[0], home[1]); clearLatLon.push({ lat, lon, r: 24 }); detailLatLon.push({ lat, lon, r: 170 }); }
+    if (inv && BS.W.invTG && BS.W.invClock) TOWN_BLOCK.forEach(P => clearPolygons.push({ latLon: P.map(([x, z]) => townLL(x, z)), roads: true }));  // the town centre comes across whole
     townModelLoad(cfg).then(lib => {
       if (T.dead) return;
-      const m = T.model = lib.create(box, { assets: cfg.assets, clearLatLon,
+      const m = T.model = lib.create(box, { assets: cfg.assets, clearLatLon, clearPolygons, detailLatLon,
         onProgress: (f, label) => { if (!T.on && !T.dead) tip.textContent = `Loading the town model: ${String(label).toLowerCase()}…`; },
         onFloodLevel: v => T.onFlood?.(v),
         onError: msg => fail(msg) });
@@ -7769,8 +7771,8 @@ const handle = async (m, post) => {
         // the view from above a spot on the ground: back and up from it, looking down at it
         const above = (x, z, yaw) => ({ x: bsClamp(x + Math.sin(yaw) * 230, F.lim[0], F.lim[1]), y: ground(x, z) + 190, z: bsClamp(z + Math.cos(yaw) * 230, F.lim[2], F.lim[3]), yaw, pitch: -0.69 });
 
-        // the Rotary clock and number 11 Norman Road, stood in the model where they really are
-        let mine = []; if (inv) try { mine = townModelGuests(T, m); } catch (e) { console.warn("Town model: the clock and Norman Road couldn't be added", e); }
+        // the town centre round the Rotary clock and number 11 Norman Road, stood in the model where they really are
+        let mine = []; if (inv) try { mine = townModelGuests(T, m); } catch (e) { console.warn("Town model: the town centre and Norman Road couldn't be added", e); }
         // Places to jump to: each as somewhere to stand (walking) and a view from above (flying). Where the model knows a
         // spot on the kerb of the nearest street (Moorooka's does), you stand there; otherwise a few steps back from the place.
         // (Logan's list starts with the whole city, which is only ever seen from the air, like the water.)
@@ -7909,10 +7911,20 @@ const handle = async (m, post) => {
   }
   // The town's own metres (x east, z south, from the library: tools/inverloch_town.py) as latitude and longitude
   const townLL = (x, z) => [-38.63351 - z / 110540, 145.72774 + x / (111320 * Math.cos(38.63351 * Math.PI / 180))];
-  // The Rotary clock and number 11 Norman Road are copied out of the weather's Inverloch (which is left as it is) and stood in
-  // the whole-town model where they really are: their shapes, colours and pictures, on a pad of level ground. The clock's hands,
-  // its lit faces, the koala, the wombats and the windows' glow at night keep following the weather's own, frame by frame.
-  // Returns the two as places to jump to: where to stand (Explore's own spot for each) and where the thing itself is.
+  // The town centre round the clock, in the town's metres: the Hub and library, the war memorial, the shops along Reilly Street
+  // and on both sides of A'Beckett Street (the bakery among them). Three convex pieces, corners clockwise on the map. Inside
+  // them the whole-town model keeps only its ground, and the weather's own town centre is stood there instead (below).
+  const TOWN_BLOCK = [
+    [[-57, -73], [51.4, -73], [35.17, 49.85], [-57, 38.9]],                 // the Hub's side of A'Beckett Street, and the street
+    [[44.33, -19.5], [97, -12.9], [97, 57.2], [35.17, 49.85]],               // the shops east of Reilly Street
+    [[-57, 38.9], [57.1, 52.46], [55.2, 76.2], [40.5, 87.6], [-57, 70.5]],   // the shops across A'Beckett Street
+  ];
+  const townInPiece = (P, x, z) => P.every((a, i) => { const b = P[(i + 1) % P.length]; return (b[0] - a[0]) * (z - a[1]) - (b[1] - a[1]) * (x - a[0]) >= 0; });
+  const townInBlock = (x, z) => TOWN_BLOCK.some(P => townInPiece(P, x, z));
+  // The town centre, the Rotary clock and number 11 Norman Road are copied out of the weather's Inverloch (which is left as it
+  // is) and stood in the whole-town model where they really are: their shapes, colours and pictures. The clock's hands, its lit
+  // faces, the flags, the koala, the wombats and the windows' glow at night keep following the weather's own, frame by frame.
+  // Returns places to jump to: where to stand for each and where the thing itself is.
   function townModelGuests(T, m) {
     const W = BS.W, THREE = BS.B.THREE, TG = W.invTG, D = INV_TOWN, G0 = 2.2, jumps = [];
     if (!TG || !m.addParts) return jumps;
@@ -7923,7 +7935,7 @@ const handle = async (m, post) => {
     const plain = mat => mat && (mat.isMeshStandardMaterial || mat.isMeshBasicMaterial || mat.isMeshLambertMaterial || mat.isMeshPhongMaterial);
     const look = mat => ({ color: mat.color ? rgb(mat.color) : [1, 1, 1], map: mat.map?.image || undefined, mapRepeat: mat.map ? [mat.map.repeat.x, mat.map.repeat.y] : undefined,
       roughness: mat.roughness, metalness: mat.metalness, emissive: mat.emissive ? rgb(mat.emissive) : undefined, emissiveIntensity: mat.emissiveIntensity,
-      opacity: mat.transparent ? mat.opacity : 1, doubleSide: mat.side === THREE.DoubleSide, flatShading: !!mat.flatShading, unlit: !!mat.isMeshBasicMaterial });
+      glowMap: !!mat.map && mat.emissiveMap === mat.map, opacity: mat.transparent ? mat.opacity : 1, doubleSide: mat.side === THREE.DoubleSide, flatShading: !!mat.flatShading, unlit: !!mat.isMeshBasicMaterial });
     const glows = (h, mats) => mats.forEach((mat, i) => { if (mat.emissive) T.glow.push({ h, i, mat, k: NaN }); });
     // a whole object, still moving: each of its meshes follows the original's place every frame
     const whole = (root, place) => { const parts = [], src = [];
@@ -7959,12 +7971,32 @@ const handle = async (m, post) => {
     // a Jump stop from one of Explore's own spots (kept in the weather scene's coordinates): to the town's metres, then the model's
     const stop = (name, sp, place, target) => { const p = v.set(...sp.pos).applyMatrix4(toTG).applyMatrix4(place);
       jumps.push({ name, target, walk: { x: p.x, z: p.z, yaw: sp.yaw - TG.rotation.y, pitch: sp.pitch } }); };
+    const under = root => { let p = root; while (p && p !== TG) p = p.parent; return !!p; };
+    const tower = W.invClock?.children.find(o => !o.isMesh && o.children.length);  // the clock's poles, faces, hands and ship; the rest of it is its plaza
+    const flags = (W.invFlags || []).filter(under), drive = (W.invDriveCars || []).map(d => d.mesh).filter(Boolean);
     // what moves at number 11: the koala, the wombats, the joey and the magpie, the two on the balcony; and the cars on Norman Road
     const moving = [W.invKoala?.ko, ...(W.invWombats || []).map(w => w.g), W.invCritters?.roo, W.invCritters?.mag, ...(W.invFolk?.all || [])].filter(Boolean), cars = W.invNormanCars || [], skip = new Set();
     [W.invClock, ...moving, ...cars].filter(Boolean).forEach(r => r.traverse(o => skip.add(o)));
 
-    // the Rotary clock, on a garden bed at the corner of A'Beckett and Reilly Streets
-    if (W.invClock) { const [x, z] = m.fromLatLon(...townLL(D.c[0], D.c[1])), top = m.addPad({ x, z, radius: 2.7, color: [0.19, 0.3, 0.12], lift: 0.3 });
+    // the town centre round the clock: the bakery and the other shops, the war memorial, the library and the Hub, the streets
+    // between them and everything on them. The things that move (the clock itself, the flags) follow the weather's own.
+    let block = null;
+    if (W.invClock && tower) { const still = new Set(); [W.invClock, ...flags, ...drive, ...moving, ...cars].filter(Boolean).forEach(r => r.traverse(o => still.add(o)));  // (the clock's plaza is built afresh for the model, below)
+      const t0 = performance.now();
+      try { block = townModelBlock(T, m, { THREE, TG, toTG, look, glows, plain, skip: still }); } catch (e) { console.warn("Town model: the town centre couldn't be added", e); }
+      if (block) T.block = { parts: block.parts, corners: block.corners, ms: Math.round(performance.now() - t0) }; }
+    if (block) { const [cx, cz] = block.at(D.c[0], D.c[1]);
+      whole(tower, block.place(D.c[0], D.c[1]));
+      flags.forEach(f => { v.setFromMatrixPosition(f.matrixWorld).applyMatrix4(toTG); whole(f, block.place(v.x, v.z)); });
+      if (W.invSpot) stop("the clock", W.invSpot, block.place(D.c[0], D.c[1]), [cx, cz]);
+      // somewhere to stand for the bakery (out in the mouth of Reilly Street, across from it) and for the war memorial (in front of it)
+      const standAt = (name, fx, fz, tx, tz, pitch) => { const [x, z] = block.at(fx, fz), [ax, az] = block.at(tx, tz); jumps.push({ name, target: [ax, az], walk: { x, z, yaw: Math.atan2(x - ax, z - az), pitch } }); };
+      const pie = D.u.find(u => /PIEMAN/.test(u[9] || ""));
+      if (pie) { const mx = (pie[0] + pie[2]) / 2, mz = (pie[1] + pie[3]) / 2; standAt("the bakery", mx + pie[4] * 27, mz + pie[5] * 27, mx, mz, 0.06); }
+      standAt("the war memorial", 25 - Math.sin(0.15) * 12, 0.5 + Math.cos(0.15) * 12, 25, 0.5, 0.03);
+      try { townModelExtras(m, block, THREE, W); } catch (e) { console.warn("Town model: the clock's plaza, café tables and signs couldn't be added", e); } }
+    // without it, the Rotary clock alone, on a garden bed at the corner of A'Beckett and Reilly Streets
+    else if (W.invClock) { const [x, z] = m.fromLatLon(...townLL(D.c[0], D.c[1])), top = m.addPad({ x, z, radius: 2.7, color: [0.19, 0.3, 0.12], lift: 0.3 });
       const place = new THREE.Matrix4().makeTranslation(x - D.c[0], top - G0, z - D.c[1]);
       whole(W.invClock, place); if (W.invSpot) stop("the clock", W.invSpot, place, [x, z]); }
     // number 11 Norman Road: the house, garage, driveway, garden and everything in it
@@ -7978,6 +8010,196 @@ const handle = async (m, post) => {
       cars.forEach(c => { const cp = place.clone(); T.cars.push({ o: c, cp }); whole(c, cp); });  // each car kept on the model's road as it goes
       if (W.invNormanSpot) stop("Norman Rd", W.invNormanSpot, place, [x, z]); }
     return jumps;
+  }
+  // The weather's town centre, cut out of its merged shapes and laid over the whole-town model's ground, which slopes where
+  // the weather's is flat: every shape goes across with its heights measured from the ground, and the model lays it down so
+  // that it follows the ground beneath it. A building comes whole or not at all (by its outline on the map); so does each
+  // thing in the street (a car, a lamp, a tree), by where it stands; the streets and footpaths are trimmed exactly at the
+  // block's edge.
+  function townModelBlock(T, m, { THREE, TG, toTG, look, glows, plain, skip }) {
+    const D = INV_TOWN, G0 = 2.2, LIFT = 0.08, REACH = 150, cx0 = D.c[0], cz0 = D.c[1];
+    // the town's metres to the model's (a hair bigger each way: the model's are true metres)
+    const o0 = m.fromLatLon(...townLL(0, 0)), o1 = m.fromLatLon(...townLL(100, 100)), kx = (o1[0] - o0[0]) / 100, kz = (o1[1] - o0[1]) / 100;
+    const at = (x, z) => [o0[0] + x * kx, o0[1] + z * kz];
+    const place = (x, z) => { const [X, Z] = at(x, z); return new THREE.Matrix4().makeTranslation(X - x, m.groundAt(X, Z) + LIFT - G0, Z - z); };
+    // the buildings' outlines, and whether each is in the block
+    const B = D.b.map(([, , f]) => { const p = []; let sx = 0, sz = 0, x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
+      for (let i = 0; i < f.length; i += 2) { const x = f[i], z = f[i + 1]; p.push([x, z]); sx += x; sz += z; x0 = Math.min(x0, x); x1 = Math.max(x1, x); z0 = Math.min(z0, z); z1 = Math.max(z1, z); }
+      return { p, x0, x1, z0, z1, inn: townInBlock(sx / p.length, sz / p.length) }; });
+    const inPoly = (p, x, z) => { let c = false; for (let i = 0, j = p.length - 1; i < p.length; j = i++) { const [xi, zi] = p[i], [xj, zj] = p[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; };
+    const offPoly = (p, x, z) => { let d = 1e9; for (let i = 0, j = p.length - 1; i < p.length; j = i++) { const [ax, az] = p[j], [bx, bz] = p[i], dx = bx - ax, dz = bz - az, t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz || 1))); d = Math.min(d, Math.hypot(x - ax - dx * t, z - az - dz * t)); } return d; };
+    const inside = (x, z) => { for (let i = 0; i < B.length; i++) { const b = B[i]; if (x >= b.x0 && x <= b.x1 && z >= b.z0 && z <= b.z1 && inPoly(b.p, x, z)) return i; } return -1; };
+    const beside = (x, z, r) => { let best = -1, bd = r; for (let i = 0; i < B.length; i++) { const b = B[i]; if (x < b.x0 - r || x > b.x1 + r || z < b.z0 - r || z > b.z1 + r) continue; const d = offPoly(b.p, x, z); if (d < bd) { bd = d; best = i; } } return best; };
+    const trees = (D.t || []).map(([x, z]) => ({ x, z, inn: townInBlock(x, z) }));
+    // what comes across, gathered by material: one mesh for each
+    const buckets = new Map();
+    const bucket = (mat, hasN, hasU) => { let b = buckets.get(mat); if (!b) buckets.set(mat, b = { mat, pos: [], nor: hasN ? [] : null, col: mat.vertexColors ? [] : null, uv: hasU && mat.map ? [] : null }); return b; };
+    // a corner is [x, y, z, nx, ny, nz, r, g, b, u, v] in the town's metres; it goes in as the model's metres and a height above the ground
+    const put = (b, p) => { b.pos.push(o0[0] + p[0] * kx, p[1] - G0 + LIFT, o0[1] + p[2] * kz);
+      if (b.nor) b.nor.push(p[3], p[4], p[5]); if (b.col) b.col.push(p[6], p[7], p[8]); if (b.uv) b.uv.push(p[9], p[10]); };
+    // a flat shape trimmed to one piece of the block
+    const trim = (poly, P) => { for (let i = 0; i < P.length && poly.length; i++) { const a = P[i], b = P[(i + 1) % P.length], ex = b[0] - a[0], ez = b[1] - a[1], out = [];
+        for (let j = 0; j < poly.length; j++) { const p = poly[j], q = poly[(j + 1) % poly.length], sp = ex * (p[2] - a[1]) - ez * (p[0] - a[0]), sq = ex * (q[2] - a[1]) - ez * (q[0] - a[0]);
+          if (sp >= 0) out.push(p);
+          if ((sp >= 0) !== (sq >= 0)) { const t = sp / (sp - sq), r = new Array(11); for (let k = 0; k < 11; k++) r[k] = p[k] + (q[k] - p[k]) * t; out.push(r); } }
+        poly = out; } return poly; };
+    const zx0 = Math.min(...TOWN_BLOCK.flat().map(p => p[0])), zx1 = Math.max(...TOWN_BLOCK.flat().map(p => p[0])), zz0 = Math.min(...TOWN_BLOCK.flat().map(p => p[1])), zz1 = Math.max(...TOWN_BLOCK.flat().map(p => p[1]));
+
+    const rel = new THREE.Matrix4(), nm = new THREE.Matrix3(), q = new THREE.Vector3(), R2 = REACH * REACH;
+    const edgeC = new THREE.Color(0x2e3236), roofC = new THREE.Color(0x9aa3ab), isEdge = p => Math.abs(p[6] - edgeC.r) + Math.abs(p[7] - edgeC.g) + Math.abs(p[8] - edgeC.b) < 0.003;
+    TG.traverse(o => { if (!o.isMesh || o.isInstancedMesh || !o.visible || skip.has(o) || !o.geometry?.attributes?.position) return;
+      const g = o.geometry, P = g.attributes.position, Nn = g.attributes.normal, U = g.attributes.uv, ix = g.index, n = P.count, nTri = Math.floor((ix ? ix.count : n) / 3);
+      const mats = Array.isArray(o.material) ? o.material : [o.material]; if (!mats.some(plain)) return;
+      rel.copy(toTG).multiply(o.matrixWorld);  // the mesh's own shape, to the town's metres
+      if (!g.boundingSphere) g.computeBoundingSphere();
+      q.copy(g.boundingSphere.center).applyMatrix4(rel); if (Math.hypot(q.x - cx0, q.z - cz0) - g.boundingSphere.radius * rel.getMaxScaleOnAxis() > REACH) return;  // nowhere near
+      nm.getNormalMatrix(rel);
+      const X = new Float32Array(n * 3), near = new Uint8Array(n);
+      for (let i = 0; i < n; i++) { q.fromBufferAttribute(P, i).applyMatrix4(rel); X[i * 3] = q.x; X[i * 3 + 1] = q.y; X[i * 3 + 2] = q.z; near[i] = (q.x - cx0) ** 2 + (q.z - cz0) ** 2 < R2 ? 1 : 0; }
+      const vi = ix ? i => ix.getX(i) : i => i;
+      const matAt = mats.length > 1 && g.groups.length ? t => { for (const gr of g.groups) if (t * 3 >= gr.start && t * 3 < gr.start + gr.count) return mats[gr.materialIndex]; return mats[0]; } : () => mats[0];
+      // the triangles near the clock, joined into shapes wherever they share a corner (a box, a pole, a whole building)
+      const ids = new Map(), parent = [], find = i => { while (parent[i] !== i) i = parent[i] = parent[parent[i]]; return i; };
+      const idOf = i => { const k = Math.round(X[i * 3] * 500) + "," + Math.round(X[i * 3 + 1] * 500) + "," + Math.round(X[i * 3 + 2] * 500); let id = ids.get(k); if (id === undefined) { id = parent.length; parent.push(id); ids.set(k, id); } return id; };
+      const tris = [];
+      for (let t = 0; t < nTri; t++) { const i0 = vi(t * 3), i1 = vi(t * 3 + 1), i2 = vi(t * 3 + 2); if (!near[i0] && !near[i1] && !near[i2]) continue;
+        const mat = matAt(t); if (!plain(mat)) continue;
+        const a = find(idOf(i0)), b = find(idOf(i1)), c = find(idOf(i2)); parent[b] = a; parent[find(c)] = a; tris.push([i0, i1, i2, a, mat]); }
+      if (!tris.length) return;
+      const shapes = new Map(), order = [];
+      for (const tr of tris) { const r = find(tr[3]); let sh = shapes.get(r); if (!sh) { shapes.set(r, sh = { x0: 1e9, x1: -1e9, y0: 1e9, y1: -1e9, z0: 1e9, z1: -1e9 }); order.push(sh); }
+        tr[3] = sh; for (let k = 0; k < 3; k++) { const i = tr[k] * 3; sh.x0 = Math.min(sh.x0, X[i]); sh.x1 = Math.max(sh.x1, X[i]); sh.y0 = Math.min(sh.y0, X[i + 1]); sh.y1 = Math.max(sh.y1, X[i + 1]); sh.z0 = Math.min(sh.z0, X[i + 2]); sh.z1 = Math.max(sh.z1, X[i + 2]); } }
+      // which shapes come: flat on the ground (streets, footpaths, paint) are trimmed to the block later; a shape by a building
+      // goes with it; leaves go with their tree; anything else by where it stands, and small parts with the big one they follow
+      let last = null;
+      for (const sh of order) { const x = (sh.x0 + sh.x1) / 2, z = (sh.z0 + sh.z1) / 2;
+        sh.flat = sh.y1 <= G0 + 0.36 && sh.y0 >= G0 - 0.02;
+        if (sh.flat) { sh.inn = sh.y1 >= G0 + 0.045 && sh.x1 >= zx0 && sh.x0 <= zx1 && sh.z1 >= zz0 && sh.z0 <= zz1; continue; }  // (not the map's painted parks and car parks: the model has its own)
+        let b = inside(x, z); if (b < 0) b = beside(x, z, 4.1);
+        const tree = b < 0 && sh.y0 >= G0 + 3.2 ? trees.find(t => Math.hypot(t.x - x, t.z - z) < 4.3) : null;
+        sh.inn = b >= 0 ? B[b].inn : tree ? tree.inn : townInBlock(x, z); sh.civic = b >= 0 && D.b[b][1] === 1;
+        const big = sh.y1 - sh.y0 >= 2.5 || Math.hypot(sh.x1 - sh.x0, sh.z1 - sh.z0) >= 3.5;
+        if (big) last = { x, z, inn: sh.inn }; else if (last && Math.hypot(x - last.x, z - last.z) <= 3) sh.inn = last.inn; }
+      // lay them down
+      const corner = i => { const p = new Array(11).fill(0), j = i * 3; p[0] = X[j]; p[1] = X[j + 1]; p[2] = X[j + 2];
+        if (Nn) { q.fromBufferAttribute(Nn, i).applyMatrix3(nm).normalize(); p[3] = q.x; p[4] = q.y; p[5] = q.z; }
+        if (C) { p[6] = C.getX(i); p[7] = C.getY(i); p[8] = C.getZ(i); }
+        if (U) { p[9] = U.getX(i); p[10] = U.getY(i); } return p; };
+      let C = null;
+      for (const [i0, i1, i2, sh, mat] of tris) { if (sh.flat && !sh.inn) continue;
+        C = mat.vertexColors ? g.attributes.color : null;
+        const a = i0 * 3, b = i1 * 3, c = i2 * 3, ux = X[b] - X[a], uy = X[b + 1] - X[a + 1], uz = X[b + 2] - X[a + 2], wx = X[c] - X[a], wy = X[c + 1] - X[a + 1], wz = X[c + 2] - X[a + 2];
+        let fx = uy * wz - uz * wy, fy = uz * wx - ux * wz, fz = ux * wy - uy * wx; const fl = Math.hypot(fx, fy, fz) || 1; fx /= fl; fy /= fl; fz /= fl;  // which way it faces
+        const mx = (X[a] + X[b] + X[c]) / 3, mz = (X[a + 2] + X[b + 2] + X[c + 2]) / 3;
+        if (sh.flat) { if (fy < -0.5) continue;  // (never seen from below)
+          const bk = bucket(mat, !!Nn, !!U), tri = [corner(i0), corner(i1), corner(i2)];
+          // Streets, lanes and paths all lie at one height in the weather's town, and flicker where they meet. Here each kind
+          // gets its own: main streets on top, lanes (a lighter grey) just under, paths (paler still) under those.
+          if (C && Math.abs(sh.y1 - G0 - 0.1) < 0.006) { const p = tri[0], lum = 0.2126 * p[6] + 0.7152 * p[7] + 0.0722 * p[8], sink = lum < 0.055 ? 0 : lum < 0.2 ? 0.02 : 0.04;
+            if (sink) tri.forEach(q2 => { q2[1] -= sink; }); }
+          for (const piece of TOWN_BLOCK) { const poly = trim(tri, piece); for (let k = 1; k + 1 < poly.length; k++) { put(bk, poly[0]); put(bk, poly[k]); put(bk, poly[k + 1]); } }
+          continue; }
+        // part of a building: inside its outline, a little behind the face
+        const fh = Math.hypot(fx, fz), own = inside(fh > 0.3 ? mx - fx / fh * 0.25 : mx, fh > 0.3 ? mz - fz / fh * 0.25 : mz);
+        if (!(own >= 0 ? B[own].inn : sh.inn)) continue;
+        const tri = [corner(i0), corner(i1), corner(i2)];
+        // the Hub's and library's roofs, seen from the air: their own grey inside the dark edge (the weather's town is seen from the street)
+        if (sh.civic && C && fy > 0.9) tri.forEach(p => { if (isEdge(p)) { p[6] = roofC.r; p[7] = roofC.g; p[8] = roofC.b; } });
+        const bk = bucket(mat, !!Nn, !!U); put(bk, tri[0]); put(bk, tri[1]); put(bk, tri[2]); } });
+
+    const parts = [], used = [];
+    for (const b of buckets.values()) { if (!b.pos.length) continue;
+      parts.push({ positions: new Float32Array(b.pos), normals: b.nor ? new Float32Array(b.nor) : undefined, colors: b.col ? new Float32Array(b.col) : undefined, uvs: b.uv ? new Float32Array(b.uv) : undefined,
+        ...look(b.mat), matrix: new THREE.Matrix4().elements, onGround: true }); used.push(b.mat); }
+    if (!parts.length) return null;
+    glows(m.addParts(parts), used);
+    return { at, place, parts: parts.length, corners: parts.reduce((n, p) => n + p.positions.length / 3, 0) };
+  }
+  // Things made for the model's town centre alone. The foot of the Rotary clock as in photos of it: brick paving, a planted
+  // bed of tussock grasses and low shrubs round the two poles, their broad teal bases, and the four mosaic blocks in a row out
+  // the front, towards the library (their pictures are the weather's own). Then tables and chairs outside the bakery and The
+  // Larder, a sandwich board out the front of each named shop, and the signs either side of the zebra crossing.
+  function townModelExtras(m, block, THREE, W) {
+    const D = INV_TOWN, FOOT = 0.26, v = new THREE.Vector3(), M = new THREE.Matrix4(), N = new THREE.Matrix3(), c = new THREE.Color(), parts = [];
+    // a mesh to fill: plain colours for each shape, or one picture over all of it
+    const mesh = spec => { const b = { pos: [], nor: [], col: spec.map ? null : [], uv: spec.map ? [] : null, spec }; parts.push(b); return b; };
+    // a shape at a place in the town's metres; heights are above the ground
+    const add = (b, geo, colour, x, y, z, ry = 0, rx = 0, rz = 0, sx = 1, sy = 1, sz = 1) => { const g = geo.index ? geo.toNonIndexed() : geo;
+      M.compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(rx, ry, rz, "YXZ")), new THREE.Vector3(sx, sy, sz)); N.getNormalMatrix(M); if (b.col) c.setHex(colour);
+      const P = g.attributes.position, Q = g.attributes.normal, U = g.attributes.uv;
+      for (let i = 0; i < P.count; i++) { v.fromBufferAttribute(P, i).applyMatrix4(M); const [X, Z] = block.at(v.x, v.z); b.pos.push(X, v.y, Z);
+        v.fromBufferAttribute(Q, i).applyMatrix3(N).normalize(); b.nor.push(v.x, v.y, v.z);
+        if (b.col) b.col.push(c.r, c.g, c.b); else b.uv.push(U.getX(i), U.getY(i)); } };
+    const box = (w, h, d) => new THREE.BoxGeometry(w, h, d), rod = (r, h, n = 8, r2 = r) => new THREE.CylinderGeometry(r2, r, h, n);
+    const bits = mesh({ roughness: 0.78 }), rnd = i => { const x = Math.sin(i * 127.1 + 3.7) * 43758.5453; return x - Math.floor(x); };
+
+    // ---- the foot of the clock, in its own frame: a across (to the right, seen from the library side), b out towards the library
+    if (W.invClock) { const cr = D.c[2], PL = 0.24, at = (a, b) => [D.c[0] + Math.cos(cr) * a + Math.sin(cr) * b, D.c[1] - Math.sin(cr) * a + Math.cos(cr) * b];
+      const put = (bk, geo, colour, a, y, b, ry = 0, rx = 0, rz = 0, sx = 1, sy = 1, sz = 1) => { const [x, z] = at(a, b); add(bk, geo, colour, x, y, z, cr + ry, rx, rz, sx, sy, sz); };
+      // brick paving, laid in courses, inside a band of pale concrete
+      const bc = document.createElement("canvas"); bc.width = bc.height = 256; const g = bc.getContext("2d"); g.fillStyle = "#8f4a3a"; g.fillRect(0, 0, 256, 256);
+      for (let r = 0; r < 16; r++) for (let k = -1; k < 8; k++) { const t = rnd(r * 17 + k * 5 + 1), x = k * 32 + (r % 2) * 16, y = r * 16;
+        g.fillStyle = `rgb(${172 + t * 34 | 0},${84 + t * 22 | 0},${64 + t * 18 | 0})`; g.fillRect(x + 1, y + 1, 30, 14); if (x + 32 > 256) g.fillRect(x - 255, y + 1, 30, 14); }
+      const paving = mesh({ map: bc, mapRepeat: [10.5, 5.8], roughness: 0.95 });
+      put(paving, box(16.8, PL, 9.3), 0, -3.3, PL / 2, -0.87);
+      [[-3.3, 3.95, 17.5, 0.35], [-3.3, -5.69, 17.5, 0.35], [-11.87, -0.87, 0.35, 9.3], [5.27, -0.87, 0.35, 9.3]].forEach(([a, b, w, d]) => put(bits, box(w, PL + 0.015, d), 0xd6c8a8, a, (PL + 0.015) / 2, b));
+      // the bed: a stone edge, mulch, tussock grasses (green and straw-gold) and low dark shrubs
+      const disc = rod(1, 1, 28);
+      put(bits, disc, 0xbdb6a6, 0, PL + 0.07, -0.7, 0, 0, 0, 4.25, 0.14, 2.75); put(bits, disc, 0x4a3a2c, 0, PL + 0.11, -0.7, 0, 0, 0, 4.05, 0.22, 2.55);
+      const BED = PL + 0.22, blade = new THREE.ConeGeometry(0.07, 1, 3), GRASS = [0x6f8f3c, 0xb7a258, 0x587a34, 0xc2ad62, 0x7b9a45];
+      for (let k = 0; k < 26; k++) { const ang = k / 26 * Math.PI * 2 + rnd(k) * 0.4, rr = 0.35 + rnd(k + 40) * 0.6, a = Math.cos(ang) * 3.6 * rr, b = -0.7 + Math.sin(ang) * 2.2 * rr;
+        if (Math.hypot(Math.abs(a) - 0.45, b) < 0.55) continue;  // not on the poles
+        const h = 0.75 + rnd(k + 80) * 0.6, colour = GRASS[k % GRASS.length];
+        for (let j = 0; j < 11; j++) { const t = j / 11 * Math.PI * 2, lean = 0.28 + rnd(k * 11 + j) * 0.3;
+          put(bits, blade, colour, a + Math.cos(t) * 0.14, BED + h * 0.46, b + Math.sin(t) * 0.14, 0, Math.sin(t) * lean, -Math.cos(t) * lean, 1, h, 1); } }
+      const bush = new THREE.IcosahedronGeometry(0.5, 1);
+      [[-3.1, -1.5, 1.1], [3.0, -1.3, 1.2], [-2.2, 0.6, 0.9], [2.5, 0.5, 0.95], [-0.2, -2.6, 1.25], [1.5, -2.3, 1.0], [-1.7, -2.4, 0.9]].forEach(([a, b, k], i) =>
+        put(bits, bush, [0x355a2b, 0x2f4f29, 0x40662f][i % 3], a, BED + 0.28 * k, b, i, 0, 0, 1.25 * k, 0.72 * k, 1.05 * k));
+      // the poles' feet: a broad teal base with a collar round its top, on a flange
+      [-0.452, 0.452].forEach(a => { put(bits, rod(0.3, 0.1, 14), 0x2c6f68, a, BED + 0.05, 0); put(bits, rod(0.22, 1.25, 14, 0.2), 0x3b8f86, a, BED + 0.72, 0);
+        put(bits, rod(0.255, 0.08, 14), 0x2c6f68, a, BED + 1.36, 0); put(bits, rod(0.24, 0.06, 14), 0x2c6f68, a, BED + 0.5, 0); });
+      // the four mosaic blocks: concrete wedges in a row on the paving, a picture on each sloping face
+      const maps = []; W.invClock.traverse(o => { const mp = o.isMesh && o.geometry?.type === "PlaneGeometry" && o.material?.map; if (mp?.image && !maps.includes(mp.image)) maps.push(mp.image); });
+      const wedge = new THREE.ExtrudeGeometry(new THREE.Shape([[-0.37, 0], [0.37, 0], [0.13, 1.02], [-0.13, 1.02]].map(([x, y]) => new THREE.Vector2(x, y))), { depth: 0.96, bevelEnabled: false });
+      wedge.translate(0, 0, -0.48); wedge.rotateY(Math.PI / 2);
+      const tilt = Math.atan2(0.24, 1.02), pane = new THREE.PlaneGeometry(0.76, 0.8);
+      [-2.45, -1.25, -0.05, 1.15].forEach((a, k) => { const b = 2.25;
+        put(bits, wedge, 0xcfcbc1, a, PL, b); put(bits, box(1.0, 0.05, 0.3), 0xdedad0, a, PL + 1.045, b); put(bits, box(1.04, 0.06, 0.82), 0xb9b4a8, a, PL + 0.03, b);
+        const pic = maps[k] ? mesh({ map: maps[k], roughness: 0.4, metalness: 0.1 }) : null;
+        [1, -1].forEach(sd => { const off = (0.25 + 0.012) * sd;
+          if (pic) put(pic, pane, 0, a, PL + 0.52, b + off, sd > 0 ? 0 : Math.PI, -tilt, 0);
+          else put(bits, box(0.76, 0.8, 0.01), 0x3f78c4, a, PL + 0.52, b + off, 0, -tilt * sd, 0); }); });
+    }
+
+    // ---- outside the shops
+    // along a shop's front: `t` of the way along it, `out` metres from the wall
+    const front = (u, t, out) => [u[0] + (u[2] - u[0]) * t + u[4] * out, u[1] + (u[3] - u[1]) * t + u[5] * out, Math.atan2(u[2] - u[0], u[3] - u[1])];
+    const table = (u, t, out, chair) => { const [x, z, r] = front(u, t, out);
+      add(bits, rod(0.38, 0.04, 12), 0xe9e5db, x, FOOT + 0.74, z); add(bits, rod(0.035, 0.72), 0x3a3d40, x, FOOT + 0.36, z); add(bits, rod(0.2, 0.03, 10), 0x3a3d40, x, FOOT + 0.015, z);
+      [-1, 1].forEach(sd => { const cx = x + Math.sin(r) * 0.66 * sd, cz = z + Math.cos(r) * 0.66 * sd, bx = x + Math.sin(r) * 0.85 * sd, bz = z + Math.cos(r) * 0.85 * sd;
+        add(bits, box(0.4, 0.04, 0.4), chair, cx, FOOT + 0.46, cz, r); add(bits, box(0.4, 0.42, 0.04), chair, bx, FOOT + 0.7, bz, r);
+        [[-0.17, -0.17], [0.17, -0.17], [-0.17, 0.17], [0.17, 0.17]].forEach(([a, b]) => add(bits, rod(0.018, 0.45, 5), 0x8d9396, cx + Math.cos(r) * a + Math.sin(r) * b, FOOT + 0.225, cz - Math.sin(r) * a + Math.cos(r) * b)); }); };
+    const pie = D.u.find(u => /PIEMAN/.test(u[9] || "")), larder = D.u.find(u => /LARDER/.test(u[9] || ""));
+    if (pie) [0.12, 0.3, 0.5, 0.68].forEach(t => table(pie, t, 1.5, 0xc8202a));
+    if (larder) [0.28, 0.7].forEach(t => table(larder, t, 1.5, 0x2f7a72));
+    // sandwich boards: two leaning panels, each shop's own colour with a pale face
+    const BOARD = [0x7a1f1f, 0x1f3f2c, 0xc7342c, 0x2e8b57, 0xd8312b, 0x1f3f7a, 0x15161a, 0x3a4a7a, 0x6b2d6b];
+    D.u.forEach((u, i) => { const mx = (u[0] + u[2]) / 2, mz = (u[1] + u[3]) / 2; if (!u[9] || !townInBlock(mx, mz)) return;
+      const [x, z] = front(u, /PIEMAN/.test(u[9]) ? 0.9 : 0.24, 2.2), a = Math.atan2(u[4], u[5]);
+      [-1, 1].forEach(sd => { const ox = Math.sin(a) * 0.13 * sd, oz = Math.cos(a) * 0.13 * sd;
+        add(bits, box(0.55, 0.85, 0.03), BOARD[i % BOARD.length], x + ox, FOOT + 0.42, z + oz, a, 0.3 * sd);
+        add(bits, box(0.43, 0.6, 0.012), 0xf4f1e6, x + ox * 1.16, FOOT + 0.45, z + oz * 1.16, a, 0.3 * sd); }); });
+    // the zebra crossing's signs: a yellow diamond on a post at each kerb, either side of it
+    const ab = D.r.find(r => r[0] === 20);
+    if (ab) { const f = ab[2]; let best = null;
+      for (let i = 0; i + 3 < f.length; i += 2) { const ax = f[i], az = f[i + 1], dx = f[i + 2] - ax, dz = f[i + 3] - az, L2 = dx * dx + dz * dz, t = Math.max(0, Math.min(1, ((D.c[0] - ax) * dx + (D.c[1] - az) * dz) / L2)),
+          x = ax + dx * t, z = az + dz * t, d = Math.hypot(D.c[0] - x, D.c[1] - z); if (!best || d < best.d) best = { d, x, z, ux: dx / Math.sqrt(L2), uz: dz / Math.sqrt(L2) }; }
+      [[-1, -1], [1, 1]].forEach(([al, sd]) => { const x = best.x + best.ux * 5 * al - best.uz * 10.5 * sd, z = best.z + best.uz * 5 * al + best.ux * 10.5 * sd, r = Math.atan2(best.ux, best.uz);
+        add(bits, rod(0.04, 2.7), 0x9aa2a6, x, FOOT + 1.35, z);
+        add(bits, box(0.62, 0.62, 0.02), 0x15161a, x, FOOT + 2.4, z, r, 0, Math.PI / 4); add(bits, box(0.54, 0.54, 0.03), 0xe6d21e, x, FOOT + 2.4, z, r, 0, Math.PI / 4); }); }
+    const out = parts.filter(b => b.pos.length).map(b => ({ positions: new Float32Array(b.pos), normals: new Float32Array(b.nor), colors: b.col ? new Float32Array(b.col) : undefined, uvs: b.uv ? new Float32Array(b.uv) : undefined,
+      ...b.spec, matrix: new THREE.Matrix4().elements, onGround: true }));
+    if (out.length) m.addParts(out);
   }
   function townModelFrame() {
     const T = BS.town, F = BS.fly, m = T.model;
