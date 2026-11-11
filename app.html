@@ -235,6 +235,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
 .lb-lgwrap { position: relative; }
 .lb-explore[hidden] { display: none; }
 .lb-food .lb-ic { background: #c2551f; }
+.lb-home { text-decoration: none; color: inherit; } .lb-home .lb-ic { background: #3d4a5c; } .lb-home[hidden] { display: none; }
 /* Food in the area (Moorooka): places to eat or drink, from OpenStreetMap */
 .fd-intro { color: var(--muted); font-size: 0.86rem; margin: 2px 0 0; }
 .fd-head { font-family: var(--display); font-size: 1.5rem; letter-spacing: -0.02em; margin: 6px 0 0; }
@@ -1506,6 +1507,7 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
       <div class="lb-catch" id="lbCatch" role="status" hidden></div>
       <div class="lb-catch lb-drive" id="lbDrive" role="status" hidden></div>
       <div class="lb-lgwrap" id="lbLgWrap"><details class="lb-apps"><summary class="lb-logan lb-appsum"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>Local news apps</b><small>Moorooka, Logan and the Bass Coast</small></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div class="lb-subs"><a class="lb-logan lb-sub" href="moorooka/" data-sub="moorooka/"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>Moorooka News</b><small>Local news first</small></span></a><a class="lb-logan lb-sub" href="logan/" data-sub="logan/"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>The Logan Wire</b><small>Local news first</small></span></a><a class="lb-logan lb-sub" href="inverloch/" data-sub="inverloch/"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>Coastline News</b><small>Local news first</small></span></a></div></details></div>
+      <a class="lb-logan lb-home" id="lbHome" href="https://ashley-pettit.github.io/awesome-news/" hidden><span class="lb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5.5 9.5V20h13V9.5"/></svg></span><span><b>Back to Awesome&#32;News</b><small>All the news, not just the local</small></span></a>
       <button class="lb-logan lb-explore" type="button" id="lbExplore" hidden><span class="lb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg></span><span><b>Virtually explore Inverloch</b><small>Walk around the town centre in 3D</small></span></button>
       <button class="lb-logan lb-food" type="button" id="lbFood" hidden><span class="lb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3v8M4.5 3v5a2.5 2.5 0 0 0 5 0V3M7 11v10M17 21V3c-2.2 1.2-3.5 3.6-3.5 7v3H17"/></svg></span><span><b>Food in the area</b><small>Places to eat or drink near the Moorooka shops</small></span></button>
       <button class="topsearch" type="button" data-open-search aria-label="Search all news">
@@ -1892,7 +1894,8 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
   let pendingStory = linkQ?.get("story") || "";
   const sharedStory = linkQ && /^https?:\/\//.test(linkQ.get("u") || "") ? { id: pendingStory, url: linkQ.get("u"), title: linkQ.get("t") || "A shared story", source: linkQ.get("s") || "", summary: "", published: !isNaN(Date.parse(linkQ.get("d") || "")) ? linkQ.get("d") : new Date().toISOString() } : null;
   let pendingTV = rawHash === "tv";  // link from the Claude copy's TV button
-  const hash = pendingStory || pendingTV ? "" : rawHash;
+  let pendingExplore = rawHash === "explore";  // a link straight into Explore (Coastline News: …/inverloch/#explore)
+  const hash = pendingStory || pendingTV || pendingExplore ? "" : rawHash;
   const state = {
     tab: hash || store.get("brief.tab3", "foryou"),
     showSaved: hash === "saved",
@@ -6478,7 +6481,7 @@ const handle = async (m, post) => {
         [x, z] = at(0.72, 2.2); const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.7, 0), new THREE.MeshStandardMaterial({ color: 0x9b968c, roughness: 1, flatShading: true })); rock.position.set(x, G0 + 0.5, z); rock.scale.set(1, 1.3, 0.8); TG.add(rock);
       }
       // the Rotary clock on its garden bed at the corner of A'Beckett and Reilly, library side; it reads from both sides (north-west and south-east). Explore starts in front of it.
-      { const fx = Math.sin(D.c[2] + 0.4), fz = Math.cos(D.c[2] + 0.4), s = toW(D.c[0] + fx * 13, G0 + 2.1, D.c[1] + fz * 13), l = toW(D.c[0], G0 + 4.5, D.c[1]).sub(s);
+      { const fx = Math.sin(D.c[2] + 0.4), fz = Math.cos(D.c[2] + 0.4), s = toW(D.c[0] + fx * 13, G0 + 4.2, D.c[1] + fz * 13), l = toW(D.c[0], G0 + 4.8, D.c[1]).sub(s);
         W.invSpot = { pos: [s.x, s.y, s.z], yaw: Math.atan2(-l.x, -l.z), pitch: Math.atan2(l.y, Math.hypot(l.x, l.z)) }; }
       W.invClock.position.set(D.c[0], 2.15, D.c[1]); W.invClock.rotation.y = D.c[2]; TG.add(W.invClock);
       // ---- the war memorial (Memorial Gardens, A'Beckett and Reilly, in front of the Hub): a two-tier white obelisk of cemented beach
@@ -7579,7 +7582,7 @@ const handle = async (m, post) => {
         onError: msg => fail(msg) });
       return m.ready.then(() => {
         if (T.dead || BS.fly !== F) { try { m.dispose(); } catch {} return; }
-        const EYE = 3, touch = matchMedia("(pointer: coarse)").matches;  // walking: your eyes 3 m up, for a clear view over the cars and fences
+        const EYE = 5, touch = matchMedia("(pointer: coarse)").matches;  // walking: your eyes 5 m up, for a clear view over the cars, fences and garden beds
         const b = m.bounds(), ground = (x = F.pos.x, z = F.pos.z) => Math.max(m.groundAt(x, z), m.waterLevel());
         // where you can go: inside the model; flying, above the ground and the water, and faster the higher you are
         F.lim = [b[0] + 30, b[1] - 30, b[2] + 30, b[3] - 30]; F.ceil = 4000;
@@ -7990,7 +7993,8 @@ const handle = async (m, post) => {
   // Loading data: Claude database (private copy) or files (GitHub Pages)
   // ======================================================================
   $("brandmark").src = APP_ICON;
-  if (LOCAL_APP && $("lbLgWrap")) $("lbLgWrap").hidden = true;  // the local apps link to each other only from Awesome News
+  if (LOCAL_APP && $("lbLgWrap")) $("lbLgWrap").hidden = true;
+  if (LOCAL_APP && $("lbHome")) $("lbHome").hidden = false;  // a local app's way back to the main app  // the local apps link to each other only from Awesome News
   state.prevVisit = store.get("brief.lastVisit", 0);
   const markVisit = () => store.set("brief.lastVisit", Date.now());
   document.addEventListener("visibilitychange", () => { if (document.hidden) markVisit(); });
@@ -8418,6 +8422,9 @@ const handle = async (m, post) => {
       if (!openSheet) render(true);
       if (pendingStory) { const id = pendingStory; pendingStory = ""; history.replaceState(null, "", location.pathname); if (findItem(id)) openReader(id); else loadArchive()?.then?.(() => findItem(id) ? openReader(id) : toast("That story isn't in the news here any more")).catch(() => toast("That story isn't in the news here any more")); }
       if (pendingTV) { pendingTV = false; try { history.replaceState(null, "", location.pathname); } catch {} openTV(); }
+      if (pendingExplore) { pendingExplore = false; try { history.replaceState(null, "", location.pathname); } catch {}
+        const t0 = Date.now(), go = () => { if (state.wx) exploreInverloch(); else if (Date.now() - t0 < 20000) setTimeout(go, 300); else toast("Explore needs the weather, which didn't load. Try again in a moment."); };
+        go(); }
       afterPics("offline", saveOffline);
       if (!state.wx) loadWeather();
     } catch {
