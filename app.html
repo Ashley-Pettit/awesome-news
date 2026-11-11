@@ -1291,6 +1291,9 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
   .bs-joy, .bs-ud { display: none !important; }
   .bs-fly-tip, .bs-fly-tip.dim { display: block !important; top: auto; right: auto; left: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); transform: none; max-width: 300px;
     white-space: pre-line; text-align: left; font-size: 0.78rem; line-height: 1.55; opacity: 0.92; pointer-events: none; }
+  /* the time slider (and the tide or flood water) tucked into the bottom right corner, out of the view */
+  .bs-fly-time { left: auto; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); width: 340px; max-width: calc(100% - 360px); margin: 0; }
+  body.bstown .bs-fly-time.bs-town-tide { bottom: calc(66px + env(safe-area-inset-bottom)); }
 }
 .bs-src { font-size: 0.62rem; color: var(--bs-dim); opacity: 0.75; margin: 2px 2px 0; text-align: right; }
 .bs-note { font-size: 0.8rem; line-height: 1.4; color: var(--bs-dim); margin: 0 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.8em; }
