@@ -1913,10 +1913,11 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
   // Opening Inverloch's 3D town (the #explore link, or the Explore button): a loading screen over everything until the town
   // is up and the view has settled, so nothing jumps or jitters while it loads
   let exLoad = null;
-  const exLoadShow = () => { if (exLoad) return; const d = exLoad = document.createElement("div"); d.className = "ex-load"; d.setAttribute("role", "status");
-    d.innerHTML = `<i aria-hidden="true"></i><b>Loading Inverloch 3D model</b><small>This takes a few seconds</small>`; document.body.appendChild(d); };
+  const exLoadShow = (where = /moorooka/.test(location.pathname) ? "Moorooka" : "Inverloch") => { if (exLoad) { exLoad.querySelector("b").textContent = `Loading ${where} 3D model`; return; }
+    const d = exLoad = document.createElement("div"); d.className = "ex-load"; d.setAttribute("role", "status");
+    d.innerHTML = `<i aria-hidden="true"></i><b>Loading ${where} 3D model</b><small>This takes a few seconds</small>`; document.body.appendChild(d); };
   const exLoadDone = () => { const d = exLoad; if (!d) return; exLoad = null; d.classList.add("gone"); setTimeout(() => d.remove(), 600); };
-  if (pendingExplore && !/moorooka/.test(location.pathname)) exLoadShow();  // the 3D Moorooka is quick: no loading screen
+  if (pendingExplore) exLoadShow();
   const hash = pendingStory || pendingTV || pendingExplore ? "" : rawHash;
   const state = {
     tab: hash || store.get("brief.tab3", "foryou"),
@@ -3083,8 +3084,8 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
   })();
   document.fonts?.ready.then(() => { inkAt = null; placeInk(); });
   function renderHeader() {
-    { const xb = $("lbExplore"), moo = S.region === "moo"; if (xb) { xb.hidden = !(moo || S.region === "inv" || /^rod(ney)?$/i.test((S.name || "").trim()));
-        $("lbExploreName").textContent = moo ? "Virtually explore Moorooka" : "Virtually explore Inverloch"; } }
+    { const xb = $("lbExplore"); if (xb) { const moo = exploreWhich() === "moo"; xb.hidden = !(moo || S.region === "inv" || /^rod(ney)?$/i.test((S.name || "").trim()));  // Moorooka: the whole suburb in 3D
+      xb.querySelector("b").textContent = moo ? "Virtually explore Moorooka" : "Virtually explore Inverloch"; xb.querySelector("small").textContent = moo ? "Walk around the suburb in 3D" : "Walk around the town centre in 3D"; } }
     { const fb = $("lbFood"); if (fb) fb.hidden = !(S.region === "moo" && MOO_FOOD.p.length); }  // Moorooka: Food in the area  // Inverloch (or Rod, who lives there): a way straight into the 3D town
     showVersion();
     $("eyebrow").textContent = state.showSaved ? "Saved" : greeting();
@@ -5115,7 +5116,7 @@ const handle = async (m, post) => {
     // Customise: the news keeps playing; Settings opens over it, and the Listen card brings the player back.
     if (t.closest("#npCust")) { npClose(); state.sTab = "news"; openSettings(); return; }  // the News tab: your interests and local area
     if (t.closest("#bsSkip")) { skipWeather(); return; }
-    if (t.closest("#lbExplore")) { exploreHere(); return; }
+    if (t.closest("#lbExplore")) { exploreTown(); return; }
     if (t.closest("#lbFood")) { openFood(); return; }
     const fdw = t.closest("[data-fd-what]"); if (fdw) { FD.what = fdw.dataset.fdWhat; renderFood(); return; }
     const fdt = t.closest("[data-fd-tab]"); if (fdt) { FD.tab = fdt.dataset.fdTab; FD.editing = null; if (!fdPlaces().some(p => fdTab(p, FD.tab) && fdIs(p, FD.what))) FD.what = "all"; renderFood(); return; }
@@ -5127,7 +5128,7 @@ const handle = async (m, post) => {
     if (pk2) { state.prevSel[pk2.dataset.prevK] = pk2.dataset.prevV; pk2.parentElement.querySelectorAll(".bchip").forEach(b => b.setAttribute("aria-pressed", String(b === pk2))); return; }
     if (t.closest("[data-prev-go]")) { previewGo(); return; }
     const sc = t.closest("[data-scene]");
-    if (sc) { const [place, drive] = sc.dataset.scene.split("|"); if (place === "invmodel") { townModelOpen(); return; } state.prevSel = { place, sky: "auto", hour: "now", drive }; previewGo(); return; }
+    if (sc) { const [place, drive] = sc.dataset.scene.split("|"); if (place === "invmodel" || place === "moomodel") { townModelOpen(false, place === "moomodel" ? "moo" : "inv"); return; } state.prevSel = { place, sky: "auto", hour: "now", drive }; previewGo(); return; }
     const sk = t.closest("[data-prev-sky]");
     if (sk && BS.prev) { BS.prev.sky = state.prevSel.sky = sk.dataset.prevSky; document.querySelectorAll("[data-prev-sky]").forEach(b => b.setAttribute("aria-pressed", String(b === sk))); return; }
     if (t.closest("[data-tv-new]")) { if (openSheet === "settings") hideSheet("settings"); startTV(); return; }
@@ -5652,7 +5653,7 @@ const handle = async (m, post) => {
   // Which place the 3D view shows: Logan for Logan news, Inverloch for Victoria, Brisbane everywhere else.
   function bsPlace() {
     const W = BS.W; if (!W.bris || !W.inv) return;
-    const pl = BS.exploreOnly ? "inv" : BS.prev?.place || (typeof wxPlace === "function" ? wxPlace() : S.region), vic = ["vic", "inv"].includes(pl), lo = pl === "logan", mo = pl === "moo";
+    const pl = BS.exploreOnly ? (BS.exploreOnly === "moo" ? "moo" : "inv") : BS.prev?.place || (typeof wxPlace === "function" ? wxPlace() : S.region), vic = ["vic", "inv"].includes(pl), lo = pl === "logan", mo = pl === "moo";
     const dr = !!(BS.drive && W.drive);  // the traffic part of Listen: the motorway instead of the place
     if (BS.orbit && !BS.orbit.on) { BS.orbit.ty = 0; BS.orbit.tp = 0; }  // a new place starts from the usual view
     const di = dr && !!W.driveInv && !!BS.driveVic;  // a drive in Victoria: the road into Inverloch
@@ -7410,7 +7411,7 @@ const handle = async (m, post) => {
     clearTimeout(F.tipT); BS.fly = null;
     document.body.classList.remove("bsfly"); $("bsFly").hidden = true;
     if (L.exploreHold) { L.exploreHold = false; wxListenOff(); if (L.on && L.paused) resumeListen(); }  // the news waited while you explored
-    if (BS.exploreOnly) { BS.exploreOnly = false; if (!$("weather").hidden) hideSheet("weather"); }  // came from "Virtually explore Inverloch": straight back home
+    if (BS.exploreOnly) { BS.exploreOnly = false; if (!$("weather").hidden) hideSheet("weather"); }  // came from "Virtually explore Inverloch" (or Moorooka): straight back home
     $("bsFlyBtn")?.focus({ preventScroll: true });
   }
   function bsFlyTick(dt) {
@@ -7558,27 +7559,37 @@ const handle = async (m, post) => {
   }
   // Inverloch: the town and the surf beach take turns; Moorooka: the landmarks and the bowls club. Each time the weather opens, the other one.
   const bsTurn = k => { const v = !store.get(k, false); store.set(k, v); return v; };
-  // ---- The whole-town model (Admin > 3D scenes > Inverloch 3D model) ----
-  // A separate model from the weather's Inverloch (the clock, A'Beckett Street, Norman Road): the whole town, about 8 km
-  // by 7, from OpenStreetMap streets and LiDAR terrain. Its script (town3d/inverloch-model.js, built from the ai-forge
-  // repo, with its own three.js) draws on its own canvas (#bsTown) over the weather's. Explore's controls fly it: every
-  // frame the camera Explore is flying is handed to the model, and the time slider sets its sun.
+  // ---- The whole-town models (Admin > 3D scenes > Inverloch 3D model, Moorooka 3D model) ----
+  // Separate models from the weather's own scenes (Inverloch's clock, A'Beckett Street and Norman Road; Moorooka's
+  // roundabout and shops). Inverloch: the whole town, about 8 km by 7, from OpenStreetMap streets and LiDAR terrain.
+  // Moorooka: the suburb and its edges, 3.3 km square, every building from the Queensland survey. Each one's script
+  // (in town3d/, built from the ai-forge repo, with its own three.js) draws on its own canvas (#bsTown) over the
+  // weather's. Explore's controls fly it: every frame the camera Explore is flying is handed to the model, and the
+  // time slider sets its sun.
   const TOWN3D = "town3d/";
-  function townModelLoad() {
-    if (window.InverlochModel) return Promise.resolve(window.InverlochModel);
-    if (!BS.townLib) BS.townLib = new Promise((ok, bad) => { const s = document.createElement("script"); s.src = TOWN3D + "inverloch-model.js?v=3";
-      s.onload = () => window.InverlochModel ? ok(window.InverlochModel) : bad(new Error("no model")); s.onerror = () => bad(new Error("no script")); document.head.appendChild(s); })
-      .catch(e => { BS.townLib = null; throw e; });
-    return BS.townLib;
+  // place: the weather scene Explore runs in underneath. up: that scene is built. air: where you start when not on foot.
+  const TOWNS = {
+    inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=3", assets: TOWN3D, place: "inv", up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
+    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=1", assets: TOWN3D + "moorooka/", place: "moo", up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5] },
+  };
+  function townModelLoad(cfg) {
+    if (window[cfg.lib]) return Promise.resolve(window[cfg.lib]);
+    const libs = BS.townLibs || (BS.townLibs = {});
+    if (!libs[cfg.lib]) libs[cfg.lib] = new Promise((ok, bad) => { const s = document.createElement("script"); s.src = cfg.src;
+      s.onload = () => window[cfg.lib] ? ok(window[cfg.lib]) : bad(new Error("no model")); s.onerror = () => bad(new Error("no script")); document.head.appendChild(s); })
+      .catch(e => { libs[cfg.lib] = null; throw e; });
+    return libs[cfg.lib];
   }
-  // viaExplore: from "Virtually explore Inverloch". If the model can't load there, you stay in the weather's own town instead.
-  function townModelOpen(viaExplore) {
+  // viaExplore: from "Virtually explore Inverloch" or "Virtually explore Moorooka". If the model can't load there, you stay
+  // in the weather's own town instead. which: "inv" (the default) or "moo".
+  function townModelOpen(viaExplore, which) {
     if (BS.town) return;
+    const cfg = TOWNS[which] || TOWNS.inv;
     if (!state.wx) { toast("The 3D town needs the weather, which is still loading. Try again in a moment."); return; }
     openWeather(); if ($("weather").hidden) return;
-    BS.invBeach = false; BS.exploreOnly = true; if (BS.B) bsPlace();
-    const T = BS.town = { on: false, model: null, dead: false, keep: !!viaExplore };
-    exLoadShow();
+    BS.invBeach = false; BS.mooAlt = false; BS.exploreOnly = cfg.place; if (BS.B) bsPlace();  // Inverloch's town, not its beach; Moorooka's streets, not its bowls club
+    const T = BS.town = { on: false, model: null, dead: false, keep: !!viaExplore, cfg };
+    exLoadShow(cfg.place === "moo" ? "Moorooka" : "Inverloch");
     // the loading screen goes once the town's up and the view has held still for a moment (or if it didn't start)
     { let onAt = 0, last = "", still = 0;
       const watch = () => {
@@ -7592,7 +7603,7 @@ const handle = async (m, post) => {
     const t0 = Date.now(), go = () => {
       if (T.dead) return;
       if ($("weather").hidden) { townModelOff(); return; }
-      if (BS.B && BS.W?.invSpot) { BS.invBeach = false; bsPlace(); if (!BS.fly) bsFlyOn(); townModelOn(T); }
+      if (BS.B && cfg.up()) { BS.invBeach = false; BS.mooAlt = false; bsPlace(); if (!BS.fly) bsFlyOn(); townModelOn(T); }
       else if (Date.now() - t0 < 20000) setTimeout(go, 200);
       else { townModelOff(); toast("The 3D view didn't start. Close it and try again."); }
     };
@@ -7607,13 +7618,13 @@ const handle = async (m, post) => {
     const fail = msg => { if (T.dead) return; toast(msg, 6000);
       if (!T.keep) { bsFlyOff(); return; }
       townModelOff(); jump.hidden = old.jump; jump.textContent = old.jumpText; jump.onclick = old.jumpClick; tip.textContent = old.tip; };  // carry on in the weather's own town
-    // The clock and number 11 come across from the weather's Inverloch (below): keep the ground clear where they'll stand
-    const D = INV_TOWN, home = D.nr?.home, clearLatLon = [];
-    if (BS.W.invClock) { const [lat, lon] = townLL(D.c[0], D.c[1]); clearLatLon.push({ lat, lon, r: 4.5 }); }
-    if (home && BS.W.invHouse) { const [lat, lon] = townLL(home[0], home[1]); clearLatLon.push({ lat, lon, r: 24 }); }
-    townModelLoad().then(lib => {
+    // Inverloch: the clock and number 11 come across from the weather's Inverloch (below): keep the ground clear where they'll stand
+    const cfg = T.cfg, inv = cfg.place === "inv", D = INV_TOWN, home = D.nr?.home, clearLatLon = [];
+    if (inv && BS.W.invClock) { const [lat, lon] = townLL(D.c[0], D.c[1]); clearLatLon.push({ lat, lon, r: 4.5 }); }
+    if (inv && home && BS.W.invHouse) { const [lat, lon] = townLL(home[0], home[1]); clearLatLon.push({ lat, lon, r: 24 }); }
+    townModelLoad(cfg).then(lib => {
       if (T.dead) return;
-      const m = T.model = lib.create(box, { assets: TOWN3D, clearLatLon,
+      const m = T.model = lib.create(box, { assets: cfg.assets, clearLatLon,
         onProgress: (f, label) => { if (!T.on && !T.dead) tip.textContent = `Loading the town model: ${String(label).toLowerCase()}…`; },
         onError: msg => fail(msg) });
       return m.ready.then(() => {
@@ -7630,15 +7641,16 @@ const handle = async (m, post) => {
         const above = (x, z, yaw) => ({ x: bsClamp(x + Math.sin(yaw) * 230, F.lim[0], F.lim[1]), y: ground(x, z) + 190, z: bsClamp(z + Math.cos(yaw) * 230, F.lim[2], F.lim[3]), yaw, pitch: -0.69 });
 
         // the Rotary clock and number 11 Norman Road, stood in the model where they really are
-        let mine = []; try { mine = townModelGuests(T, m); } catch (e) { console.warn("Town model: the clock and Norman Road couldn't be added", e); }
-        // Places to jump to: each as somewhere to stand (walking) and a view from above (flying)
+        let mine = []; if (inv) try { mine = townModelGuests(T, m); } catch (e) { console.warn("Town model: the clock and Norman Road couldn't be added", e); }
+        // Places to jump to: each as somewhere to stand (walking) and a view from above (flying). Where the model knows a
+        // spot on the kerb of the nearest street (Moorooka's does), you stand there; otherwise a few steps back from the place.
         const places = [...mine.map(g => ({ name: g.name, walk: g.walk, fly: above(g.target[0], g.target[1], g.walk.yaw) })),
           ...m.spots().map(s => { let dx = s.x - s.tx, dz = s.z - s.tz; const d = Math.hypot(dx, dz) || 1, r = Math.min(30, d); dx /= d; dz /= d;
-            return { name: s.name, water: s.kind === "water", fly: s, walk: { x: s.tx + dx * r, z: s.tz + dz * r, yaw: Math.atan2(dx, dz), pitch: 0.02 } }; })];
+            return { name: s.name, water: s.kind === "water", fly: s, walk: s.stand ? { x: s.stand.x, z: s.stand.z, yaw: s.stand.yaw, pitch: 0.02 } : { x: s.tx + dx * r, z: s.tz + dz * r, yaw: Math.atan2(dx, dz), pitch: 0.02 } }; })];
 
         // ---- Walk or Fly ----
-        const tideBox = $("bsTownTide"), tideIn = $("bsTownTideIn"), tideOut = $("bsTownTideOut");
-        const setMode = (walk, to) => { T.walk = walk; document.body.classList.toggle("bswalk", walk); F.walk = walk ? () => ground() + F.eye : null; tideBox.hidden = walk;
+        const tideBox = $("bsTownTide"), tideIn = $("bsTownTideIn"), tideOut = $("bsTownTideOut"), tidal = m.tide.max > m.tide.min;  // Moorooka has no tide to move
+        const setMode = (walk, to) => { T.walk = walk; document.body.classList.toggle("bswalk", walk); F.walk = walk ? () => ground() + F.eye : null; tideBox.hidden = walk || !tidal;
           modeBox.querySelectorAll("button").forEach(bn => bn.setAttribute("aria-pressed", String((bn.dataset.townMode === "walk") === walk)));
           if (document.pointerLockElement) document.exitPointerLock?.();
           F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.vert = 0; F.keys.clear();
@@ -7694,8 +7706,9 @@ const handle = async (m, post) => {
         list.onclick = e => { const bn = e.target.closest("[data-town-go]"); if (!bn) return; const p = places[+bn.dataset.townGo]; openList(false); go(p, T.walk && !p.water);  // the inlet and the strait are best seen from the air
           jump.focus({ preventScroll: true }); };
 
-        // start on foot at the clock, as Explore always has (R comes back here); with no clock, from the air
-        if (places[0] && mine.length) go(places[0], true); else { setMode(false); F.pos.set(300, 620, 2350); F.yaw = 0.04; F.pitch = -0.4; }
+        // Inverloch: start on foot at the clock, as Explore always has (R comes back here); with no clock, from the air.
+        // Moorooka: on foot at the first of its places, the shops on Beaudesert Road.
+        if (places[0] && (mine.length || !inv)) go(places[0], true); else { setMode(false); F.pos.set(cfg.air[0], cfg.air[1], cfg.air[2]); F.yaw = cfg.air[3]; F.pitch = cfg.air[4]; }
         F.start = { pos: F.pos.clone(), yaw: F.yaw, pitch: F.pitch };
         modeBox.hidden = false; T.on = true; box.hidden = false;
         F.heightAt = () => F.pos.y - ground(); $("bsHeight").hidden = false;  // the height shown top left
@@ -7796,20 +7809,12 @@ const handle = async (m, post) => {
     const box = $("bsTown"); box.hidden = true; box.textContent = "";
     document.body.classList.remove("bstown", "bswalk"); $("bsHeight").hidden = true; $("bsTownTide").hidden = true; $("bsTownMode").hidden = true; $("bsTownList").hidden = true;
   }
-  // "Virtually explore Inverloch": the whole-town model, on foot at the clock. (If the model can't load, the weather's own town.)
-  function exploreInverloch() { townModelOpen(true); }
-  // Moorooka: the weather's own 3D Moorooka (the landmarks, not the bowls club), straight into Explore. Elsewhere, Inverloch.
-  function exploreHere() {
-    if (S.region !== "moo") { exploreInverloch(); return; }
-    if (!state.wx) { toast("Explore needs the weather, which is still loading. Try again in a moment."); return; }
-    openWeather(); if ($("weather").hidden) return;
-    BS.mooAlt = false; if (BS.B) bsPlace();
-    const t0 = Date.now(), go = () => { if ($("weather").hidden) return;
-      if (BS.B && BS.W && BS.sceneKey === "moo") { if (!BS.fly) bsFlyOn(); }
-      else if (Date.now() - t0 < 20000) { if (BS.B) { BS.mooAlt = false; bsPlace(); } setTimeout(go, 200); }
-      else toast("The 3D view didn't start. Close it and try again."); };
-    go();
-  }
+  // "Virtually explore Inverloch": the whole-town model, on foot at the clock. "Virtually explore Moorooka": the suburb,
+  // on foot at the shops. (If the model can't load, the weather's own town.) Moorooka's shows where Moorooka is your area;
+  // Rod, who lives in Inverloch, always gets Inverloch's.
+  function exploreWhich() { return S.region === "moo" && !/^rod(ney)?$/i.test((S.name || "").trim()) ? "moo" : "inv"; }
+  function exploreTown() { townModelOpen(true, exploreWhich()); }
+  function exploreInverloch() { townModelOpen(true, "inv"); }
   function openWeather() {
     if (!state.wx) { toast("The weather isn't available right now"); return; }
     BS.view = { mode: "live", ms: Date.now(), play: true, day: null };  // plays on from now each time it opens
@@ -8357,6 +8362,7 @@ const handle = async (m, post) => {
     const go = (place, drive, label, sub) => `<button class="field" type="button" data-scene="${place}|${drive}"><span class="lbl">${label}<span class="sub">${sub}</span></span><span class="chev" aria-hidden="true">›</span></button>`;
     return `<div class="group"><h2>3D scenes</h2><div class="card">
       ${go("moo", "off", "Moorooka streets", "The weather in Moorooka")}${go("bowls", "off", "Moorooka bowls club", "Moorooka's other view")}
+      ${go("moomodel", "off", "Moorooka 3D model", "The whole suburb from the air: every building, street and the railway")}
       ${go("qld", "off", "Brisbane", "The river and the city")}${go("logan", "off", "Logan", "Logan's weather")}
       ${go("inv", "off", "Inverloch town", "The Rotary clock and A'Beckett Street")}${go("invmodel", "off", "Inverloch 3D model", "The whole town from the air: every street, the inlet and its tides")}
       ${go("invbeach", "off", "Inverloch beach", "The surf beach from the sand")}
@@ -8473,7 +8479,7 @@ const handle = async (m, post) => {
       if (pendingStory) { const id = pendingStory; pendingStory = ""; history.replaceState(null, "", location.pathname); if (findItem(id)) openReader(id); else loadArchive()?.then?.(() => findItem(id) ? openReader(id) : toast("That story isn't in the news here any more")).catch(() => toast("That story isn't in the news here any more")); }
       if (pendingTV) { pendingTV = false; try { history.replaceState(null, "", location.pathname); } catch {} openTV(); }
       if (pendingExplore) { pendingExplore = false; try { history.replaceState(null, "", location.pathname); } catch {}
-        const t0 = Date.now(), go = () => { if (state.wx) exploreHere(); else if (Date.now() - t0 < 20000) setTimeout(go, 300); else { exLoadDone(); toast("Explore needs the weather, which didn't load. Try again in a moment."); } };
+        const t0 = Date.now(), go = () => { if (state.wx) exploreTown(); else if (Date.now() - t0 < 20000) setTimeout(go, 300); else { exLoadDone(); toast("Explore needs the weather, which didn't load. Try again in a moment."); } };
         go(); }
       afterPics("offline", saveOffline);
       if (!state.wx) loadWeather();
