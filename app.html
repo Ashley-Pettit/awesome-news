@@ -1251,9 +1251,17 @@ body.bstown .bs-fly-time.bs-town-tide { bottom: calc(236px + env(safe-area-inset
 /* Time and Tide: a button each (tap to show or hide the slider). Under Exit in Explore; under Jump to (and Flood) in a town model */
 .bs-slides { pointer-events: auto; position: absolute; left: 16px; top: calc(60px + env(safe-area-inset-top)); display: flex; gap: 6px; }
 body.bstown .bs-slides { left: auto; right: 16px; }
-body.bstown .bs-fly-x.bs-town-flood:not([hidden]) ~ .bs-slides { top: calc(106px + env(safe-area-inset-top)); }
-.bs-slides .bs-fly-x { position: static; transform: none; }
-.bs-slides .bs-fly-x[aria-expanded="true"] { background: #fff; color: #1b1830; }
+.bs-fly .bs-slides > .bs-fly-x { position: static; transform: none; display: inline-flex; align-items: center; gap: 6px; }
+.bs-slides .bs-fly-x[aria-expanded="true"], .bs-slides .bs-fly-x[aria-pressed="true"] { background: #fff; color: #1b1830; }
+.bs-slides .bs-fly-x svg { width: 16px; height: 16px; flex: none; }
+.bs-slides .bs-fly-x.bs-ic { width: 38px; padding: 0; justify-content: center; }
+.bs-slides .bs-fly-x.bs-ic svg { width: 18px; height: 18px; }
+/* The top buttons: one height, one frosted look with a fine edge, rows that line up */
+.bs-fly:focus { outline: none; }
+.bs-fly-x, .bs-town-mode, .bs-height { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22), inset 0 0 0 1px rgba(255, 255, 255, 0.14); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.bs-town-mode { box-sizing: border-box; height: 38px; }
+.bs-fly-x { font-weight: 650; letter-spacing: 0.01em; white-space: nowrap; }
+@media (max-width: 420px) { .bs-fly-x { padding: 0 12px; } .bs-town-mode button { padding: 0 12px; } .bs-slides { gap: 5px; } }
 .bs-fly-time[hidden], .bs-slides [hidden] { display: none !important; }
 body.bstown .bs-fly-time[hidden] + .bs-fly-time.bs-town-tide { bottom: calc(186px + env(safe-area-inset-bottom)); }  /* Tide on its own: where Time goes */
 body.bsfly.flypeek .bs-slides { display: none; }
@@ -1261,7 +1269,7 @@ body.bsfly.flypeek .bs-slides { display: none; }
 body.bstown .bs-ud { top: auto; right: auto; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom)); transform: translateX(-50%); }
 .bs-fly-tip { display: none; }  /* Explore: no "Left stick to walk…" tip, the sticks are labelled */
 /* How high you are above the ground: small, top left under Exit, out of the way */
-.bs-height { position: absolute; top: calc(68px + env(safe-area-inset-top)); left: 16px; z-index: 2; padding: 4px 10px; border-radius: 999px; pointer-events: none;
+.bs-height { position: absolute; top: calc(66px + env(safe-area-inset-top)); left: 16px; z-index: 2; padding: 4px 10px; border-radius: 999px; pointer-events: none;
   background: rgba(16, 18, 34, 0.6); color: #fff; font: 700 0.78rem var(--ui); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
 .bs-height[hidden] { display: none; }
 /* Jump: top right, opening a list of places */
@@ -1747,7 +1755,7 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
   <canvas id="bsGl" aria-label="Animated 3D view of the sky over the Brisbane River, matching the time and weather shown" role="img"></canvas>
   <div id="bsTown" hidden></div>
   <div class="bs-drive" id="bsDrive"></div>
-  <div class="bs-fly" id="bsFly" hidden>
+  <div class="bs-fly" id="bsFly" tabindex="-1" hidden>
     <p class="bs-fly-tip" id="bsFlyTip"></p>
     <button class="bs-fly-x" type="button" id="bsFlyX">Exit explore</button>
     <button class="bs-fly-x bs-fly-peek" type="button" id="bsFlyPeek" aria-pressed="false">Show weather</button>
@@ -1756,9 +1764,8 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <div class="bs-height" id="bsHeight" hidden aria-hidden="true"></div>
     <div class="bs-town-mode" id="bsTownMode" role="group" aria-label="Walk or fly" hidden><button type="button" data-town-mode="walk" aria-pressed="true">Walk</button><button type="button" data-town-mode="fly" aria-pressed="false">Fly</button></div>
     <div class="bs-town-list" id="bsTownList" role="menu" aria-label="Places to jump to" hidden></div>
-    <button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button>
     <div class="bs-town-list bs-town-floods" id="bsTownFloods" role="menu" aria-label="Floods to show on the map" hidden></div>
-    <div class="bs-slides" role="group" aria-label="Share, time and tide"><button class="bs-fly-x" type="button" id="bsShareBtn">Share</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false">Time</button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button></div>
+    <div class="bs-slides" role="group" aria-label="Share, tide, time and flood"><button class="bs-fly-x bs-ic" type="button" id="bsShareBtn" aria-label="Share a link to this 3D model" title="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false" aria-label="Time of day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span id="bsTimeBtnT">Time</span></button><button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button></div>
     <p class="bs-town-note" id="bsTownNote" hidden></p>
     <div class="bs-town-ask" id="bsTownAsk" role="alertdialog" aria-labelledby="bsTownAskText" hidden><p id="bsTownAskText"></p><div><button type="button" data-ask="yes">Yes</button><button type="button" data-ask="no">No</button></div></div>
     <div class="bs-fly-time bs-town-tide bs-town-rise" id="bsTownRise" hidden><span>Water</span><input type="range" id="bsTownRiseIn" min="0" max="1" step="0.01" value="1" aria-label="Flood water level"><output id="bsTownRiseOut" for="bsTownRiseIn"></output></div>
@@ -7398,10 +7405,10 @@ const handle = async (m, post) => {
     BS.flyView = BS.view; { const v = BS.view, day = v.day || bsKey(v.ms), mins = bsMins(v.ms), m2 = mins >= 7 * 60 && mins <= 17 * 60 ? mins : 12 * 60;
       BS.view = { mode: "day", day, ms: bsMidnight(day) + m2 * 60000, play: false }; bsApply(true);
       const ti = $("bsFlyTime"), to = $("bsFlyTimeOut"); ti.value = m2; to.textContent = bsTime(BS.view.ms);
-      const tb = $("bsTimeBtn"), tbox = $("bsFlyTimeBox"); tb.textContent = `Time ${bsTime(BS.view.ms)}`; tbox.hidden = true; tb.setAttribute("aria-expanded", "false");
+      const tb = $("bsTimeBtn"), tbox = $("bsFlyTimeBox"); $("bsTimeBtnT").textContent = bsTime(BS.view.ms); tbox.hidden = true; tb.setAttribute("aria-expanded", "false");
       $("bsShareBtn").onclick = exploreShare;
       tb.onclick = () => { tbox.hidden = !tbox.hidden; tb.setAttribute("aria-expanded", String(!tbox.hidden)); };
-      ti.oninput = () => { BS.view.ms = bsMidnight(BS.view.day) + (+ti.value) * 60000; to.textContent = bsTime(BS.view.ms); tb.textContent = `Time ${to.textContent}`; bsApply(true); }; }
+      ti.oninput = () => { BS.view.ms = bsMidnight(BS.view.day) + (+ti.value) * 60000; to.textContent = bsTime(BS.view.ms); $("bsTimeBtnT").textContent = to.textContent; bsApply(true); }; }
     const F = BS.fly = { ...start, pos: start.pos.clone(), start, keys: new Set(), stick: { x: 0, y: 0 }, lookStick: { x: 0, y: 0 }, vert: 0, touches: new Map(), drag: null };
     const canvas = $("bsGl"), touch = matchMedia("(pointer: coarse)").matches;
     document.body.classList.add("bsfly"); $("bsFly").hidden = false;
@@ -7508,7 +7515,7 @@ const handle = async (m, post) => {
     document.addEventListener("mousemove", F.on.mousemove);
     ["pointerdown", "pointermove", "pointerup", "pointercancel"].forEach(k => canvas.addEventListener(k, F.on[k]));
     $("bsFlyX").onclick = () => { if (document.body.classList.contains("wxlisten")) backToNews(); else bsFlyOff(); };
-    $("bsFlyX").focus({ preventScroll: true });
+    $("bsFly").focus({ preventScroll: true });
   }
   function bsFlyOff() {
     const F = BS.fly; if (!F) return;
