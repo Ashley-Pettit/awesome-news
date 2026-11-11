@@ -1250,7 +1250,7 @@ body.bstown:not(.bswalk) #bsTown { pointer-events: auto; touch-action: none; cur
 body.bstown .bs-fly-time.bs-town-tide { bottom: calc(236px + env(safe-area-inset-bottom)); }
 /* Up and Down sit between the sticks, in reach of both thumbs (walking, they raise or lower your eyes above the ground) */
 body.bstown .bs-ud { top: auto; right: auto; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom)); transform: translateX(-50%); }
-body.bstown .bs-fly-tip { display: none; }  /* the 3D town: no "Left stick to walk…" tip, the sticks are labelled */
+.bs-fly-tip { display: none; }  /* Explore: no "Left stick to walk…" tip, the sticks are labelled */
 /* How high you are above the ground: small, top left under Exit, out of the way */
 .bs-height { position: absolute; top: calc(68px + env(safe-area-inset-top)); left: 16px; z-index: 2; padding: 4px 10px; border-radius: 999px; pointer-events: none;
   background: rgba(16, 18, 34, 0.6); color: #fff; font: 700 0.78rem var(--ui); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
@@ -1522,7 +1522,7 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
       <div class="lb-catch lb-drive" id="lbDrive" role="status" hidden></div>
       <div class="lb-lgwrap" id="lbLgWrap"><details class="lb-apps"><summary class="lb-logan lb-appsum"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>Local news apps</b><small>Moorooka, Logan and the Bass Coast</small></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div class="lb-subs"><a class="lb-logan lb-sub" href="moorooka/" data-sub="moorooka/"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>Moorooka News</b><small>Local news first</small></span></a><a class="lb-logan lb-sub" href="logan/" data-sub="logan/"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>The Logan Wire</b><small>Local news first</small></span></a><a class="lb-logan lb-sub" href="inverloch/" data-sub="inverloch/"><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 7 12 7 12s7-6.9 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></svg></span><span><b>Coastline News</b><small>Local news first</small></span></a></div></details></div>
       <a class="lb-logan lb-home" id="lbHome" href="https://ashley-pettit.github.io/awesome-news/" hidden><span class="lb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5.5 9.5V20h13V9.5"/></svg></span><span><b>Back to Awesome&#32;News</b><small>All the news, not just the local</small></span></a>
-      <button class="lb-logan lb-explore" type="button" id="lbExplore" hidden><span class="lb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg></span><span><b>Virtually explore Inverloch</b><small>Walk around the town centre in 3D</small></span></button>
+      <button class="lb-logan lb-explore" type="button" id="lbExplore" hidden><span class="lb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg></span><span><b id="lbExploreName">Virtually explore Inverloch</b><small>Walk around the town centre in 3D</small></span></button>
       <button class="lb-logan lb-food" type="button" id="lbFood" hidden><span class="lb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3v8M4.5 3v5a2.5 2.5 0 0 0 5 0V3M7 11v10M17 21V3c-2.2 1.2-3.5 3.6-3.5 7v3H17"/></svg></span><span><b>Food in the area</b><small>Places to eat or drink near the Moorooka shops</small></span></button>
       <button class="topsearch" type="button" data-open-search aria-label="Search all news">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
@@ -1916,7 +1916,7 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
   const exLoadShow = () => { if (exLoad) return; const d = exLoad = document.createElement("div"); d.className = "ex-load"; d.setAttribute("role", "status");
     d.innerHTML = `<i aria-hidden="true"></i><b>Loading Inverloch 3D model</b><small>This takes a few seconds</small>`; document.body.appendChild(d); };
   const exLoadDone = () => { const d = exLoad; if (!d) return; exLoad = null; d.classList.add("gone"); setTimeout(() => d.remove(), 600); };
-  if (pendingExplore) exLoadShow();
+  if (pendingExplore && !/moorooka/.test(location.pathname)) exLoadShow();  // the 3D Moorooka is quick: no loading screen
   const hash = pendingStory || pendingTV || pendingExplore ? "" : rawHash;
   const state = {
     tab: hash || store.get("brief.tab3", "foryou"),
@@ -3083,7 +3083,8 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
   })();
   document.fonts?.ready.then(() => { inkAt = null; placeInk(); });
   function renderHeader() {
-    { const xb = $("lbExplore"); if (xb) xb.hidden = !(S.region === "inv" || /^rod(ney)?$/i.test((S.name || "").trim())); }
+    { const xb = $("lbExplore"), moo = S.region === "moo"; if (xb) { xb.hidden = !(moo || S.region === "inv" || /^rod(ney)?$/i.test((S.name || "").trim()));
+        $("lbExploreName").textContent = moo ? "Virtually explore Moorooka" : "Virtually explore Inverloch"; } }
     { const fb = $("lbFood"); if (fb) fb.hidden = !(S.region === "moo" && MOO_FOOD.p.length); }  // Moorooka: Food in the area  // Inverloch (or Rod, who lives there): a way straight into the 3D town
     showVersion();
     $("eyebrow").textContent = state.showSaved ? "Saved" : greeting();
@@ -5114,7 +5115,7 @@ const handle = async (m, post) => {
     // Customise: the news keeps playing; Settings opens over it, and the Listen card brings the player back.
     if (t.closest("#npCust")) { npClose(); state.sTab = "news"; openSettings(); return; }  // the News tab: your interests and local area
     if (t.closest("#bsSkip")) { skipWeather(); return; }
-    if (t.closest("#lbExplore")) { exploreInverloch(); return; }
+    if (t.closest("#lbExplore")) { exploreHere(); return; }
     if (t.closest("#lbFood")) { openFood(); return; }
     const fdw = t.closest("[data-fd-what]"); if (fdw) { FD.what = fdw.dataset.fdWhat; renderFood(); return; }
     const fdt = t.closest("[data-fd-tab]"); if (fdt) { FD.tab = fdt.dataset.fdTab; FD.editing = null; if (!fdPlaces().some(p => fdTab(p, FD.tab) && fdIs(p, FD.what))) FD.what = "all"; renderFood(); return; }
@@ -7797,6 +7798,18 @@ const handle = async (m, post) => {
   }
   // "Virtually explore Inverloch": the whole-town model, on foot at the clock. (If the model can't load, the weather's own town.)
   function exploreInverloch() { townModelOpen(true); }
+  // Moorooka: the weather's own 3D Moorooka (the landmarks, not the bowls club), straight into Explore. Elsewhere, Inverloch.
+  function exploreHere() {
+    if (S.region !== "moo") { exploreInverloch(); return; }
+    if (!state.wx) { toast("Explore needs the weather, which is still loading. Try again in a moment."); return; }
+    openWeather(); if ($("weather").hidden) return;
+    BS.mooAlt = false; if (BS.B) bsPlace();
+    const t0 = Date.now(), go = () => { if ($("weather").hidden) return;
+      if (BS.B && BS.W && BS.sceneKey === "moo") { if (!BS.fly) bsFlyOn(); }
+      else if (Date.now() - t0 < 20000) { if (BS.B) { BS.mooAlt = false; bsPlace(); } setTimeout(go, 200); }
+      else toast("The 3D view didn't start. Close it and try again."); };
+    go();
+  }
   function openWeather() {
     if (!state.wx) { toast("The weather isn't available right now"); return; }
     BS.view = { mode: "live", ms: Date.now(), play: true, day: null };  // plays on from now each time it opens
@@ -8460,7 +8473,7 @@ const handle = async (m, post) => {
       if (pendingStory) { const id = pendingStory; pendingStory = ""; history.replaceState(null, "", location.pathname); if (findItem(id)) openReader(id); else loadArchive()?.then?.(() => findItem(id) ? openReader(id) : toast("That story isn't in the news here any more")).catch(() => toast("That story isn't in the news here any more")); }
       if (pendingTV) { pendingTV = false; try { history.replaceState(null, "", location.pathname); } catch {} openTV(); }
       if (pendingExplore) { pendingExplore = false; try { history.replaceState(null, "", location.pathname); } catch {}
-        const t0 = Date.now(), go = () => { if (state.wx) exploreInverloch(); else if (Date.now() - t0 < 20000) setTimeout(go, 300); else { exLoadDone(); toast("Explore needs the weather, which didn't load. Try again in a moment."); } };
+        const t0 = Date.now(), go = () => { if (state.wx) exploreHere(); else if (Date.now() - t0 < 20000) setTimeout(go, 300); else { exLoadDone(); toast("Explore needs the weather, which didn't load. Try again in a moment."); } };
         go(); }
       afterPics("offline", saveOffline);
       if (!state.wx) loadWeather();
