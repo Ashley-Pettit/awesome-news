@@ -1753,7 +1753,7 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <div class="bs-town-list" id="bsTownList" role="menu" aria-label="Places to jump to" hidden></div>
     <button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button>
     <div class="bs-town-list bs-town-floods" id="bsTownFloods" role="menu" aria-label="Floods to show on the map" hidden></div>
-    <div class="bs-slides" role="group" aria-label="Sliders"><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false">Time</button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button></div>
+    <div class="bs-slides" role="group" aria-label="Share, time and tide"><button class="bs-fly-x" type="button" id="bsShareBtn">Share</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false">Time</button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button></div>
     <div class="bs-town-ask" id="bsTownAsk" role="alertdialog" aria-labelledby="bsTownAskText" hidden><p id="bsTownAskText"></p><div><button type="button" data-ask="yes">Yes</button><button type="button" data-ask="no">No</button></div></div>
     <div class="bs-fly-time bs-town-tide bs-town-rise" id="bsTownRise" hidden><span>Water</span><input type="range" id="bsTownRiseIn" min="0" max="1" step="0.01" value="1" aria-label="Flood water level"><output id="bsTownRiseOut" for="bsTownRiseIn"></output></div>
     <button class="bs-fly-x bs-fly-jump" type="button" id="bsFlyJump" hidden>Jump to Norman Rd</button>
@@ -7393,6 +7393,7 @@ const handle = async (m, post) => {
       BS.view = { mode: "day", day, ms: bsMidnight(day) + m2 * 60000, play: false }; bsApply(true);
       const ti = $("bsFlyTime"), to = $("bsFlyTimeOut"); ti.value = m2; to.textContent = bsTime(BS.view.ms);
       const tb = $("bsTimeBtn"), tbox = $("bsFlyTimeBox"); tb.textContent = `Time ${bsTime(BS.view.ms)}`; tbox.hidden = true; tb.setAttribute("aria-expanded", "false");
+      $("bsShareBtn").onclick = exploreShare;
       tb.onclick = () => { tbox.hidden = !tbox.hidden; tb.setAttribute("aria-expanded", String(!tbox.hidden)); };
       ti.oninput = () => { BS.view.ms = bsMidnight(BS.view.day) + (+ti.value) * 60000; to.textContent = bsTime(BS.view.ms); tb.textContent = `Time ${to.textContent}`; bsApply(true); }; }
     const F = BS.fly = { ...start, pos: start.pos.clone(), start, keys: new Set(), stick: { x: 0, y: 0 }, lookStick: { x: 0, y: 0 }, vert: 0, touches: new Map(), drag: null };
@@ -8248,6 +8249,14 @@ const handle = async (m, post) => {
   // on foot at the shops. "Virtually explore Logan": the whole city, from the air over the council's administration centre.
   // (If the model can't load, the weather's own scene of the place.) Moorooka's and Logan's show where that is your area;
   // Rod, who lives in Inverloch, always gets Inverloch's.
+  // Share: a direct link that opens Explore in this suburb (its own app: Inverloch, Moorooka or Logan)
+  function exploreLink() { const k = BS.town?.cfg?.place || ({ invTown: "inv", invBeach: "inv", moo: "moo", mooBowls: "moo", logan: "logan" })[BS.sceneKey];
+    const root = /\/awesome-news\//.test(location.pathname) ? location.origin + location.pathname.replace(/(\/awesome-news\/).*$/, "$1") : "https://ashley-pettit.github.io/awesome-news/";
+    const dir = { inv: "inverloch/", moo: "moorooka/", logan: "logan/" }[k] || "", name = { inv: "Inverloch", moo: "Moorooka", logan: "Logan" }[k];
+    return { url: dir ? `${root}${dir}explore/` : `${root}#explore`, name }; }  // explore/: its own link preview (a picture of the model)
+  async function exploreShare() { const { url, name } = exploreLink(), title = name ? `3D model of ${name}` : "Explore in 3D";
+    if (navigator.share) { try { await navigator.share({ title, url }); return; } catch (e) { if (e?.name === "AbortError") return; } }
+    try { await navigator.clipboard.writeText(url); toast("Link copied"); } catch { toast(url, 8000); } }
   function exploreWhich() { const rod = /^rod(ney)?$/i.test((S.name || "").trim()); return S.region === "moo" && !rod ? "moo" : S.region === "logan" && !rod ? "logan" : "inv"; }
   function exploreTown() { townModelOpen(true, exploreWhich()); }
   function exploreInverloch() { townModelOpen(true, "inv"); }
