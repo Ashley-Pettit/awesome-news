@@ -8415,6 +8415,9 @@ const handle = async (m, post) => {
     const today = new Intl.DateTimeFormat("en-AU", { day: "numeric", month: "short", timeZone: "Australia/Brisbane" }).format(new Date());
     const [d, m, hm] = built.split(" ");  // "4 Nov 11:41": just the time on the day it was built
     el.textContent = !built ? "v dev" : `${d} ${m}` === today ? `v ${hm}` : `v ${d} ${m}`;
+    // Ash: the commit it was built from instead (the same short id as in the update notes), to check it's the latest
+    const commit = document.querySelector('meta[name="an-commit"]')?.content || "";
+    if (commit && /^ash(ley)?$/i.test((S.name || "").trim())) el.textContent = commit;
     el.title = `Version built ${built || "here"}${id ? " (" + id + ")" : ""}`;
   }
   // The page's build (stamped by build.py) against the latest on the site. Never mid-listen: it waits until you stop.

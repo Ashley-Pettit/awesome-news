@@ -89,7 +89,15 @@ def stamped(hd, bd, folder):
         json.dump({"build": build}, f)
     from datetime import datetime, timedelta, timezone
     built = datetime.now(timezone(timedelta(hours=10))).strftime("%-d %b %H:%M")  # Brisbane time, shown to Rod and Ash
-    return hd.replace("<head>\n", f'<head>\n<meta name="an-build" content="{build}">\n<meta name="an-built" content="{built}">\n', 1)
+    # the git commit it was built from (shown to Ash next to the title, the same short id as GitHub and the update notes)
+    commit = (os.environ.get("GITHUB_SHA") or "")[:7]
+    if not commit:
+        try:
+            import subprocess
+            commit = subprocess.run(["git", "rev-parse", "--short=7", "HEAD"], capture_output=True, text=True, cwd=os.path.dirname(os.path.abspath(__file__))).stdout.strip()
+        except Exception:
+            commit = ""
+    return hd.replace("<head>\n", f'<head>\n<meta name="an-build" content="{build}">\n<meta name="an-built" content="{built}">\n<meta name="an-commit" content="{commit}">\n', 1)
 
 
 os.makedirs(site, exist_ok=True)
