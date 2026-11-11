@@ -26,11 +26,22 @@ Every frame the app passes the camera Explore is moving to `model.setCamera(...)
 - **Fly**: rises above where you were standing. The sticks fly, Up and Down sit between them, and the view itself
   can be dragged (pinch or scroll to zoom, two fingers or right-drag to turn). The tide slider shows here.
   Going back to Walk puts you down on the ground you were looking at.
-- **Jump to…** lists the clock, Norman Rd and the model's own places. Walking, it stands you there; flying, it shows
-  the place from above.
-- **The Rotary clock and number 11 Norman Road** are copied out of the weather's Inverloch when the model opens
-  (`townModelGuests`) and stood in the model where they really are. The weather's scenes are not changed. The clock's
-  hands and lit faces, the koala, the wombats and the windows' glow keep following the originals.
+- **Jump to…** lists the clock, the bakery, the war memorial, Norman Rd and the model's own places. Walking, it
+  stands you there; flying, it shows the place from above.
+- **The town centre round the clock and number 11 Norman Road** are copied out of the weather's Inverloch when the
+  model opens (`townModelGuests`) and stood in the model where they really are. The weather's scenes are not changed.
+  The clock's hands and lit faces, the flags, the koala, the wombats and the windows' glow keep following the originals.
+
+### The town centre
+
+The block round the clock comes across whole (`townModelBlock`): the Hub and library, the war memorial, the shops
+along Reilly Street and on both sides of A'Beckett Street (the bakery among them), with their verandahs and signs,
+the streets, footpaths, parked cars, lamps, banners and trees. Its outline is `TOWN_BLOCK` in `app.html`, in the
+weather town's own metres. Inside it the model keeps only its ground, so nothing is shown twice.
+
+The weather's town is flat and the model's ground slopes, so each shape is handed over with heights measured from
+the ground and the model lays it down along the terrain. Anything added to the weather's town centre later shows up
+in the model too, as long as it stands inside the block.
 
 ## Where it comes from
 
