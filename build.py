@@ -89,7 +89,15 @@ def stamped(hd, bd, folder):
         json.dump({"build": build}, f)
     from datetime import datetime, timedelta, timezone
     built = datetime.now(timezone(timedelta(hours=10))).strftime("%-d %b %H:%M")  # Brisbane time, shown to Rod and Ash
-    return hd.replace("<head>\n", f'<head>\n<meta name="an-build" content="{build}">\n<meta name="an-built" content="{built}">\n', 1)
+    # the git commit it was built from (shown to Ash next to the title, the same short id as GitHub and the update notes)
+    commit = (os.environ.get("GITHUB_SHA") or "")[:7]
+    if not commit:
+        try:
+            import subprocess
+            commit = subprocess.run(["git", "rev-parse", "--short=7", "HEAD"], capture_output=True, text=True, cwd=os.path.dirname(os.path.abspath(__file__))).stdout.strip()
+        except Exception:
+            commit = ""
+    return hd.replace("<head>\n", f'<head>\n<meta name="an-build" content="{build}">\n<meta name="an-built" content="{built}">\n<meta name="an-commit" content="{commit}">\n', 1)
 
 
 os.makedirs(site, exist_ok=True)
@@ -113,7 +121,7 @@ if os.path.exists(beta_src):
 shutil.copytree(os.path.join(here, "icons"), os.path.join(site, "icons"), dirs_exist_ok=True)
 shutil.copy(os.path.join(here, "manifest.webmanifest"), site)
 shutil.copy(os.path.join(here, "sw.js"), site)
-# The whole-town 3D model of Inverloch (Admin > 3D scenes): its script and data, only fetched when it's opened.
+# The whole-town 3D models of Inverloch and Moorooka ("Virtually explore"; Admin > 3D scenes): scripts and data, only fetched when one is opened.
 if os.path.isdir(os.path.join(here, "town3d")):
     shutil.copytree(os.path.join(here, "town3d"), os.path.join(site, "town3d"), dirs_exist_ok=True, ignore=shutil.ignore_patterns("*.md"))
 # Council news pictures sent from the work PC (council_news.py), served next to the app.
