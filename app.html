@@ -7420,7 +7420,7 @@ const handle = async (m, post) => {
     const lim = F.lim || [-420, 420, -420, 200];  // the area you can fly in (Norman Road has its own)
     F.pos.x = bsClamp(F.pos.x + (-sy * f + cy * r) * sp, lim[0], lim[1]);
     F.pos.z = bsClamp(F.pos.z + (-cy * f - sy * r) * sp, lim[2], lim[3]);
-    if (F.walk) { if (u) F.eye = bsClamp((F.eye || 4) + u * 3 * lk, 1.5, 30);  // Up and Down: eyes higher or lower above the ground
+    if (F.walk) { if (u) F.eye = bsClamp((F.eye || 3.5) + u * 3 * lk, 1.5, 30);  // Up and Down: eyes higher or lower above the ground
       F.pos.y += (F.walk() - F.pos.y) * Math.min(1, lk * 10); }  // walking in the whole-town model: your eyes follow the ground, up hill and down
     else F.pos.y = bsClamp(F.pos.y + u * sp, F.floor ? F.floor() : 1.4, F.ceil || 180);
     if (F.heightAt) { const h = Math.max(0, F.heightAt()), t = h < 10 ? h.toFixed(1) : String(Math.round(h)); if (t !== F.hText) { F.hText = t; $("bsHeight").textContent = `${t} m up`; } }
@@ -7602,7 +7602,7 @@ const handle = async (m, post) => {
         onError: msg => fail(msg) });
       return m.ready.then(() => {
         if (T.dead || BS.fly !== F) { try { m.dispose(); } catch {} return; }
-        const EYE = 4, touch = matchMedia("(pointer: coarse)").matches;  // walking: your eyes 4 m up to start, for a clear view over the cars and fences (Up and Down change it)
+        const EYE = 3.5, touch = matchMedia("(pointer: coarse)").matches;  // walking: your eyes 3.5 m up to start, for a clear view over the cars and fences (Up and Down change it)
         F.eye = EYE;
         const b = m.bounds(), ground = (x = F.pos.x, z = F.pos.z) => Math.max(m.groundAt(x, z), m.waterLevel());
         // where you can go: inside the model; flying, above the ground and the water, and faster the higher you are
