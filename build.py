@@ -167,6 +167,46 @@ if os.path.exists(os.path.join(here, "local", "brands.json")):
             json.dump({"name": nm, "short_name": b["short"], "description": b["tagline"], "start_url": "./", "scope": "./", "id": "./",
                        "display": "standalone", "background_color": "#f6f5fa", "theme_color": "#f6f5fa",
                        "icons": [{"src": "icon-192.png", "sizes": "192x192", "type": "image/png"}, {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"}]}, f)
+        # Its 3D model's own share page (/<dir>/explore/): a link preview with a picture of the model and "3D model of <suburb>",
+        # which opens Explore straight away. Link previews can't see "#explore", so the share button links here.
+        sub = {"inv": "Inverloch", "moo": "Moorooka", "logan": "Logan"}.get(slug)
+        if sub and os.path.exists(os.path.join(here, "local", slug, "explore-share.jpg")):
+            ex = os.path.join(out, "explore"); os.makedirs(ex, exist_ok=True)
+            for fn in ("explore-share.jpg", "explore-icon.png"):
+                shutil.copy(os.path.join(here, "local", slug, fn), ex)
+            t, dsc, eu = f"3D model of {sub}", f"Fly over {sub} and walk its streets in a 3D model built from open map data. Free, in your browser.", f"{url}explore/"
+            with open(os.path.join(ex, "index.html"), "w", encoding="utf-8") as f:
+                f.write(f"""<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{t}</title>
+<meta name="description" content="{dsc}">
+<link rel="canonical" href="{eu}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{nm}">
+<meta property="og:title" content="{t}">
+<meta property="og:description" content="{dsc}">
+<meta property="og:url" content="{eu}">
+<meta property="og:image" content="{eu}explore-share.jpg?v=1">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{t}, seen from the air">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{t}">
+<meta name="twitter:description" content="{dsc}">
+<meta name="twitter:image" content="{eu}explore-share.jpg?v=1">
+<link rel="icon" type="image/png" href="explore-icon.png?v=1">
+<link rel="apple-touch-icon" href="explore-icon.png?v=1">
+<meta http-equiv="refresh" content="0; url=../#explore">
+<script>location.replace("../#explore");</script>
+</head>
+<body style="margin:0;padding:24px;background:#0e0d16;color:#fff;font:16px system-ui,sans-serif">
+<p><a href="../#explore" style="color:#b8a6ff">Open the {t}</a></p>
+</body>
+</html>
+""")
         print(f"Built {out}/index.html")
 open(os.path.join(site, ".nojekyll"), "w").close()
 print(f"Built {site}/index.html")

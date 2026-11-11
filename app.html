@@ -1248,6 +1248,15 @@ body.bstown:not(.bswalk) #bsTown { pointer-events: auto; touch-action: none; cur
 .bs-town-tide span { flex: none; font: 700 0.8rem var(--ui); color: var(--bs-ink); }
 .bs-town-tide output { min-width: 68px; }
 body.bstown .bs-fly-time.bs-town-tide { bottom: calc(236px + env(safe-area-inset-bottom)); }
+/* Time and Tide: a button each (tap to show or hide the slider). Under Exit in Explore; under Jump to (and Flood) in a town model */
+.bs-slides { pointer-events: auto; position: absolute; left: 16px; top: calc(60px + env(safe-area-inset-top)); display: flex; gap: 6px; }
+body.bstown .bs-slides { left: auto; right: 16px; }
+body.bstown .bs-fly-x.bs-town-flood:not([hidden]) ~ .bs-slides { top: calc(106px + env(safe-area-inset-top)); }
+.bs-slides .bs-fly-x { position: static; transform: none; }
+.bs-slides .bs-fly-x[aria-expanded="true"] { background: #fff; color: #1b1830; }
+.bs-fly-time[hidden], .bs-slides [hidden] { display: none !important; }
+body.bstown .bs-fly-time[hidden] + .bs-fly-time.bs-town-tide { bottom: calc(186px + env(safe-area-inset-bottom)); }  /* Tide on its own: where Time goes */
+body.bsfly.flypeek .bs-slides { display: none; }
 /* Up and Down sit between the sticks, in reach of both thumbs (walking, they raise or lower your eyes above the ground) */
 body.bstown .bs-ud { top: auto; right: auto; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom)); transform: translateX(-50%); }
 .bs-fly-tip { display: none; }  /* Explore: no "Left stick to walk…" tip, the sticks are labelled */
@@ -1308,6 +1317,7 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
   /* the time slider (and the tide or flood water) tucked into the bottom right corner, out of the view */
   .bs-fly-time { left: auto; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); width: 340px; max-width: calc(100% - 360px); margin: 0; }
   body.bstown .bs-fly-time.bs-town-tide { bottom: calc(66px + env(safe-area-inset-bottom)); }
+  body.bstown .bs-fly-time[hidden] + .bs-fly-time.bs-town-tide { bottom: calc(16px + env(safe-area-inset-bottom)); }
 }
 .bs-src { font-size: 0.62rem; color: var(--bs-dim); opacity: 0.75; margin: 2px 2px 0; text-align: right; }
 .bs-note { font-size: 0.8rem; line-height: 1.4; color: var(--bs-dim); margin: 0 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.8em; }
@@ -1741,13 +1751,14 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <p class="bs-fly-tip" id="bsFlyTip"></p>
     <button class="bs-fly-x" type="button" id="bsFlyX">Exit explore</button>
     <button class="bs-fly-x bs-fly-peek" type="button" id="bsFlyPeek" aria-pressed="false">Show weather</button>
-    <div class="bs-fly-time"><input type="range" id="bsFlyTime" min="0" max="1439" step="5" aria-label="Time of day"><output id="bsFlyTimeOut" for="bsFlyTime"></output></div>
+    <div class="bs-fly-time" id="bsFlyTimeBox" hidden><input type="range" id="bsFlyTime" min="0" max="1439" step="5" aria-label="Time of day"><output id="bsFlyTimeOut" for="bsFlyTime"></output></div>
     <div class="bs-fly-time bs-town-tide" id="bsTownTide" hidden><span>Tide</span><input type="range" id="bsTownTideIn" step="0.05" aria-label="Tide level"><output id="bsTownTideOut" for="bsTownTideIn"></output></div>
     <div class="bs-height" id="bsHeight" hidden aria-hidden="true"></div>
     <div class="bs-town-mode" id="bsTownMode" role="group" aria-label="Walk or fly" hidden><button type="button" data-town-mode="walk" aria-pressed="true">Walk</button><button type="button" data-town-mode="fly" aria-pressed="false">Fly</button></div>
     <div class="bs-town-list" id="bsTownList" role="menu" aria-label="Places to jump to" hidden></div>
     <button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button>
     <div class="bs-town-list bs-town-floods" id="bsTownFloods" role="menu" aria-label="Floods to show on the map" hidden></div>
+    <div class="bs-slides" role="group" aria-label="Share, time and tide"><button class="bs-fly-x" type="button" id="bsShareBtn">Share</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false">Time</button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button></div>
     <p class="bs-town-note" id="bsTownNote" hidden></p>
     <div class="bs-town-ask" id="bsTownAsk" role="alertdialog" aria-labelledby="bsTownAskText" hidden><p id="bsTownAskText"></p><div><button type="button" data-ask="yes">Yes</button><button type="button" data-ask="no">No</button></div></div>
     <div class="bs-fly-time bs-town-tide bs-town-rise" id="bsTownRise" hidden><span>Water</span><input type="range" id="bsTownRiseIn" min="0" max="1" step="0.01" value="1" aria-label="Flood water level"><output id="bsTownRiseOut" for="bsTownRiseIn"></output></div>
@@ -7387,7 +7398,10 @@ const handle = async (m, post) => {
     BS.flyView = BS.view; { const v = BS.view, day = v.day || bsKey(v.ms), mins = bsMins(v.ms), m2 = mins >= 7 * 60 && mins <= 17 * 60 ? mins : 12 * 60;
       BS.view = { mode: "day", day, ms: bsMidnight(day) + m2 * 60000, play: false }; bsApply(true);
       const ti = $("bsFlyTime"), to = $("bsFlyTimeOut"); ti.value = m2; to.textContent = bsTime(BS.view.ms);
-      ti.oninput = () => { BS.view.ms = bsMidnight(BS.view.day) + (+ti.value) * 60000; to.textContent = bsTime(BS.view.ms); bsApply(true); }; }
+      const tb = $("bsTimeBtn"), tbox = $("bsFlyTimeBox"); tb.textContent = `Time ${bsTime(BS.view.ms)}`; tbox.hidden = true; tb.setAttribute("aria-expanded", "false");
+      $("bsShareBtn").onclick = exploreShare;
+      tb.onclick = () => { tbox.hidden = !tbox.hidden; tb.setAttribute("aria-expanded", String(!tbox.hidden)); };
+      ti.oninput = () => { BS.view.ms = bsMidnight(BS.view.day) + (+ti.value) * 60000; to.textContent = bsTime(BS.view.ms); tb.textContent = `Time ${to.textContent}`; bsApply(true); }; }
     const F = BS.fly = { ...start, pos: start.pos.clone(), start, keys: new Set(), stick: { x: 0, y: 0 }, lookStick: { x: 0, y: 0 }, vert: 0, touches: new Map(), drag: null };
     const canvas = $("bsGl"), touch = matchMedia("(pointer: coarse)").matches;
     document.body.classList.add("bsfly"); $("bsFly").hidden = false;
@@ -7792,8 +7806,9 @@ const handle = async (m, post) => {
             return { id: s.id, name: s.name, water: s.kind === "water", fly: s, walk: s.stand ? { x: s.stand.x, z: s.stand.z, yaw: s.stand.yaw, pitch: 0.02 } : { x: s.tx + dx * r, z: s.tz + dz * r, yaw: Math.atan2(dx, dz), pitch: 0.02 } }; })];
 
         // ---- Walk or Fly ----
-        const tideBox = $("bsTownTide"), tideIn = $("bsTownTideIn"), tideOut = $("bsTownTideOut"), tidal = m.tide.max > m.tide.min;  // Moorooka has no tide to move
-        const setMode = (walk, to) => { T.walk = walk; document.body.classList.toggle("bswalk", walk); F.walk = walk ? () => ground() + F.eye : null; tideBox.hidden = walk || !tidal; F.lim = walk ? inner : outer;
+        const tideBox = $("bsTownTide"), tideIn = $("bsTownTideIn"), tideOut = $("bsTownTideOut"), tidal = m.tide.max > m.tide.min, tideBtn = $("bsTideBtn");
+        tideBtn.setAttribute("aria-expanded", "false"); tideBtn.onclick = () => { tideBox.hidden = !tideBox.hidden; tideBtn.setAttribute("aria-expanded", String(!tideBox.hidden)); };  // Moorooka has no tide to move
+        const setMode = (walk, to) => { T.walk = walk; document.body.classList.toggle("bswalk", walk); F.walk = walk ? () => ground() + F.eye : null; tideBtn.hidden = walk || !tidal; tideBox.hidden = tideBtn.hidden || tideBtn.getAttribute("aria-expanded") !== "true"; F.lim = walk ? inner : outer;
           modeBox.querySelectorAll("button").forEach(bn => bn.setAttribute("aria-pressed", String((bn.dataset.townMode === "walk") === walk)));
           if (document.pointerLockElement) document.exitPointerLock?.();
           F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.vert = 0; F.keys.clear();
@@ -8235,13 +8250,21 @@ const handle = async (m, post) => {
     if (BS.fly) { const F = BS.fly; F.walk = F.speed = F.floor = F.hot = null; F.ceil = 0; F.lim = null; }  // Explore, if it carries on, is its old self
     try { T.model?.dispose(); } catch {}
     const box = $("bsTown"); box.hidden = true; box.textContent = "";
-    document.body.classList.remove("bstown", "bswalk"); $("bsHeight").hidden = true; $("bsTownTide").hidden = true; $("bsTownMode").hidden = true; $("bsTownList").hidden = true;
+    document.body.classList.remove("bstown", "bswalk"); $("bsHeight").hidden = true; $("bsTownTide").hidden = true; $("bsTideBtn").hidden = true; $("bsTownMode").hidden = true; $("bsTownList").hidden = true;
     $("bsTownFlood").hidden = true; $("bsTownFlood").textContent = "Flood"; $("bsTownFloods").hidden = true; $("bsTownRise").hidden = true; $("bsTownAsk").hidden = true; $("bsTownNote").hidden = true;
   }
   // "Virtually explore Inverloch": the whole-town model, on foot at the clock. "Virtually explore Moorooka": the suburb,
   // on foot at the shops. "Virtually explore Logan": the whole city, from the air over the council's administration centre.
   // (If the model can't load, the weather's own scene of the place.) Moorooka's and Logan's show where that is your area;
   // Rod, who lives in Inverloch, always gets Inverloch's.
+  // Share: a direct link that opens Explore in this suburb (its own app: Inverloch, Moorooka or Logan)
+  function exploreLink() { const k = BS.town?.cfg?.place || ({ invTown: "inv", invBeach: "inv", moo: "moo", mooBowls: "moo", logan: "logan" })[BS.sceneKey];
+    const root = /\/awesome-news\//.test(location.pathname) ? location.origin + location.pathname.replace(/(\/awesome-news\/).*$/, "$1") : "https://ashley-pettit.github.io/awesome-news/";
+    const dir = { inv: "inverloch/", moo: "moorooka/", logan: "logan/" }[k] || "", name = { inv: "Inverloch", moo: "Moorooka", logan: "Logan" }[k];
+    return { url: dir ? `${root}${dir}explore/` : `${root}#explore`, name }; }  // explore/: its own link preview (a picture of the model)
+  async function exploreShare() { const { url, name } = exploreLink(), title = name ? `3D model of ${name}` : "Explore in 3D";
+    if (navigator.share) { try { await navigator.share({ title, url }); return; } catch (e) { if (e?.name === "AbortError") return; } }
+    try { await navigator.clipboard.writeText(url); toast("Link copied"); } catch { toast(url, 8000); } }
   function exploreWhich() { const rod = /^rod(ney)?$/i.test((S.name || "").trim()); return S.region === "moo" && !rod ? "moo" : S.region === "logan" && !rod ? "logan" : "inv"; }
   function exploreTown() { townModelOpen(true, exploreWhich()); }
   function exploreInverloch() { townModelOpen(true, "inv"); }
