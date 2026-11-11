@@ -39,6 +39,11 @@ along Reilly Street and on both sides of A'Beckett Street (the bakery among them
 the streets, footpaths, parked cars, lamps, banners and trees. Its outline is `TOWN_BLOCK` in `app.html`, in the
 weather town's own metres. Inside it the model keeps only its ground, so nothing is shown twice.
 
+The model adds a few things of its own there (`townModelExtras`): tables and chairs outside the bakery and The
+Larder, a sandwich board for each named shop, and the signs at the zebra crossing. Round the clock and round number
+11 it is also asked for street-level detail (`detailLatLon`): cars with proper shapes, a car, letterbox and bins out
+the front of the houses, and power lines along the streets.
+
 The weather's town is flat and the model's ground slopes, so each shape is handed over with heights measured from
 the ground and the model lays it down along the terrain. Anything added to the weather's town centre later shows up
 in the model too, as long as it stands inside the block.

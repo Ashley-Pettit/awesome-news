@@ -7538,7 +7538,7 @@ const handle = async (m, post) => {
   const TOWN3D = "town3d/";
   function townModelLoad() {
     if (window.InverlochModel) return Promise.resolve(window.InverlochModel);
-    if (!BS.townLib) BS.townLib = new Promise((ok, bad) => { const s = document.createElement("script"); s.src = TOWN3D + "inverloch-model.js?v=4";
+    if (!BS.townLib) BS.townLib = new Promise((ok, bad) => { const s = document.createElement("script"); s.src = TOWN3D + "inverloch-model.js?v=5";
       s.onload = () => window.InverlochModel ? ok(window.InverlochModel) : bad(new Error("no model")); s.onerror = () => bad(new Error("no script")); document.head.appendChild(s); })
       .catch(e => { BS.townLib = null; throw e; });
     return BS.townLib;
@@ -7569,13 +7569,14 @@ const handle = async (m, post) => {
       if (!T.keep) { bsFlyOff(); return; }
       townModelOff(); jump.hidden = old.jump; jump.textContent = old.jumpText; jump.onclick = old.jumpClick; tip.textContent = old.tip; };  // carry on in the weather's own town
     // The clock and number 11 come across from the weather's Inverloch (below): keep the ground clear where they'll stand
-    const D = INV_TOWN, home = D.nr?.home, clearLatLon = [], clearPolygons = [];
-    if (BS.W.invClock) { const [lat, lon] = townLL(D.c[0], D.c[1]); clearLatLon.push({ lat, lon, r: 4.5 }); }
-    if (home && BS.W.invHouse) { const [lat, lon] = townLL(home[0], home[1]); clearLatLon.push({ lat, lon, r: 24 }); }
+    // (and round both, the model draws its small things: cars with proper shapes, letterboxes, bins, power lines)
+    const D = INV_TOWN, home = D.nr?.home, clearLatLon = [], clearPolygons = [], detailLatLon = [];
+    if (BS.W.invClock) { const [lat, lon] = townLL(D.c[0], D.c[1]); clearLatLon.push({ lat, lon, r: 4.5 }); detailLatLon.push({ lat, lon, r: 260 }); }
+    if (home && BS.W.invHouse) { const [lat, lon] = townLL(home[0], home[1]); clearLatLon.push({ lat, lon, r: 24 }); detailLatLon.push({ lat, lon, r: 170 }); }
     if (BS.W.invTG && BS.W.invClock) TOWN_BLOCK.forEach(P => clearPolygons.push({ latLon: P.map(([x, z]) => townLL(x, z)), roads: true }));  // the town centre comes across whole
     townModelLoad().then(lib => {
       if (T.dead) return;
-      const m = T.model = lib.create(box, { assets: TOWN3D, clearLatLon, clearPolygons,
+      const m = T.model = lib.create(box, { assets: TOWN3D, clearLatLon, clearPolygons, detailLatLon,
         onProgress: (f, label) => { if (!T.on && !T.dead) tip.textContent = `Loading the town model: ${String(label).toLowerCase()}…`; },
         onError: msg => fail(msg) });
       return m.ready.then(() => {
@@ -7746,7 +7747,8 @@ const handle = async (m, post) => {
       const standAt = (name, fx, fz, tx, tz, pitch) => { const [x, z] = block.at(fx, fz), [ax, az] = block.at(tx, tz); jumps.push({ name, target: [ax, az], walk: { x, z, yaw: Math.atan2(x - ax, z - az), pitch } }); };
       const pie = D.u.find(u => /PIEMAN/.test(u[9] || ""));
       if (pie) { const mx = (pie[0] + pie[2]) / 2, mz = (pie[1] + pie[3]) / 2; standAt("the bakery", mx + pie[4] * 27, mz + pie[5] * 27, mx, mz, 0.06); }
-      standAt("the war memorial", 25 - Math.sin(0.15) * 12, 0.5 + Math.cos(0.15) * 12, 25, 0.5, 0.03); }
+      standAt("the war memorial", 25 - Math.sin(0.15) * 12, 0.5 + Math.cos(0.15) * 12, 25, 0.5, 0.03);
+      try { townModelExtras(m, block, THREE); } catch (e) { console.warn("Town model: the café tables and signs couldn't be added", e); } }
     // without it, the Rotary clock alone, on a garden bed at the corner of A'Beckett and Reilly Streets
     else if (W.invClock) { const [x, z] = m.fromLatLon(...townLL(D.c[0], D.c[1])), top = m.addPad({ x, z, radius: 2.7, color: [0.19, 0.3, 0.12], lift: 0.3 });
       const place = new THREE.Matrix4().makeTranslation(x - D.c[0], top - G0, z - D.c[1]);
@@ -7865,6 +7867,44 @@ const handle = async (m, post) => {
     if (!parts.length) return null;
     glows(m.addParts(parts), used);
     return { at, place, parts: parts.length, corners: parts.reduce((n, p) => n + p.positions.length / 3, 0) };
+  }
+  // A few more things for the model's town centre that the weather's doesn't have: tables and chairs outside the bakery and
+  // The Larder, a sandwich board out the front of each named shop, and the signs either side of the zebra crossing.
+  function townModelExtras(m, block, THREE) {
+    const D = INV_TOWN, FOOT = 0.26, pos = [], nor = [], col = [], c = new THREE.Color(), v = new THREE.Vector3(), M = new THREE.Matrix4(), N = new THREE.Matrix3();
+    // a shape at a place in the town's metres; heights are above the ground
+    const add = (geo, colour, x, y, z, ry = 0, rx = 0, rz = 0) => { const g = geo.index ? geo.toNonIndexed() : geo;
+      M.compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(rx, ry, rz, "YXZ")), new THREE.Vector3(1, 1, 1)); N.getNormalMatrix(M); c.setHex(colour);
+      const P = g.attributes.position, Q = g.attributes.normal;
+      for (let i = 0; i < P.count; i++) { v.fromBufferAttribute(P, i).applyMatrix4(M); const [X, Z] = block.at(v.x, v.z); pos.push(X, v.y, Z);
+        v.fromBufferAttribute(Q, i).applyMatrix3(N).normalize(); nor.push(v.x, v.y, v.z); col.push(c.r, c.g, c.b); } };
+    const box = (w, h, d) => new THREE.BoxGeometry(w, h, d), rod = (r, h, n = 8) => new THREE.CylinderGeometry(r, r, h, n);
+    // along a shop's front: `t` of the way along it, `out` metres from the wall
+    const front = (u, t, out) => [u[0] + (u[2] - u[0]) * t + u[4] * out, u[1] + (u[3] - u[1]) * t + u[5] * out, Math.atan2(u[2] - u[0], u[3] - u[1])];
+    const table = (u, t, out, chair) => { const [x, z, r] = front(u, t, out);
+      add(rod(0.38, 0.04, 12), 0xe9e5db, x, FOOT + 0.74, z); add(rod(0.035, 0.72), 0x3a3d40, x, FOOT + 0.36, z); add(rod(0.2, 0.03, 10), 0x3a3d40, x, FOOT + 0.015, z);
+      [-1, 1].forEach(sd => { const cx = x + Math.sin(r) * 0.66 * sd, cz = z + Math.cos(r) * 0.66 * sd, bx = x + Math.sin(r) * 0.85 * sd, bz = z + Math.cos(r) * 0.85 * sd;
+        add(box(0.4, 0.04, 0.4), chair, cx, FOOT + 0.46, cz, r); add(box(0.4, 0.42, 0.04), chair, bx, FOOT + 0.7, bz, r);
+        [[-0.17, -0.17], [0.17, -0.17], [-0.17, 0.17], [0.17, 0.17]].forEach(([a, b]) => add(rod(0.018, 0.45, 5), 0x8d9396, cx + Math.cos(r) * a + Math.sin(r) * b, FOOT + 0.225, cz - Math.sin(r) * a + Math.cos(r) * b)); }); };
+    const pie = D.u.find(u => /PIEMAN/.test(u[9] || "")), larder = D.u.find(u => /LARDER/.test(u[9] || ""));
+    if (pie) [0.12, 0.3, 0.5, 0.68].forEach(t => table(pie, t, 1.5, 0xc8202a));
+    if (larder) [0.28, 0.7].forEach(t => table(larder, t, 1.5, 0x2f7a72));
+    // sandwich boards: two leaning panels, each shop's own colour with a pale face
+    const BOARD = [0x7a1f1f, 0x1f3f2c, 0xc7342c, 0x2e8b57, 0xd8312b, 0x1f3f7a, 0x15161a, 0x3a4a7a, 0x6b2d6b];
+    D.u.forEach((u, i) => { const mx = (u[0] + u[2]) / 2, mz = (u[1] + u[3]) / 2; if (!u[9] || !townInBlock(mx, mz)) return;
+      const [x, z, r] = front(u, /PIEMAN/.test(u[9]) ? 0.9 : 0.24, 2.2), a = Math.atan2(u[4], u[5]);
+      [-1, 1].forEach(sd => { const ox = Math.sin(a) * 0.13 * sd, oz = Math.cos(a) * 0.13 * sd;
+        add(box(0.55, 0.85, 0.03), BOARD[i % BOARD.length], x + ox, FOOT + 0.42, z + oz, a, 0.3 * sd);
+        add(box(0.43, 0.6, 0.012), 0xf4f1e6, x + ox * 1.16, FOOT + 0.45, z + oz * 1.16, a, 0.3 * sd); }); });
+    // the zebra crossing's signs: a yellow diamond on a post at each kerb, either side of it
+    const ab = D.r.find(r => r[0] === 20);
+    if (ab) { const f = ab[2]; let best = null;
+      for (let i = 0; i + 3 < f.length; i += 2) { const ax = f[i], az = f[i + 1], dx = f[i + 2] - ax, dz = f[i + 3] - az, L2 = dx * dx + dz * dz, t = Math.max(0, Math.min(1, ((D.c[0] - ax) * dx + (D.c[1] - az) * dz) / L2)),
+          x = ax + dx * t, z = az + dz * t, d = Math.hypot(D.c[0] - x, D.c[1] - z); if (!best || d < best.d) best = { d, x, z, ux: dx / Math.sqrt(L2), uz: dz / Math.sqrt(L2) }; }
+      [[-1, -1], [1, 1]].forEach(([al, sd]) => { const x = best.x + best.ux * 5 * al - best.uz * 10.5 * sd, z = best.z + best.uz * 5 * al + best.ux * 10.5 * sd, r = Math.atan2(best.ux, best.uz);
+        add(rod(0.04, 2.7), 0x9aa2a6, x, FOOT + 1.35, z);
+        add(box(0.62, 0.62, 0.02), 0x15161a, x, FOOT + 2.4, z, r, 0, Math.PI / 4); add(box(0.54, 0.54, 0.03), 0xe6d21e, x, FOOT + 2.4, z, r, 0, Math.PI / 4); }); }
+    if (pos.length) m.addParts([{ positions: new Float32Array(pos), normals: new Float32Array(nor), colors: new Float32Array(col), roughness: 0.75, matrix: new THREE.Matrix4().elements, onGround: true }]);
   }
   function townModelFrame() {
     const T = BS.town, F = BS.fly, m = T.model;
