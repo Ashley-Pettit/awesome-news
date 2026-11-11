@@ -20,6 +20,9 @@ Two models, each separate from the weather's own scenes of the same place (which
 
 Nothing here is downloaded until someone opens a model. `build.py` copies this folder into the site.
 
+The Logan map, a whole city with its floods, is in `logan/` with a README of its own. It is opened and flown by the
+same code (the third entry in `TOWNS`).
+
 ## How the app uses them
 
 `app.html` (search for `townModelOpen`; the two models are listed in `TOWNS`) opens the weather's 3D view on the

@@ -1234,7 +1234,7 @@ body.bsfly.flypeek .bs-fly-x.bs-fly-lock { display: none !important; }
 body.bsfly #bsGl { touch-action: none; cursor: crosshair; }
 /* The whole-town model (Admin > 3D scenes > Inverloch 3D model): its own canvas over the weather's, flown with Explore's controls.
    It never takes a touch or click itself, so the sticks, the mouse look and the keys all work as they do in Explore. */
-.inv-embed-credit { display: none !important; }  /* the 3D town's map and elevation credits are in Settings, under About */
+.inv-embed-credit, .lgn-embed-credit { display: none !important; }  /* the 3D models' map, elevation and flood credits are in Settings, under About */
 #bsTown { position: absolute; inset: 0; z-index: 0; pointer-events: none; --inv-credit-bottom: calc(236px + env(safe-area-inset-bottom)); }
 body.bstown #bsFlyPeek, body.bstown #bsFlyLock { display: none !important; }
 /* Walk or Fly, at the top. Walking: the sticks, with your eyes following the ground. Flying: the sticks and Up and Down, or drag the
@@ -1261,6 +1261,14 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
   max-height: min(62%, 440px); overflow-y: auto; padding: 6px; border-radius: 14px; background: rgba(16, 18, 34, 0.9); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
 .bs-town-list button { min-height: 40px; padding: 6px 12px; border: 0; border-radius: 10px; background: none; color: #fff; font: 600 0.86rem var(--ui); text-align: left; cursor: pointer; }
 .bs-town-list button:hover, .bs-town-list button:focus-visible { background: rgba(255, 255, 255, 0.18); outline: none; }
+/* The Logan model's floods: a Flood button under Jump, its list of floods, and (with a flood on) the water level above the time */
+.bs-fly-x.bs-town-flood { top: calc(60px + env(safe-area-inset-top)); left: auto; right: 16px; }
+.bs-fly-x.bs-town-flood[aria-pressed="true"] { background: #fff; color: #1b1830; }
+.bs-town-list.bs-town-floods { top: calc(106px + env(safe-area-inset-top)); }
+.bs-town-list button small { display: block; margin-top: 2px; font: 500 0.74rem/1.3 var(--ui); color: rgba(255, 255, 255, 0.78); }
+.bs-town-list button[aria-checked="true"] { background: rgba(255, 255, 255, 0.14); }
+.bs-town-list p { margin: 4px 12px 6px; font: 500 0.72rem/1.4 var(--ui); color: rgba(255, 255, 255, 0.78); }
+.bs-town-rise output { min-width: 88px; }
 #weather .bs-flybtn { display: inline-flex; }  /* Explore: for everyone */
 /* While Listen plays the weather: Explore sits up top beside Week (its "Back to the news" only shows once you're exploring) */
 /* Explore's on-screen controls: a stick to move (left), a stick to look (right), Up and Down top right */
@@ -1713,6 +1721,9 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
     <div class="bs-height" id="bsHeight" hidden aria-hidden="true"></div>
     <div class="bs-town-mode" id="bsTownMode" role="group" aria-label="Walk or fly" hidden><button type="button" data-town-mode="walk" aria-pressed="true">Walk</button><button type="button" data-town-mode="fly" aria-pressed="false">Fly</button></div>
     <div class="bs-town-list" id="bsTownList" role="menu" aria-label="Places to jump to" hidden></div>
+    <button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button>
+    <div class="bs-town-list bs-town-floods" id="bsTownFloods" role="menu" aria-label="Floods to show on the map" hidden></div>
+    <div class="bs-fly-time bs-town-tide bs-town-rise" id="bsTownRise" hidden><span>Water</span><input type="range" id="bsTownRiseIn" min="0" max="1" step="0.01" value="1" aria-label="Flood water level"><output id="bsTownRiseOut" for="bsTownRiseIn"></output></div>
     <button class="bs-fly-x bs-fly-jump" type="button" id="bsFlyJump" hidden>Jump to Norman Rd</button>
     <button class="bs-fly-x bs-fly-lock" type="button" id="bsFlyLock" hidden>Use this view for the weather</button>
     <div class="bs-ud" role="group" aria-label="Fly up or down">
@@ -1910,7 +1921,11 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
   let pendingStory = linkQ?.get("story") || "";
   const sharedStory = linkQ && /^https?:\/\//.test(linkQ.get("u") || "") ? { id: pendingStory, url: linkQ.get("u"), title: linkQ.get("t") || "A shared story", source: linkQ.get("s") || "", summary: "", published: !isNaN(Date.parse(linkQ.get("d") || "")) ? linkQ.get("d") : new Date().toISOString() } : null;
   let pendingTV = rawHash === "tv";  // link from the Claude copy's TV button
-  let pendingExplore = rawHash === "explore";  // a link straight into Explore (Coastline News: …/inverloch/#explore)
+  // A link straight into Explore. #explore opens the 3D model for your area (Coastline News: …/inverloch/#explore, Moorooka
+  // News: …/moorooka/#explore, The Logan Wire: …/logan/#explore). #explore-logan, #explore-moorooka and #explore-inverloch
+  // name the model, from any of the apps. Holds which model: "inv", "moo" or "logan", or "" for none.
+  let pendingExplore = rawHash === "explore" ? exploreWhich() : rawHash === "explore-logan" ? "logan" : rawHash === "explore-moorooka" ? "moo" : rawHash === "explore-inverloch" ? "inv" : "";
+  const exploreName = k => k === "moo" ? "Moorooka" : k === "logan" ? "Logan" : "Inverloch";
   // Opening Inverloch's 3D town (the #explore link, or the Explore button): a loading screen over everything until the town
   // is up and the view has settled, so nothing jumps or jitters while it loads
   let exLoad = null;
@@ -1918,7 +1933,7 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
     const d = exLoad = document.createElement("div"); d.className = "ex-load"; d.setAttribute("role", "status");
     d.innerHTML = `<i aria-hidden="true"></i><b>Loading ${where} 3D model</b><small>This takes a few seconds</small>`; document.body.appendChild(d); };
   const exLoadDone = () => { const d = exLoad; if (!d) return; exLoad = null; d.classList.add("gone"); setTimeout(() => d.remove(), 600); };
-  if (pendingExplore) exLoadShow();
+  if (pendingExplore) exLoadShow(exploreName(pendingExplore));
   const hash = pendingStory || pendingTV || pendingExplore ? "" : rawHash;
   const state = {
     tab: hash || store.get("brief.tab3", "foryou"),
@@ -3085,8 +3100,8 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
   })();
   document.fonts?.ready.then(() => { inkAt = null; placeInk(); });
   function renderHeader() {
-    { const xb = $("lbExplore"); if (xb) { const moo = exploreWhich() === "moo"; xb.hidden = !(moo || S.region === "inv" || /^rod(ney)?$/i.test((S.name || "").trim()));  // Moorooka: the whole suburb in 3D
-      xb.querySelector("b").textContent = moo ? "Virtually explore Moorooka" : "Virtually explore Inverloch"; xb.querySelector("small").textContent = moo ? "Walk around the suburb in 3D" : "Walk around the town centre in 3D"; } }
+    { const xb = $("lbExplore"); if (xb) { const w = exploreWhich(), moo = w === "moo", lo = w === "logan"; xb.hidden = !(moo || lo || S.region === "inv" || /^rod(ney)?$/i.test((S.name || "").trim()));  // Moorooka: the whole suburb in 3D. Logan: the whole city.
+      xb.querySelector("b").textContent = `Virtually explore ${exploreName(w)}`; xb.querySelector("small").textContent = moo ? "Walk around the suburb in 3D" : lo ? "Fly over the whole city in 3D, and see its floods" : "Walk around the town centre in 3D"; } }
     { const fb = $("lbFood"); if (fb) fb.hidden = !(S.region === "moo" && MOO_FOOD.p.length); }  // Moorooka: Food in the area  // Inverloch (or Rod, who lives there): a way straight into the 3D town
     showVersion();
     $("eyebrow").textContent = state.showSaved ? "Saved" : greeting();
@@ -3742,7 +3757,7 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
         <button class="field danger" type="button" id="clearSaved">Clear saved stories <span class="sub" style="color:var(--muted)">${state.saved.length} saved</span></button>
       </div><p class="hint">Everything you set here stays on this device.</p></div>
       ${commuteOK() ? commuteHTML() : ""}
-      <p class="about">Awesome News pulls from free sources only: ABC, SBS, BBC, The Guardian, 7NEWS, The Conversation, 360info, Global Voices, NASA, EFF, Ars Technica, TechCrunch, iTnews and more. Weather from Open-Meteo, tuned to local Bureau stations. Inverloch's 3D town is built from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> map data (&copy; OpenStreetMap contributors, ODbL) and Geoscience Australia elevation data (CC BY 4.0). ${privateMode() ? "Stories open in full right here." : "Stories marked Full are free to republish, so they open in full right here."} No paywalls, no sport.${state.status?.updatedAt ? `<br>Stories last updated ${esc(longDate(state.status.updatedAt))}.` : ""}</p>
+      <p class="about">Awesome News pulls from free sources only: ABC, SBS, BBC, The Guardian, 7NEWS, The Conversation, 360info, Global Voices, NASA, EFF, Ars Technica, TechCrunch, iTnews and more. Weather from Open-Meteo, tuned to local Bureau stations. Inverloch's 3D town is built from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> map data (&copy; OpenStreetMap contributors, ODbL) and Geoscience Australia elevation data (CC BY 4.0). Logan's 3D map is built from Queensland Government map and flood data (&copy; State of Queensland, CC BY 4.0), Geoscience Australia elevation data (CC BY 4.0), and Bureau of Meteorology rainfall and river heights (CC BY 4.0); its floods are a guide only. ${privateMode() ? "Stories open in full right here." : "Stories marked Full are free to republish, so they open in full right here."} No paywalls, no sport.${state.status?.updatedAt ? `<br>Stories last updated ${esc(longDate(state.status.updatedAt))}.` : ""}</p>
 `,
     };
     $("sBody").innerHTML = `
@@ -5129,7 +5144,7 @@ const handle = async (m, post) => {
     if (pk2) { state.prevSel[pk2.dataset.prevK] = pk2.dataset.prevV; pk2.parentElement.querySelectorAll(".bchip").forEach(b => b.setAttribute("aria-pressed", String(b === pk2))); return; }
     if (t.closest("[data-prev-go]")) { previewGo(); return; }
     const sc = t.closest("[data-scene]");
-    if (sc) { const [place, drive] = sc.dataset.scene.split("|"); if (place === "invmodel" || place === "moomodel") { townModelOpen(false, place === "moomodel" ? "moo" : "inv"); return; } state.prevSel = { place, sky: "auto", hour: "now", drive }; previewGo(); return; }
+    if (sc) { const [place, drive] = sc.dataset.scene.split("|"); if (place === "invmodel" || place === "moomodel" || place === "loganmodel") { townModelOpen(false, place === "moomodel" ? "moo" : place === "loganmodel" ? "logan" : "inv"); return; } state.prevSel = { place, sky: "auto", hour: "now", drive }; previewGo(); return; }
     const sk = t.closest("[data-prev-sky]");
     if (sk && BS.prev) { BS.prev.sky = state.prevSel.sky = sk.dataset.prevSky; document.querySelectorAll("[data-prev-sky]").forEach(b => b.setAttribute("aria-pressed", String(b === sk))); return; }
     if (t.closest("[data-tv-new]")) { if (openSheet === "settings") hideSheet("settings"); startTV(); return; }
@@ -5654,7 +5669,7 @@ const handle = async (m, post) => {
   // Which place the 3D view shows: Logan for Logan news, Inverloch for Victoria, Brisbane everywhere else.
   function bsPlace() {
     const W = BS.W; if (!W.bris || !W.inv) return;
-    const pl = BS.exploreOnly ? (BS.exploreOnly === "moo" ? "moo" : "inv") : BS.prev?.place || (typeof wxPlace === "function" ? wxPlace() : S.region), vic = ["vic", "inv"].includes(pl), lo = pl === "logan", mo = pl === "moo";
+    const pl = BS.exploreOnly ? (BS.exploreOnly === "moo" ? "moo" : BS.exploreOnly === "logan" ? "logan" : "inv") : BS.prev?.place || (typeof wxPlace === "function" ? wxPlace() : S.region), vic = ["vic", "inv"].includes(pl), lo = pl === "logan", mo = pl === "moo";
     const dr = !!(BS.drive && W.drive);  // the traffic part of Listen: the motorway instead of the place
     if (BS.orbit && !BS.orbit.on) { BS.orbit.ty = 0; BS.orbit.tp = 0; }  // a new place starts from the usual view
     const di = dr && !!W.driveInv && !!BS.driveVic;  // a drive in Victoria: the road into Inverloch
@@ -7412,7 +7427,7 @@ const handle = async (m, post) => {
     clearTimeout(F.tipT); BS.fly = null;
     document.body.classList.remove("bsfly"); $("bsFly").hidden = true;
     if (L.exploreHold) { L.exploreHold = false; wxListenOff(); if (L.on && L.paused) resumeListen(); }  // the news waited while you explored
-    if (BS.exploreOnly) { BS.exploreOnly = false; if (!$("weather").hidden) hideSheet("weather"); }  // came from "Virtually explore Inverloch" (or Moorooka): straight back home
+    if (BS.exploreOnly) { BS.exploreOnly = false; if (!$("weather").hidden) hideSheet("weather"); }  // came from "Virtually explore Inverloch" (or Moorooka, or Logan): straight back home
     $("bsFlyBtn")?.focus({ preventScroll: true });
   }
   function bsFlyTick(dt) {
@@ -7430,7 +7445,7 @@ const handle = async (m, post) => {
     if (F.walk) { if (u) F.eye = bsClamp((F.eye || 3.5) + u * 3 * lk, 1.5, 30);  // Up and Down: eyes higher or lower above the ground
       F.pos.y += (F.walk() - F.pos.y) * Math.min(1, lk * 10); }  // walking in the whole-town model: your eyes follow the ground, up hill and down
     else F.pos.y = bsClamp(F.pos.y + u * sp, F.floor ? F.floor() : 1.4, F.ceil || 180);
-    if (F.heightAt) { const h = Math.max(0, F.heightAt()), t = h < 10 ? h.toFixed(1) : String(Math.round(h)); if (t !== F.hText) { F.hText = t; $("bsHeight").textContent = `${t} m up`; } }
+    if (F.heightAt) { const h = Math.max(0, F.heightAt()), t = h < 10 ? `${h.toFixed(1)} m` : h < 10000 ? `${Math.round(h)} m` : `${(h / 1000).toFixed(1)} km`; if (t !== F.hText) { F.hText = t; $("bsHeight").textContent = `${t} up`; } }
   }
   function bsStrike() {
     const W = BS.W, a = W.bolt.geometry.attributes.position; let x = -170 + Math.random() * 340; const z = -240 - Math.random() * 80, y = 78, seg = (y - 2) / 15;
@@ -7560,18 +7575,27 @@ const handle = async (m, post) => {
   }
   // Inverloch: the town and the surf beach take turns; Moorooka: the landmarks and the bowls club. Each time the weather opens, the other one.
   const bsTurn = k => { const v = !store.get(k, false); store.set(k, v); return v; };
-  // ---- The whole-town models (Admin > 3D scenes > Inverloch 3D model, Moorooka 3D model) ----
+  // ---- The whole-town models (Admin > 3D scenes > Inverloch 3D model, Moorooka 3D model, Logan 3D model) ----
   // Separate models from the weather's own scenes (Inverloch's clock, A'Beckett Street and Norman Road; Moorooka's
   // roundabout and shops). Inverloch: the whole town, about 8 km by 7, from OpenStreetMap streets and LiDAR terrain.
-  // Moorooka: the suburb and its edges, 3.3 km square, every building from the Queensland survey. Each one's script
+  // Moorooka: the suburb and its edges, 3.3 km square, every building from the Queensland survey. Logan: the whole city,
+  // 53 km by 45, with the council precinct in detail and the 1974, 2017 and 2022 floods and an estimated 1% AEP flood. Each one's script
   // (in town3d/, built from the ai-forge repo, with its own three.js) draws on its own canvas (#bsTown) over the
   // weather's. Explore's controls fly it: every frame the camera Explore is flying is handed to the model, and the
   // time slider sets its sun.
   const TOWN3D = "town3d/";
   // place: the weather scene Explore runs in underneath. up: that scene is built. air: where you start when not on foot.
+  // Logan's is a whole city, so it also sets: start (the place you open over, from the air), wait (how long the loading screen
+  // stays up at most, ms), ceil (how high you can fly, m), fast (top speed, as a multiple of walking pace), far and out (how far
+  // off the ground you're looking at can be, and how far back a pinch can take you, m), stride (how the steps grow when looking
+  // for that ground), pad (how far outside the model you can fly, m), stand (where Jump stands you: a share of the way back to
+  // the camera, up to so many metres) and floodLook (where its floods are widest: the lower Logan from the south-west, as
+  // latitude, longitude, metres back, tilt and bearing).
   const TOWNS = {
     inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=3", assets: TOWN3D, place: "inv", up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
     moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=1", assets: TOWN3D + "moorooka/", place: "moo", up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5] },
+    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=1", assets: TOWN3D + "logan/", place: "logan", up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
+      start: "council", wait: 90000, ceil: 110000, fast: 600, far: 150000, out: 130000, stride: 0.02, pad: 80000, stand: [0.45, 400], floodLook: [-27.69, 153.17, 12000, 55, -35] },
   };
   function townModelLoad(cfg) {
     if (window[cfg.lib]) return Promise.resolve(window[cfg.lib]);
@@ -7582,7 +7606,7 @@ const handle = async (m, post) => {
     return libs[cfg.lib];
   }
   // viaExplore: from "Virtually explore Inverloch" or "Virtually explore Moorooka". If the model can't load there, you stay
-  // in the weather's own town instead. which: "inv" (the default) or "moo".
+  // in the weather's own town instead. which: "inv" (the default), "moo" or "logan".
   function townModelOpen(viaExplore, which) {
     if (BS.town) return;
     const cfg = TOWNS[which] || TOWNS.inv;
@@ -7590,15 +7614,16 @@ const handle = async (m, post) => {
     openWeather(); if ($("weather").hidden) return;
     BS.invBeach = false; BS.mooAlt = false; BS.exploreOnly = cfg.place; if (BS.B) bsPlace();  // Inverloch's town, not its beach; Moorooka's streets, not its bowls club
     const T = BS.town = { on: false, model: null, dead: false, keep: !!viaExplore, cfg };
-    exLoadShow(cfg.place === "moo" ? "Moorooka" : "Inverloch");
-    // the loading screen goes once the town's up and the view has held still for a moment (or if it didn't start)
+    exLoadShow(exploreName(cfg.place));
+    // the loading screen goes once the town's up, the view has held still for a moment and (where the model can say so, as
+    // Logan's does) everything around you is in, so nothing pops in as it lifts (or if it didn't start)
     { let onAt = 0, last = "", still = 0;
       const watch = () => {
-        if (BS.town !== T || T.dead || Date.now() - t0 > 45000) { exLoadDone(); return; }
+        if (BS.town !== T || T.dead || Date.now() - t0 > (cfg.wait || 45000)) { exLoadDone(); return; }
         if (T.on) { const F = BS.fly, at = performance.now(); onAt ||= at;
           const k = F ? [F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch].map(v => v.toFixed(2)).join() : "";
           if (k !== last) { last = k; still = at; }
-          if (at - onAt > 1200 && at - still > 700) { exLoadDone(); return; } }
+          if (at - onAt > 1200 && at - still > 700 && (!T.model?.settled || T.model.settled() || at - onAt > 8000)) { exLoadDone(); return; } }
         setTimeout(watch, 120); };
       setTimeout(watch, 120); }
     const t0 = Date.now(), go = () => {
@@ -7612,6 +7637,7 @@ const handle = async (m, post) => {
   }
   function townModelOn(T) {
     const F = BS.fly, box = $("bsTown"), tip = $("bsFlyTip"), jump = $("bsFlyJump"), list = $("bsTownList"), modeBox = $("bsTownMode");
+    const fb = $("bsTownFlood"), fl = $("bsTownFloods"), riseBox = $("bsTownRise"), riseIn = $("bsTownRiseIn"), riseOut = $("bsTownRiseOut");
     if (!F) { townModelOff(); return; }
     document.body.classList.add("bstown", "bswalk");
     const old = { tip: tip.textContent, jump: jump.hidden, jumpText: jump.textContent, jumpClick: jump.onclick };  // Explore's own, for if the model can't load
@@ -7627,16 +7653,20 @@ const handle = async (m, post) => {
       if (T.dead) return;
       const m = T.model = lib.create(box, { assets: cfg.assets, clearLatLon,
         onProgress: (f, label) => { if (!T.on && !T.dead) tip.textContent = `Loading the town model: ${String(label).toLowerCase()}…`; },
+        onFloodLevel: v => T.onFlood?.(v),
         onError: msg => fail(msg) });
       return m.ready.then(() => {
         if (T.dead || BS.fly !== F) { try { m.dispose(); } catch {} return; }
         const EYE = 3.5, touch = matchMedia("(pointer: coarse)").matches;  // walking: your eyes 3.5 m up to start, for a clear view over the cars and fences (Up and Down change it)
         F.eye = EYE;
-        const b = m.bounds(), ground = (x = F.pos.x, z = F.pos.z) => Math.max(m.groundAt(x, z), m.waterLevel());
-        // where you can go: inside the model; flying, above the ground and the water, and faster the higher you are
-        F.lim = [b[0] + 30, b[1] - 30, b[2] + 30, b[3] - 30]; F.ceil = 4000;
+        // the ground, or the water over it: the sea and the inlet (Inverloch), or a flood that's on the map (Logan)
+        const b = m.bounds(), ground = (x = F.pos.x, z = F.pos.z) => Math.max(m.groundAt(x, z), m.waterAt ? m.waterAt(x, z) : m.waterLevel());
+        const { ceil = 4000, fast = 30, far = 7000, out = 9000, stride = 0, pad = 0, stand = [1, 30] } = cfg;  // a town's limits, unless the model is bigger (Logan)
+        // where you can go: inside the model (flying over Logan, far enough outside it to see the whole city); flying, above the ground and the water, and faster the higher you are
+        const inner = [b[0] + 30, b[1] - 30, b[2] + 30, b[3] - 30], outer = pad ? [b[0] - pad, b[1] + pad, b[2] - pad, b[3] + pad] : inner;
+        F.lim = inner; F.ceil = ceil;
         F.floor = () => ground() + 3;
-        F.speed = () => T.walk ? 1 : bsClamp((F.pos.y - ground()) / 22, 1, 30);
+        F.speed = () => T.walk ? 1 : bsClamp((F.pos.y - ground()) / 22, 1, fast);
         const keepIn = () => { F.pos.x = bsClamp(F.pos.x, F.lim[0], F.lim[1]); F.pos.z = bsClamp(F.pos.z, F.lim[2], F.lim[3]); if (!T.walk) F.pos.y = bsClamp(F.pos.y, F.floor(), F.ceil); };
         // the view from above a spot on the ground: back and up from it, looking down at it
         const above = (x, z, yaw) => ({ x: bsClamp(x + Math.sin(yaw) * 230, F.lim[0], F.lim[1]), y: ground(x, z) + 190, z: bsClamp(z + Math.cos(yaw) * 230, F.lim[2], F.lim[3]), yaw, pitch: -0.69 });
@@ -7645,13 +7675,15 @@ const handle = async (m, post) => {
         let mine = []; if (inv) try { mine = townModelGuests(T, m); } catch (e) { console.warn("Town model: the clock and Norman Road couldn't be added", e); }
         // Places to jump to: each as somewhere to stand (walking) and a view from above (flying). Where the model knows a
         // spot on the kerb of the nearest street (Moorooka's does), you stand there; otherwise a few steps back from the place.
+        // (Logan's list starts with the whole city, which is only ever seen from the air, like the water.)
         const places = [...mine.map(g => ({ name: g.name, walk: g.walk, fly: above(g.target[0], g.target[1], g.walk.yaw) })),
-          ...m.spots().map(s => { let dx = s.x - s.tx, dz = s.z - s.tz; const d = Math.hypot(dx, dz) || 1, r = Math.min(30, d); dx /= d; dz /= d;
-            return { name: s.name, water: s.kind === "water", fly: s, walk: s.stand ? { x: s.stand.x, z: s.stand.z, yaw: s.stand.yaw, pitch: 0.02 } : { x: s.tx + dx * r, z: s.tz + dz * r, yaw: Math.atan2(dx, dz), pitch: 0.02 } }; })];
+          ...(m.overview ? [{ name: "The whole city", water: true, fly: () => m.overview() }] : []),
+          ...m.spots().map(s => { let dx = s.x - s.tx, dz = s.z - s.tz; const d = Math.hypot(dx, dz) || 1, r = Math.min(stand[1], d * stand[0]); dx /= d; dz /= d;
+            return { id: s.id, name: s.name, water: s.kind === "water", fly: s, walk: s.stand ? { x: s.stand.x, z: s.stand.z, yaw: s.stand.yaw, pitch: 0.02 } : { x: s.tx + dx * r, z: s.tz + dz * r, yaw: Math.atan2(dx, dz), pitch: 0.02 } }; })];
 
         // ---- Walk or Fly ----
         const tideBox = $("bsTownTide"), tideIn = $("bsTownTideIn"), tideOut = $("bsTownTideOut"), tidal = m.tide.max > m.tide.min;  // Moorooka has no tide to move
-        const setMode = (walk, to) => { T.walk = walk; document.body.classList.toggle("bswalk", walk); F.walk = walk ? () => ground() + F.eye : null; tideBox.hidden = walk || !tidal;
+        const setMode = (walk, to) => { T.walk = walk; document.body.classList.toggle("bswalk", walk); F.walk = walk ? () => ground() + F.eye : null; tideBox.hidden = walk || !tidal; F.lim = walk ? inner : outer;
           modeBox.querySelectorAll("button").forEach(bn => bn.setAttribute("aria-pressed", String((bn.dataset.townMode === "walk") === walk)));
           if (document.pointerLockElement) document.exitPointerLock?.();
           F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.vert = 0; F.keys.clear();
@@ -7661,22 +7693,23 @@ const handle = async (m, post) => {
           T.tween = to ? { a: { x: F.pos.x, y: F.pos.y, z: F.pos.z, yaw: F.yaw, pitch: F.pitch }, b: to, t0: performance.now(), ms: 900 } : null; };
         // Fly: up and back from where you're standing, so the same spot stays in view. Walk: down to the ground you're looking at.
         const walkFromHere = () => { const cp = Math.cos(F.pitch), d = [-Math.sin(F.yaw) * cp, Math.sin(F.pitch), -Math.cos(F.yaw) * cp]; let x = F.pos.x, z = F.pos.z;
-          if (d[1] < -0.05) for (let t = 0; t < 7000; t += 5) { const px = F.pos.x + d[0] * t, pz = F.pos.z + d[2] * t; if (F.pos.y + d[1] * t <= ground(px, pz) + 1) { x = px; z = pz; break; } }
-          x = bsClamp(x, F.lim[0], F.lim[1]); z = bsClamp(z, F.lim[2], F.lim[3]);
+          if (d[1] < -0.05) for (let t = 0; t < far; t += Math.max(5, t * stride)) { const px = F.pos.x + d[0] * t, pz = F.pos.z + d[2] * t; if (F.pos.y + d[1] * t <= ground(px, pz) + 1) { x = px; z = pz; break; } }
+          x = bsClamp(x, inner[0], inner[1]); z = bsClamp(z, inner[2], inner[3]);
           return { x, y: ground(x, z) + F.eye, z, yaw: F.yaw, pitch: -0.04 }; };
         modeBox.onclick = e => { const bn = e.target.closest("[data-town-mode]"); if (!bn) return; const walk = bn.dataset.townMode === "walk"; if (walk === T.walk) return;
           setMode(walk, walk ? walkFromHere() : above(F.pos.x, F.pos.z, F.yaw)); };
 
         // ---- flying: drag the view to move, pinch (or scroll) to zoom, two fingers (or right-drag) to turn ----
         const look3 = () => { const cp = Math.cos(F.pitch); return [-Math.sin(F.yaw) * cp, Math.sin(F.pitch), -Math.cos(F.yaw) * cp]; };
-        const reach = () => { const d = look3(), h = Math.max(2, F.pos.y - ground()); return bsClamp(d[1] < -0.08 ? h / -d[1] : h * 6, 25, 7000); };  // how far off the ground you're looking at is
-        const pan = (dx, dy) => { const k = 1.1547 * reach() / (box.clientHeight || 600), sy = Math.sin(F.yaw), cy = Math.cos(F.yaw), up = k / Math.max(0.35, Math.sin(-F.pitch));
+        const reach = () => { const d = look3(), h = Math.max(2, F.pos.y - ground()); return bsClamp(d[1] < -0.08 ? h / -d[1] : h * 6, 25, far); };  // how far off the ground you're looking at is
+        const fovK = m.fov ? () => 2 * Math.tan(m.fov() * Math.PI / 360) : () => 1.1547;  // the model's own field of view where it gives one, so the ground stays under your finger
+        const pan = (dx, dy) => { const k = fovK() * reach() / (box.clientHeight || 600), sy = Math.sin(F.yaw), cy = Math.cos(F.yaw), up = k / Math.max(0.35, Math.sin(-F.pitch));
           F.pos.x += -cy * dx * k - sy * dy * up; F.pos.z += sy * dx * k - cy * dy * up; keepIn(); };
         const zoomTurn = (scale, turn) => { const R = reach(), d = look3(), L = [F.pos.x + d[0] * R, F.pos.y + d[1] * R, F.pos.z + d[2] * R];  // about the ground in the middle of the view
-          F.yaw += turn; const R2 = bsClamp(R * scale, 20, 9000), e = look3(); F.pos.set(L[0] - e[0] * R2, L[1] - e[1] * R2, L[2] - e[2] * R2); keepIn(); };
+          F.yaw += turn; const R2 = bsClamp(R * scale, 20, out), e = look3(); F.pos.set(L[0] - e[0] * R2, L[1] - e[1] * R2, L[2] - e[2] * R2); keepIn(); };
         const ptrs = new Map(); let pinch = null;
         const gest = {
-          pointerdown: e => { if (T.walk) return; list.hidden = true; jump.setAttribute("aria-expanded", "false"); try { box.setPointerCapture(e.pointerId); } catch {}
+          pointerdown: e => { if (T.walk) return; list.hidden = true; jump.setAttribute("aria-expanded", "false"); fl.hidden = true; fb.setAttribute("aria-expanded", "false"); try { box.setPointerCapture(e.pointerId); } catch {}
             ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); pinch = null; T.tween = null; tip.classList.add("dim"); e.preventDefault(); },
           pointermove: e => { const p = ptrs.get(e.pointerId); if (!p || T.walk) return; const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
             if (ptrs.size === 1) { if (e.pointerType === "mouse" && (e.buttons & 2)) { F.yaw -= dx * 0.005; F.pitch = bsClamp(F.pitch - dy * 0.005, -1.45, 0.4); } else pan(dx, dy); }
@@ -7699,17 +7732,53 @@ const handle = async (m, post) => {
         // ---- Jump: a list of places. Walking, it stands you there; flying, it shows the place from above. ----
         const go = (p, walk) => { T.tween = null; if (walk !== T.walk) setMode(walk);
           if (walk) { F.pos.set(p.walk.x, ground(p.walk.x, p.walk.z) + F.eye, p.walk.z); F.yaw = p.walk.yaw; F.pitch = p.walk.pitch; }
-          else { F.pos.set(p.fly.x, p.fly.y, p.fly.z); F.yaw = p.fly.yaw; F.pitch = p.fly.pitch; } };
+          else { const v = typeof p.fly === "function" ? p.fly() : p.fly; F.pos.set(v.x, v.y, v.z); F.yaw = v.yaw; F.pitch = v.pitch; } };
         list.innerHTML = places.map((p, i) => `<button type="button" role="menuitem" data-town-go="${i}">${esc(p.name[0].toUpperCase() + p.name.slice(1))}</button>`).join("");
-        const openList = on => { list.hidden = !on; jump.setAttribute("aria-expanded", String(on)); if (on) list.querySelector("button")?.focus({ preventScroll: true }); };
+        const openList = on => { list.hidden = !on; jump.setAttribute("aria-expanded", String(on)); if (on) { fl.hidden = true; fb.setAttribute("aria-expanded", "false"); list.querySelector("button")?.focus({ preventScroll: true }); } };
         jump.hidden = !places.length; jump.textContent = "Jump to…"; jump.setAttribute("aria-haspopup", "menu"); openList(false);
         jump.onclick = () => openList(list.hidden);
         list.onclick = e => { const bn = e.target.closest("[data-town-go]"); if (!bn) return; const p = places[+bn.dataset.townGo]; openList(false); go(p, T.walk && !p.water);  // the inlet and the strait are best seen from the air
           jump.focus({ preventScroll: true }); };
 
+        // ---- Flood (Logan): a list of floods to lay over the map. With one on, a slider lowers the water from its peak. ----
+        if (m.floods) {
+          let events = null, now = "";
+          const riseName = v => v > 0.995 ? "At the peak" : `${((1 - v) * m.floodDrop).toFixed(1)} m lower`;
+          const setRise = v => { riseIn.value = v; riseOut.textContent = riseName(+v); };
+          T.onFlood = setRise;  // the water rises to its peak by itself when a flood is first shown
+          riseIn.oninput = () => { m.setFloodLevel(+riseIn.value); riseOut.textContent = riseName(+riseIn.value); };
+          const openFloods = on => { fl.hidden = !on; fb.setAttribute("aria-expanded", String(on)); if (on) { openList(false); (fl.querySelector('[aria-checked="true"]') || fl.querySelector("button"))?.focus({ preventScroll: true }); } };
+          const draw = () => { fl.innerHTML = `<button type="button" role="menuitemradio" aria-checked="${!now}" data-town-flood="">No flood</button>`
+            + events.map(e => `<button type="button" role="menuitemradio" aria-checked="${e.id === now}" data-town-flood="${esc(e.id)}">${esc(e.name)}<small>${e.kind === "design" ? "Estimated from rainfall" : "As recorded on the river gauges"} · about ${Math.round(e.areaKm2)} km² under water</small></button>`).join("")
+            + `<p>A guide only. For property, insurance or planning decisions, use Logan City Council's flood maps.</p>`; };
+          const shown = id => { now = id; draw(); fb.setAttribute("aria-pressed", String(!!id)); riseBox.hidden = !id; };
+          // somewhere to see a flood from: back and up from a place, looking down at it (metres back, tilt from straight down, bearing: 0 is from the south)
+          const lookFrom = (lat, lon, back, tilt, bearing) => { const [tx, tz] = m.fromLatLon(lat, lon), p = tilt * Math.PI / 180, a = bearing * Math.PI / 180, g = m.groundAt(tx, tz);
+            const x = tx + back * Math.sin(p) * Math.sin(a), z = tz + back * Math.sin(p) * Math.cos(a), y = g + back * Math.cos(p);
+            return { x, y, z, yaw: Math.atan2(x - tx, z - tz), pitch: -Math.atan2(y - g, Math.hypot(x - tx, z - tz)) }; };
+          const pick = async id => { const e = events.find(x => x.id === id), was = now; shown(e ? id : "");
+            try { await m.setFlood(e ? id : null); } catch { if (!T.dead && now === id) { shown(""); toast("That flood couldn't load. Check your connection and try again."); } return; }
+            if (T.dead || !e || now !== id) return;
+            toast(`${e.name}. ${e.note} About ${Math.round(e.areaKm2)} km² of Logan under water.`, 8000);
+            if (was) return;  // swapping one flood for another: the view stays where you put it
+            // turning the water on: if none of it is in view, glide to where the floods are widest (on foot, you're told instead)
+            const R = reach(), d = look3(), cx = F.pos.x + d[0] * R, cz = F.pos.z + d[2] * R; let wet = false;
+            for (let i = -3; i <= 3 && !wet; i++) for (let j = -3; j <= 3; j++) if (m.waterAt(cx + i * R * 0.25, cz + j * R * 0.25) > -1e5) { wet = true; break; }
+            if (wet) return;
+            if (T.walk) toast(`${e.name}: no flood water here. Tap Fly, or jump to somewhere by the river.`, 8000);
+            else T.tween = { a: { x: F.pos.x, y: F.pos.y, z: F.pos.z, yaw: F.yaw, pitch: F.pitch }, b: lookFrom(...cfg.floodLook), t0: performance.now(), ms: 1800 }; };
+          fb.hidden = false; fb.setAttribute("aria-pressed", "false"); openFloods(false);
+          fb.onclick = async () => { if (!fl.hidden) { openFloods(false); return; }
+            if (!events) { try { events = await m.floods(); } catch { events = null; toast("The floods couldn't load. Check your connection and try again."); return; } if (T.dead) return; draw(); }
+            openFloods(true); };
+          fl.onclick = e => { const bn = e.target.closest("[data-town-flood]"); if (!bn) return; openFloods(false); pick(bn.dataset.townFlood); fb.focus({ preventScroll: true }); };
+        }
+
         // Inverloch: start on foot at the clock, as Explore always has (R comes back here); with no clock, from the air.
         // Moorooka: on foot at the first of its places, the shops on Beaudesert Road.
-        if (places[0] && (mine.length || !inv)) go(places[0], true); else { setMode(false); F.pos.set(cfg.air[0], cfg.air[1], cfg.air[2]); F.yaw = cfg.air[3]; F.pitch = cfg.air[4]; }
+        // Logan: from the air, over the council's administration centre.
+        if (cfg.start) go(places.find(p => p.id === cfg.start) || places[0], false);
+        else if (places[0] && (mine.length || !inv)) go(places[0], true); else { setMode(false); F.pos.set(cfg.air[0], cfg.air[1], cfg.air[2]); F.yaw = cfg.air[3]; F.pitch = cfg.air[4]; }
         F.start = { pos: F.pos.clone(), yaw: F.yaw, pitch: F.pitch };
         modeBox.hidden = false; T.on = true; box.hidden = false;
         F.heightAt = () => F.pos.y - ground(); $("bsHeight").hidden = false;  // the height shown top left
@@ -7809,11 +7878,13 @@ const handle = async (m, post) => {
     try { T.model?.dispose(); } catch {}
     const box = $("bsTown"); box.hidden = true; box.textContent = "";
     document.body.classList.remove("bstown", "bswalk"); $("bsHeight").hidden = true; $("bsTownTide").hidden = true; $("bsTownMode").hidden = true; $("bsTownList").hidden = true;
+    $("bsTownFlood").hidden = true; $("bsTownFloods").hidden = true; $("bsTownRise").hidden = true;
   }
   // "Virtually explore Inverloch": the whole-town model, on foot at the clock. "Virtually explore Moorooka": the suburb,
-  // on foot at the shops. (If the model can't load, the weather's own town.) Moorooka's shows where Moorooka is your area;
+  // on foot at the shops. "Virtually explore Logan": the whole city, from the air over the council's administration centre.
+  // (If the model can't load, the weather's own scene of the place.) Moorooka's and Logan's show where that is your area;
   // Rod, who lives in Inverloch, always gets Inverloch's.
-  function exploreWhich() { return S.region === "moo" && !/^rod(ney)?$/i.test((S.name || "").trim()) ? "moo" : "inv"; }
+  function exploreWhich() { const rod = /^rod(ney)?$/i.test((S.name || "").trim()); return S.region === "moo" && !rod ? "moo" : S.region === "logan" && !rod ? "logan" : "inv"; }
   function exploreTown() { townModelOpen(true, exploreWhich()); }
   function exploreInverloch() { townModelOpen(true, "inv"); }
   function openWeather() {
@@ -8365,6 +8436,7 @@ const handle = async (m, post) => {
       ${go("moo", "off", "Moorooka streets", "The weather in Moorooka")}${go("bowls", "off", "Moorooka bowls club", "Moorooka's other view")}
       ${go("moomodel", "off", "Moorooka 3D model", "The whole suburb from the air: every building, street and the railway")}
       ${go("qld", "off", "Brisbane", "The river and the city")}${go("logan", "off", "Logan", "Logan's weather")}
+      ${go("loganmodel", "off", "Logan 3D model", "The whole city from the air: every street, the council precinct and its floods")}
       ${go("inv", "off", "Inverloch town", "The Rotary clock and A'Beckett Street")}${go("invmodel", "off", "Inverloch 3D model", "The whole town from the air: every street, the inlet and its tides")}
       ${go("invbeach", "off", "Inverloch beach", "The surf beach from the sand")}
     </div></div>
@@ -8482,8 +8554,8 @@ const handle = async (m, post) => {
       if (!openSheet) render(true);
       if (pendingStory) { const id = pendingStory; pendingStory = ""; history.replaceState(null, "", location.pathname); if (findItem(id)) openReader(id); else loadArchive()?.then?.(() => findItem(id) ? openReader(id) : toast("That story isn't in the news here any more")).catch(() => toast("That story isn't in the news here any more")); }
       if (pendingTV) { pendingTV = false; try { history.replaceState(null, "", location.pathname); } catch {} openTV(); }
-      if (pendingExplore) { pendingExplore = false; try { history.replaceState(null, "", location.pathname); } catch {}
-        const t0 = Date.now(), go = () => { if (state.wx) exploreTown(); else if (Date.now() - t0 < 20000) setTimeout(go, 300); else { exLoadDone(); toast("Explore needs the weather, which didn't load. Try again in a moment."); } };
+      if (pendingExplore) { const which = pendingExplore; pendingExplore = ""; try { history.replaceState(null, "", location.pathname); } catch {}
+        const t0 = Date.now(), go = () => { if (state.wx) townModelOpen(true, which); else if (Date.now() - t0 < 20000) setTimeout(go, 300); else { exLoadDone(); toast("Explore needs the weather, which didn't load. Try again in a moment."); } };
         go(); }
       afterPics("offline", saveOffline);
       if (!state.wx) loadWeather();
