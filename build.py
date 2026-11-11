@@ -113,11 +113,9 @@ if os.path.exists(beta_src):
 shutil.copytree(os.path.join(here, "icons"), os.path.join(site, "icons"), dirs_exist_ok=True)
 shutil.copy(os.path.join(here, "manifest.webmanifest"), site)
 shutil.copy(os.path.join(here, "sw.js"), site)
-# The whole-town 3D models (Admin > 3D scenes): Inverloch (town3d) and Logan (logan3d). Each is a script and its data,
-# only fetched when it's opened.
-for model in ("town3d", "logan3d"):
-    if os.path.isdir(os.path.join(here, model)):
-        shutil.copytree(os.path.join(here, model), os.path.join(site, model), dirs_exist_ok=True, ignore=shutil.ignore_patterns("*.md"))
+# The whole-town 3D models of Inverloch and Moorooka ("Virtually explore"; Admin > 3D scenes): scripts and data, only fetched when one is opened.
+if os.path.isdir(os.path.join(here, "town3d")):
+    shutil.copytree(os.path.join(here, "town3d"), os.path.join(site, "town3d"), dirs_exist_ok=True, ignore=shutil.ignore_patterns("*.md"))
 # Council news pictures sent from the work PC (council_news.py), served next to the app.
 if os.path.isdir(os.path.join(here, "council", "img")):
     shutil.copytree(os.path.join(here, "council", "img"), os.path.join(site, "council", "img"), dirs_exist_ok=True)

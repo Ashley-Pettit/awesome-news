@@ -18,8 +18,8 @@ precinct on Wembley Road in detail.
 | `precinct.png` | Car parks, paths and lawns around the council's administration centre |
 | `flood.json`, `flood-1974.png`, `flood-2017.png`, `flood-2022.png`, `flood-aep1.png` | The floods: what they were, and each one's water levels |
 
-Nothing here is downloaded until someone opens the map (about 9 MB the first time). `build.py` copies this folder
-into the site.
+Nothing here is downloaded until someone opens the map (about 9 MB the first time). `build.py` copies `town3d/`,
+this folder included, into the site.
 
 ## Links that open it directly
 
@@ -28,12 +28,12 @@ into the site.
 
 Either shows a "Loading Logan 3D model" screen at once, over the whole app, and lifts it only when the map is up, the
 view has held still and the buildings and trees around the camera are all in (`model.settled()`), so nothing jumps or
-pops in. `#explore` on its own opens the model of the app's own area; `#explore-inverloch` names Inverloch's.
+pops in. `#explore` on its own opens the model for your news area; `#explore-inverloch` and `#explore-moorooka` name the others.
 
 ## How the app uses it
 
-The same way as the Inverloch model in `town3d/`, and through the same code: `app.html` (search for `townModelOpen`
-and `TOWN_MODELS`) opens the weather's 3D view on Logan, goes into Explore, and lays the map's canvas (`#bsTown`)
+The same way as the Inverloch and Moorooka models in `town3d/`, and through the same code: `app.html` (search for
+`townModelOpen`; the models are listed in `TOWNS`) opens the weather's 3D view on Logan, goes into Explore, and lays the map's canvas (`#bsTown`)
 over the weather's. If the map cannot load, Virtually explore Logan carries on in the weather's own Logan scene.
 
 Every frame the app passes the camera Explore is moving to `model.setCamera(...)`, and the time slider to
@@ -70,7 +70,7 @@ These files are built, not written by hand. The source is the `ai-forge` reposit
 - data pipeline: `scripts/logan/`
 
 To update, run `npm run build:logan-embed` there and copy everything in `dist-embed-logan/` into this folder. If the
-script changes, bump the `?v=` on `logan-model.js` in `app.html` (in `TOWN_MODELS`) so phones fetch the new one.
+script changes, bump the `?v=` on `logan-model.js` in `app.html` (in `TOWNS`) so phones fetch the new one.
 
 ## Credits
 
