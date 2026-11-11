@@ -1250,6 +1250,7 @@ body.bstown:not(.bswalk) #bsTown { pointer-events: auto; touch-action: none; cur
 body.bstown .bs-fly-time.bs-town-tide { bottom: calc(236px + env(safe-area-inset-bottom)); }
 /* Up and Down sit between the sticks, in reach of both thumbs (walking, they raise or lower your eyes above the ground) */
 body.bstown .bs-ud { top: auto; right: auto; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom)); transform: translateX(-50%); }
+body.bstown .bs-fly-tip { display: none; }  /* the 3D town: no "Left stick to walk…" tip, the sticks are labelled */
 /* How high you are above the ground: small, top left under Exit, out of the way */
 .bs-height { position: absolute; top: calc(68px + env(safe-area-inset-top)); left: 16px; z-index: 2; padding: 4px 10px; border-radius: 999px; pointer-events: none;
   background: rgba(16, 18, 34, 0.6); color: #fff; font: 700 0.78rem var(--ui); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
