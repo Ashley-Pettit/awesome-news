@@ -208,6 +208,25 @@ lines, found on the photograph.
     sits 2.3 m from the kerb, or in the middle of a narrower verge;
   - roads were already joined up and are unchanged.
 
+- **Designed at 0.2 m** (Ash, 13 November 2026: "Still tonnes of mistakes. Fix em up! Infer. Draw road lines. Fix
+  paths. Fix roads, fix grass fix car placement, fix concrete, fix barriers, improve res"). `tools/ground/design.py`
+  redraws the square's ground at twice the sharpness (blocks of 1024 px), from the street lines, property boundaries,
+  buildings and the plan itself:
+  - corners where streets meet are rounded (5 m), on street land only;
+  - verges are read a metre at a time: paved to the property line (6 m or more of concrete), driveway crossovers (at
+    least 3 m wide, kerb to property line), car park entries (4 m or more of asphalt), lawn everywhere else;
+  - footpaths are drawn in the ground, 1.3 m wide at the street's own distance from the kerb, across crossovers and
+    entries and round the corners to meet the cross street's. Inside the square the model's raised footpath strips
+    are no longer drawn (they stopped short at every corner); outside it they are as before;
+  - bare earth patches under 150 m2 take the ground around them, and loose concrete and asphalt on house blocks is
+    drawn as the rectangle it fills, square to the property.
+- **Cars and fences** (`tools/ground/cars_fences.py`, the whole suburb): cars at the kerb are set square to the street,
+  1.1 m in from the kerb and following its curve; none over the kerb, in a junction, across a driveway or car park
+  entry, or on a verge. Fences across streets, through buildings or through car parks are gone.
+- **The model's own code** (`moorooka-model.js`, patched): a dashed centre line on every street 6.5 m wide or more,
+  broken give way lines where a street meets a bigger or equal one, and kerbs kept clear of every street's carriageway
+  (they used to poke into junctions).
+
 ## Inverloch tidied by inference
 
 Ash, 13 November 2026: "Do the same for Inverloch, find things that look out of place and infer correctness". With
