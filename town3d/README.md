@@ -12,6 +12,7 @@ Two models, each separate from the weather's own scenes of the same place (which
 | `inverloch-model.js` | The Inverloch model as one script (`window.InverlochModel`), with its own copy of three.js |
 | `height.png` | Terrain heights, including the Anderson Inlet sandbars |
 | `ground.webp` | Ground colour: land cover, sand, paddocks, roads |
+| `detail.json`, `detail-*.webp` | Sharp close-up ground for the town centre and Norman Road (`-lo` = half size, for older phones). Optional: without them the ground is the one picture |
 | `town.json` | Streets, mapped buildings, generated houses, trees, cars |
 | `moorooka/moorooka-model.js` | The Moorooka model as one script (`window.MoorookaModel`), with its own copy of three.js |
 | `moorooka/height.png` | Terrain heights, from the river flats up to Toohey Forest |

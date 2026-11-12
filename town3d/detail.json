@@ -1,0 +1,20 @@
+{
+ "patches": [
+  {
+   "name": "town",
+   "x": -499.37,
+   "z": -690.77,
+   "size": 640.0,
+   "file": "detail-town.webp",
+   "lo": "detail-town-lo.webp"
+  },
+  {
+   "name": "norman",
+   "x": -1767.13,
+   "z": 209.85,
+   "size": 384.0,
+   "file": "detail-norman.webp",
+   "lo": "detail-norman-lo.webp"
+  }
+ ]
+}
