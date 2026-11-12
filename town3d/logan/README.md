@@ -28,6 +28,9 @@ Wembley Road is in detail:
   street. Generated: the vegetation survey only maps stands of bush.
 - **Fronts and driveways across the whole city:** each house's front door and garage face its nearest street, and
   a concrete driveway runs from the garage to that street. Generated: which way a house really faces is not surveyed.
+- **Street lights and parked cars across the whole city:** lights along the sealed streets, lit at night, and a car
+  at the kerb of local streets here and there, made around you as you move. Footpaths also run beside main roads.
+  Generated, not surveyed.
 - **Houses across the whole city:** each keeps its surveyed size and heights; close up it also has overhanging
   eaves, a hipped or gabled roof in tiles or ribbed sheet metal, window frames, a front door, a garage door and,
   on about a quarter, solar panels. Those additions are generated, not surveyed.
@@ -109,9 +112,15 @@ Every frame the app passes the camera Explore is moving to `model.setCamera(...)
   water level along the Logan and Albert rivers.
 - 1974 and 2022: the 2017 water surface, raised or lowered by how much higher or lower each flood peaked at each
   river gauge (Bureau of Meteorology records).
-- 1%, 2% and 5% AEP (a 1 in 100, 1 in 50 and 1 in 20 chance in any year): estimates. For nine floods since 1947, the
-  rain that fell on each river's catchment is set against the peak recorded at its gauges; that relation is read at
-  the Bureau's design rainfall for each chance. The peaks are good to about a metre either way.
+- 1%, 2% and 5% AEP (a 1 in 100, 1 in 50 and 1 in 20 chance in any year): estimates, each the mean of two
+  independent ones. First, for nine floods since 1947 the rain that fell on each river's catchment is set against
+  the peak recorded at its gauges, and that relation is read at the Bureau's design rainfall for each chance.
+  Second, each gauge's own recorded peaks are ranked by size and read at that chance.
+
+**How accurate.** Tested against the Bureau's recorded river heights with each flood held back in turn
+(`scripts/logan/check_flood.py` in `ai-forge`), the method's water levels are typically out by 1 to 1.5 m, which
+at the 1% AEP is roughly 15 to 20 km² of the city either way. No council flood study, model or map went into
+any of it, so that it can be compared with them as an independent estimate.
 
 They are a guide only, not Logan City Council's adopted flood mapping, and the app says so in the Flood list. The
 method and its limits are written up in `scripts/logan/README.md` in the `ai-forge` repository.
