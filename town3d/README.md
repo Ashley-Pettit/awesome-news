@@ -103,6 +103,17 @@ lines, found on the photograph.
   is the ground picture: Ash did not like pictures on the ground from near. Its broad colour still tints the
   lawn and soil (read very coarsely, so no pixels or blotches show), and from further off the picture takes over.
 - Pools are not sorted yet, so a pool shows as soil.
+- **Streets and car parks are worked out, not copied patch by patch** (Ash: "do some inference to fix car parks,
+  roads, footpaths"):
+  - each street's carriageway is as wide as its asphalt really reaches either side of the surveyed centre line
+    (1.5 m wider than the street data on average), so the kerbs stand on the real edge;
+  - the verge, from the kerb to the property boundary, is lawn; a driveway is drawn where sealed ground crosses
+    the whole verge; outside shops (a building on the boundary) the footpath is paved to the wall;
+  - a footpath is drawn on the sides where the photograph shows one along at least a third of the street, at
+    its usual distance from the kerb, and not on the sides where it shows none;
+  - a car park is one surface (worn and patched asphalt is not concrete), and its bay lines are redrawn at a
+    steady pitch with the gaps filled in; lines that fit no row are dropped.
+  The street widths and footpath sides are in `town.json` (`footpaths`), so every device gets them.
 - The edges are smooth curves, so square corners come out rounded, and a few patches are misread (worn asphalt
   as concrete, deep shade guessed from the ground beside it).
 - Not every device gets it: never the slowest tier, a device reporting under 4 GB of memory, or one asking to
