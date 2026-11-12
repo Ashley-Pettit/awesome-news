@@ -7711,7 +7711,8 @@ const handle = async (m, post) => {
   // time slider sets its sun.
   const TOWN3D = "town3d/";
   // place: the weather scene Explore runs in underneath. up: that scene is built. air: where you start when not on foot.
-  // Logan's is a whole city, so it also sets: start (the place you open over, from the air), wait (how long the loading screen
+  // Logan's is a whole city, so it also sets: start (the place you open at), onFoot (you open standing at the spot the model
+  // picks for that place, not in the air over it), wait (how long the loading screen
   // stays up at most, ms), ceil (how high you can fly, m), fast (top speed, as a multiple of walking pace), far and out (how far
   // off the ground you're looking at can be, and how far back a pinch can take you, m), stride (how the steps grow when looking
   // for that ground), pad (how far outside the model you can fly, m), stand (where Jump stands you: a share of the way back to
@@ -7721,8 +7722,8 @@ const handle = async (m, post) => {
     inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=6", assets: TOWN3D, place: "inv", up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
     moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=1", assets: TOWN3D + "moorooka/", place: "moo", up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
       walkStart: { x: -269.8, z: -991.4, yaw: -1.623 } },  // Ash's pick for where Moorooka starts: the Beaudesert Road footpath, looking at the house he chose
-    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=5", assets: TOWN3D + "logan/", place: "logan", up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
-      start: "council", wait: 90000, ceil: 110000, fast: 600, far: 150000, out: 130000, stride: 0.02, pad: 80000, stand: [0.45, 400], floodLook: [-27.69, 153.17, 12000, 55, -35],
+    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=6", assets: TOWN3D + "logan/", place: "logan", up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
+      start: "council", onFoot: true, wait: 90000, ceil: 110000, fast: 600, far: 150000, out: 130000, stride: 0.02, pad: 80000, stand: [0.45, 400], floodLook: [-27.69, 153.17, 12000, 55, -35],
       note: "Prototype - not official council flood mapping" },  // shown small in the bottom right corner the whole time the model is open
   };
   function townModelLoad(cfg) {
@@ -7810,7 +7811,7 @@ const handle = async (m, post) => {
         const places = [...mine.map(g => ({ name: g.name, walk: g.walk, fly: above(g.target[0], g.target[1], g.walk.yaw) })),
           ...(m.overview ? [{ name: "The whole city", water: true, fly: () => m.overview() }] : []),
           ...m.spots().map(s => { let dx = s.x - s.tx, dz = s.z - s.tz; const d = Math.hypot(dx, dz) || 1, r = Math.min(stand[1], d * stand[0]); dx /= d; dz /= d;
-            return { id: s.id, name: s.name, water: s.kind === "water", fly: s, walk: s.stand ? { x: s.stand.x, z: s.stand.z, yaw: s.stand.yaw, pitch: 0.02 } : { x: s.tx + dx * r, z: s.tz + dz * r, yaw: Math.atan2(dx, dz), pitch: 0.02 } }; })];
+            return { id: s.id, name: s.name, water: s.kind === "water", fly: s, walk: s.stand ? { x: s.stand.x, z: s.stand.z, yaw: s.stand.yaw, pitch: s.stand.pitch ?? 0.02 } : { x: s.tx + dx * r, z: s.tz + dz * r, yaw: Math.atan2(dx, dz), pitch: 0.02 } }; })];
 
         // ---- Walk or Fly ----
         const tideBox = $("bsTownTide"), tideIn = $("bsTownTideIn"), tideOut = $("bsTownTideOut"), tidal = m.tide.max > m.tide.min, tideBtn = $("bsTideBtn");
@@ -7919,11 +7920,12 @@ const handle = async (m, post) => {
 
         // Inverloch: start on foot at the clock, as Explore always has (R comes back here); with no clock, from the air.
         // Moorooka: on foot at the first of its places, the shops on Beaudesert Road.
-        // Logan: from the air, over the council's administration centre. Moorooka: on foot at Ash's pick (walkStart).
-        // Explore opens flying, over that spot; Walk (or F) from there takes you down onto it at 3 m
+        // Logan: on foot (onFoot), on the path across the council's front lawn, facing the wall with its name on it: the
+        // model picks the spot (the place's `stand`). Moorooka: at Ash's pick (walkStart).
+        // The others open flying, over that spot; Walk (or F) from there takes you down onto it at 3 m
         const first = cfg.walkStart ? { walk: { ...cfg.walkStart, pitch: 0.02 }, fly: above(cfg.walkStart.x, cfg.walkStart.z, cfg.walkStart.yaw) }
           : cfg.start ? places.find(p => p.id === cfg.start) || places[0] : places[0] && (mine.length || !inv) ? places[0] : null;
-        if (first) go(first, false); else { setMode(false); F.pos.set(cfg.air[0], cfg.air[1], cfg.air[2]); F.yaw = cfg.air[3]; F.pitch = cfg.air[4]; }
+        if (first) go(first, !!(cfg.onFoot && first.walk)); else { setMode(false); F.pos.set(cfg.air[0], cfg.air[1], cfg.air[2]); F.yaw = cfg.air[3]; F.pitch = cfg.air[4]; }
         F.start = { pos: F.pos.clone(), yaw: F.yaw, pitch: F.pitch }; const startWalk = T.walk;
         T.atStart = () => first?.walk && F.pos.distanceTo(F.start.pos) < 3;  // still where Explore opened
         // the keys (desktop): F walk or fly, J the places list, R back to the start

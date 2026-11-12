@@ -60,11 +60,13 @@ over the weather's. If the map cannot load, Virtually explore Logan carries on i
 Every frame the app passes the camera Explore is moving to `model.setCamera(...)`, and the time slider to
 `model.setMinutes(...)`.
 
-- **Fly** (how it opens, over the council's administration centre, behind the loading screen): the sticks fly, and the view itself can be
-  dragged (pinch or scroll to zoom, two fingers or right-drag to turn). You can pull back far enough to see the
-  whole city.
-- **Walk**: puts you down on the ground you were looking at, with your eyes 3 m up. The council precinct is the
-  place to do it; elsewhere the buildings are plain blocks.
+- **Walk** (how it opens, behind the loading screen): you stand on the path across the council's front lawn, eyes
+  3 m up, facing the wall with the building's name on it, with the palms, the flags and the covered entry in view.
+  The model picks that spot (the council place's `stand` in `spots()`); `onFoot` in `TOWNS` says to open there
+  rather than in the air above. Anywhere else, Walk puts you down on the ground you were looking at. The council
+  precinct is the place to walk; elsewhere the buildings are plain blocks.
+- **Fly**: the sticks fly, and the view itself can be dragged (pinch or scroll to zoom, two fingers or right-drag
+  to turn). You can pull back far enough to see the whole city.
 - **Jump to…** lists the whole city, the council's administration centre and the map's other places.
 - **Flood** lists the January 1974, March 2017 and February 2022 floods and estimated 1%, 2% and 5% AEP floods,
   each with a line on what it was and how much of Logan it put under water. Choosing one lays its water over the
