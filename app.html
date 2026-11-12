@@ -7705,7 +7705,7 @@ const handle = async (m, post) => {
   // Separate models from the weather's own scenes (Inverloch's clock, A'Beckett Street and Norman Road; Moorooka's
   // roundabout and shops). Inverloch: the whole town, about 8 km by 7, from OpenStreetMap streets and LiDAR terrain.
   // Moorooka: the suburb and its edges, 3.3 km square, every building from the Queensland survey. Logan: the whole city,
-  // 53 km by 45, with the 320 m around the council building in detail, the 1974, 2017 and 2022 floods and estimated 1%, 2% and 5% AEP floods. Each one's script
+  // 53 km by 45, with the 500 m around the council building in detail, the 1974, 2017 and 2022 floods and estimated 1%, 2% and 5% AEP floods. Each one's script
   // (in town3d/, built from the ai-forge repo, with its own three.js) draws on its own canvas (#bsTown) over the
   // weather's. Explore's controls fly it: every frame the camera Explore is flying is handed to the model, and the
   // time slider sets its sun.
@@ -7722,7 +7722,7 @@ const handle = async (m, post) => {
     inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=6", assets: TOWN3D, place: "inv", up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
     moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=1", assets: TOWN3D + "moorooka/", place: "moo", up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
       walkStart: { x: -269.8, z: -991.4, yaw: -1.623 } },  // Ash's pick for where Moorooka starts: the Beaudesert Road footpath, looking at the house he chose
-    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=6", assets: TOWN3D + "logan/", place: "logan", up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
+    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=7", assets: TOWN3D + "logan/", place: "logan", up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
       start: "council", onFoot: true, wait: 90000, ceil: 110000, fast: 600, far: 150000, out: 130000, stride: 0.02, pad: 80000, stand: [0.45, 400], floodLook: [-27.69, 153.17, 12000, 55, -35],
       note: "Prototype - not official council flood mapping" },  // shown small in the bottom right corner the whole time the model is open
   };
