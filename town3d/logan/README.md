@@ -17,6 +17,8 @@ Wembley Road is in detail:
 - **Checked against an aerial view:** the paths and car parks nearest the council (the long straight path, the
   path curving across the lawn to the entry, the path along the west wing, where the front and west car parks sit)
   were lined up with an aerial view and corrected, good to about 5 m. The surveyed streets agreed with it.
+- **The terrain, across the whole city:** close up, the ground picture's pixel edges are roughened and texture is
+  added (patches of lawn and dry grass, clumps, blades, grit), so it no longer looks pixelated. Generated, not surveyed.
 - **Houses across the whole city:** each keeps its surveyed size and heights; close up it also has overhanging
   eaves, a hipped or gabled roof in tiles or ribbed sheet metal, window frames, a front door, a garage door and,
   on about a quarter, solar panels. Those additions are generated, not surveyed.
