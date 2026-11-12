@@ -103,7 +103,7 @@ def carve(z, fill, to, acc, min_km2, look=60):
 
 def setup(prep, flow):
     z = prep["z"].astype(np.float64).copy()
-    bad = z <= -5.99  # a patch with no survey in the north-west corner: take the nearest surveyed height
+    bad = z < -4  # a patch with no survey in the north-west corner: take the nearest surveyed height
     if bad.any():
         idx = distance_transform_edt(bad, return_distances=False, return_indices=True)
         z = z[tuple(idx)]

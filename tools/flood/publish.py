@@ -7,6 +7,7 @@ the floods the model showed before (Brisbane City Council's mapping), as a check
 import json, os, sys
 import numpy as np
 from PIL import Image
+from scipy.ndimage import distance_transform_edt
 
 OFFSET, SCALE = 10.0, 400.0
 ORDER = ["1974", "2011", "2022", "aep1", "aep2", "aep5", "aep02"]
@@ -27,6 +28,19 @@ NAMES = {"1974": "January 1974", "2011": "January 2011", "2022": "February 2022"
          "aep2": "2% AEP flood", "aep5": "5% AEP flood", "aep02": "0.2% AEP flood"}
 
 
+def tidy(wet, depth, min_cells=8, keep_depth=0.3):
+    """Drop specks: patches of water under min_cells cells (8 x 25 m2 = 200 m2) that are nowhere 30 cm deep, mostly
+    puddles caught against buildings and in small hollows."""
+    from scipy.ndimage import label, sum as nsum, maximum as nmax
+    lab, n = label(wet, structure=np.ones((3, 3)))
+    if not n:
+        return wet
+    idx = np.arange(1, n + 1)
+    size = nsum(wet, lab, idx); deep = nmax(np.where(wet, depth, 0), lab, idx)
+    keep = np.zeros(n + 1, bool); keep[1:] = (size >= min_cells) | (deep >= keep_depth)
+    return keep[lab]
+
+
 def write(prep, runs, out):
     z = prep["z"]; dx = float(prep["dx"])
     events = []
@@ -34,11 +48,16 @@ def write(prep, runs, out):
         f = os.path.join(runs, f"{eid}.npz")
         if not os.path.exists(f):
             continue
-        d = np.load(f); wet = d["wet"]; lv = np.where(wet, d["level"], z)
+        d = np.load(f); wet = tidy(d["wet"], d["depth"]) & (z > -4)  # no water shown where there's no survey
+        # dry cells next to water carry the nearest water level (so the water's edge meets the ground smoothly), as the
+        # model's earlier flood files did; the rest are blank, which also keeps the files small
+        dist, idx = distance_transform_edt(~wet, return_indices=True)
+        lv = np.where(wet, d["level"], np.where(dist <= 3, d["level"][tuple(idx)], -OFFSET))
         v = np.clip(np.round((lv + OFFSET) * SCALE), 0, 65535).astype(np.uint16)
         rgb = np.stack([(v >> 8).astype(np.uint8), (v & 255).astype(np.uint8), np.where(wet, 255, 0).astype(np.uint8)], -1)
         Image.fromarray(rgb, "RGB").save(os.path.join(out, f"flood-{eid}.png"), optimize=True)
         dep = np.where(wet, d["level"] - z, 0)
+        # the deepest water in the simulation's own grid (creek beds graded through culverts are lower than surveyed)
         events.append({"id": eid, "kind": "design" if eid.startswith("aep") else "historic", "name": NAMES[eid], "note": NOTES[eid],
                        "areaKm2": round(float(wet.sum()) * dx * dx / 1e6, 2), "deepest": round(float(dep.max()), 1),
                        "levels": [round(float(d["level"][wet].min()), 1), round(float(d["level"][wet].max()), 1)]})
@@ -62,7 +81,7 @@ def compare(prep, runs, old):
         f = os.path.join(runs, f"{eid}.npz"); o = os.path.join(old, f"flood-{eid}.png")
         if not (os.path.exists(f) and os.path.exists(o)):
             continue
-        d = np.load(f); ours = d["wet"]; theirs, tl = old_wet(o)
+        d = np.load(f); ours = tidy(d["wet"], d["depth"]); theirs, tl = old_wet(o)
         both = (ours & theirs).sum(); rows.append({
             "id": eid, "ours_km2": round(ours.sum() * px, 2), "council_km2": round(theirs.sum() * px, 2),
             "council_area_we_also_flood_%": round(100 * both / max(1, theirs.sum())),
