@@ -89,7 +89,15 @@ def stamped(hd, bd, folder):
         json.dump({"build": build}, f)
     from datetime import datetime, timedelta, timezone
     built = datetime.now(timezone(timedelta(hours=10))).strftime("%-d %b %H:%M")  # Brisbane time, shown to Rod and Ash
-    return hd.replace("<head>\n", f'<head>\n<meta name="an-build" content="{build}">\n<meta name="an-built" content="{built}">\n', 1)
+    # the git commit it was built from (shown to Ash next to the title, the same short id as GitHub and the update notes)
+    commit = (os.environ.get("GITHUB_SHA") or "")[:7]
+    if not commit:
+        try:
+            import subprocess
+            commit = subprocess.run(["git", "rev-parse", "--short=7", "HEAD"], capture_output=True, text=True, cwd=os.path.dirname(os.path.abspath(__file__))).stdout.strip()
+        except Exception:
+            commit = ""
+    return hd.replace("<head>\n", f'<head>\n<meta name="an-build" content="{build}">\n<meta name="an-built" content="{built}">\n<meta name="an-commit" content="{commit}">\n', 1)
 
 
 os.makedirs(site, exist_ok=True)
@@ -159,6 +167,29 @@ if os.path.exists(os.path.join(here, "local", "brands.json")):
             json.dump({"name": nm, "short_name": b["short"], "description": b["tagline"], "start_url": "./", "scope": "./", "id": "./",
                        "display": "standalone", "background_color": "#f6f5fa", "theme_color": "#f6f5fa",
                        "icons": [{"src": "icon-192.png", "sizes": "192x192", "type": "image/png"}, {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"}]}, f)
+        # Its 3D model's own share page (/<dir>/explore/): a link preview with a picture of the model and "3D model of <suburb>",
+        # which opens Explore straight away. Link previews can't see "#explore" (and run the page's script), so the share button links here.
+        sub = {"inv": "Inverloch", "moo": "Moorooka", "logan": "Logan"}.get(slug)
+        if sub and os.path.exists(os.path.join(here, "local", slug, "explore-share.jpg")):
+            ex = os.path.join(out, "explore"); os.makedirs(ex, exist_ok=True)
+            for fn in ("explore-share.jpg", "explore-icon.png"):
+                shutil.copy(os.path.join(here, "local", slug, fn), ex)
+            t, dsc, eu = f"3D model of {sub}", f"Explore {sub} in 3D: fly over it and walk its streets, right in your browser. Built from open map data.", f"{url}explore/"
+            # The full app at this address (so a link preview, which runs the page, stays here), with the 3D model's own card and
+            # icon, and a flag that opens Explore straight away
+            ehead = lhead.replace('<base href="../">', '<base href="../../">', 1).replace(f"<title>{nm}</title>", f"<title>{t}</title>", 1)
+            for prop in ("og:title", "twitter:title"):
+                ehead = ehead.replace(f'"{prop}" content="{nm}"', f'"{prop}" content="{t}"')
+            ehead = (ehead.replace(b["tagline"], dsc)
+                          .replace(f'content="{url}"', f'content="{eu}"').replace(f'href="{url}"', f'href="{eu}"')
+                          .replace(f"{url}share.png?v=1", f"{eu}explore-share.jpg?v=1")
+                          .replace(f"{nm} app icon and name", f"{t}, seen from the air")
+                          .replace(f'href="{d}/icon-192.png?v=1"', f'href="{d}/explore/explore-icon.png?v=1"')
+                          .replace(f'href="{d}/icon-180.png?v=1"', f'href="{d}/explore/explore-icon.png?v=1"')
+                          .replace("<head>\n", f'<head>\n<meta name="an-explore" content="{slug}">\n', 1))
+            assert "explore-share.jpg" in ehead and "an-explore" in ehead and '<base href="../../">' in ehead, "explore page head"
+            with open(os.path.join(ex, "index.html"), "w", encoding="utf-8") as f:
+                f.write(stamped(ehead, lbody, ex) + lbody.strip() + "\n</body>\n</html>\n")
         print(f"Built {out}/index.html")
 open(os.path.join(site, ".nojekyll"), "w").close()
 print(f"Built {site}/index.html")

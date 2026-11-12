@@ -21,6 +21,9 @@ Two models, each separate from the weather's own scenes of the same place (which
 
 Nothing here is downloaded until someone opens a model. `build.py` copies this folder into the site.
 
+The Logan map, a whole city with its floods, is in `logan/` with a README of its own. It is opened and flown by the
+same code (the third entry in `TOWNS`).
+
 ## How the app uses them
 
 `app.html` (search for `townModelOpen`; the two models are listed in `TOWNS`) opens the weather's 3D view on the
@@ -35,13 +38,32 @@ Every frame the app passes the camera Explore is moving to `model.setCamera(...)
 - **Fly**: rises above where you were standing. The sticks fly, Up and Down sit between them, and the view itself
   can be dragged (pinch or scroll to zoom, two fingers or right-drag to turn). Inverloch's tide slider shows here;
   Moorooka has no tide, so it has none. Going back to Walk puts you down on the ground you were looking at.
-- **Jump to…** lists the model's own places (and, in Inverloch, the clock and Norman Rd). Walking, it stands you
-  there; flying, it shows the place from above. Moorooka's model gives each place a spot on the kerb of the nearest
-  street to stand on; Inverloch's stands you a few steps back from the place.
-- **The Rotary clock and number 11 Norman Road** are copied out of the weather's Inverloch when that model opens
-  (`townModelGuests`) and stood in the model where they really are. The weather's scenes are not changed. The clock's
-  hands and lit faces, the koala, the wombats and the windows' glow keep following the originals. Moorooka has no
-  guests of this kind.
+- **Jump to…** lists the model's own places (and, in Inverloch, the clock, the bakery, the war memorial and
+  Norman Rd). Walking, it stands you there; flying, it shows the place from above. Moorooka's model gives each place
+  a spot on the kerb of the nearest street to stand on; Inverloch's stands you a few steps back from the place.
+- **The town centre round the clock and number 11 Norman Road** are copied out of the weather's Inverloch when that
+  model opens (`townModelGuests`) and stood in the model where they really are. The weather's scenes are not changed.
+  The clock's hands and lit faces, the flags, the koala, the wombats and the windows' glow keep following the
+  originals. Moorooka has no guests of this kind.
+
+### Inverloch's town centre
+
+The block round the clock comes across whole (`townModelBlock`): the Hub and library, the war memorial, the shops
+along Reilly Street and on both sides of A'Beckett Street (the bakery among them), with their verandahs and signs,
+the streets, footpaths, parked cars, lamps, banners and trees. Its outline is `TOWN_BLOCK` in `app.html`, in the
+weather town's own metres. Inside it the model keeps only its ground, so nothing is shown twice.
+
+The model adds a few things of its own there (`townModelExtras`): the foot of the clock as in photos of it (brick
+paving, a planted bed, the poles' broad bases, the four mosaic blocks in a row), the war memorial likewise (a squat
+obelisk on a plinth, bollards with poppies, boulders, two flagpoles, a square of brick paving; the weather's own is
+left out of the block), tables and chairs outside the bakery
+and The Larder, a sandwich board for each named shop, and the signs at the zebra crossing. Round the clock and round number
+11 it is also asked for street-level detail (`detailLatLon`): cars with proper shapes, a letterbox and bins out
+the front of the houses, and power lines along the streets.
+
+The weather's town is flat and the model's ground slopes, so each shape is handed over with heights measured from
+the ground and the model lays it down along the terrain. Anything added to the weather's town centre later shows up
+in the model too, as long as it stands inside the block.
 
 ## Where they come from
 
