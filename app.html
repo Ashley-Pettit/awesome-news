@@ -1781,12 +1781,12 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <div class="bs-town-list bs-town-floods" id="bsTownFloods" role="menu" aria-label="Floods to show on the map" hidden></div>
     <div class="bs-slides" role="group" aria-label="Share, tide, time and flood"><button class="bs-fly-x bs-ic" type="button" id="bsShareBtn" aria-label="Share a link to this 3D model" title="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false" aria-label="Time of day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span id="bsTimeBtnT">Time</span></button><button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button></div>
     <p class="bs-town-note" id="bsTownNote" hidden></p>
-    <p class="bs-flood-banner" id="bsFloodBanner" role="alert" hidden>Experimental. Not official flood information. Do not rely on this model. Not endorsed by Brisbane City Council.</p>
+    <p class="bs-flood-banner" id="bsFloodBanner" role="alert" hidden>Experimental. Not official flood information. Do not rely on this model. Not endorsed by <span data-fw="council">Brisbane City Council</span>.</p>
     <div class="bs-flood-warn" id="bsFloodWarn" role="alertdialog" aria-modal="true" aria-labelledby="bsFloodWarnH" aria-describedby="bsFloodWarnD" hidden><div>
       <h2 id="bsFloodWarnH">This is not official flood information</h2>
       <div id="bsFloodWarnD"><p><b>Do not rely on this model.</b></p>
-      <ul><li>It is <b>experimental</b>: the council's flood maps laid over a terrain model, with the water levels worked out from the two. Many things are left out.</li><li>It is <b>not endorsed by Brisbane City Council (BCC)</b> or anyone else.</li><li>Do not use it to decide whether a property floods, or what to do in a flood.</li></ul>
-      <p>For real flood information use Brisbane City Council's Flood Awareness Map, and follow the Bureau of Meteorology's warnings in an emergency.</p></div>
+      <ul><li>It is <b>experimental</b>: <span data-fw="how">the council's flood maps laid over a terrain model, with the water levels worked out from the two</span>. Many things are left out.</li><li>It is <b>not endorsed by <span data-fw="council">Brisbane City Council</span> (<span data-fw="short">BCC</span>)</b> or anyone else.</li><li>Do not use it to decide whether a property floods, or what to do in a flood.</li></ul>
+      <p>For real flood information use <span data-fw="map">Brisbane City Council's Flood Awareness Map</span>, and follow the Bureau of Meteorology's warnings in an emergency.</p></div>
       <div class="bs-flood-warn-go"><button type="button" data-warn="no">Cancel</button><button type="button" data-warn="yes">I understand. Show the floods</button></div>
     </div></div>
     <div class="bs-town-ask" id="bsTownAsk" role="alertdialog" aria-labelledby="bsTownAskText" hidden><p id="bsTownAskText"></p><div><button type="button" data-ask="yes">Yes</button><button type="button" data-ask="no">No</button></div></div>
@@ -7748,11 +7748,14 @@ const handle = async (m, post) => {
       walkStart: { x: -269.8, z: -991.4, yaw: -1.623 },  // Ash's pick for where Moorooka starts: the Beaudesert Road footpath, looking at the house he chose
       // its floods: widest over the Oxley Creek flats along the model's western edge, seen from the east. floodWarn: the not-official notice has to be accepted
       // before the list opens, and a banner says the same while a flood is showing (Ash asked for both).
-      floodLook: [-27.5375, 153.0115, 1100, 40, 100], floodOf: "this map", floodWarn: true,
+      floodLook: [-27.5375, 153.0115, 1100, 40, 100], floodOf: "this map",
+      floodWarn: { council: "Brisbane City Council", short: "BCC", how: "the council's flood maps laid over a terrain model, with the water levels worked out from the two", map: "Brisbane City Council's Flood Awareness Map" },
       floodNote: "A guide only: where the water reached is Brisbane City Council's mapping; how high it stood is worked out from the terrain. Water running overland to the creeks is not shown. For property, insurance or planning decisions, use the council's Flood Awareness Map and FloodWise Property Report." },
     logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=16", assets: TOWN3D + "logan/", place: "logan", up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
       start: "council", onFoot: true, wait: 90000, ceil: 110000, fast: 600, far: 150000, out: 130000, stride: 0.02, pad: 80000, stand: [0.45, 400], floodLook: [-27.69, 153.17, 12000, 55, -35],
-      note: "Prototype - not official council flood mapping" },  // shown small in the bottom right corner the whole time the model is open
+      note: "Prototype - not official council flood mapping",
+      // the same not-official notice and banner as Moorooka's (Ash, 12 November 2026)
+      floodWarn: { council: "Logan City Council", short: "LCC", how: "the 2017 flood as mapped, and the others worked out from river gauge heights and rainfall over a terrain model", map: "Logan City Council's flood maps" } },  // shown small in the bottom right corner the whole time the model is open
   };
   function townModelLoad(cfg) {
     if (window[cfg.lib]) return Promise.resolve(window[cfg.lib]);
@@ -7917,6 +7920,7 @@ const handle = async (m, post) => {
         if (m.floods) {
           let events = null, now = "", agreed = !cfg.floodWarn;
           const warn = $("bsFloodWarn"), banner = $("bsFloodBanner");
+          if (cfg.floodWarn) for (const el of document.querySelectorAll("[data-fw]")) el.textContent = cfg.floodWarn[el.dataset.fw] || el.textContent;  // this town's council
           const km2 = a => a < 10 ? a.toFixed(1) : String(Math.round(a));
           const riseName = v => v > 0.995 ? "At the peak" : `${((1 - v) * m.floodDrop).toFixed(1)} m lower`;
           const setRise = v => { riseIn.value = v; riseOut.textContent = riseName(+v); };
