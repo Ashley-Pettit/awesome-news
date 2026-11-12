@@ -7739,7 +7739,11 @@ const handle = async (m, post) => {
   function townModelOpen(viaExplore, which) {
     if (BS.town) return;
     const cfg = TOWNS[which] || TOWNS.inv;
-    if (!state.wx) { toast("The 3D town needs the weather, which is still loading. Try again in a moment."); return; }
+    // The weather's still on its way: show the loader straight away and carry on once it's here (no "try again" message)
+    if (!state.wx) { exLoadShow(exploreName(cfg.place)); if (BS.wxWait) return; const t0 = Date.now();
+      BS.wxWait = () => { if (state.wx) { BS.wxWait = null; townModelOpen(viaExplore, which); } else if (Date.now() - t0 < 30000) setTimeout(BS.wxWait, 300);
+        else { BS.wxWait = null; exLoadDone(); toast("The 3D model couldn't load. Check your connection and try again."); } };
+      BS.wxWait(); return; }
     openWeather(); if ($("weather").hidden) return;
     BS.invBeach = false; BS.mooAlt = false; BS.exploreOnly = cfg.place; if (BS.B) bsPlace();  // Inverloch's town, not its beach; Moorooka's streets, not its bowls club
     const T = BS.town = { on: false, model: null, dead: false, keep: !!viaExplore, cfg };
@@ -8988,8 +8992,7 @@ const handle = async (m, post) => {
       if (pendingStory) { const id = pendingStory; pendingStory = ""; history.replaceState(null, "", location.pathname); if (findItem(id)) openReader(id); else loadArchive()?.then?.(() => findItem(id) ? openReader(id) : toast("That story isn't in the news here any more")).catch(() => toast("That story isn't in the news here any more")); }
       if (pendingTV) { pendingTV = false; try { history.replaceState(null, "", location.pathname); } catch {} openTV(); }
       if (pendingExplore) { const which = pendingExplore; pendingExplore = ""; try { history.replaceState(null, "", location.pathname); } catch {}
-        const t0 = Date.now(), go = () => { if (state.wx) townModelOpen(true, which); else if (Date.now() - t0 < 20000) setTimeout(go, 300); else { exLoadDone(); toast("Explore needs the weather, which didn't load. Try again in a moment."); } };
-        go(); }
+        townModelOpen(true, which); }  // it waits for the weather itself, with the loader up
       afterPics("offline", saveOffline);
       if (!state.wx) loadWeather();
     } catch {
