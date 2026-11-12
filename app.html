@@ -7744,11 +7744,11 @@ const handle = async (m, post) => {
   // of: "Logan"), floodNote (the line under the list) and floodWarn (show the not-official notice first, and a banner while a flood is on).
   const TOWNS = {
     inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=11", assets: TOWN3D, place: "inv", up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
-    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=11", assets: TOWN3D + "moorooka/", place: "moo", up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
+    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=12", assets: TOWN3D + "moorooka/", place: "moo", up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
       walkStart: { x: -269.8, z: -991.4, yaw: -1.623 },  // Ash's pick for where Moorooka starts: the Beaudesert Road footpath, looking at the house he chose
       // its floods: widest over the Oxley Creek flats along the model's western edge, seen from the east. floodWarn: the not-official notice has to be accepted
       // before the list opens, and a banner says the same while a flood is showing (Ash asked for both).
-      floodLook: [-27.5375, 153.0115, 1100, 40, 100], floodOf: "this map",
+      floodLook: [-27.5375, 153.0115, 1100, 40, 100], floodOf: "this map", noFloodSlider: true,  // Ash: no water level slider ("At the peak") in Moorooka: a flood just rises to its peak
       floodWarn: { council: "Brisbane City Council", short: "BCC", how: "our own computer simulation of rain running over the ground and the creeks rising (and, in big river floods, Oxley Creek backing up), on a 5 m model of the terrain", map: "Brisbane City Council's Flood Awareness Map and FloodWise Property Report" },
       floodNote: "A guide only: our own simulation, from the terrain, the buildings and the Bureau's design rainfall for Moorooka. It includes water running over the ground to the creeks. No council flood mapping is used. For property, insurance or planning decisions, use Brisbane City Council's Flood Awareness Map and FloodWise Property Report." },
     logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=21", assets: TOWN3D + "logan/", place: "logan", up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
@@ -7930,7 +7930,7 @@ const handle = async (m, post) => {
           const draw = () => { fl.innerHTML = `<button type="button" role="menuitemradio" aria-checked="${!now}" data-town-flood="">No flood</button>`
             + events.map(e => `<button type="button" role="menuitemradio" aria-checked="${e.id === now}" data-town-flood="${esc(e.id)}">${esc(e.name)}<small>${esc(e.note)} About ${km2(e.areaKm2)} km² of ${esc(cfg.floodOf || "Logan")} under water.</small></button>`).join("")
             + `<p>${esc(cfg.floodNote || "A guide only: the 2017 flood as mapped, the others worked out from river gauge heights and rainfall. For property, insurance or planning decisions, use Logan City Council's flood maps.")}</p>`; };
-          const shown = id => { now = id; draw(); fb.setAttribute("aria-pressed", String(!!id)); riseBox.hidden = !id; banner.hidden = !(cfg.floodWarn && id); const e = events.find(x => x.id === id);
+          const shown = id => { now = id; draw(); fb.setAttribute("aria-pressed", String(!!id)); riseBox.hidden = !id || !!cfg.noFloodSlider; banner.hidden = !(cfg.floodWarn && id); const e = events.find(x => x.id === id);
             fb.textContent = e ? `Flood: ${e.kind === "design" ? e.name.replace(/ AEP.*/, "") : e.id}` : "Flood"; };
           // somewhere to see a flood from: back and up from a place, looking down at it (metres back, tilt from straight down, bearing: 0 is from the south)
           const lookFrom = (lat, lon, back, tilt, bearing) => { const [tx, tz] = m.fromLatLon(lat, lon), p = tilt * Math.PI / 180, a = bearing * Math.PI / 180, g = m.groundAt(tx, tz);
