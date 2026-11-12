@@ -17,6 +17,10 @@ Wembley Road is in detail:
 - **Checked against an aerial view:** the paths and car parks nearest the council (the long straight path, the
   path curving across the lawn to the entry, the path along the west wing, where the front and west car parks sit)
   were lined up with an aerial view and corrected, good to about 5 m. The surveyed streets agreed with it.
+- **Houses across the whole city:** each keeps its surveyed size and heights; close up it also has overhanging
+  eaves, a hipped or gabled roof in tiles or ribbed sheet metal, window frames, a front door, a garage door and,
+  on about a quarter, solar panels. Those additions are generated, not surveyed.
+- **Cars:** round wheels under wheel arches, bumpers, number plates, door seams and handles, wing mirrors.
 - **Roads:** real street surfaces with sharp-edged lane lines, stop lines, arrows and crossings, footpaths and
   grassed verges, street lights, power poles and wires along the local streets, give-way, street name and bus
   stop signs, bus shelters with a bus at one, cars, utes and vans parked and on the road (those being driven
