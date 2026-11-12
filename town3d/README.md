@@ -81,6 +81,11 @@ ground texture and the cars):
 - **Cars:** sedans with a sloping bonnet and boot, a glazed cabin, round wheels, bumpers, plates, door seams and
   lights, in place of the earlier blocks. Generated.
 
+- **Ground tiles load a strip at a time:** the sharper ground tiles near the camera used to arrive whole, which
+  held up a frame each time (a tile is 16 MB once unpacked). Each tile is now fetched and unpacked on a worker and
+  sent to the graphics card a few strips per frame, with a small "Loading sharper ground" note under the top
+  buttons while tiles are on their way (it stands still for people who ask for reduced motion).
+
 ## Moorooka's floods
 
 **Flood** in Explore Moorooka works the way it does in the Logan model (see `logan/README.md`), through the same
