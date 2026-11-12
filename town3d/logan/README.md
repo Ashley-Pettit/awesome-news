@@ -55,8 +55,7 @@ Wembley Road is in detail:
 - The railway and its wiring, and the named schools, parks and streets.
 
 A block of **Browns Plains** is in the same detail: about 100 m from Ammons Street down Sutton and Coyle courts to
-the playground in Forestglen Park. **Fly to Browns Plains**, under Flood, flies you there (it is also in Jump to,
-as "Browns Plains in detail").
+the playground in Forestglen Park. **Fly to Browns Plains**, first in Jump to, flies you there.
 
 - **From the survey and the aerial imagery:** every house and shed (size and heights), the property boundaries,
   each roof's colour and whether it has solar panels, where the 133 trees and 68 garden shrubs stand and how big
@@ -113,8 +112,8 @@ Every frame the app passes the camera Explore is moving to `model.setCamera(...)
 - **Fly**: the sticks fly, and the view itself can be dragged (pinch or scroll to zoom, two fingers or right-drag
   to turn). You can pull back far enough to see the whole city.
 - **Jump to…** lists the whole city, the council's administration centre and the map's other places.
-- **Fly to Browns Plains** (under Flood) flies you up and over to the Browns Plains block (`flyTo` in `TOWNS`): in
-  Fly, to the view from above it, the higher and the longer the further it is.
+- **Fly to Browns Plains** (first in Jump to) flies you up and over to the Browns Plains block (`flyTo` in `TOWNS`):
+  in Fly, to the view from above it, the higher and the longer the further it is.
 - **Flood** lists the January 1974, March 2017 and February 2022 floods and estimated 1%, 2% and 5% AEP floods,
   each with a line on what it was and how much of Logan it put under water. Choosing one lays its water over the
   map (`model.setFlood(id)`), rising to its peak, and the button then names it ("Flood: 1974"). Nothing pops up
