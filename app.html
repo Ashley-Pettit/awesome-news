@@ -8211,17 +8211,18 @@ const handle = async (m, post) => {
     }
 
     // ---- the war memorial, as in photos of it: a squat concrete obelisk on a plinth and step, its plaques (the weather's own
-    // pictures), granite bollards with a poppy on each, a dark boulder with a plaque at each front corner, a white flagpole
-    // either side with the flag flying, and brick paving in a square inside a band of pale concrete; shrubs, grasses and a
-    // bench behind. In its own frame: a across (to the right, seen from the front), b out towards the front (the clock's side).
+    // pictures), granite bollards with a poppy on each, two dark boulders with plaques out the front, a white flagpole either
+    // side behind with the flag flying, and brick paving. It all stands between the park's path (on its left) and Reilly
+    // Street's footpath (on its right), about five metres apart: the paving runs from one to the other and nothing stands on
+    // either. In its own frame: a across (to the right, seen from the front), b out towards the front (the clock's side).
     { const [MX, MZ, MR] = TOWN_MEMORIAL, PL = 0.14, at = (a, b) => [MX + Math.cos(MR) * a + Math.sin(MR) * b, MZ - Math.sin(MR) * a + Math.cos(MR) * b];
       const put = (bk, geo, colour, a, y, b, ry = 0, rx = 0, rz = 0, sx = 1, sy = 1, sz = 1) => { const [x, z] = at(a, b); add(bk, geo, colour, x, y, z, MR + ry, rx, rz, sx, sy, sz); };
       const CONC = 0xdedad2, GRANITE = 0xd8d5cf, Q = Math.PI / 4;
-      put(mesh({ map: bc, mapRepeat: [6.9, 6.9], roughness: 0.95 }), box(11, PL, 11), 0, 0, PL / 2, 0.6);
-      [[0, 6.27, 11.7, 0.35], [0, -5.07, 11.7, 0.35], [-5.67, 0.6, 0.35, 11], [5.67, 0.6, 0.35, 11]].forEach(([a, b, w, d]) => put(bits, box(w, PL + 0.015, d), 0xd6c8a8, a, (PL + 0.015) / 2, b));
-      put(bits, box(4.6, 0.03, 4.6), 0xc9c4b8, 0, PL + 0.015, 0.3);                       // the concrete it stands on
-      put(bits, box(3.0, 0.18, 3.0), 0xcfcbc2, 0, PL + 0.12, 0); put(bits, box(2.5, 1.15, 2.5), CONC, 0, PL + 0.785, 0); put(bits, box(2.64, 0.1, 2.64), 0xcfcbc2, 0, PL + 1.41, 0);
-      put(bits, new THREE.CylinderGeometry(0.72, 1.34, 2.6, 4), CONC, 0, PL + 2.76, 0, Q); put(bits, new THREE.ConeGeometry(0.72, 0.34, 4), 0xd3cfc6, 0, PL + 4.23, 0, Q);
+      put(mesh({ map: bc, mapRepeat: [3.1, 6], roughness: 0.95 }), box(4.95, PL, 9.6), 0, -0.02, PL / 2, 0.5);
+      [[-0.02, 5.47, 4.95, 0.35], [-0.02, -4.47, 4.95, 0.35]].forEach(([a, b, w, d]) => put(bits, box(w, PL + 0.015, d), 0xd6c8a8, a, (PL + 0.015) / 2, b));
+      put(bits, box(3.1, 0.03, 3.1), 0xc9c4b8, 0, PL + 0.015, 0.2, Q);                    // the concrete it stands on, set cornerwise
+      put(bits, box(2.6, 0.18, 2.6), 0xcfcbc2, 0, PL + 0.12, 0); put(bits, box(2.2, 1.15, 2.2), CONC, 0, PL + 0.785, 0); put(bits, box(2.32, 0.1, 2.32), 0xcfcbc2, 0, PL + 1.41, 0);
+      put(bits, new THREE.CylinderGeometry(0.66, 1.2, 2.6, 4), CONC, 0, PL + 2.76, 0, Q); put(bits, new THREE.ConeGeometry(0.66, 0.34, 4), 0xd3cfc6, 0, PL + 4.23, 0, Q);
       // its plaques: the weather's own, widest on the front of the plinth, the next on the back, the small one on the shaft
       const pics = []; W.invTG?.traverse(o => { const mp = o.isMesh && o.geometry?.type === "PlaneGeometry" && o.material?.map, q = o.geometry?.parameters; if (!mp?.image || !q || q.width > 1.6) return;
         const pw = new THREE.Vector3().setFromMatrixPosition(o.matrixWorld).applyMatrix4(new THREE.Matrix4().copy(W.invTG.matrixWorld).invert());
@@ -8229,24 +8230,23 @@ const handle = async (m, post) => {
       pics.sort((p, q) => q.w - p.w);
       const plaque = (k, a, y, b, ry, rx, sc = 1) => { const pic = pics[k], w = (pic ? pic.w : 0.9) * sc, h = (pic ? pic.h : 0.5) * sc, [ox, oz] = [Math.sin(ry) * 0.012, Math.cos(ry) * 0.012];
         put(bits, box(w + 0.08, h + 0.08, 0.02), 0x1b1c1e, a, y, b, ry, rx); if (pic) put(mesh({ map: pic.img, roughness: 0.5, metalness: 0.3 }), new THREE.PlaneGeometry(w, h), 0, a + ox, y, b + oz, ry, rx); };
-      plaque(0, 0, PL + 0.82, 1.262, 0, 0, 0.8); plaque(1, 0, PL + 0.82, -1.262, Math.PI, 0, 0.8); plaque(3, 0, PL + 2.25, 0.86, 0, -0.17, 0.9);
-      // bollards with poppies, boulders with their plaques
-      [[-2.1, 1.5], [-0.85, 2.2], [0.85, 2.2], [2.1, 1.5], [-2.25, -0.2], [2.25, -0.2]].forEach(([a, b]) => { put(bits, box(0.22, 0.9, 0.22), GRANITE, a, PL + 0.45, b);
+      plaque(0, 0, PL + 0.82, 1.112, 0, 0, 0.8); plaque(1, 0, PL + 0.82, -1.112, Math.PI, 0, 0.8); plaque(3, 0, PL + 2.25, 0.78, 0, -0.2, 0.9);
+      // bollards with poppies round it, two boulders with their plaques out the front
+      [[-1.75, 1.2], [-0.8, 1.95], [0.8, 1.95], [1.75, 1.2], [-1.8, -0.4], [1.8, -0.4]].forEach(([a, b]) => { put(bits, box(0.22, 0.9, 0.22), GRANITE, a, PL + 0.45, b);
         put(bits, new THREE.ConeGeometry(0.156, 0.24, 4), GRANITE, a, PL + 1.02, b, Q); put(bits, new THREE.SphereGeometry(0.05, 8, 6), 0xc21b2a, a, PL + 0.72, b + 0.12); });
-      const rock = new THREE.DodecahedronGeometry(0.8, 1);
-      [[-3.9, 3.2, 0.4], [3.9, 3.0, -0.4]].forEach(([a, b, r], i) => { put(bits, rock, 0x4a4742, a, PL + 0.5, b, r + i, 0, 0, 1.1, 0.8, 0.8);
-        put(bits, box(0.7, 0.45, 0.03), 0x1b1c1e, a, PL + 0.4, b + 0.78, r * 0.3, -0.25); put(bits, box(0.62, 0.37, 0.035), 0x6b5a34, a, PL + 0.4, b + 0.782, r * 0.3, -0.25); });
-      // the flagpoles, and the flags out on the breeze
+      const rock = new THREE.DodecahedronGeometry(0.62, 1);
+      [[-1.55, 3.7, 0.4], [1.5, 3.9, -0.4]].forEach(([a, b, r], i) => { put(bits, rock, 0x4a4742, a, PL + 0.4, b, r + i, 0, 0, 1.1, 0.8, 0.8);
+        put(bits, box(0.6, 0.4, 0.03), 0x1b1c1e, a, PL + 0.36, b + 0.6, r * 0.3, -0.25); put(bits, box(0.52, 0.32, 0.035), 0x6b5a34, a, PL + 0.36, b + 0.602, r * 0.3, -0.25); });
+      // the flagpoles behind it, and the flags out on the breeze
       const flag = W.invAustr?.image ? mesh({ map: W.invAustr.image, roughness: 0.8, doubleSide: true }) : null;
-      [[-3.3, 4.2, 0.5], [3.6, 3.9, -0.3]].forEach(([a, b, r]) => { put(bits, rod(0.06, 9, 10, 0.045), 0xf4f3ef, a, PL + 4.5, b); put(bits, new THREE.SphereGeometry(0.09, 10, 8), 0xf4f3ef, a, PL + 9.05, b); put(bits, rod(0.14, 0.12, 10), 0xdedad2, a, PL + 0.06, b);
+      [[-1.95, -2.5, 0.5], [1.95, -2.6, 0.2]].forEach(([a, b, r]) => { put(bits, rod(0.06, 9, 10, 0.045), 0xf4f3ef, a, PL + 4.5, b); put(bits, new THREE.SphereGeometry(0.09, 10, 8), 0xf4f3ef, a, PL + 9.05, b); put(bits, rod(0.14, 0.12, 10), 0xdedad2, a, PL + 0.06, b);
         if (flag) put(flag, new THREE.PlaneGeometry(1.8, 0.9), 0, a + Math.cos(r) * 0.95, PL + 8.4, b - Math.sin(r) * 0.95, r); });
-      // behind it: a clipped hedge, shrubs and tussocks, and a bench
-      put(bits, box(6.4, 1.0, 1.0), 0x3f6236, 0.2, PL + 0.5, -4.4);
+      // at the back: a bench between two shrubs, tussocks by the poles
       const bush = new THREE.IcosahedronGeometry(0.5, 1), blade = new THREE.ConeGeometry(0.07, 1, 3);
-      [[-4.3, -3.4, 1.2], [4.4, -3.2, 1.1], [-4.6, -0.6, 0.9], [4.7, -0.4, 1.0]].forEach(([a, b, k], i) => put(bits, bush, [0x355a2b, 0x40662f][i % 2], a, PL + 0.28 * k, b, i, 0, 0, 1.25 * k, 0.72 * k, 1.05 * k));
-      [[-3.4, -2.3], [3.5, -2.2], [-4.5, 1.3], [4.6, 1.2], [-2.2, -3.4], [2.6, -3.5]].forEach(([a, b], k) => { const h = 0.8 + rnd(k + 300) * 0.5, colour = [0x6f8f3c, 0xb7a258, 0x587a34][k % 3];
-        for (let j = 0; j < 11; j++) { const t = j / 11 * Math.PI * 2, lean = 0.28 + rnd(k * 13 + j + 5) * 0.3; put(bits, blade, colour, a + Math.cos(t) * 0.14, PL + h * 0.46, b + Math.sin(t) * 0.14, 0, Math.sin(t) * lean, -Math.cos(t) * lean, 1, h, 1); } });
-      put(bits, box(1.8, 0.07, 0.5), 0x7a5a3c, -3.3, PL + 0.46, -3.3, 0.5); put(bits, box(1.8, 0.45, 0.06), 0x7a5a3c, -3.42, PL + 0.74, -3.5, 0.5); [-0.75, 0.75].forEach(o => put(bits, box(0.07, 0.44, 0.5), 0x2d3033, -3.3 + Math.cos(0.5) * o, PL + 0.22, -3.3 - Math.sin(0.5) * o, 0.5));
+      [[-1.9, -3.75, 0.95], [1.9, -3.75, 0.9]].forEach(([a, b, k], i) => put(bits, bush, [0x355a2b, 0x40662f][i % 2], a, PL + 0.28 * k, b, i, 0, 0, 1.2 * k, 0.72 * k, 1.05 * k));
+      [[-2.05, -1.7], [2.05, -1.8], [-1.1, -4.0], [1.1, -4.0]].forEach(([a, b], k) => { const h = 0.7 + rnd(k + 300) * 0.4, colour = [0x6f8f3c, 0xb7a258, 0x587a34][k % 3];
+        for (let j = 0; j < 11; j++) { const t = j / 11 * Math.PI * 2, lean = 0.28 + rnd(k * 13 + j + 5) * 0.3; put(bits, blade, colour, a + Math.cos(t) * 0.12, PL + h * 0.46, b + Math.sin(t) * 0.12, 0, Math.sin(t) * lean, -Math.cos(t) * lean, 1, h, 1); } });
+      put(bits, box(1.6, 0.07, 0.5), 0x7a5a3c, 0, PL + 0.46, -3.5); put(bits, box(1.6, 0.45, 0.06), 0x7a5a3c, 0, PL + 0.74, -3.74); [-0.68, 0.68].forEach(o => put(bits, box(0.07, 0.44, 0.5), 0x2d3033, o, PL + 0.22, -3.5));
     }
 
     // ---- outside the shops
