@@ -18,6 +18,7 @@ Two models, each separate from the weather's own scenes of the same place (which
 | `moorooka/ground.webp` | Ground colour: lawns, tree cover, sealed ground, streets, rail beds |
 | `moorooka/town.json` | Streets, railway, every surveyed building with its roof height and colour, trees, cars, back fences |
 | `moorooka/detail/` | The ground at twice the sharpness, in 16 tiles. The model fetches the ones nearest the camera (not on the slowest devices) |
+| `moorooka/floods.json`, `moorooka/flood-1974.png`, `flood-2011.png`, `flood-2022.png`, `flood-aep1.png`, `flood-aep2.png`, `flood-aep5.png`, `flood-aep02.png` | Moorooka's floods: what they were, and each one's water levels. Fetched only when Flood is used |
 
 Nothing here is downloaded until someone opens a model. `build.py` copies this folder into the site.
 
@@ -65,6 +66,24 @@ out the front of the houses, and power lines along the streets.
 The weather's town is flat and the model's ground slopes, so each shape is handed over with heights measured from
 the ground and the model lays it down along the terrain. Anything added to the weather's town centre later shows up
 in the model too, as long as it stands inside the block.
+
+## Moorooka's floods
+
+**Flood** in Explore Moorooka works the way it does in the Logan model (see `logan/README.md`), through the same
+code in `app.html`: a list of floods, the water rising to its peak, a **Water** slider that lowers it by up to 8 m,
+and a card offering to fly to where it flooded if it did not flood where you are. The list has January 1974,
+January 2011 and February 2022, and 1%, 2%, 5% and 0.2% AEP floods.
+
+Two things are different, and Ash asked for both:
+
+- The first press shows a notice that has to be accepted before the list opens: this is not official flood
+  information, do not rely on this model, it is experimental, and it is not endorsed by Brisbane City Council.
+- A banner says the same for as long as a flood is showing.
+
+Where the water reached is Brisbane City Council's mapping (the mapped 1974, 2011 and 2022 floods, and its high,
+medium and low likelihood areas for 5%, 1% and 0.2%). How high it stood is worked out from the terrain, and the 2%
+flood is placed between the 5% and 1% ones: the council maps neither. Water running overland to the creeks is not
+shown. The method is written up in `scripts/moorooka/README.md` in the `ai-forge` repository.
 
 ## Where they come from
 
