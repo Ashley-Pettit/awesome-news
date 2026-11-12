@@ -208,6 +208,18 @@ lines, found on the photograph.
     sits 2.3 m from the kerb, or in the middle of a narrower verge;
   - roads were already joined up and are unchanged.
 
+## Inverloch tidied by inference
+
+Ash, 13 November 2026: "Do the same for Inverloch, find things that look out of place and infer correctness". With
+no imagery, only the street data, buildings and houses in `town.json` (`tools/ground/inverloch/fix_inv.py`):
+
+- 57 street and path ends that stopped 0.3 to 6 m short of another street or path now meet it (a path runs to the
+  kerb, a street to the other street's centre line). Roundabouts and closed loops are left alone;
+- 46 trees whose trunks stood inside a house or on a path, lane or driveway are gone;
+- 2 caravan-park cabins standing on a road are gone;
+- checked and fine as they were: no grass islands inside car parks or paving in the close-up ground, every painted
+  road matches a street, no houses on streets or overlapping, no parked cars off sealed ground.
+
 ## Moorooka's floods
 
 **Flood** in Explore Moorooka works the way it does in the Logan model (see `logan/README.md`), through the same
