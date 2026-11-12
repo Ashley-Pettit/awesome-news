@@ -6,13 +6,25 @@ the motorway bridge), which is built inside `app.html`.
 
 It covers the City of Logan and its surrounds, 53 km by 45: LiDAR terrain at true scale, every street, about
 174,000 surveyed buildings, bushland, the railway and suburb boundaries. Close up, anywhere in the city, the
-streets turn from a map's coloured lines into asphalt with kerbs and lane lines, and the buildings show windows
-(some lit at night). The 320 m around the council's administration centre on Wembley Road is in detail: every
-house with its roof, windows and fences, real street surfaces with lane lines, stop lines, arrows and footpaths,
-the railway and its wiring, car parks with their bays, street lights, bus shelters with a bus at one, cars, utes
-and vans parked and on the road (those being driven have their lights on at night), trees where the vegetation
-survey records them, and the named schools, parks and streets. The vehicles, road markings and windows are
-generated to look right, not surveyed.
+streets turn from a map's coloured lines into asphalt with kerbs and lane lines, the buildings show windows
+(some lit at night), and the bush trees stand on trunks. The 320 m around the council's administration centre on
+Wembley Road is in detail:
+
+- **Roads:** real street surfaces with sharp-edged lane lines, stop lines, arrows and crossings, footpaths and
+  grassed verges, street lights, power poles and wires along the local streets, give-way, street name and bus
+  stop signs, bus shelters with a bus at one, cars, utes and vans parked and on the road (those being driven
+  have their lights on at night).
+- **Car parks:** every bay, wheel stops, arrows in the aisles, accessible bays, planted islands with a tree at
+  the ends of the rows, light poles.
+- **Trees:** where the vegetation survey and the imagery put them, as gums, broadleaf trees, palms, jacarandas
+  in flower and conifers.
+- **Houses:** each surveyed house with its roof, windows, doors and fences, on a lawn, with a porch, front path,
+  letterbox and wheelie bins, and here and there solar panels, an aerial, a rainwater tank or a clothes line.
+- The railway and its wiring, and the named schools, parks and streets.
+
+Where the buildings, streets and trees are is surveyed. The vehicles, road markings, signs, what kind each tree
+is, and everything on and around the houses beyond their outline and height are generated to look right, not
+surveyed: nothing here says a particular house has solar panels.
 
 | File | What it is |
 | --- | --- |
