@@ -19,6 +19,9 @@ Wembley Road is in detail:
   were lined up with an aerial view and corrected, good to about 5 m. The surveyed streets agreed with it.
 - **The terrain, across the whole city:** close up, the ground picture's pixel edges are roughened and texture is
   added (patches of lawn and dry grass, clumps, blades, grit), so it no longer looks pixelated. Generated, not surveyed.
+- **Trees across the whole city:** each crown is three lumpy masses on a trunk, different on every tree, and about
+  one in thirty is in flower. **Windows** have frames, glazing bars, sills, some sky in the glass and, on some, a
+  blind. Generated, not surveyed.
 - **Houses across the whole city:** each keeps its surveyed size and heights; close up it also has overhanging
   eaves, a hipped or gabled roof in tiles or ribbed sheet metal, window frames, a front door, a garage door and,
   on about a quarter, solar panels. Those additions are generated, not surveyed.
