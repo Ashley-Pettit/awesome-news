@@ -8084,7 +8084,7 @@ const handle = async (m, post) => {
     if (W.invClock && tower) { const still = new Set(); [W.invClock, ...flags, ...drive, ...moving, ...cars].filter(Boolean).forEach(r => r.traverse(o => still.add(o)));  // (the clock's plaza is built afresh for the model, below)
       const t0 = performance.now();
       try { block = townModelBlock(T, m, { THREE, TG, toTG, look, glows, plain, skip: still, drop: (x, z, flat, top) => { const d = Math.hypot(x - TOWN_OLD_MEMORIAL[0], z - TOWN_OLD_MEMORIAL[1]);  // the weather's memorial and its paving (not the park's paths beside it), whatever lies under the plaza, and the benches and bins round the weather's clock
-        return (flat ? top > 0.102 && (d < 2.6 || (d < 14 && top < 0.1285)) : d < 7) || (flat && townOnPlaza(x, z)) || (!flat && Math.hypot(x - D.c[0], z - D.c[1]) < 9.5); } }); } catch (e) { console.warn("Town model: the town centre couldn't be added", e); }
+        return (flat ? top > 0.102 && (d < 2.6 || (d < 14 && top < 0.1285)) : d < 7) || (flat && (townOnPlaza(x, z) || (top > 0.132 && Math.hypot(x - 15, z - 35.5) < 5.5))) || (!flat && Math.hypot(x - D.c[0], z - D.c[1]) < 9.5); } }); } catch (e) { console.warn("Town model: the town centre couldn't be added", e); }
       if (block) T.block = { parts: block.parts, corners: block.corners, ms: Math.round(performance.now() - t0) }; }
     if (block) { const [cx, cz] = block.at(D.c[0], D.c[1]);
       const [kx, kz] = block.at(TOWN_CLOCK[0], TOWN_CLOCK[1]), clockPlace = new THREE.Matrix4().makeTranslation(kx, block.place(TOWN_CLOCK[0], TOWN_CLOCK[1]).elements[13], kz)
@@ -8250,7 +8250,7 @@ const handle = async (m, post) => {
       // (an L: the broad piece by the lawn, a leg down the west side to the street, and a strip along the kerb; the corner
       // between them is the bed under the big tree)
       const brick = (a, b, w, d) => slab(a, b, w, d, mesh({ map: bc, mapRepeat: [w / 1.6, d / 1.6], roughness: 0.95 }), 0);
-      brick(-0.35, -0.25, 10.3, 7.3); brick(-2.0, 8.7, 7.0, 10.6); brick(3.35, 12.05, 3.7, 3.9);
+      brick(-0.35, -0.25, 10.3, 7.3); brick(-2.0, 8.7, 7.0, 10.6);
       [[-0.35, -4.05, 10.9, 0.3], [-5.65, 5, 0.3, 18.4], [4.95, -0.25, 0.3, 7.3], [3.2, 3.55, 3.8, 0.3], [1.65, 6.8, 0.3, 6.8], [3.5, 10.05, 4.0, 0.3], [5.35, 12.05, 0.3, 4.3], [-0.15, 14.15, 11.3, 0.3],
         [-2.0, 3.55, 7.0, 0.24], [-0.6, 1.3, 1.5, 4.4]].forEach(([a, b, w, d]) => slab(a, b, w, d, bits, 0xd6c8a8, PL + 0.015));
       const thing = (geo, colour, a, y, b, ry = 0, rx = 0, rz = 0, sx = 1, sy = 1, sz = 1) => { const [x, z] = pl(a, b); add(bits, geo, colour, x, y, z, -t + ry, rx, rz, sx, sy, sz); };
@@ -8260,15 +8260,19 @@ const handle = async (m, post) => {
         for (let k = 0; k < 3; k++) thing(box(1.8, 0.1, 0.035), 0x8a6a45, a - sn * 0.3, PL + 0.6 + k * 0.14, b - c * 0.3, r, -0.12);
         [-0.8, 0.8].forEach(o => { thing(box(0.06, 0.46, 0.5), 0x2d3033, a + c * o, PL + 0.23, b - sn * o, r); thing(box(0.06, 0.5, 0.05), 0x2d3033, a + c * o - sn * 0.3, PL + 0.7, b - sn * o - c * 0.3, r, -0.12); }); });
       thing(rod(0.27, 0.9, 12, 0.3), 0x2f5a3a, 0.9, PL + 0.45, 5.2); thing(rod(0.31, 0.06, 12), 0x24452d, 0.9, PL + 0.93, 5.2);
-      slab(2.6, 12.0, 3.0, 3.0, bits, 0x8f9092, PL + 0.02); slab(-2.0, 5.0, 7.0, 2.0, bits, 0xbfb8a8, PL + 0.02);  // a square of asphalt in the brick, and the concrete walk across it
-      [[-4.9, 13.3], [1.1, 13.5]].forEach(([a, b]) => thing(box(0.16, 1.0, 0.16), 0x8a7a5e, a, PL + 0.5, b));        // timber posts at the kerb
+      slab(-2.0, 5.0, 7.0, 2.0, bits, 0xbfb8a8, PL + 0.02);  // the concrete walk across the brick
+      [[-0.15, 14.2, 11.5, 0.22], [-5.7, 9.1, 0.22, 10.4], [5.5, 12.1, 0.22, 4.4], [3.5, 10.0, 4.2, 0.22], [1.6, 12.1, 0.22, 4.2]].forEach(([a, b, w, d]) => slab(a, b, w, d, bits, 0xcfcac0, PL + 0.14));  // a raised kerb where the plaza and its garden meet the road
+      [[-4.9, 13.3], [1.0, 13.5]].forEach(([a, b]) => thing(box(0.16, 1.0, 0.16), 0x8a7a5e, a, PL + 0.5, b));        // timber posts at the kerb
       // planting: the mulched bed under the big tree in the plaza's corner, and a strip along its west side
       const blade = new THREE.ConeGeometry(0.07, 1, 3), bush = new THREE.IcosahedronGeometry(0.5, 1), GR = [0x6f8f3c, 0xb7a258, 0x587a34, 0xc2ad62];
       const bed = (a, b, w, d) => { thing(box(w, 0.12, d), 0x4a3a2c, a, 0.14, b); const n = Math.round(w * d / 1.3);
         for (let k = 0; k < n; k++) { const pa = a + (rnd(k * 3.1 + a) - 0.5) * (w - 0.6), pb = b + (rnd(k * 5.7 + b) - 0.5) * (d - 0.6);
           if (k % 3 === 0) { const q = 0.7 + rnd(k + 9) * 0.5; thing(bush, [0x355a2b, 0x40662f][k % 6 ? 0 : 1], pa, 0.2 + 0.26 * q, pb, k, 0, 0, 1.15 * q, 0.7 * q, q); continue; }
           const h = 0.6 + rnd(k + 60) * 0.5; for (let jj = 0; jj < 9; jj++) { const tt = jj / 9 * Math.PI * 2, lean = 0.28 + rnd(k * 7 + jj) * 0.3; thing(blade, GR[k % 4], pa + Math.cos(tt) * 0.12, 0.2 + h * 0.46, pb + Math.sin(tt) * 0.12, 0, Math.sin(tt) * lean, -Math.cos(tt) * lean, 1, h, 1); } } };
-      bed(3.6, 6.8, 3.6, 6.2); bed(-6.5, 1.5, 1.2, 5.6); }
+      bed(3.6, 6.8, 3.6, 6.2); bed(-6.5, 1.5, 1.2, 5.6);
+      // the garden on the corner, inside its kerb: mulch, shrubs, tussocks and a few in flower
+      slab(3.55, 12.1, 3.7, 4.0, bits, 0x5a4a3a, PL + 0.06); bed(3.55, 12.1, 3.5, 3.8);
+      [[2.6, 13.2], [4.6, 11.2], [3.4, 12.6]].forEach(([a, b], k) => thing(bush, 0xd98ab0, a, 0.2 + 0.3, b, k, 0, 0, 0.9, 0.6, 0.8)); }
 
     // ---- the foot of the clock, in its own frame: a across (to the right, seen from the lawn side), b out towards the lawn
     if (W.invClock) { const cr = TOWN_CLOCK[2], at = (a, b) => [TOWN_CLOCK[0] + Math.cos(cr) * a + Math.sin(cr) * b, TOWN_CLOCK[1] - Math.sin(cr) * a + Math.cos(cr) * b];
@@ -8361,7 +8365,7 @@ const handle = async (m, post) => {
       add(bits, box(0.2, 1.1, 0.2), 0x8a7a5e, cx + 1.3, PL + 0.55, cz + 1.6); add(bits, rod(0.09, 0.02, 12), 0x3f78c4, cx + 1.3, PL + 0.9, cz + 1.71, 0, Math.PI / 2);
       const bush = new THREE.IcosahedronGeometry(0.5, 1);
       add(bits, bush, 0x5a2f4a, cx - 1.6, PL + 0.55, cz - 3.2, 0, 0, 0, 1.5, 1.1, 1.4);
-      [[-1.9, 1.5, 1.0], [-0.7, 2.0, 1.2], [0.5, 2.1, 1.0], [-2.6, 0.4, 0.9]].forEach(([dx, dz, k], i) => add(bits, bush, [0x355a2b, 0x40662f, 0x2f4f29][i % 3], cx + dx, PL + 0.3 * k, cz + dz, i, 0, 0, 1.3 * k, 0.8 * k, 1.1 * k));
+      [[-1.6, 0.9, 0.8], [-0.6, 1.25, 0.9], [0.5, 1.25, 0.8], [-2.0, 0.1, 0.8]].forEach(([dx, dz, k], i) => add(bits, bush, [0x355a2b, 0x40662f, 0x2f4f29][i % 3], cx + dx, PL + 0.3 * k, cz + dz, i, 0, 0, 1.3 * k, 0.8 * k, 1.1 * k));
       if (D.lib) { const [x1, z1, x2, z2, nx, nz] = D.lib, r = Math.atan2(nx, nz), at = (t, o) => [x1 + (x2 - x1) * t + nx * o, z1 + (z2 - z1) * t + nz * o];
         const info = (w, h, big) => sign(w, h, (g, cw, ch) => { g.fillStyle = "#f2c81e"; g.fillRect(0, 0, cw, ch); const q = big ? cw * 0.7 : ch * 0.8; g.fillStyle = "#1f3f9a"; g.fillRect(big ? cw * 0.15 : ch * 0.1, big ? ch * 0.12 : ch * 0.1, q, q);
           g.fillStyle = "#f2c81e"; g.font = `700 italic ${q * 0.85}px Georgia, serif`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("i", (big ? cw * 0.15 : ch * 0.1) + q / 2, (big ? ch * 0.12 : ch * 0.1) + q * 0.52);
@@ -8388,14 +8392,6 @@ const handle = async (m, post) => {
       [-1, 1].forEach(sd => { const ox = Math.sin(a) * 0.13 * sd, oz = Math.cos(a) * 0.13 * sd;
         add(bits, box(0.55, 0.85, 0.03), BOARD[i % BOARD.length], x + ox, FOOT + 0.42, z + oz, a, 0.3 * sd);
         add(bits, box(0.43, 0.6, 0.012), 0xf4f1e6, x + ox * 1.16, FOOT + 0.45, z + oz * 1.16, a, 0.3 * sd); }); });
-    // the zebra crossing's signs: a yellow diamond on a post at each kerb, either side of it
-    const ab = D.r.find(r => r[0] === 20);
-    if (ab) { const f = ab[2]; let best = null;
-      for (let i = 0; i + 3 < f.length; i += 2) { const ax = f[i], az = f[i + 1], dx = f[i + 2] - ax, dz = f[i + 3] - az, L2 = dx * dx + dz * dz, t = Math.max(0, Math.min(1, ((D.c[0] - ax) * dx + (D.c[1] - az) * dz) / L2)),
-          x = ax + dx * t, z = az + dz * t, d = Math.hypot(D.c[0] - x, D.c[1] - z); if (!best || d < best.d) best = { d, x, z, ux: dx / Math.sqrt(L2), uz: dz / Math.sqrt(L2) }; }
-      [[-1, -1], [1, 1]].forEach(([al, sd]) => { const x = best.x + best.ux * 5 * al - best.uz * 10.5 * sd, z = best.z + best.uz * 5 * al + best.ux * 10.5 * sd, r = Math.atan2(best.ux, best.uz);
-        add(bits, rod(0.04, 2.7), 0x9aa2a6, x, FOOT + 1.35, z);
-        add(bits, box(0.62, 0.62, 0.02), 0x15161a, x, FOOT + 2.4, z, r, 0, Math.PI / 4); add(bits, box(0.54, 0.54, 0.03), 0xe6d21e, x, FOOT + 2.4, z, r, 0, Math.PI / 4); }); }
     const out = parts.filter(b => b.pos.length).map(b => ({ positions: new Float32Array(b.pos), normals: new Float32Array(b.nor), colors: b.col ? new Float32Array(b.col) : undefined, uvs: b.uv ? new Float32Array(b.uv) : undefined,
       ...b.spec, matrix: new THREE.Matrix4().elements, onGround: true }));
     if (out.length) m.addParts(out);
