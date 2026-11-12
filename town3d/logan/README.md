@@ -7,9 +7,13 @@ the motorway bridge), which is built inside `app.html`.
 It covers the City of Logan and its surrounds, 53 km by 45: LiDAR terrain at true scale, every street, about
 174,000 surveyed buildings, bushland, the railway and suburb boundaries. Close up, anywhere in the city, the
 streets turn from a map's coloured lines into asphalt with kerbs and lane lines, the buildings show windows
-(some lit at night), and the bush trees stand on trunks. The 320 m around the council's administration centre on
+(some lit at night), and the bush trees stand on trunks. The 500 m around the council's administration centre on
 Wembley Road is in detail:
 
+- **The ground:** nothing on it is a picture, so nothing blurs close up. Every lawn, street, kerb, footpath and
+  car park is a shape with a sharp edge, filled with its material: grass, asphalt, concrete, the exposed
+  aggregate of the council's own paths. The grain (blades, pebbles, grit, mowing stripes) is worked out for
+  each pixel. The colours are indicative; only the council's entrance path was matched to a photograph.
 - **Roads:** real street surfaces with sharp-edged lane lines, stop lines, arrows and crossings, footpaths and
   grassed verges, street lights, power poles and wires along the local streets, give-way, street name and bus
   stop signs, bus shelters with a bus at one, cars, utes and vans parked and on the road (those being driven
@@ -22,7 +26,11 @@ Wembley Road is in detail:
   letterbox and wheelie bins, and here and there solar panels, an aerial, a rainwater tank or a clothes line.
 - **The council's entrance:** laid out from a photograph taken on its front lawn: the building's name on the
   wall beside the entry, the covered entry on its columns, four flagpoles, and the grove of tall palms in its
-  hedged garden bed. The two roundels beside the name are plain stand-ins for the crest and the city's logo.
+  hedged garden bed. The crest and the City of Logan logo beside the name are redrawn from that photograph (the
+  artwork itself was not to hand), so they are close, not exact.
+- **What moves:** three people walk to and fro on the paths to the entrance and beside the car park, and one car
+  drives round the front car park. While you are within about 500 m of the council the map redraws every frame
+  for them; further off it rests, as before.
 - The railway and its wiring, and the named schools, parks and streets.
 
 Where the buildings, streets and trees are is surveyed. The vehicles, road markings, signs, what kind each tree
@@ -35,8 +43,7 @@ surveyed: nothing here says a particular house has solar panels.
 | `height.png`, `relief.webp` | Terrain heights, and the terrain's shading and water |
 | `ground.webp`, `lights.webp`, `cover.png` | Ground colour, the city's lights at night, and where the bushland is |
 | `roads.bin`, `buildings.bin` | Streets and surveyed building outlines |
-| `map.json` | Suburbs, council divisions, the railway, street names, the council precinct |
-| `precinct.webp` | The ground around the council's administration centre: streets, car parks, paths, lawns, the railway |
+| `map.json` | Suburbs, council divisions, the railway, street names, and the council precinct: its buildings, houses, trees, and the shapes of its ground |
 | `flood.json`, `flood-1974.png`, `flood-2017.png`, `flood-2022.png`, `flood-aep1.png`, `flood-aep2.png`, `flood-aep5.png` | The floods: what they were, and each one's water levels |
 
 Nothing here is downloaded until someone opens the map (about 9 MB the first time). `build.py` copies `town3d/`,
