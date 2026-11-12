@@ -52,13 +52,14 @@ along Reilly Street and on both sides of A'Beckett Street (the bakery among them
 the streets, footpaths, parked cars, lamps, banners and trees. Its outline is `TOWN_BLOCK` in `app.html`, in the
 weather town's own metres. Inside it the model keeps only its ground, so nothing is shown twice.
 
-The model adds a few things of its own there (`townModelExtras`): the foot of the clock as in photos of it (brick
-paving, a planted bed, the poles' broad bases, the four mosaic blocks in a row), the war memorial likewise (a squat
-obelisk on a plinth, bollards with poppies, boulders, two flagpoles, a square of brick paving; the weather's own is
-left out of the block), tables and chairs outside the bakery
-and The Larder, a sandwich board for each named shop, and the signs at the zebra crossing. Round the clock and round number
-11 it is also asked for street-level detail (`detailLatLon`): cars with proper shapes, a letterbox and bins out
-the front of the houses, and power lines along the streets.
+The model adds a few things of its own there (`townModelExtras`). The corner of A'Beckett and Reilly Streets is
+laid out as it really is, checked against Google Maps satellite imagery: one brick plaza with the war memorial at its
+lawn end and the Rotary clock a few metres on, by the zebra crossing, the four mosaic blocks between them. (The
+weather's town has the clock where the memorial belongs and the memorial up by Reilly Street; in the model both are
+moved, see `TOWN_PLAZA`, `TOWN_MEMORIAL` and `TOWN_CLOCK` in `app.html`.) Also tables and chairs outside the bakery
+and The Larder, a sandwich board for each named shop, and the signs at the zebra crossing. Round the clock and round
+number 11 the model is asked for street-level detail (`detailLatLon`): cars with proper shapes, a letterbox and bins
+out the front of the houses, and power lines along the streets.
 
 The weather's town is flat and the model's ground slopes, so each shape is handed over with heights measured from
 the ground and the model lays it down along the terrain. Anything added to the weather's town centre later shows up

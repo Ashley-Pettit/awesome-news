@@ -7959,7 +7959,16 @@ const handle = async (m, post) => {
     [[44.33, -19.5], [97, -12.9], [97, 57.2], [35.17, 49.85]],               // the shops east of Reilly Street
     [[-57, 38.9], [57.1, 52.46], [55.2, 76.2], [40.5, 87.6], [-57, 70.5]],   // the shops across A'Beckett Street
   ];
-  const TOWN_MEMORIAL = [25, 0.5, -0.15];  // the war memorial: where it stands and which way it faces; the model builds its own (townModelExtras)
+  // The corner of A'Beckett and Reilly Streets as it really is (from Google Maps): one brick plaza, the war memorial at its
+  // lawn end and the Rotary clock a few metres on, out on the kerb's build-out. The weather's town has the clock where the
+  // memorial belongs and the memorial up by Reilly Street; the model puts both right and builds the plaza (townModelExtras).
+  const TOWN_OLD_MEMORIAL = [25, 0.5];             // where the weather's own memorial stands: left out of the model
+  const TOWN_PLAZA = [18, 18.6, 0.115];            // the plaza's frame: a point in it, and A'Beckett Street's slant
+  const TOWN_MEMORIAL = [17.2, 18.0, Math.PI - 0.115];  // the memorial: where it stands and which way it faces (the lawn)
+  const TOWN_CLOCK = [14.4, 30.7, -0.26];           // the clock, in its bed at the kerb, south-west of the memorial; its faces look to the street and to the lawn
+  // a across the plaza (along the street, east), b down it (towards the street): from the town's metres
+  const townPlazaAB = (x, z) => { const [ox, oz, t] = TOWN_PLAZA, dx = x - ox, dz = z - oz; return [dx * Math.cos(t) + dz * Math.sin(t), -dx * Math.sin(t) + dz * Math.cos(t)]; };
+  const townOnPlaza = (x, z) => { const [a, b] = townPlazaAB(x, z); return (a > -5.8 && a < 5.1 && b > -4.2 && b < 3.4) || (a > -5.8 && a < 1.5 && b >= 3.4 && b < 14) || (a >= 1.5 && a < 5.8 && b > 10.1 && b < 14); };
   const townInPiece = (P, x, z) => P.every((a, i) => { const b = P[(i + 1) % P.length]; return (b[0] - a[0]) * (z - a[1]) - (b[1] - a[1]) * (x - a[0]) >= 0; });
   const townInBlock = (x, z) => TOWN_BLOCK.some(P => townInPiece(P, x, z));
   // The town centre, the Rotary clock and number 11 Norman Road are copied out of the weather's Inverloch (which is left as it
@@ -8024,17 +8033,20 @@ const handle = async (m, post) => {
     let block = null;
     if (W.invClock && tower) { const still = new Set(); [W.invClock, ...flags, ...drive, ...moving, ...cars].filter(Boolean).forEach(r => r.traverse(o => still.add(o)));  // (the clock's plaza is built afresh for the model, below)
       const t0 = performance.now();
-      try { block = townModelBlock(T, m, { THREE, TG, toTG, look, glows, plain, skip: still, drop: (x, z) => Math.hypot(x - TOWN_MEMORIAL[0], z - TOWN_MEMORIAL[1]) < 7 }); } catch (e) { console.warn("Town model: the town centre couldn't be added", e); }
+      try { block = townModelBlock(T, m, { THREE, TG, toTG, look, glows, plain, skip: still, drop: (x, z, flat, top) => { const d = Math.hypot(x - TOWN_OLD_MEMORIAL[0], z - TOWN_OLD_MEMORIAL[1]);  // the weather's memorial and its paving (not the park's paths beside it), whatever lies under the plaza, and the benches and bins round the weather's clock
+        return (flat ? top > 0.102 && (d < 2.6 || (d < 14 && top < 0.1285)) : d < 7) || (flat && townOnPlaza(x, z)) || (!flat && Math.hypot(x - D.c[0], z - D.c[1]) < 9.5); } }); } catch (e) { console.warn("Town model: the town centre couldn't be added", e); }
       if (block) T.block = { parts: block.parts, corners: block.corners, ms: Math.round(performance.now() - t0) }; }
     if (block) { const [cx, cz] = block.at(D.c[0], D.c[1]);
-      whole(tower, block.place(D.c[0], D.c[1]));
-      flags.forEach(f => { v.setFromMatrixPosition(f.matrixWorld).applyMatrix4(toTG); if (Math.hypot(v.x - TOWN_MEMORIAL[0], v.z - TOWN_MEMORIAL[1]) > 7) whole(f, block.place(v.x, v.z)); });  // (the memorial has its own two)
-      if (W.invSpot) stop("the clock", W.invSpot, block.place(D.c[0], D.c[1]), [cx, cz]);
+      const [kx, kz] = block.at(TOWN_CLOCK[0], TOWN_CLOCK[1]), clockPlace = new THREE.Matrix4().makeTranslation(kx, block.place(TOWN_CLOCK[0], TOWN_CLOCK[1]).elements[13], kz)
+        .multiply(new THREE.Matrix4().makeRotationY(TOWN_CLOCK[2] - D.c[2])).multiply(new THREE.Matrix4().makeTranslation(-D.c[0], 0, -D.c[1]));  // lifted from where the weather's stands, turned, and set down
+      whole(tower, clockPlace);
+      flags.forEach(f => { v.setFromMatrixPosition(f.matrixWorld).applyMatrix4(toTG); if (Math.hypot(v.x - TOWN_OLD_MEMORIAL[0], v.z - TOWN_OLD_MEMORIAL[1]) > 7) whole(f, block.place(v.x, v.z)); });  // (the memorial has its own two)
       // somewhere to stand for the bakery (out in the mouth of Reilly Street, across from it) and for the war memorial (in front of it)
       const standAt = (name, fx, fz, tx, tz, pitch) => { const [x, z] = block.at(fx, fz), [ax, az] = block.at(tx, tz); jumps.push({ name, target: [ax, az], walk: { x, z, yaw: Math.atan2(x - ax, z - az), pitch } }); };
+      standAt("the clock", 16.5, 6.5, 16.2, 22, 0.1);  // from the lawn: the memorial in front, the clock beyond to the right, the shops across the street
       const pie = D.u.find(u => /PIEMAN/.test(u[9] || ""));
       if (pie) { const mx = (pie[0] + pie[2]) / 2, mz = (pie[1] + pie[3]) / 2; standAt("the bakery", mx + pie[4] * 27, mz + pie[5] * 27, mx, mz, 0.06); }
-      standAt("the war memorial", 25 - Math.sin(0.15) * 12, 0.5 + Math.cos(0.15) * 12, 25, 0.5, 0.03);
+      standAt("the war memorial", TOWN_MEMORIAL[0] + 1.5, TOWN_MEMORIAL[1] - 11, TOWN_MEMORIAL[0], TOWN_MEMORIAL[1], 0.05);
       try { townModelExtras(m, block, THREE, W); } catch (e) { console.warn("Town model: the clock's plaza, café tables and signs couldn't be added", e); } }
     // without it, the Rotary clock alone, on a garden bed at the corner of A'Beckett and Reilly Streets
     else if (W.invClock) { const [x, z] = m.fromLatLon(...townLL(D.c[0], D.c[1])), top = m.addPad({ x, z, radius: 2.7, color: [0.19, 0.3, 0.12], lift: 0.3 });
@@ -8115,7 +8127,7 @@ const handle = async (m, post) => {
       let last = null;
       for (const sh of order) { const x = (sh.x0 + sh.x1) / 2, z = (sh.z0 + sh.z1) / 2;
         sh.flat = sh.y1 <= G0 + 0.36 && sh.y0 >= G0 - 0.02;
-        if (drop?.(x, z)) { sh.inn = false; continue; }  // (something the model builds afresh)
+        if (drop?.(x, z, sh.flat, sh.y1 - G0)) { sh.inn = false; continue; }  // (something the model builds afresh)
         if (sh.flat) { sh.inn = sh.y1 >= G0 + 0.045 && sh.x1 >= zx0 && sh.x0 <= zx1 && sh.z1 >= zz0 && sh.z0 <= zz1; continue; }  // (not the map's painted parks and car parks: the model has its own)
         let b = inside(x, z); if (b < 0) b = beside(x, z, 4.1);
         const tree = b < 0 && sh.y0 >= G0 + 3.2 ? trees.find(t => Math.hypot(t.x - x, t.z - z) < 4.3) : null;
@@ -8141,6 +8153,7 @@ const handle = async (m, post) => {
             if (sink) tri.forEach(q2 => { q2[1] -= sink; }); }
           for (const piece of TOWN_BLOCK) { const poly = trim(tri, piece); for (let k = 1; k + 1 < poly.length; k++) { put(bk, poly[0]); put(bk, poly[k]); put(bk, poly[k + 1]); } }
           continue; }
+        if (drop?.(mx, mz, false, 0)) continue;  // (a piece of something the model builds afresh, joined to something it keeps)
         // part of a building: inside its outline, a little behind the face
         const fh = Math.hypot(fx, fz), own = inside(fh > 0.3 ? mx - fx / fh * 0.25 : mx, fh > 0.3 ? mz - fz / fh * 0.25 : mz);
         if (!(own >= 0 ? B[own].inn : sh.inn)) continue;
@@ -8176,81 +8189,135 @@ const handle = async (m, post) => {
     const bits = mesh({ roughness: 0.78 }), rnd = i => { const x = Math.sin(i * 127.1 + 3.7) * 43758.5453; return x - Math.floor(x); };
 
     // red bricks laid in courses, for the paving
-    const bc = document.createElement("canvas"); bc.width = bc.height = 256; { const g = bc.getContext("2d"); g.fillStyle = "#8f4a3a"; g.fillRect(0, 0, 256, 256);
+    const bc = document.createElement("canvas"); bc.width = bc.height = 256; { const g = bc.getContext("2d"); g.fillStyle = "#a8806f"; g.fillRect(0, 0, 256, 256);
       for (let r = 0; r < 16; r++) for (let k = -1; k < 8; k++) { const t = rnd(r * 17 + k * 5 + 1), x = k * 32 + (r % 2) * 16, y = r * 16;
-        g.fillStyle = `rgb(${172 + t * 34 | 0},${84 + t * 22 | 0},${64 + t * 18 | 0})`; g.fillRect(x + 1, y + 1, 30, 14); if (x + 32 > 256) g.fillRect(x - 255, y + 1, 30, 14); } }
+        g.fillStyle = `rgb(${186 + t * 28 | 0},${128 + t * 22 | 0},${106 + t * 18 | 0})`; g.fillRect(x + 1, y + 1, 30, 14); if (x + 32 > 256) g.fillRect(x - 255, y + 1, 30, 14); } }
 
-    // ---- the foot of the clock, in its own frame: a across (to the right, seen from the library side), b out towards the library
-    if (W.invClock) { const cr = D.c[2], PL = 0.24, at = (a, b) => [D.c[0] + Math.cos(cr) * a + Math.sin(cr) * b, D.c[1] - Math.sin(cr) * a + Math.cos(cr) * b];
+    // ---- the plaza: brick, edged with pale concrete; a broad piece by the lawn and a narrower one out to the street
+    const PL = 0.2;
+    { const [ox, oz, t] = TOWN_PLAZA, pl = (a, b) => [ox + Math.cos(t) * a - Math.sin(t) * b, oz + Math.sin(t) * a + Math.cos(t) * b];
+      const slab = (a, b, w, d, bk, colour, h = PL) => { const [x, z] = pl(a, b); add(bk, box(w, h, d), colour, x, h / 2, z, -t); };
+      // (an L: the broad piece by the lawn, a leg down the west side to the street, and a strip along the kerb; the corner
+      // between them is the bed under the big tree)
+      const brick = (a, b, w, d) => slab(a, b, w, d, mesh({ map: bc, mapRepeat: [w / 1.6, d / 1.6], roughness: 0.95 }), 0);
+      brick(-0.35, -0.25, 10.3, 7.3); brick(-2.0, 8.7, 7.0, 10.6); brick(3.35, 12.05, 3.7, 3.9);
+      [[-0.35, -4.05, 10.9, 0.3], [-5.65, 5, 0.3, 18.4], [4.95, -0.25, 0.3, 7.3], [3.2, 3.55, 3.8, 0.3], [1.65, 6.8, 0.3, 6.8], [3.5, 10.05, 4.0, 0.3], [5.35, 12.05, 0.3, 4.3], [-0.15, 14.15, 11.3, 0.3],
+        [-2.0, 3.55, 7.0, 0.24], [-0.6, 1.3, 1.5, 4.4]].forEach(([a, b, w, d]) => slab(a, b, w, d, bits, 0xd6c8a8, PL + 0.015));
+      const thing = (geo, colour, a, y, b, ry = 0, rx = 0, rz = 0, sx = 1, sy = 1, sz = 1) => { const [x, z] = pl(a, b); add(bits, geo, colour, x, y, z, -t + ry, rx, rz, sx, sy, sz); };
+      // seats (one by the memorial, one on the kerb strip), a bin, and the kerb's row of bollards
+      [[3.9, 1.6, -Math.PI / 2], [4.2, 12.9, Math.PI]].forEach(([a, b, r]) => { const c = Math.cos(r), sn = Math.sin(r);
+        for (let k = 0; k < 4; k++) thing(box(1.8, 0.04, 0.11), 0x8a6a45, a + sn * (k * 0.13 - 0.2), PL + 0.46, b + c * (k * 0.13 - 0.2), r);
+        for (let k = 0; k < 3; k++) thing(box(1.8, 0.1, 0.035), 0x8a6a45, a - sn * 0.3, PL + 0.6 + k * 0.14, b - c * 0.3, r, -0.12);
+        [-0.8, 0.8].forEach(o => { thing(box(0.06, 0.46, 0.5), 0x2d3033, a + c * o, PL + 0.23, b - sn * o, r); thing(box(0.06, 0.5, 0.05), 0x2d3033, a + c * o - sn * 0.3, PL + 0.7, b - sn * o - c * 0.3, r, -0.12); }); });
+      thing(rod(0.27, 0.9, 12, 0.3), 0x2f5a3a, 0.9, PL + 0.45, 5.2); thing(rod(0.31, 0.06, 12), 0x24452d, 0.9, PL + 0.93, 5.2);
+      slab(2.6, 12.0, 3.0, 3.0, bits, 0x8f9092, PL + 0.02); slab(-2.0, 5.0, 7.0, 2.0, bits, 0xbfb8a8, PL + 0.02);  // a square of asphalt in the brick, and the concrete walk across it
+      [[-4.9, 13.3], [1.1, 13.5]].forEach(([a, b]) => thing(box(0.16, 1.0, 0.16), 0x8a7a5e, a, PL + 0.5, b));        // timber posts at the kerb
+      // planting: the mulched bed under the big tree in the plaza's corner, and a strip along its west side
+      const blade = new THREE.ConeGeometry(0.07, 1, 3), bush = new THREE.IcosahedronGeometry(0.5, 1), GR = [0x6f8f3c, 0xb7a258, 0x587a34, 0xc2ad62];
+      const bed = (a, b, w, d) => { thing(box(w, 0.12, d), 0x4a3a2c, a, 0.14, b); const n = Math.round(w * d / 1.3);
+        for (let k = 0; k < n; k++) { const pa = a + (rnd(k * 3.1 + a) - 0.5) * (w - 0.6), pb = b + (rnd(k * 5.7 + b) - 0.5) * (d - 0.6);
+          if (k % 3 === 0) { const q = 0.7 + rnd(k + 9) * 0.5; thing(bush, [0x355a2b, 0x40662f][k % 6 ? 0 : 1], pa, 0.2 + 0.26 * q, pb, k, 0, 0, 1.15 * q, 0.7 * q, q); continue; }
+          const h = 0.6 + rnd(k + 60) * 0.5; for (let jj = 0; jj < 9; jj++) { const tt = jj / 9 * Math.PI * 2, lean = 0.28 + rnd(k * 7 + jj) * 0.3; thing(blade, GR[k % 4], pa + Math.cos(tt) * 0.12, 0.2 + h * 0.46, pb + Math.sin(tt) * 0.12, 0, Math.sin(tt) * lean, -Math.cos(tt) * lean, 1, h, 1); } } };
+      bed(3.6, 6.8, 3.6, 6.2); bed(-6.5, 1.5, 1.2, 5.6); }
+
+    // ---- the foot of the clock, in its own frame: a across (to the right, seen from the lawn side), b out towards the lawn
+    if (W.invClock) { const cr = TOWN_CLOCK[2], at = (a, b) => [TOWN_CLOCK[0] + Math.cos(cr) * a + Math.sin(cr) * b, TOWN_CLOCK[1] - Math.sin(cr) * a + Math.cos(cr) * b];
       const put = (bk, geo, colour, a, y, b, ry = 0, rx = 0, rz = 0, sx = 1, sy = 1, sz = 1) => { const [x, z] = at(a, b); add(bk, geo, colour, x, y, z, cr + ry, rx, rz, sx, sy, sz); };
-      // brick paving, laid in courses, inside a band of pale concrete
-      const paving = mesh({ map: bc, mapRepeat: [10.5, 5.8], roughness: 0.95 });
-      put(paving, box(16.8, PL, 9.3), 0, -3.3, PL / 2, -0.87);
-      [[-3.3, 3.95, 17.5, 0.35], [-3.3, -5.69, 17.5, 0.35], [-11.87, -0.87, 0.35, 9.3], [5.27, -0.87, 0.35, 9.3]].forEach(([a, b, w, d]) => put(bits, box(w, PL + 0.015, d), 0xd6c8a8, a, (PL + 0.015) / 2, b));
       // the bed: a stone edge, mulch, tussock grasses (green and straw-gold) and low dark shrubs
       const disc = rod(1, 1, 28);
-      put(bits, disc, 0xbdb6a6, 0, PL + 0.07, -0.7, 0, 0, 0, 4.25, 0.14, 2.75); put(bits, disc, 0x4a3a2c, 0, PL + 0.11, -0.7, 0, 0, 0, 4.05, 0.22, 2.55);
+      put(bits, disc, 0xbdb6a6, 0, PL + 0.07, -0.4, 0, 0, 0, 2.25, 0.14, 1.55); put(bits, disc, 0x4a3a2c, 0, PL + 0.11, -0.4, 0, 0, 0, 2.1, 0.22, 1.4);
       const BED = PL + 0.22, blade = new THREE.ConeGeometry(0.07, 1, 3), GRASS = [0x6f8f3c, 0xb7a258, 0x587a34, 0xc2ad62, 0x7b9a45];
-      for (let k = 0; k < 26; k++) { const ang = k / 26 * Math.PI * 2 + rnd(k) * 0.4, rr = 0.35 + rnd(k + 40) * 0.6, a = Math.cos(ang) * 3.6 * rr, b = -0.7 + Math.sin(ang) * 2.2 * rr;
-        if (Math.hypot(Math.abs(a) - 0.45, b) < 0.55) continue;  // not on the poles
-        const h = 0.75 + rnd(k + 80) * 0.6, colour = GRASS[k % GRASS.length];
-        for (let j = 0; j < 11; j++) { const t = j / 11 * Math.PI * 2, lean = 0.28 + rnd(k * 11 + j) * 0.3;
-          put(bits, blade, colour, a + Math.cos(t) * 0.14, BED + h * 0.46, b + Math.sin(t) * 0.14, 0, Math.sin(t) * lean, -Math.cos(t) * lean, 1, h, 1); } }
+      for (let k = 0; k < 18; k++) { const ang = k / 18 * Math.PI * 2 + rnd(k) * 0.4, rr = 0.4 + rnd(k + 40) * 0.55, a = Math.cos(ang) * 1.85 * rr, b = -0.4 + Math.sin(ang) * 1.15 * rr;
+        if (Math.hypot(Math.abs(a) - 0.45, b) < 0.5) continue;  // not on the poles
+        const h = 0.7 + rnd(k + 80) * 0.5, colour = GRASS[k % GRASS.length];
+        for (let j = 0; j < 11; j++) { const tt = j / 11 * Math.PI * 2, lean = 0.28 + rnd(k * 11 + j) * 0.3;
+          put(bits, blade, colour, a + Math.cos(tt) * 0.13, BED + h * 0.46, b + Math.sin(tt) * 0.13, 0, Math.sin(tt) * lean, -Math.cos(tt) * lean, 1, h, 1); } }
       const bush = new THREE.IcosahedronGeometry(0.5, 1);
-      [[-3.1, -1.5, 1.1], [3.0, -1.3, 1.2], [-2.2, 0.6, 0.9], [2.5, 0.5, 0.95], [-0.2, -2.6, 1.25], [1.5, -2.3, 1.0], [-1.7, -2.4, 0.9]].forEach(([a, b, k], i) =>
-        put(bits, bush, [0x355a2b, 0x2f4f29, 0x40662f][i % 3], a, BED + 0.28 * k, b, i, 0, 0, 1.25 * k, 0.72 * k, 1.05 * k));
+      [[-1.5, -0.6, 0.8], [1.5, -0.5, 0.85], [-0.1, -1.3, 0.9]].forEach(([a, b, k], i) => put(bits, bush, [0x355a2b, 0x2f4f29, 0x40662f][i % 3], a, BED + 0.28 * k, b, i, 0, 0, 1.2 * k, 0.72 * k, 1.05 * k));
       // the poles' feet: a broad teal base with a collar round its top, on a flange
       [-0.452, 0.452].forEach(a => { put(bits, rod(0.3, 0.1, 14), 0x2c6f68, a, BED + 0.05, 0); put(bits, rod(0.22, 1.25, 14, 0.2), 0x3b8f86, a, BED + 0.72, 0);
         put(bits, rod(0.255, 0.08, 14), 0x2c6f68, a, BED + 1.36, 0); put(bits, rod(0.24, 0.06, 14), 0x2c6f68, a, BED + 0.5, 0); });
-      // the four mosaic blocks: concrete wedges in a row on the paving, a picture on each sloping face
+      // the four mosaic blocks: concrete wedges in a slanting row running north-east from the clock, a picture on each sloping face
       const maps = []; W.invClock.traverse(o => { const mp = o.isMesh && o.geometry?.type === "PlaneGeometry" && o.material?.map; if (mp?.image && !maps.includes(mp.image)) maps.push(mp.image); });
       const wedge = new THREE.ExtrudeGeometry(new THREE.Shape([[-0.37, 0], [0.37, 0], [0.13, 1.02], [-0.13, 1.02]].map(([x, y]) => new THREE.Vector2(x, y))), { depth: 0.96, bevelEnabled: false });
       wedge.translate(0, 0, -0.48); wedge.rotateY(Math.PI / 2);
-      const tilt = Math.atan2(0.24, 1.02), pane = new THREE.PlaneGeometry(0.76, 0.8);
-      [-2.45, -1.25, -0.05, 1.15].forEach((a, k) => { const b = 2.25;
-        put(bits, wedge, 0xcfcbc1, a, PL, b); put(bits, box(1.0, 0.05, 0.3), 0xdedad0, a, PL + 1.045, b); put(bits, box(1.04, 0.06, 0.82), 0xb9b4a8, a, PL + 0.03, b);
+      const tilt = Math.atan2(0.24, 1.02), pane = new THREE.PlaneGeometry(0.76, 0.8), ry = Math.PI / 4;
+      for (let k = 0; k < 4; k++) { const x = TOWN_CLOCK[0] + 1.5 + k * 0.82, z = TOWN_CLOCK[1] + 0.1 - k * 0.82;
+        add(bits, wedge, 0xcfcbc1, x, PL, z, ry); add(bits, box(1.0, 0.05, 0.3), 0xdedad0, x, PL + 1.045, z, ry); add(bits, box(1.04, 0.06, 0.82), 0xb9b4a8, x, PL + 0.03, z, ry);
         const pic = maps[k] ? mesh({ map: maps[k], roughness: 0.4, metalness: 0.1 }) : null;
-        [1, -1].forEach(sd => { const off = (0.25 + 0.012) * sd;
-          if (pic) put(pic, pane, 0, a, PL + 0.52, b + off, sd > 0 ? 0 : Math.PI, -tilt, 0);
-          else put(bits, box(0.76, 0.8, 0.01), 0x3f78c4, a, PL + 0.52, b + off, 0, -tilt * sd, 0); }); });
+        [1, -1].forEach(sd => { const off = (0.25 + 0.012) * sd, px = x + Math.sin(ry) * off, pz = z + Math.cos(ry) * off;
+          if (pic) add(pic, pane, 0, px, PL + 0.52, pz, ry + (sd > 0 ? 0 : Math.PI), -tilt, 0);
+          else add(bits, box(0.76, 0.8, 0.01), 0x3f78c4, px, PL + 0.52, pz, ry, -tilt * sd, 0); }); }
     }
 
     // ---- the war memorial, as in photos of it: a tall tapering concrete obelisk with a pyramid top on a big square plinth,
     // its plaques (the weather's own pictures), six granite bollards (little obelisks, a poppy on each) on a concrete pad set
-    // cornerwise, a rough dark boulder with a plaque out to each side, two white flagpoles behind with the flag flying, all on
-    // a broad apron of brick paving with a concrete path across its front. The apron runs out to Reilly Street's footpath;
-    // everything that stands is kept on the apron, off the footpath and the park's path.
-    // In its own frame: a across (to the right, seen from the front), b out towards the front (the clock's side).
-    { const [MX, MZ, MR] = TOWN_MEMORIAL, PL = 0.14, at = (a, b) => [MX + Math.cos(MR) * a + Math.sin(MR) * b, MZ - Math.sin(MR) * a + Math.cos(MR) * b];
+    // cornerwise, a rough dark boulder with a plaque out to each side, and a white flagpole either side in front with the
+    // flag flying. In its own frame: a across (to the right, seen from the front), b out towards the front (the lawn).
+    { const [MX, MZ, MR] = TOWN_MEMORIAL, at = (a, b) => [MX + Math.cos(MR) * a + Math.sin(MR) * b, MZ - Math.sin(MR) * a + Math.cos(MR) * b];
       const put = (bk, geo, colour, a, y, b, ry = 0, rx = 0, rz = 0, sx = 1, sy = 1, sz = 1) => { const [x, z] = at(a, b); add(bk, geo, colour, x, y, z, MR + ry, rx, rz, sx, sy, sz); };
-      const CONC = 0xc6cacc, CONC2 = 0xb4b9bc, GRANITE = 0xcfcdd0, Q = Math.PI / 4;
-      put(mesh({ map: bc, mapRepeat: [6.1, 5.5], roughness: 0.95 }), box(9.8, PL, 8.8), 0, -0.3, PL / 2, 1.2);
-      put(bits, box(10.6, PL + 0.02, 1.9), 0xd3c8ad, -0.3, (PL + 0.02) / 2, 6.5);          // the concrete path across the front
-      put(bits, box(4.3, 0.03, 4.3), 0xb9bcbc, 0, PL + 0.015, 0.2, Q);                     // the pad it stands on, set cornerwise
+      const CONC = 0xe6e5df, CONC2 = 0xd9d8d2, GRANITE = 0xcfcdd0, Q = Math.PI / 4;
+      put(bits, box(4.1, 0.03, 4.1), 0xb9bcbc, 0, PL + 0.015, 0.1, Q);                     // the pad it stands on, set cornerwise
       // the plinth with its sloping shoulder, the shaft and its pyramid top
-      put(bits, box(2.5, 0.16, 2.5), CONC2, 0, PL + 0.11, 0); put(bits, box(2.3, 1.45, 2.3), CONC, 0, PL + 0.915, 0);
+      // (old concrete: mottled, with dark streaks run down from the ledges)
+      const cc = document.createElement("canvas"); cc.width = cc.height = 256; { const g = cc.getContext("2d"); g.fillStyle = "#f4f3ee"; g.fillRect(0, 0, 256, 256);
+        for (let i = 0; i < 260; i++) { g.fillStyle = `rgba(${rnd(i) > 0.5 ? "255,255,255" : "70,78,84"},${0.03 + rnd(i * 3) * 0.06})`; g.beginPath(); g.ellipse(rnd(i * 7) * 256, rnd(i * 5) * 256, 6 + rnd(i * 2) * 26, 4 + rnd(i * 9) * 14, rnd(i) * 3, 0, 7); g.fill(); }
+        for (let i = 0; i < 46; i++) { const x = rnd(i * 13 + 2) * 256, gr = g.createLinearGradient(0, 0, 0, 90 + rnd(i) * 150); gr.addColorStop(0, "rgba(60,66,70,0.14)"); gr.addColorStop(1, "rgba(60,66,70,0)"); g.fillStyle = gr; g.fillRect(x, 0, 2 + rnd(i * 4) * 5, 256); } }
+      put(bits, box(2.5, 0.16, 2.5), CONC2, 0, PL + 0.11, 0); put(mesh({ map: cc, roughness: 0.95 }), box(2.3, 1.45, 2.3), 0, 0, PL + 0.915, 0);
       put(bits, new THREE.CylinderGeometry(1.3, 1.63, 0.16, 4), CONC2, 0, PL + 1.72, 0, Q);
-      put(bits, new THREE.CylinderGeometry(0.8, 1.24, 3.3, 4), CONC, 0, PL + 3.45, 0, Q); put(bits, new THREE.ConeGeometry(0.86, 0.5, 4), CONC2, 0, PL + 5.35, 0, Q);
+      put(mesh({ map: cc, mapRepeat: [4, 1.6], roughness: 0.95 }), new THREE.CylinderGeometry(0.8, 1.24, 3.3, 4), 0, 0, PL + 3.45, 0, Q); put(bits, new THREE.ConeGeometry(0.86, 0.5, 4), CONC2, 0, PL + 5.35, 0, Q);
+      // the marble panel on the side facing the street: "Commemorating Inverloch Volunteers, Great War 1914-18"
+      { const mc = document.createElement("canvas"); mc.width = 384; mc.height = 288; const g = mc.getContext("2d"); g.fillStyle = "#eceae4"; g.fillRect(0, 0, 384, 288);
+        for (let i = 0; i < 14; i++) { g.strokeStyle = `rgba(120,125,135,${0.08 + rnd(i + 500) * 0.1})`; g.lineWidth = 1 + rnd(i) * 2; g.beginPath(); g.moveTo(rnd(i * 3) * 384, 0); g.bezierCurveTo(rnd(i * 5) * 384, 90, rnd(i * 7) * 384, 190, rnd(i * 11) * 384, 288); g.stroke(); }
+        g.fillStyle = "#2f3f66"; g.textAlign = "center"; g.textBaseline = "middle"; g.font = '700 34px Georgia, "Times New Roman", serif';
+        ["COMMEMORATING", "INVERLOCH VOLUNTEERS", "GREAT WAR 1914-18"].forEach((tx, i) => { g.font = `700 ${i === 1 ? 29 : 34}px Georgia, "Times New Roman", serif`; g.fillText(tx, 192, 70 + i * 76); });
+        put(bits, box(1.42, 1.08, 0.03), 0xb4b9bc, 0, PL + 0.93, -1.158, Math.PI); put(mesh({ map: mc, roughness: 0.5 }), new THREE.PlaneGeometry(1.3, 0.96), 0, 0, PL + 0.93, -1.178, Math.PI); }
       // its plaques: the weather's own, widest on the front of the plinth, the next on the back, the small one on the shaft
-      const pics = []; W.invTG?.traverse(o => { const mp = o.isMesh && o.geometry?.type === "PlaneGeometry" && o.material?.map, q = o.geometry?.parameters; if (!mp?.image || !q || q.width > 1.6) return;
+      const pics = [], [OX, OZ] = TOWN_OLD_MEMORIAL; W.invTG?.traverse(o => { const mp = o.isMesh && o.geometry?.type === "PlaneGeometry" && o.material?.map, q = o.geometry?.parameters; if (!mp?.image || !q || q.width > 1.6) return;
         const pw = new THREE.Vector3().setFromMatrixPosition(o.matrixWorld).applyMatrix4(new THREE.Matrix4().copy(W.invTG.matrixWorld).invert());
-        if (Math.hypot(pw.x - MX, pw.z - MZ) < 3.2 && pw.y < 6 && !pics.some(k => k.img === mp.image)) pics.push({ img: mp.image, w: q.width, h: q.height }); });
+        if (Math.hypot(pw.x - OX, pw.z - OZ) < 3.2 && pw.y < 6 && !pics.some(k => k.img === mp.image)) pics.push({ img: mp.image, w: q.width, h: q.height }); });
       pics.sort((p, q) => q.w - p.w);
       const plaque = (k, a, y, b, ry, rx, sc = 1, rim = 0x1b1c1e) => { const pic = pics[k], w = (pic ? pic.w : 0.9) * sc, h = (pic ? pic.h : 0.5) * sc, [ox, oz] = [Math.sin(ry) * 0.012, Math.cos(ry) * 0.012];
         put(bits, box(w + 0.1, h + 0.1, 0.02), rim, a, y, b, ry, rx); if (pic) put(mesh({ map: pic.img, roughness: 0.5, metalness: 0.3 }), new THREE.PlaneGeometry(w, h), 0, a + ox, y, b + oz, ry, rx); };
-      plaque(0, 0, PL + 0.95, 1.162, 0, 0, 0.85); plaque(1, 0, PL + 0.95, -1.162, Math.PI, 0, 0.95, 0xe6e3da); plaque(3, 0, PL + 3.0, 0.775, 0, -0.133, 1.2);
-      // the bollards: little granite obelisks with a poppy, three down each side of the pad
-      [[-1.9, 1.5], [-0.75, 2.45], [0.75, 2.45], [1.9, 1.5], [-2.3, -0.3], [2.3, -0.3]].forEach(([a, b]) => { put(bits, new THREE.CylinderGeometry(0.13, 0.2, 1.05, 4), GRANITE, a, PL + 0.525, b, Q);
+      plaque(0, 0, PL + 0.95, 1.162, 0, 0, 0.85); plaque(3, 0, PL + 3.0, 0.775, 0, -0.133, 1.2);
+      // the bollards: little granite obelisks with a poppy, round the pad
+      [[-1.9, 1.3], [-0.75, 2.2], [0.75, 2.2], [1.9, 1.3], [-2.2, -0.4], [2.2, -0.4]].forEach(([a, b]) => { put(bits, new THREE.CylinderGeometry(0.13, 0.2, 1.05, 4), GRANITE, a, PL + 0.525, b, Q);
         put(bits, new THREE.ConeGeometry(0.13, 0.2, 4), GRANITE, a, PL + 1.15, b, Q); put(bits, new THREE.SphereGeometry(0.05, 8, 6), 0xc21b2a, a, PL + 0.85, b + 0.13); });
       // the boulders: rough, dark basalt, a bronze plaque leaning on each
       const rock = new THREE.DodecahedronGeometry(0.6, 0);
-      [[-3.9, 1.6, 0.5], [3.5, 2.0, -0.6]].forEach(([a, b, r], i) => { put(bits, rock, 0x5a5650, a, PL + 0.42, b, r + i * 1.3, 0.2, 0.15, 1.15, 0.95, 0.8);
+      [[-1.7, 2.3, 0.5], [3.7, -2.5, -0.6]].forEach(([a, b, r], i) => { put(bits, rock, 0x5a5650, a, PL + 0.42, b, r + i * 1.3, 0.2, 0.15, 1.15, 0.95, 0.8);
         put(bits, new THREE.DodecahedronGeometry(0.3, 0), 0x4d4944, a + 0.35, PL + 0.2, b - 0.3, i, 0.4, 0, 1.2, 0.8, 1);
         put(bits, box(0.55, 0.36, 0.03), 0x7a6a3e, a, PL + 0.3, b + 0.62, r * 0.3, -0.3); });
-      // the flagpoles behind it, and the flags out on the breeze
+      // the flagpoles either side in front, and the flags out on the breeze
       const flag = W.invAustr?.image ? mesh({ map: W.invAustr.image, roughness: 0.8, doubleSide: true }) : null;
-      [[-2.7, -2.1, 0.5], [3.0, -1.7, 0.2]].forEach(([a, b, r]) => { put(bits, rod(0.06, 9.5, 10, 0.045), 0xf4f3ef, a, PL + 4.75, b); put(bits, new THREE.SphereGeometry(0.09, 10, 8), 0xf4f3ef, a, PL + 9.55, b); put(bits, rod(0.14, 0.12, 10), 0xdedad2, a, PL + 0.06, b);
+      [[-2.6, 3.0, 0.5], [4.2, 0.0, 0.2]].forEach(([a, b, r]) => { put(bits, rod(0.06, 9.5, 10, 0.045), 0xf4f3ef, a, PL + 4.75, b); put(bits, new THREE.SphereGeometry(0.09, 10, 8), 0xf4f3ef, a, PL + 9.55, b); put(bits, rod(0.14, 0.12, 10), 0xdedad2, a, PL + 0.06, b);
         if (flag) put(flag, new THREE.PlaneGeometry(1.8, 0.9), 0, a + Math.cos(r) * 0.95, PL + 8.9, b - Math.sin(r) * 0.95, r); });
+    }
+
+    // ---- the last touches from Street View: the speed and bike-lane signs on their post at the kerb, the parking sign, the
+    // round-topped information post and the purple shrub by the clock, more shrubs along the kerb in front of it, and the
+    // visitor information signs on the library's corner
+    { const sign = (w, h, draw) => { const c = document.createElement("canvas"); c.width = Math.round(w * 220); c.height = Math.round(h * 220); draw(c.getContext("2d"), c.width, c.height); return mesh({ map: c, roughness: 0.6, doubleSide: true }); };
+      const [cx, cz] = TOWN_CLOCK, post = (x, z, h) => add(bits, rod(0.035, h), 0x9aa2a6, x, PL + h / 2, z);
+      post(cx + 2.6, cz + 2.0, 3.0);
+      add(sign(0.6, 0.8, (g, w, h) => { g.fillStyle = "#ffffff"; g.fillRect(0, 0, w, h); g.strokeStyle = "#d21f26"; g.lineWidth = w * 0.1; g.beginPath(); g.arc(w / 2, h * 0.45, w * 0.36, 0, 7); g.stroke();
+        g.fillStyle = "#111"; g.font = `700 ${w * 0.42}px system-ui, sans-serif`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("40", w / 2, h * 0.46); }), new THREE.PlaneGeometry(0.6, 0.8), 0, cx + 2.6, PL + 2.6, cz + 2.04, 0);
+      add(sign(0.5, 0.85, (g, w, h) => { g.fillStyle = "#ffffff"; g.fillRect(0, 0, w, h); g.strokeStyle = "#111"; g.lineWidth = 4; g.strokeRect(4, 4, w - 8, h - 8); g.fillStyle = "#111"; g.textAlign = "center"; g.textBaseline = "middle";
+        g.lineWidth = 5; [[0.33, 0.28], [0.67, 0.28]].forEach(([a, b]) => { g.beginPath(); g.arc(w * a, h * b, w * 0.13, 0, 7); g.stroke(); }); g.beginPath(); g.moveTo(w * 0.33, h * 0.28); g.lineTo(w * 0.5, h * 0.17); g.lineTo(w * 0.67, h * 0.28); g.stroke();
+        g.font = `700 ${w * 0.24}px system-ui, sans-serif`; g.fillText("LANE", w / 2, h * 0.58); g.fillText("END", w / 2, h * 0.82); }), new THREE.PlaneGeometry(0.5, 0.85), 0, cx + 2.6, PL + 1.7, cz + 2.04, 0);
+      post(cx - 2.4, cz - 3.6, 2.6);
+      add(sign(0.45, 0.6, (g, w, h) => { g.fillStyle = "#ffffff"; g.fillRect(0, 0, w, h); g.fillStyle = "#1f7a3a"; g.font = `700 ${w * 0.6}px system-ui, sans-serif`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("2P", w / 2, h * 0.4);
+        g.strokeStyle = "#1f7a3a"; g.lineWidth = 4; g.strokeRect(4, 4, w - 8, h - 8); }), new THREE.PlaneGeometry(0.45, 0.6), 0, cx - 2.4, PL + 2.25, cz - 3.56, 0);
+      add(bits, box(0.2, 1.1, 0.2), 0x8a7a5e, cx + 1.3, PL + 0.55, cz + 1.6); add(bits, rod(0.09, 0.02, 12), 0x3f78c4, cx + 1.3, PL + 0.9, cz + 1.71, 0, Math.PI / 2);
+      const bush = new THREE.IcosahedronGeometry(0.5, 1);
+      add(bits, bush, 0x5a2f4a, cx - 1.6, PL + 0.55, cz - 3.2, 0, 0, 0, 1.5, 1.1, 1.4);
+      [[-1.9, 1.5, 1.0], [-0.7, 2.0, 1.2], [0.5, 2.1, 1.0], [-2.6, 0.4, 0.9]].forEach(([dx, dz, k], i) => add(bits, bush, [0x355a2b, 0x40662f, 0x2f4f29][i % 3], cx + dx, PL + 0.3 * k, cz + dz, i, 0, 0, 1.3 * k, 0.8 * k, 1.1 * k));
+      if (D.lib) { const [x1, z1, x2, z2, nx, nz] = D.lib, r = Math.atan2(nx, nz), at = (t, o) => [x1 + (x2 - x1) * t + nx * o, z1 + (z2 - z1) * t + nz * o];
+        const info = (w, h, big) => sign(w, h, (g, cw, ch) => { g.fillStyle = "#f2c81e"; g.fillRect(0, 0, cw, ch); const q = big ? cw * 0.7 : ch * 0.8; g.fillStyle = "#1f3f9a"; g.fillRect(big ? cw * 0.15 : ch * 0.1, big ? ch * 0.12 : ch * 0.1, q, q);
+          g.fillStyle = "#f2c81e"; g.font = `700 italic ${q * 0.85}px Georgia, serif`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("i", (big ? cw * 0.15 : ch * 0.1) + q / 2, (big ? ch * 0.12 : ch * 0.1) + q * 0.52);
+          if (!big) { g.fillStyle = "#1f3f9a"; g.font = `700 ${ch * 0.27}px system-ui, sans-serif`; g.textAlign = "left"; g.fillText("Visitor", ch * 1.05, ch * 0.34); g.fillText("Information", ch * 1.05, ch * 0.68); } });
+        let [x, z] = at(0.86, 0.22); add(info(3.0, 1.1, false), new THREE.PlaneGeometry(3.0, 1.1), 0, x, 0.08 + 3.9, z, r);
+        [x, z] = at(0.62, 0.22); add(info(1.5, 2.6, true), new THREE.PlaneGeometry(1.5, 2.6), 0, x, 0.08 + 1.9, z, r); }
     }
 
     // ---- outside the shops
