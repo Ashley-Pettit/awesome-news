@@ -241,10 +241,6 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
 .ex-load.gone { opacity: 0; pointer-events: none; }
 .ex-load b { font: 750 1.3rem/1.25 var(--display, var(--ui)); letter-spacing: -0.01em; }
 .ex-load small { font: 500 0.9rem var(--ui); opacity: 0.75; }
-.ex-ask { max-width: none; } .ex-ask b { max-width: 22ch; } .ex-ask small { max-width: 34ch; line-height: 1.45; }
-.ex-ask-b { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
-.ex-ask-b button { height: 44px; padding: 0 18px; border: 0; border-radius: 999px; font: 700 0.95rem var(--ui); cursor: pointer; background: #ffd36b; color: #1b1830; }
-.ex-ask-b button + button { background: rgba(255, 255, 255, 0.14); color: #fff; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25); }
 .ex-load i { width: 46px; height: 46px; border-radius: 50%; border: 4px solid rgba(255, 255, 255, 0.22); border-top-color: #ffd36b; animation: exspin 0.9s linear infinite; }
 @keyframes exspin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .ex-load i { animation-duration: 2.4s; } }
@@ -1983,20 +1979,7 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     const d = exLoad = document.createElement("div"); d.className = "ex-load"; d.setAttribute("role", "status");
     d.innerHTML = `<i aria-hidden="true"></i><b>Loading ${where} 3D model</b><small>This takes a few seconds</small>`; document.body.appendChild(d); };
   const exLoadDone = () => { const d = exLoad; if (!d) return; exLoad = null; d.classList.add("gone"); setTimeout(() => d.remove(), 600); };
-  // Facebook, Messenger and Instagram open links in their own small browser, which can run out of memory on a whole suburb in 3D
-  // (the page then fails with "can't reach this page"). There, ask first: open it in the phone's browser, or try here anyway.
-  const IN_APP = /FBAN|FBAV|FB_IAB|FBIOS|Instagram|Messenger/i.test(navigator.userAgent || "");
-  let exHold = false;
-  if (pendingExplore && IN_APP) {
-    exHold = true; const where = exploreName(pendingExplore), app = /Instagram/i.test(navigator.userAgent) ? "Instagram" : "Facebook";
-    const d = exLoad = document.createElement("div"); d.className = "ex-load ex-ask"; d.setAttribute("role", "dialog"); d.setAttribute("aria-label", `${where} 3D model`);
-    d.innerHTML = `<b>Open the ${where} 3D model in your browser</b><small>${app}'s built-in browser often runs out of memory for a whole suburb in 3D. Tap ••• at the top, then Open in browser (or Open in Safari).</small>
-      <div class="ex-ask-b"><button type="button" data-x="copy">Copy link</button><button type="button" data-x="go">Try here anyway</button></div>`;
-    d.onclick = async e => { const x = e.target.closest("[data-x]")?.dataset.x; if (!x) return;
-      if (x === "copy") { const u = location.origin + location.pathname; try { await navigator.clipboard.writeText(u); e.target.textContent = "Link copied"; } catch { e.target.textContent = u; } return; }
-      d.remove(); exLoad = null; exLoadShow(where); const go = exHold; exHold = false; if (typeof go === "function") go(); };
-    document.body.appendChild(d);
-  } else if (pendingExplore) exLoadShow(exploreName(pendingExplore));
+  if (pendingExplore) exLoadShow(exploreName(pendingExplore));
   const hash = pendingStory || pendingTV || pendingExplore ? "" : rawHash;
   const state = {
     tab: hash || store.get("brief.tab3", "foryou"),
@@ -9010,7 +8993,7 @@ const handle = async (m, post) => {
       if (pendingStory) { const id = pendingStory; pendingStory = ""; history.replaceState(null, "", location.pathname); if (findItem(id)) openReader(id); else loadArchive()?.then?.(() => findItem(id) ? openReader(id) : toast("That story isn't in the news here any more")).catch(() => toast("That story isn't in the news here any more")); }
       if (pendingTV) { pendingTV = false; try { history.replaceState(null, "", location.pathname); } catch {} openTV(); }
       if (pendingExplore) { const which = pendingExplore; pendingExplore = ""; try { history.replaceState(null, "", location.pathname); } catch {}
-        if (exHold) exHold = () => townModelOpen(true, which); else townModelOpen(true, which); }  // it waits for the weather itself, with the loader up
+        townModelOpen(true, which); }  // it waits for the weather itself, with the loader up
       afterPics("offline", saveOffline);
       if (!state.wx) loadWeather();
     } catch {
