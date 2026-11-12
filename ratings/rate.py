@@ -14,7 +14,8 @@ in this order:
                                                      Claude judges the article, not just the headline
     python ratings/rate.py merge scores.tsv          adds "id<TAB>interest<TAB>topic<TAB>negativity" lines to ratings/
                                                      interest.json, topics.json and neg.json; drops stories gone from the site
-    python ratings/rate.py blank [max]               writes ratings/blank.tsv: id, outlet, headline, link for stories with no
+    python ratings/rate.py blank [max] [--text DIR]  writes ratings/blank.tsv: id, outlet, headline, link (and, with --text, what the
+                                                     article says, keeping only stories with text) for stories with no
                                                      text at all, for Claude to summarise
     python ratings/rate.py sums file.tsv             adds "id<TAB>summary" lines to ratings/summaries.json
 
@@ -78,8 +79,8 @@ def order_by_likeness(rows):
     return out
 
 
-def article_text(d):
-    """{id: first few hundred characters of the article} from the fetcher's OUT/text/*.json."""
+def article_text(d, most=700):
+    """{id: the start of the article (most characters)} from the fetcher's OUT/text/*.json."""
     out = {}
     if not d or not os.path.isdir(d):
         return out
@@ -97,7 +98,7 @@ def article_text(d):
             txt = " ".join(p if isinstance(p, str) else str(p.get("t") or p.get("text") or "") if isinstance(p, dict) else "" for p in ps)
             txt = re.sub(r"<[^>]+>|\s+", " ", txt).strip()
             if txt:
-                out[sid] = txt[:700]
+                out[sid] = txt[:most]
     return out
 
 
@@ -247,16 +248,21 @@ def main():
             json.dump(docs[fn], open(os.path.join(d, fn), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
         print(json.dumps({"sameTopicDropped": same, "dullDropped": dull, "files": len(secs)}))
     elif cmd == "blank":
-        most = int(sys.argv[2]) if len(sys.argv) > 2 else 15
+        args = sys.argv[2:]
+        tdir = args[args.index("--text") + 1] if "--text" in args else ""
+        nums = [a for a in args if a.isdigit()]
+        most = int(nums[0]) if nums else 15
+        texts = article_text(tdir, 1500) if tdir else {}
         try:
             have = json.load(open(SUMS, encoding="utf-8")).get("summaries", {})
         except Exception:
             have = {}
         bare, _ = bare_now()
-        todo = [(k, v) for k, v in bare.items() if k not in have][:most]
+        todo = [(k, v) for k, v in bare.items() if k not in have and (not tdir or len(texts.get(k, "")) >= 200)][:most]
         with open(os.path.join(HERE, "blank.tsv"), "w", encoding="utf-8") as f:
-            for k, (src, t, u) in todo:
-                f.write(f"{k}\t{src}\t{t}\t{u}\n".replace("\r", " "))
+            for k, (src, t, u) in todo:  # with --text: a 5th column, what the article says (so no web fetching is needed)
+                say = re.sub(r"[\t\r\n]+", " ", texts.get(k, ""))
+                f.write((f"{k}\t{src}\t{t}\t{u}" + (f"\t{say}" if tdir else "")).replace("\r", " ") + "\n")
         print(json.dumps({"blank": len(bare), "todo": len(todo)}))
     elif cmd == "sums":
         try:
