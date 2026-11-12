@@ -47,11 +47,12 @@ and the GitHub Actions workflows (news data and the `chat` branch). Everything e
 
 ### For the Awesome News chat (the one that merges)
 
-For each open pull request, oldest first: read the diff, bring it up to date with `main` and sort out any clashes
-(keeping both sides' work), build it (`python3 build.py`), check the scripts still parse and try the changed pages
-at phone and desktop sizes. Then merge it, wait for the publish, and tell Ash what went live with the linked pull
-request, the linked commit and the page to open. If a pull request breaks something, don't merge it: say what's
-wrong on the pull request and tell Ash.
+For each open pull request, oldest first: read the diff and merge it. Only when it clashes with `main`: bring it up
+to date, sort out the clashes (keeping both sides' work), then build it (`python3 build.py`), check the scripts
+still parse and try the changed pages at phone and desktop sizes before merging. A clean pull request needs no
+testing (Ash, 12 November 2026: "no need to test merge unless fixing conflict"). Then wait for the publish and tell
+Ash what went live with the linked pull request, the linked commit and the page to open. If a pull request plainly
+breaks something, don't merge it: say what's wrong on the pull request and tell Ash.
 
 Where this comes from: on 12 November 2026 Ash said "There are issues with multiple agents pushing. What I'll do is
 you just send PRs and another agent will push in. Remind me to get that agent to pull when you push. That agent is
