@@ -67,6 +67,19 @@ The weather's town is flat and the model's ground slopes, so each shape is hande
 the ground and the model lays it down along the terrain. Anything added to the weather's town centre later shows up
 in the model too, as long as it stands inside the block.
 
+## Moorooka close up
+
+So the suburb holds up from walking height (none of this is on the slowest devices' cut-down version except the
+ground texture and the cars):
+
+- **The ground:** within about 300 m of the camera the ground picture's pixel edges are roughened and texture is
+  added: clumps, blades and dry patches on lawn, stains and grit on sealed ground and on the streets. Generated in
+  the model's shader, not surveyed, and no extra download.
+- **Kerbs and footpaths:** a kerb on every street; a concrete footpath beyond a grass strip on both sides of the
+  bigger streets and one side of local streets. Generated: which streets really have a footpath is not surveyed.
+- **Cars:** sedans with a sloping bonnet and boot, a glazed cabin, round wheels, bumpers, plates, door seams and
+  lights, in place of the earlier blocks. Generated.
+
 ## Moorooka's floods
 
 **Flood** in Explore Moorooka works the way it does in the Logan model (see `logan/README.md`), through the same
