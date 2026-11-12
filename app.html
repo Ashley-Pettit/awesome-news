@@ -7959,7 +7959,16 @@ const handle = async (m, post) => {
     [[44.33, -19.5], [97, -12.9], [97, 57.2], [35.17, 49.85]],               // the shops east of Reilly Street
     [[-57, 38.9], [57.1, 52.46], [55.2, 76.2], [40.5, 87.6], [-57, 70.5]],   // the shops across A'Beckett Street
   ];
-  const TOWN_MEMORIAL = [25, 0.5, -0.15];  // the war memorial: where it stands and which way it faces; the model builds its own (townModelExtras)
+  // The corner of A'Beckett and Reilly Streets as it really is (from Google Maps): one brick plaza, the war memorial at its
+  // lawn end and the Rotary clock a few metres on, out on the kerb's build-out. The weather's town has the clock where the
+  // memorial belongs and the memorial up by Reilly Street; the model puts both right and builds the plaza (townModelExtras).
+  const TOWN_OLD_MEMORIAL = [25, 0.5];             // where the weather's own memorial stands: left out of the model
+  const TOWN_PLAZA = [18, 18.6, 0.115];            // the plaza's frame: a point in it, and A'Beckett Street's slant
+  const TOWN_MEMORIAL = [17.4, 18.3, Math.PI - 0.115];  // the memorial: where it stands and which way it faces (the lawn)
+  const TOWN_CLOCK = [19.8, 26.5];                 // the clock
+  // a across the plaza (along the street, east), b down it (towards the street): from the town's metres
+  const townPlazaAB = (x, z) => { const [ox, oz, t] = TOWN_PLAZA, dx = x - ox, dz = z - oz; return [dx * Math.cos(t) + dz * Math.sin(t), -dx * Math.sin(t) + dz * Math.cos(t)]; };
+  const townOnPlaza = (x, z) => { const [a, b] = townPlazaAB(x, z); return (Math.abs(a) < 5.8 && b > -4.2 && b < 4.2) || (a > -3.3 && a < 5.8 && b >= 4.2 && b < 12.2); };
   const townInPiece = (P, x, z) => P.every((a, i) => { const b = P[(i + 1) % P.length]; return (b[0] - a[0]) * (z - a[1]) - (b[1] - a[1]) * (x - a[0]) >= 0; });
   const townInBlock = (x, z) => TOWN_BLOCK.some(P => townInPiece(P, x, z));
   // The town centre, the Rotary clock and number 11 Norman Road are copied out of the weather's Inverloch (which is left as it
@@ -8024,17 +8033,19 @@ const handle = async (m, post) => {
     let block = null;
     if (W.invClock && tower) { const still = new Set(); [W.invClock, ...flags, ...drive, ...moving, ...cars].filter(Boolean).forEach(r => r.traverse(o => still.add(o)));  // (the clock's plaza is built afresh for the model, below)
       const t0 = performance.now();
-      try { block = townModelBlock(T, m, { THREE, TG, toTG, look, glows, plain, skip: still, drop: (x, z, flat) => { const d = Math.hypot(x - TOWN_MEMORIAL[0], z - TOWN_MEMORIAL[1]); return d < 7 || (flat && d < 13.5 && x < TOWN_MEMORIAL[0] - 1.5); } }); } catch (e) { console.warn("Town model: the town centre couldn't be added", e); }
+      try { block = townModelBlock(T, m, { THREE, TG, toTG, look, glows, plain, skip: still, drop: (x, z, flat, top) => { const d = Math.hypot(x - TOWN_OLD_MEMORIAL[0], z - TOWN_OLD_MEMORIAL[1]);  // the weather's memorial and its paving (not the park's paths beside it), whatever lies under the plaza, and the benches and bins round the weather's clock
+        return (flat ? top > 0.102 && (d < 1.5 || (d < 14 && top < 0.1285)) : d < 7) || (flat && townOnPlaza(x, z)) || (!flat && Math.hypot(x - D.c[0], z - D.c[1]) < 9.5); } }); } catch (e) { console.warn("Town model: the town centre couldn't be added", e); }
       if (block) T.block = { parts: block.parts, corners: block.corners, ms: Math.round(performance.now() - t0) }; }
     if (block) { const [cx, cz] = block.at(D.c[0], D.c[1]);
-      whole(tower, block.place(D.c[0], D.c[1]));
-      flags.forEach(f => { v.setFromMatrixPosition(f.matrixWorld).applyMatrix4(toTG); if (Math.hypot(v.x - TOWN_MEMORIAL[0], v.z - TOWN_MEMORIAL[1]) > 7) whole(f, block.place(v.x, v.z)); });  // (the memorial has its own two)
-      if (W.invSpot) stop("the clock", W.invSpot, block.place(D.c[0], D.c[1]), [cx, cz]);
+      const [kx, kz] = block.at(TOWN_CLOCK[0], TOWN_CLOCK[1]), clockPlace = block.place(D.c[0], D.c[1]).setPosition(kx - D.c[0], block.place(TOWN_CLOCK[0], TOWN_CLOCK[1]).elements[13], kz - D.c[1]);
+      whole(tower, clockPlace);
+      flags.forEach(f => { v.setFromMatrixPosition(f.matrixWorld).applyMatrix4(toTG); if (Math.hypot(v.x - TOWN_OLD_MEMORIAL[0], v.z - TOWN_OLD_MEMORIAL[1]) > 7) whole(f, block.place(v.x, v.z)); });  // (the memorial has its own two)
       // somewhere to stand for the bakery (out in the mouth of Reilly Street, across from it) and for the war memorial (in front of it)
       const standAt = (name, fx, fz, tx, tz, pitch) => { const [x, z] = block.at(fx, fz), [ax, az] = block.at(tx, tz); jumps.push({ name, target: [ax, az], walk: { x, z, yaw: Math.atan2(x - ax, z - az), pitch } }); };
+      standAt("the clock", 12.5, 12.5, TOWN_CLOCK[0], TOWN_CLOCK[1], 0.12);  // from the lawn: the memorial in front, the clock beyond, the bakery across the street
       const pie = D.u.find(u => /PIEMAN/.test(u[9] || ""));
       if (pie) { const mx = (pie[0] + pie[2]) / 2, mz = (pie[1] + pie[3]) / 2; standAt("the bakery", mx + pie[4] * 27, mz + pie[5] * 27, mx, mz, 0.06); }
-      standAt("the war memorial", 25 - Math.sin(0.15) * 12, 0.5 + Math.cos(0.15) * 12, 25, 0.5, 0.03);
+      standAt("the war memorial", TOWN_MEMORIAL[0] + 1.5, TOWN_MEMORIAL[1] - 11, TOWN_MEMORIAL[0], TOWN_MEMORIAL[1], 0.05);
       try { townModelExtras(m, block, THREE, W); } catch (e) { console.warn("Town model: the clock's plaza, café tables and signs couldn't be added", e); } }
     // without it, the Rotary clock alone, on a garden bed at the corner of A'Beckett and Reilly Streets
     else if (W.invClock) { const [x, z] = m.fromLatLon(...townLL(D.c[0], D.c[1])), top = m.addPad({ x, z, radius: 2.7, color: [0.19, 0.3, 0.12], lift: 0.3 });
@@ -8115,7 +8126,7 @@ const handle = async (m, post) => {
       let last = null;
       for (const sh of order) { const x = (sh.x0 + sh.x1) / 2, z = (sh.z0 + sh.z1) / 2;
         sh.flat = sh.y1 <= G0 + 0.36 && sh.y0 >= G0 - 0.02;
-        if (drop?.(x, z, sh.flat)) { sh.inn = false; continue; }  // (something the model builds afresh)
+        if (drop?.(x, z, sh.flat, sh.y1 - G0)) { sh.inn = false; continue; }  // (something the model builds afresh)
         if (sh.flat) { sh.inn = sh.y1 >= G0 + 0.045 && sh.x1 >= zx0 && sh.x0 <= zx1 && sh.z1 >= zz0 && sh.z0 <= zz1; continue; }  // (not the map's painted parks and car parks: the model has its own)
         let b = inside(x, z); if (b < 0) b = beside(x, z, 4.1);
         const tree = b < 0 && sh.y0 >= G0 + 3.2 ? trees.find(t => Math.hypot(t.x - x, t.z - z) < 4.3) : null;
@@ -8180,34 +8191,36 @@ const handle = async (m, post) => {
       for (let r = 0; r < 16; r++) for (let k = -1; k < 8; k++) { const t = rnd(r * 17 + k * 5 + 1), x = k * 32 + (r % 2) * 16, y = r * 16;
         g.fillStyle = `rgb(${172 + t * 34 | 0},${84 + t * 22 | 0},${64 + t * 18 | 0})`; g.fillRect(x + 1, y + 1, 30, 14); if (x + 32 > 256) g.fillRect(x - 255, y + 1, 30, 14); } }
 
-    // ---- the foot of the clock, in its own frame: a across (to the right, seen from the library side), b out towards the library
-    if (W.invClock) { const cr = D.c[2], PL = 0.24, at = (a, b) => [D.c[0] + Math.cos(cr) * a + Math.sin(cr) * b, D.c[1] - Math.sin(cr) * a + Math.cos(cr) * b];
+    // ---- the plaza: brick, edged with pale concrete; a broad piece by the lawn and a narrower one out to the street
+    const PL = 0.2;
+    { const [ox, oz, t] = TOWN_PLAZA, pl = (a, b) => [ox + Math.cos(t) * a - Math.sin(t) * b, oz + Math.sin(t) * a + Math.cos(t) * b];
+      const slab = (a, b, w, d, bk, colour, h = PL) => { const [x, z] = pl(a, b); add(bk, box(w, h, d), colour, x, h / 2, z, -t); };
+      slab(0, 0, 11, 7.8, mesh({ map: bc, mapRepeat: [6.9, 4.9], roughness: 0.95 }), 0); slab(1.25, 7.95, 8.5, 8.1, mesh({ map: bc, mapRepeat: [5.3, 5.1], roughness: 0.95 }), 0);
+      [[0, -4.05, 11.6, 0.3], [-5.65, 0, 0.3, 7.8], [5.65, 3.95, 0.3, 16.1], [-4.4, 4.05, 2.8, 0.3], [-3.15, 8.1, 0.3, 7.8], [1.25, 12.15, 9.1, 0.3]].forEach(([a, b, w, d]) => slab(a, b, w, d, bits, 0xd6c8a8, PL + 0.015)); }
+
+    // ---- the foot of the clock, in its own frame: a across (to the right, seen from the lawn side), b out towards the lawn
+    if (W.invClock) { const cr = D.c[2], at = (a, b) => [TOWN_CLOCK[0] + Math.cos(cr) * a + Math.sin(cr) * b, TOWN_CLOCK[1] - Math.sin(cr) * a + Math.cos(cr) * b];
       const put = (bk, geo, colour, a, y, b, ry = 0, rx = 0, rz = 0, sx = 1, sy = 1, sz = 1) => { const [x, z] = at(a, b); add(bk, geo, colour, x, y, z, cr + ry, rx, rz, sx, sy, sz); };
-      // brick paving, laid in courses, inside a band of pale concrete
-      const paving = mesh({ map: bc, mapRepeat: [10.5, 5.8], roughness: 0.95 });
-      put(paving, box(16.8, PL, 9.3), 0, -3.3, PL / 2, -0.87);
-      [[-3.3, 3.95, 17.5, 0.35], [-3.3, -5.69, 17.5, 0.35], [-11.87, -0.87, 0.35, 9.3], [5.27, -0.87, 0.35, 9.3]].forEach(([a, b, w, d]) => put(bits, box(w, PL + 0.015, d), 0xd6c8a8, a, (PL + 0.015) / 2, b));
       // the bed: a stone edge, mulch, tussock grasses (green and straw-gold) and low dark shrubs
       const disc = rod(1, 1, 28);
-      put(bits, disc, 0xbdb6a6, 0, PL + 0.07, -0.7, 0, 0, 0, 4.25, 0.14, 2.75); put(bits, disc, 0x4a3a2c, 0, PL + 0.11, -0.7, 0, 0, 0, 4.05, 0.22, 2.55);
+      put(bits, disc, 0xbdb6a6, 0, PL + 0.07, -0.4, 0, 0, 0, 2.85, 0.14, 1.95); put(bits, disc, 0x4a3a2c, 0, PL + 0.11, -0.4, 0, 0, 0, 2.7, 0.22, 1.8);
       const BED = PL + 0.22, blade = new THREE.ConeGeometry(0.07, 1, 3), GRASS = [0x6f8f3c, 0xb7a258, 0x587a34, 0xc2ad62, 0x7b9a45];
-      for (let k = 0; k < 26; k++) { const ang = k / 26 * Math.PI * 2 + rnd(k) * 0.4, rr = 0.35 + rnd(k + 40) * 0.6, a = Math.cos(ang) * 3.6 * rr, b = -0.7 + Math.sin(ang) * 2.2 * rr;
-        if (Math.hypot(Math.abs(a) - 0.45, b) < 0.55) continue;  // not on the poles
-        const h = 0.75 + rnd(k + 80) * 0.6, colour = GRASS[k % GRASS.length];
-        for (let j = 0; j < 11; j++) { const t = j / 11 * Math.PI * 2, lean = 0.28 + rnd(k * 11 + j) * 0.3;
-          put(bits, blade, colour, a + Math.cos(t) * 0.14, BED + h * 0.46, b + Math.sin(t) * 0.14, 0, Math.sin(t) * lean, -Math.cos(t) * lean, 1, h, 1); } }
+      for (let k = 0; k < 18; k++) { const ang = k / 18 * Math.PI * 2 + rnd(k) * 0.4, rr = 0.4 + rnd(k + 40) * 0.55, a = Math.cos(ang) * 2.4 * rr, b = -0.4 + Math.sin(ang) * 1.5 * rr;
+        if (Math.hypot(Math.abs(a) - 0.45, b) < 0.5) continue;  // not on the poles
+        const h = 0.7 + rnd(k + 80) * 0.5, colour = GRASS[k % GRASS.length];
+        for (let j = 0; j < 11; j++) { const tt = j / 11 * Math.PI * 2, lean = 0.28 + rnd(k * 11 + j) * 0.3;
+          put(bits, blade, colour, a + Math.cos(tt) * 0.13, BED + h * 0.46, b + Math.sin(tt) * 0.13, 0, Math.sin(tt) * lean, -Math.cos(tt) * lean, 1, h, 1); } }
       const bush = new THREE.IcosahedronGeometry(0.5, 1);
-      [[-3.1, -1.5, 1.1], [3.0, -1.3, 1.2], [-2.2, 0.6, 0.9], [2.5, 0.5, 0.95], [-0.2, -2.6, 1.25], [1.5, -2.3, 1.0], [-1.7, -2.4, 0.9]].forEach(([a, b, k], i) =>
-        put(bits, bush, [0x355a2b, 0x2f4f29, 0x40662f][i % 3], a, BED + 0.28 * k, b, i, 0, 0, 1.25 * k, 0.72 * k, 1.05 * k));
+      [[-1.9, -0.8, 0.9], [1.9, -0.7, 0.95], [-0.2, -1.6, 1.0], [1.1, 0.7, 0.8]].forEach(([a, b, k], i) => put(bits, bush, [0x355a2b, 0x2f4f29, 0x40662f][i % 3], a, BED + 0.28 * k, b, i, 0, 0, 1.2 * k, 0.72 * k, 1.05 * k));
       // the poles' feet: a broad teal base with a collar round its top, on a flange
       [-0.452, 0.452].forEach(a => { put(bits, rod(0.3, 0.1, 14), 0x2c6f68, a, BED + 0.05, 0); put(bits, rod(0.22, 1.25, 14, 0.2), 0x3b8f86, a, BED + 0.72, 0);
         put(bits, rod(0.255, 0.08, 14), 0x2c6f68, a, BED + 1.36, 0); put(bits, rod(0.24, 0.06, 14), 0x2c6f68, a, BED + 0.5, 0); });
-      // the four mosaic blocks: concrete wedges in a row on the paving, a picture on each sloping face
+      // the four mosaic blocks: concrete wedges in a row between the clock and the memorial, a picture on each sloping face
       const maps = []; W.invClock.traverse(o => { const mp = o.isMesh && o.geometry?.type === "PlaneGeometry" && o.material?.map; if (mp?.image && !maps.includes(mp.image)) maps.push(mp.image); });
       const wedge = new THREE.ExtrudeGeometry(new THREE.Shape([[-0.37, 0], [0.37, 0], [0.13, 1.02], [-0.13, 1.02]].map(([x, y]) => new THREE.Vector2(x, y))), { depth: 0.96, bevelEnabled: false });
       wedge.translate(0, 0, -0.48); wedge.rotateY(Math.PI / 2);
       const tilt = Math.atan2(0.24, 1.02), pane = new THREE.PlaneGeometry(0.76, 0.8);
-      [-2.45, -1.25, -0.05, 1.15].forEach((a, k) => { const b = 2.25;
+      [-1.8, -0.6, 0.6, 1.8].forEach((a, k) => { const b = 2.3;
         put(bits, wedge, 0xcfcbc1, a, PL, b); put(bits, box(1.0, 0.05, 0.3), 0xdedad0, a, PL + 1.045, b); put(bits, box(1.04, 0.06, 0.82), 0xb9b4a8, a, PL + 0.03, b);
         const pic = maps[k] ? mesh({ map: maps[k], roughness: 0.4, metalness: 0.1 }) : null;
         [1, -1].forEach(sd => { const off = (0.25 + 0.012) * sd;
@@ -8217,44 +8230,35 @@ const handle = async (m, post) => {
 
     // ---- the war memorial, as in photos of it: a tall tapering concrete obelisk with a pyramid top on a big square plinth,
     // its plaques (the weather's own pictures), six granite bollards (little obelisks, a poppy on each) on a concrete pad set
-    // cornerwise, a rough dark boulder with a plaque out to each side, two white flagpoles behind with the flag flying, all on
-    // a broad apron of brick paving with a concrete path across its front. The apron runs out to Reilly Street's footpath;
-    // everything that stands is kept on the apron, off the footpath and the park's path.
-    // In its own frame: a across (to the right, seen from the front), b out towards the front (the clock's side).
-    { const [MX, MZ, MR] = TOWN_MEMORIAL, PL = 0.14, at = (a, b) => [MX + Math.cos(MR) * a + Math.sin(MR) * b, MZ - Math.sin(MR) * a + Math.cos(MR) * b];
+    // cornerwise, a rough dark boulder with a plaque out to each side, and a white flagpole either side in front with the
+    // flag flying. In its own frame: a across (to the right, seen from the front), b out towards the front (the lawn).
+    { const [MX, MZ, MR] = TOWN_MEMORIAL, at = (a, b) => [MX + Math.cos(MR) * a + Math.sin(MR) * b, MZ - Math.sin(MR) * a + Math.cos(MR) * b];
       const put = (bk, geo, colour, a, y, b, ry = 0, rx = 0, rz = 0, sx = 1, sy = 1, sz = 1) => { const [x, z] = at(a, b); add(bk, geo, colour, x, y, z, MR + ry, rx, rz, sx, sy, sz); };
       const CONC = 0xc6cacc, CONC2 = 0xb4b9bc, GRANITE = 0xcfcdd0, Q = Math.PI / 4;
-      put(mesh({ map: bc, mapRepeat: [6.1, 5.5], roughness: 0.95 }), box(9.8, PL, 8.8), 0, -0.3, PL / 2, 1.2);
-      // the ways in, laid afresh so each runs straight up to the apron's edge: the park's two paths (from the library side and
-      // from the north), and a brick walk from the clock's paving
-      const way = (bk, colour, x0, z0, a1, b1, w, top) => { const [x1, z1] = at(a1, b1), L = Math.hypot(x1 - x0, z1 - z0); add(bk, box(w, top, L), colour, (x0 + x1) / 2, top / 2, (z0 + z1) / 2, Math.atan2(x1 - x0, z1 - z0)); };
-      way(bits, 0xcfc8ba, 12.3, 12.6, -4.2, 5.4, 2.4, 0.12); way(bits, 0xcfc8ba, 24.0, -17.3, -2.4, -3.1, 2.4, 0.12);
-      { const cr = D.c[2], x0 = D.c[0] + Math.cos(cr) * -6.5 + Math.sin(cr) * -5.3, z0 = D.c[1] - Math.sin(cr) * -6.5 + Math.cos(cr) * -5.3, [x1, z1] = at(0.4, 5.5), L = Math.hypot(x1 - x0, z1 - z0);
-        add(mesh({ map: bc, mapRepeat: [1.75, L / 1.6], roughness: 0.95 }), box(2.8, 0.13, L), 0, (x0 + x1) / 2, 0.065, (z0 + z1) / 2, Math.atan2(x1 - x0, z1 - z0)); }
-      put(bits, box(4.3, 0.03, 4.3), 0xb9bcbc, 0, PL + 0.015, 0.2, Q);                     // the pad it stands on, set cornerwise
+      put(bits, box(4.1, 0.03, 4.1), 0xb9bcbc, 0, PL + 0.015, 0.1, Q);                     // the pad it stands on, set cornerwise
       // the plinth with its sloping shoulder, the shaft and its pyramid top
       put(bits, box(2.5, 0.16, 2.5), CONC2, 0, PL + 0.11, 0); put(bits, box(2.3, 1.45, 2.3), CONC, 0, PL + 0.915, 0);
       put(bits, new THREE.CylinderGeometry(1.3, 1.63, 0.16, 4), CONC2, 0, PL + 1.72, 0, Q);
       put(bits, new THREE.CylinderGeometry(0.8, 1.24, 3.3, 4), CONC, 0, PL + 3.45, 0, Q); put(bits, new THREE.ConeGeometry(0.86, 0.5, 4), CONC2, 0, PL + 5.35, 0, Q);
       // its plaques: the weather's own, widest on the front of the plinth, the next on the back, the small one on the shaft
-      const pics = []; W.invTG?.traverse(o => { const mp = o.isMesh && o.geometry?.type === "PlaneGeometry" && o.material?.map, q = o.geometry?.parameters; if (!mp?.image || !q || q.width > 1.6) return;
+      const pics = [], [OX, OZ] = TOWN_OLD_MEMORIAL; W.invTG?.traverse(o => { const mp = o.isMesh && o.geometry?.type === "PlaneGeometry" && o.material?.map, q = o.geometry?.parameters; if (!mp?.image || !q || q.width > 1.6) return;
         const pw = new THREE.Vector3().setFromMatrixPosition(o.matrixWorld).applyMatrix4(new THREE.Matrix4().copy(W.invTG.matrixWorld).invert());
-        if (Math.hypot(pw.x - MX, pw.z - MZ) < 3.2 && pw.y < 6 && !pics.some(k => k.img === mp.image)) pics.push({ img: mp.image, w: q.width, h: q.height }); });
+        if (Math.hypot(pw.x - OX, pw.z - OZ) < 3.2 && pw.y < 6 && !pics.some(k => k.img === mp.image)) pics.push({ img: mp.image, w: q.width, h: q.height }); });
       pics.sort((p, q) => q.w - p.w);
       const plaque = (k, a, y, b, ry, rx, sc = 1, rim = 0x1b1c1e) => { const pic = pics[k], w = (pic ? pic.w : 0.9) * sc, h = (pic ? pic.h : 0.5) * sc, [ox, oz] = [Math.sin(ry) * 0.012, Math.cos(ry) * 0.012];
         put(bits, box(w + 0.1, h + 0.1, 0.02), rim, a, y, b, ry, rx); if (pic) put(mesh({ map: pic.img, roughness: 0.5, metalness: 0.3 }), new THREE.PlaneGeometry(w, h), 0, a + ox, y, b + oz, ry, rx); };
       plaque(0, 0, PL + 0.95, 1.162, 0, 0, 0.85); plaque(1, 0, PL + 0.95, -1.162, Math.PI, 0, 0.95, 0xe6e3da); plaque(3, 0, PL + 3.0, 0.775, 0, -0.133, 1.2);
-      // the bollards: little granite obelisks with a poppy, three down each side of the pad
-      [[-1.9, 1.5], [-0.75, 2.45], [0.75, 2.45], [1.9, 1.5], [-2.3, -0.3], [2.3, -0.3]].forEach(([a, b]) => { put(bits, new THREE.CylinderGeometry(0.13, 0.2, 1.05, 4), GRANITE, a, PL + 0.525, b, Q);
+      // the bollards: little granite obelisks with a poppy, round the pad
+      [[-1.9, 1.3], [-0.75, 2.2], [0.75, 2.2], [1.9, 1.3], [-2.2, -0.4], [2.2, -0.4]].forEach(([a, b]) => { put(bits, new THREE.CylinderGeometry(0.13, 0.2, 1.05, 4), GRANITE, a, PL + 0.525, b, Q);
         put(bits, new THREE.ConeGeometry(0.13, 0.2, 4), GRANITE, a, PL + 1.15, b, Q); put(bits, new THREE.SphereGeometry(0.05, 8, 6), 0xc21b2a, a, PL + 0.85, b + 0.13); });
       // the boulders: rough, dark basalt, a bronze plaque leaning on each
       const rock = new THREE.DodecahedronGeometry(0.6, 0);
-      [[-3.9, 1.6, 0.5], [3.5, 2.0, -0.6]].forEach(([a, b, r], i) => { put(bits, rock, 0x5a5650, a, PL + 0.42, b, r + i * 1.3, 0.2, 0.15, 1.15, 0.95, 0.8);
+      [[-3.9, 0.9, 0.5], [3.9, 0.7, -0.6]].forEach(([a, b, r], i) => { put(bits, rock, 0x5a5650, a, PL + 0.42, b, r + i * 1.3, 0.2, 0.15, 1.15, 0.95, 0.8);
         put(bits, new THREE.DodecahedronGeometry(0.3, 0), 0x4d4944, a + 0.35, PL + 0.2, b - 0.3, i, 0.4, 0, 1.2, 0.8, 1);
         put(bits, box(0.55, 0.36, 0.03), 0x7a6a3e, a, PL + 0.3, b + 0.62, r * 0.3, -0.3); });
-      // the flagpoles behind it, and the flags out on the breeze
+      // the flagpoles either side in front, and the flags out on the breeze
       const flag = W.invAustr?.image ? mesh({ map: W.invAustr.image, roughness: 0.8, doubleSide: true }) : null;
-      [[-2.7, -2.1, 0.5], [3.0, -1.7, 0.2]].forEach(([a, b, r]) => { put(bits, rod(0.06, 9.5, 10, 0.045), 0xf4f3ef, a, PL + 4.75, b); put(bits, new THREE.SphereGeometry(0.09, 10, 8), 0xf4f3ef, a, PL + 9.55, b); put(bits, rod(0.14, 0.12, 10), 0xdedad2, a, PL + 0.06, b);
+      [[-3.5, 2.5, 0.5], [3.6, 2.4, 0.2]].forEach(([a, b, r]) => { put(bits, rod(0.06, 9.5, 10, 0.045), 0xf4f3ef, a, PL + 4.75, b); put(bits, new THREE.SphereGeometry(0.09, 10, 8), 0xf4f3ef, a, PL + 9.55, b); put(bits, rod(0.14, 0.12, 10), 0xdedad2, a, PL + 0.06, b);
         if (flag) put(flag, new THREE.PlaneGeometry(1.8, 0.9), 0, a + Math.cos(r) * 0.95, PL + 8.9, b - Math.sin(r) * 0.95, r); });
     }
 
