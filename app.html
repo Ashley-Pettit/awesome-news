@@ -8024,7 +8024,7 @@ const handle = async (m, post) => {
     let block = null;
     if (W.invClock && tower) { const still = new Set(); [W.invClock, ...flags, ...drive, ...moving, ...cars].filter(Boolean).forEach(r => r.traverse(o => still.add(o)));  // (the clock's plaza is built afresh for the model, below)
       const t0 = performance.now();
-      try { block = townModelBlock(T, m, { THREE, TG, toTG, look, glows, plain, skip: still, drop: (x, z) => Math.hypot(x - TOWN_MEMORIAL[0], z - TOWN_MEMORIAL[1]) < 7 }); } catch (e) { console.warn("Town model: the town centre couldn't be added", e); }
+      try { block = townModelBlock(T, m, { THREE, TG, toTG, look, glows, plain, skip: still, drop: (x, z, flat) => { const d = Math.hypot(x - TOWN_MEMORIAL[0], z - TOWN_MEMORIAL[1]); return d < 7 || (flat && d < 13.5 && x < TOWN_MEMORIAL[0] - 1.5); } }); } catch (e) { console.warn("Town model: the town centre couldn't be added", e); }
       if (block) T.block = { parts: block.parts, corners: block.corners, ms: Math.round(performance.now() - t0) }; }
     if (block) { const [cx, cz] = block.at(D.c[0], D.c[1]);
       whole(tower, block.place(D.c[0], D.c[1]));
@@ -8115,7 +8115,7 @@ const handle = async (m, post) => {
       let last = null;
       for (const sh of order) { const x = (sh.x0 + sh.x1) / 2, z = (sh.z0 + sh.z1) / 2;
         sh.flat = sh.y1 <= G0 + 0.36 && sh.y0 >= G0 - 0.02;
-        if (drop?.(x, z)) { sh.inn = false; continue; }  // (something the model builds afresh)
+        if (drop?.(x, z, sh.flat)) { sh.inn = false; continue; }  // (something the model builds afresh)
         if (sh.flat) { sh.inn = sh.y1 >= G0 + 0.045 && sh.x1 >= zx0 && sh.x0 <= zx1 && sh.z1 >= zz0 && sh.z0 <= zz1; continue; }  // (not the map's painted parks and car parks: the model has its own)
         let b = inside(x, z); if (b < 0) b = beside(x, z, 4.1);
         const tree = b < 0 && sh.y0 >= G0 + 3.2 ? trees.find(t => Math.hypot(t.x - x, t.z - z) < 4.3) : null;
@@ -8225,7 +8225,12 @@ const handle = async (m, post) => {
       const put = (bk, geo, colour, a, y, b, ry = 0, rx = 0, rz = 0, sx = 1, sy = 1, sz = 1) => { const [x, z] = at(a, b); add(bk, geo, colour, x, y, z, MR + ry, rx, rz, sx, sy, sz); };
       const CONC = 0xc6cacc, CONC2 = 0xb4b9bc, GRANITE = 0xcfcdd0, Q = Math.PI / 4;
       put(mesh({ map: bc, mapRepeat: [6.1, 5.5], roughness: 0.95 }), box(9.8, PL, 8.8), 0, -0.3, PL / 2, 1.2);
-      put(bits, box(10.6, PL + 0.02, 1.9), 0xd3c8ad, -0.3, (PL + 0.02) / 2, 6.5);          // the concrete path across the front
+      // the ways in, laid afresh so each runs straight up to the apron's edge: the park's two paths (from the library side and
+      // from the north), and a brick walk from the clock's paving
+      const way = (bk, colour, x0, z0, a1, b1, w, top) => { const [x1, z1] = at(a1, b1), L = Math.hypot(x1 - x0, z1 - z0); add(bk, box(w, top, L), colour, (x0 + x1) / 2, top / 2, (z0 + z1) / 2, Math.atan2(x1 - x0, z1 - z0)); };
+      way(bits, 0xcfc8ba, 12.3, 12.6, -4.2, 5.4, 2.4, 0.12); way(bits, 0xcfc8ba, 24.0, -17.3, -2.4, -3.1, 2.4, 0.12);
+      { const cr = D.c[2], x0 = D.c[0] + Math.cos(cr) * -6.5 + Math.sin(cr) * -5.3, z0 = D.c[1] - Math.sin(cr) * -6.5 + Math.cos(cr) * -5.3, [x1, z1] = at(0.4, 5.5), L = Math.hypot(x1 - x0, z1 - z0);
+        add(mesh({ map: bc, mapRepeat: [1.75, L / 1.6], roughness: 0.95 }), box(2.8, 0.13, L), 0, (x0 + x1) / 2, 0.065, (z0 + z1) / 2, Math.atan2(x1 - x0, z1 - z0)); }
       put(bits, box(4.3, 0.03, 4.3), 0xb9bcbc, 0, PL + 0.015, 0.2, Q);                     // the pad it stands on, set cornerwise
       // the plinth with its sloping shoulder, the shaft and its pyramid top
       put(bits, box(2.5, 0.16, 2.5), CONC2, 0, PL + 0.11, 0); put(bits, box(2.3, 1.45, 2.3), CONC, 0, PL + 0.915, 0);
