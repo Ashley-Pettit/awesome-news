@@ -70,8 +70,9 @@ over the weather's. If the map cannot load, Virtually explore Logan carries on i
 Every frame the app passes the camera Explore is moving to `model.setCamera(...)`, and the time slider to
 `model.setMinutes(...)`.
 
-- **Walk** (how it opens, behind the loading screen): you stand on the council's front lawn beside the path that curves across it, eyes
-  3 m up, facing the wall with the building's name on it, with the palms, the flags and the covered entry in view.
+- **Walk** (how it opens, behind the loading screen): you stand by the long path off the north end of the wall
+  with the council's name on it, eyes 3 m up, looking along the wall to the covered entry, the flags and the palms
+  (Ash's pick).
   The model picks that spot (the council place's `stand` in `spots()`); `onFoot` in `TOWNS` says to open there
   rather than in the air above. Anywhere else, Walk puts you down on the ground you were looking at. The council
   precinct is the place to walk; elsewhere the buildings are plain blocks.
