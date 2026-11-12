@@ -7760,8 +7760,8 @@ const handle = async (m, post) => {
       floodLook: [-27.5375, 153.0115, 1100, 40, 100], floodOf: "this map", noFloodSlider: true,  // Ash: no water level slider ("At the peak") in Moorooka: a flood just rises to its peak
       floodWarn: { council: "Brisbane City Council", short: "BCC", how: "our own computer simulation of rain running over the ground and the creeks rising (and, in big river floods, Oxley Creek backing up), on a 5 m model of the terrain", map: "Brisbane City Council's Flood Awareness Map and FloodWise Property Report" },
       floodNote: "A guide only: our own simulation, from the terrain, the buildings and the Bureau's design rainfall for Moorooka. It includes water running over the ground to the creeks. No council flood mapping is used. For property, insurance or planning decisions, use Brisbane City Council's Flood Awareness Map and FloodWise Property Report." },
-    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=25", assets: TOWN3D + "logan/", place: "logan", up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
-      start: "council", onFoot: true, flyTo: { id: "brownsplains", label: "Fly to Browns Plains" }, wait: 90000, ceil: 110000, fast: 600, far: 150000, out: 130000, stride: 0.02, pad: 80000, stand: [0.45, 400], floodLook: [-27.69, 153.17, 12000, 55, -35],
+    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=26", assets: TOWN3D + "logan/", place: "logan", up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
+      start: "council", onFoot: true, noFloodSlider: true, flyTo: { id: "brownsplains", label: "Fly to Browns Plains" }, wait: 90000, ceil: 110000, fast: 600, far: 150000, out: 130000, stride: 0.02, pad: 80000, stand: [0.45, 400], floodLook: [-27.69, 153.17, 12000, 55, -35],
       note: "Prototype - not official council flood mapping",
       // the same not-official notice and banner as Moorooka's (Ash, 12 November 2026)
       floodWarn: { council: "Logan City Council", short: "LCC", how: "the 2017 flood as mapped, and the others worked out from river gauge heights and rainfall over a terrain model", map: "Logan City Council's flood maps" } },  // shown small in the bottom right corner the whole time the model is open
@@ -7855,6 +7855,9 @@ const handle = async (m, post) => {
         const places = [...mine.map(g => ({ name: g.name, walk: g.walk, fly: above(g.target[0], g.target[1], g.walk.yaw) })),
           ...(m.overview ? [{ name: "The whole city", water: true, fly: () => m.overview() }] : []),
           ...m.spots().map(s => { let dx = s.x - s.tx, dz = s.z - s.tz; const d = Math.hypot(dx, dz) || 1, r = Math.min(stand[1], d * stand[0]); dx /= d; dz /= d;
+            // a place the model marks with a pin (Logan: 704 Waterford Tamborine Road) is always shown from the air, where its pin
+            // and red boundary can be seen (on foot you could land behind a tree: Ash, 13 November 2026, "I can't tell where 704 is")
+            if (s.marker) return { id: s.id, name: s.name, water: true, fly: s };
             return { id: s.id, name: s.name, water: s.kind === "water", fly: s, walk: s.stand ? { x: s.stand.x, z: s.stand.z, yaw: s.stand.yaw, pitch: s.stand.pitch ?? 0.02 } : { x: s.tx + dx * r, z: s.tz + dz * r, yaw: Math.atan2(dx, dz), pitch: 0.02 } }; })];
 
         // ---- Walk or Fly ----
