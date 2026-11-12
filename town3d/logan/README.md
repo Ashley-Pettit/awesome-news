@@ -24,6 +24,8 @@ Wembley Road is in detail:
   blind. Generated, not surveyed.
 - **Footpaths across the whole city:** close up, connector and local streets have a concrete footpath beside them.
   Generated: which streets really have one is not surveyed.
+- **Street and garden trees across the whole city:** among the houses, clear of every surveyed building and
+  street. Generated: the vegetation survey only maps stands of bush.
 - **Houses across the whole city:** each keeps its surveyed size and heights; close up it also has overhanging
   eaves, a hipped or gabled roof in tiles or ribbed sheet metal, window frames, a front door, a garage door and,
   on about a quarter, solar panels. Those additions are generated, not surveyed.

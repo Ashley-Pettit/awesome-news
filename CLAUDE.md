@@ -17,3 +17,13 @@ Never write a bare commit id or pull request number.
 Where this comes from: on 12 November 2026 Ash said Claude Code was "not following my instructions of version
 numbers with hyperlinks" and asked for it to be remembered. The bullet points are Claude's reading of that
 instruction; if Ash words it differently, their wording wins.
+
+## Pull requests: open them, do not merge them
+
+Several Claude sessions work on this repository at once, and their pushes to `main` have collided. So a session
+working on a model or feature opens a pull request for its change and stops there; it does not merge it. One other
+session does the merging. After opening a pull request, remind Ash to have that session merge it and pull.
+
+Where this comes from: on 12 November 2026 Ash said "There are issues with multiple agents pushing. What I'll do is
+you just send PRs and another agent will push in. Remind me to get that agent to pull when you push." Which session
+does the merging is Ash's call; this note is Claude's reading of the instruction.
