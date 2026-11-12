@@ -1969,7 +1969,8 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
   // A link straight into Explore. #explore opens the 3D model for your area (Coastline News: …/inverloch/#explore, Moorooka
   // News: …/moorooka/#explore, The Logan Wire: …/logan/#explore). #explore-logan, #explore-moorooka and #explore-inverloch
   // name the model, from any of the apps. Holds which model: "inv", "moo" or "logan", or "" for none.
-  let pendingExplore = rawHash === "explore" ? exploreWhich() : rawHash === "explore-logan" ? "logan" : rawHash === "explore-moorooka" ? "moo" : rawHash === "explore-inverloch" ? "inv" : "";
+  let pendingExplore = document.querySelector('meta[name="an-explore"]')?.content  // a suburb's 3D model page (/<suburb>/explore/)
+    || (rawHash === "explore" ? exploreWhich() : rawHash === "explore-logan" ? "logan" : rawHash === "explore-moorooka" ? "moo" : rawHash === "explore-inverloch" ? "inv" : "");
   const exploreName = k => k === "moo" ? "Moorooka" : k === "logan" ? "Logan" : "Inverloch";
   // Opening Inverloch's 3D town (the #explore link, or the Explore button): a loading screen over everything until the town
   // is up and the view has settled, so nothing jumps or jitters while it loads
@@ -8319,7 +8320,7 @@ const handle = async (m, post) => {
     const dir = { inv: "inverloch/", moo: "moorooka/", logan: "logan/" }[k] || "", name = { inv: "Inverloch", moo: "Moorooka", logan: "Logan" }[k];
     return { url: dir ? `${root}${dir}explore/` : `${root}#explore`, name }; }  // explore/: its own link preview (a picture of the model)
   async function exploreShare() { const { url, name } = exploreLink(), title = name ? `3D model of ${name}` : "Explore in 3D";
-    if (navigator.share) { try { await navigator.share({ title, url }); return; } catch (e) { if (e?.name === "AbortError") return; } }
+    if (navigator.share) { try { await navigator.share({ title, text: name ? `Explore ${name} in 3D` : title, url }); return; } catch (e) { if (e?.name === "AbortError") return; } }
     try { await navigator.clipboard.writeText(url); toast("Link copied"); } catch { toast(url, 8000); } }
   function exploreWhich() { const rod = /^rod(ney)?$/i.test((S.name || "").trim()); return S.region === "moo" && !rod ? "moo" : S.region === "logan" && !rod ? "logan" : "inv"; }
   function exploreTown() { townModelOpen(true, exploreWhich()); }
