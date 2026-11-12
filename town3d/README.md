@@ -19,6 +19,7 @@ Two models, each separate from the weather's own scenes of the same place (which
 | `moorooka/ground.webp` | Ground colour: lawns, tree cover, sealed ground, streets, rail beds |
 | `moorooka/town.json` | Streets, railway, every surveyed building with its roof height and colour, trees, cars, back fences |
 | `moorooka/detail/` | The ground at twice the sharpness, in 16 tiles. The model fetches the ones nearest the camera (not on the slowest devices) |
+| `moorooka/surface/` | A pilot: what the ground is made of (lawn, asphalt, concrete) for about 825 m square around Moorooka Square and the Beaudesert Road shops, in 16 small blocks, with `index.json` listing them and holding the car parks' painted lines. Fetched only close to the ground, on devices that can draw it (see below) |
 | `moorooka/floods.json`, `moorooka/flood-1974.png`, `flood-2011.png`, `flood-2022.png`, `flood-aep1.png`, `flood-aep2.png`, `flood-aep5.png`, `flood-aep02.png` | Moorooka's floods: what they were, and each one's water levels. Fetched only when Flood is used |
 
 Nothing here is downloaded until someone opens a model. `build.py` copies this folder into the site.
@@ -85,6 +86,26 @@ ground texture and the cars):
   held up a frame each time (a tile is 16 MB once unpacked). Each tile is now fetched and unpacked on a worker and
   sent to the graphics card a few strips per frame, with a small "Loading sharper ground" note under the top
   buttons while tiles are on their way (it stands still for people who ask for reduced motion).
+
+## Moorooka's ground drawn by kind (a pilot)
+
+Around Moorooka Square and the Beaudesert Road shops (about 825 m square) the model knows what the ground is made
+of: lawn, asphalt or concrete, sorted from the 10 cm Queensland aerial photograph. It does not show the
+photograph. It draws each kind itself with a generated surface (blades and dry patches, aggregate and cracks,
+weathered concrete), so the edge between a lawn and a path stays sharp however close you get, and nothing the
+photograph caught on the day (parked cars, shadows) is painted on the ground. Car parks also get their painted
+lines, found on the photograph.
+
+- Each block stores, for each kind, how far every point is inside or outside it, at 0.4 m. Read back smoothly,
+  the edge is good to about 20 cm. A block is about 120 KB to fetch and 1 MB on the graphics card (the reversed
+  10 cm photo tiles were 16 MB each).
+- Garden beds, bare earth and pools are not sorted yet: there the model's own ground painting shows, as before.
+- The edges are smooth curves, so square corners come out rounded, and a few patches are misread (worn asphalt
+  as concrete, deep shade guessed from the ground beside it).
+- Not every device gets it: never the slowest tier, a device reporting under 4 GB of memory, or one asking to
+  save data; and only once the model has been seen to draw at 24 frames a second or better. If the rate falls
+  away later, it is dropped and the model carries on as before. `?sharp=1` on the address forces it on,
+  `?sharp=0` off.
 
 ## Moorooka's floods
 
