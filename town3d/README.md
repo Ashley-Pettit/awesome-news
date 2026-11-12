@@ -57,7 +57,7 @@ paving, a planted bed, the poles' broad bases, the four mosaic blocks in a row),
 obelisk on a plinth, bollards with poppies, boulders, two flagpoles, a square of brick paving; the weather's own is
 left out of the block), tables and chairs outside the bakery
 and The Larder, a sandwich board for each named shop, and the signs at the zebra crossing. Round the clock and round number
-11 it is also asked for street-level detail (`detailLatLon`): cars with proper shapes, a car, letterbox and bins out
+11 it is also asked for street-level detail (`detailLatLon`): cars with proper shapes, a letterbox and bins out
 the front of the houses, and power lines along the streets.
 
 The weather's town is flat and the model's ground slopes, so each shape is handed over with heights measured from
