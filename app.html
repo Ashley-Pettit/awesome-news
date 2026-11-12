@@ -9111,6 +9111,8 @@ const handle = async (m, post) => {
     vaultReady = restoreVault().catch(() => {});
     state.canPull = true;
     if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+    // keep a copy of this page for opening offline (the service worker only uses it when there's no connection)
+    if ("caches" in window && location.protocol === "https:") setTimeout(() => caches.open("awesome-news-v7").then(c => c.add(location.pathname)).catch(() => {}), 5000);
     loadStatic(false);
     loadWeather();
     // A new version of the app: reload to it. Phones that keep the app open on the home screen never
