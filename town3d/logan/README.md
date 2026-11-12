@@ -26,6 +26,8 @@ Wembley Road is in detail:
   Generated: which streets really have one is not surveyed.
 - **Street and garden trees across the whole city:** among the houses, clear of every surveyed building and
   street. Generated: the vegetation survey only maps stands of bush.
+- **Fronts and driveways across the whole city:** each house's front door and garage face its nearest street, and
+  a concrete driveway runs from the garage to that street. Generated: which way a house really faces is not surveyed.
 - **Houses across the whole city:** each keeps its surveyed size and heights; close up it also has overhanging
   eaves, a hipped or gabled roof in tiles or ribbed sheet metal, window frames, a front door, a garage door and,
   on about a quarter, solar panels. Those additions are generated, not surveyed.
