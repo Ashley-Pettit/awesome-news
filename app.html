@@ -8034,7 +8034,7 @@ const handle = async (m, post) => {
     if (W.invClock && tower) { const still = new Set(); [W.invClock, ...flags, ...drive, ...moving, ...cars].filter(Boolean).forEach(r => r.traverse(o => still.add(o)));  // (the clock's plaza is built afresh for the model, below)
       const t0 = performance.now();
       try { block = townModelBlock(T, m, { THREE, TG, toTG, look, glows, plain, skip: still, drop: (x, z, flat, top) => { const d = Math.hypot(x - TOWN_OLD_MEMORIAL[0], z - TOWN_OLD_MEMORIAL[1]);  // the weather's memorial and its paving (not the park's paths beside it), whatever lies under the plaza, and the benches and bins round the weather's clock
-        return (flat ? top > 0.102 && (d < 1.5 || (d < 14 && top < 0.1285)) : d < 7) || (flat && townOnPlaza(x, z)) || (!flat && Math.hypot(x - D.c[0], z - D.c[1]) < 9.5); } }); } catch (e) { console.warn("Town model: the town centre couldn't be added", e); }
+        return (flat ? top > 0.102 && (d < 2.6 || (d < 14 && top < 0.1285)) : d < 7) || (flat && townOnPlaza(x, z)) || (!flat && Math.hypot(x - D.c[0], z - D.c[1]) < 9.5); } }); } catch (e) { console.warn("Town model: the town centre couldn't be added", e); }
       if (block) T.block = { parts: block.parts, corners: block.corners, ms: Math.round(performance.now() - t0) }; }
     if (block) { const [cx, cz] = block.at(D.c[0], D.c[1]);
       const [kx, kz] = block.at(TOWN_CLOCK[0], TOWN_CLOCK[1]), clockPlace = new THREE.Matrix4().makeTranslation(kx, block.place(TOWN_CLOCK[0], TOWN_CLOCK[1]).elements[13], kz)
@@ -8292,6 +8292,32 @@ const handle = async (m, post) => {
       const flag = W.invAustr?.image ? mesh({ map: W.invAustr.image, roughness: 0.8, doubleSide: true }) : null;
       [[-2.6, 3.0, 0.5], [4.2, 0.0, 0.2]].forEach(([a, b, r]) => { put(bits, rod(0.06, 9.5, 10, 0.045), 0xf4f3ef, a, PL + 4.75, b); put(bits, new THREE.SphereGeometry(0.09, 10, 8), 0xf4f3ef, a, PL + 9.55, b); put(bits, rod(0.14, 0.12, 10), 0xdedad2, a, PL + 0.06, b);
         if (flag) put(flag, new THREE.PlaneGeometry(1.8, 0.9), 0, a + Math.cos(r) * 0.95, PL + 8.9, b - Math.sin(r) * 0.95, r); });
+    }
+
+    // ---- the last touches from Street View: the speed and bike-lane signs on their post at the kerb, the parking sign, the
+    // round-topped information post and the purple shrub by the clock, more shrubs along the kerb in front of it, and the
+    // visitor information signs on the library's corner
+    { const sign = (w, h, draw) => { const c = document.createElement("canvas"); c.width = Math.round(w * 220); c.height = Math.round(h * 220); draw(c.getContext("2d"), c.width, c.height); return mesh({ map: c, roughness: 0.6, doubleSide: true }); };
+      const [cx, cz] = TOWN_CLOCK, post = (x, z, h) => add(bits, rod(0.035, h), 0x9aa2a6, x, PL + h / 2, z);
+      post(cx + 2.6, cz + 2.0, 3.0);
+      add(sign(0.6, 0.8, (g, w, h) => { g.fillStyle = "#ffffff"; g.fillRect(0, 0, w, h); g.strokeStyle = "#d21f26"; g.lineWidth = w * 0.1; g.beginPath(); g.arc(w / 2, h * 0.45, w * 0.36, 0, 7); g.stroke();
+        g.fillStyle = "#111"; g.font = `700 ${w * 0.42}px system-ui, sans-serif`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("40", w / 2, h * 0.46); }), new THREE.PlaneGeometry(0.6, 0.8), 0, cx + 2.6, PL + 2.6, cz + 2.04, 0);
+      add(sign(0.5, 0.85, (g, w, h) => { g.fillStyle = "#ffffff"; g.fillRect(0, 0, w, h); g.strokeStyle = "#111"; g.lineWidth = 4; g.strokeRect(4, 4, w - 8, h - 8); g.fillStyle = "#111"; g.textAlign = "center"; g.textBaseline = "middle";
+        g.lineWidth = 5; [[0.33, 0.28], [0.67, 0.28]].forEach(([a, b]) => { g.beginPath(); g.arc(w * a, h * b, w * 0.13, 0, 7); g.stroke(); }); g.beginPath(); g.moveTo(w * 0.33, h * 0.28); g.lineTo(w * 0.5, h * 0.17); g.lineTo(w * 0.67, h * 0.28); g.stroke();
+        g.font = `700 ${w * 0.24}px system-ui, sans-serif`; g.fillText("LANE", w / 2, h * 0.58); g.fillText("END", w / 2, h * 0.82); }), new THREE.PlaneGeometry(0.5, 0.85), 0, cx + 2.6, PL + 1.7, cz + 2.04, 0);
+      post(cx - 2.4, cz - 3.6, 2.6);
+      add(sign(0.45, 0.6, (g, w, h) => { g.fillStyle = "#ffffff"; g.fillRect(0, 0, w, h); g.fillStyle = "#1f7a3a"; g.font = `700 ${w * 0.6}px system-ui, sans-serif`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("2P", w / 2, h * 0.4);
+        g.strokeStyle = "#1f7a3a"; g.lineWidth = 4; g.strokeRect(4, 4, w - 8, h - 8); }), new THREE.PlaneGeometry(0.45, 0.6), 0, cx - 2.4, PL + 2.25, cz - 3.56, 0);
+      add(bits, box(0.2, 1.1, 0.2), 0x8a7a5e, cx + 1.3, PL + 0.55, cz + 1.6); add(bits, rod(0.09, 0.02, 12), 0x3f78c4, cx + 1.3, PL + 0.9, cz + 1.71, 0, Math.PI / 2);
+      const bush = new THREE.IcosahedronGeometry(0.5, 1);
+      add(bits, bush, 0x5a2f4a, cx - 1.6, PL + 0.55, cz - 3.2, 0, 0, 0, 1.5, 1.1, 1.4);
+      [[-1.9, 1.5, 1.0], [-0.7, 2.0, 1.2], [0.5, 2.1, 1.0], [-2.6, 0.4, 0.9]].forEach(([dx, dz, k], i) => add(bits, bush, [0x355a2b, 0x40662f, 0x2f4f29][i % 3], cx + dx, PL + 0.3 * k, cz + dz, i, 0, 0, 1.3 * k, 0.8 * k, 1.1 * k));
+      if (D.lib) { const [x1, z1, x2, z2, nx, nz] = D.lib, r = Math.atan2(nx, nz), at = (t, o) => [x1 + (x2 - x1) * t + nx * o, z1 + (z2 - z1) * t + nz * o];
+        const info = (w, h, big) => sign(w, h, (g, cw, ch) => { g.fillStyle = "#f2c81e"; g.fillRect(0, 0, cw, ch); const q = big ? cw * 0.7 : ch * 0.8; g.fillStyle = "#1f3f9a"; g.fillRect(big ? cw * 0.15 : ch * 0.1, big ? ch * 0.12 : ch * 0.1, q, q);
+          g.fillStyle = "#f2c81e"; g.font = `700 italic ${q * 0.85}px Georgia, serif`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("i", (big ? cw * 0.15 : ch * 0.1) + q / 2, (big ? ch * 0.12 : ch * 0.1) + q * 0.52);
+          if (!big) { g.fillStyle = "#1f3f9a"; g.font = `700 ${ch * 0.27}px system-ui, sans-serif`; g.textAlign = "left"; g.fillText("Visitor", ch * 1.05, ch * 0.34); g.fillText("Information", ch * 1.05, ch * 0.68); } });
+        let [x, z] = at(0.86, 0.22); add(info(3.0, 1.1, false), new THREE.PlaneGeometry(3.0, 1.1), 0, x, 0.08 + 3.9, z, r);
+        [x, z] = at(0.62, 0.22); add(info(1.5, 2.6, true), new THREE.PlaneGeometry(1.5, 2.6), 0, x, 0.08 + 1.9, z, r); }
     }
 
     // ---- outside the shops
