@@ -115,7 +115,7 @@ lines, found on the photograph.
 - **Streets and car parks are worked out, not copied patch by patch** (Ash: "do some inference to fix car parks,
   roads, footpaths"):
   - each street's carriageway is as wide as its asphalt really reaches either side of the surveyed centre line
-    (1.5 m wider than the street data on average), so the kerbs stand on the real edge;
+    (1.9 m wider than the street data on average), so the kerbs stand on the real edge;
   - the verge, from the kerb to the property boundary, is lawn; a driveway is drawn where sealed ground crosses
     the whole verge; outside shops (a building on the boundary) the footpath is paved to the wall;
   - a footpath is drawn on the sides where the photograph shows one along at least a third of the street, at
@@ -123,6 +123,20 @@ lines, found on the photograph.
   - a car park is one surface (worn and patched asphalt is not concrete), and its bay lines are redrawn at a
     steady pitch with the gaps filled in; lines that fit no row are dropped.
   The street widths and footpath sides are in `town.json` (`footpaths`), so every device gets them.
+- **Every property is drawn as a plan, not as a picture** (Ash, after the last round: "Paths and roads grass
+  still don't make sense. Use inference"). The wavy blobs of lawn, concrete and soil were mostly tree canopy read
+  as lawn, and each property copied patch by patch. Now:
+  - a tree's canopy (darker and rougher than mown grass) is not lawn. Like deep shade it hides the ground, which
+    is filled in from beside it and is not counted as evidence of anything;
+  - a property has one main surface: lawn for a house and its yard, asphalt for a car park, concrete for a paved
+    yard, whichever covers most of the open ground that shows;
+  - whatever else is there (a drive, a patio, a lawn beside a car park) is drawn as rectangles, square to the
+    property or along the piece's own length. Garden beds, bare earth and pieces that fit no rectangle take the
+    main surface;
+  - the street land left over between the streets, verges and properties (corners, parking lanes, traffic
+    islands) is done the same way, square to the street beside it.
+  So a curved drive or a round garden bed comes out squared off, and a small path or bed (under 6 to 10 square
+  metres) is not drawn at all.
 - The edges are smooth curves, so square corners come out rounded, and a few patches are misread (worn asphalt
   as concrete, deep shade guessed from the ground beside it).
 - Not every device gets it: never the slowest tier, a device reporting under 4 GB of memory, or one asking to
