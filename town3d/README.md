@@ -196,6 +196,17 @@ lines, found on the photograph.
   - units and townhouses share one 3.5 m driveway down a side of the block to the last of them;
   - any sealed ground off the street of 500 m2 or more is an asphalt car park (pale asphalt was read as concrete);
   - blocks it can't read (shops, yards, blocks behind others) keep the plan above.
+- **Tidied by inference only** (Ash, 13 November 2026: "Dont use images, dont use a satellite, infer only. Make the
+  smallest change you can to make things sensible like connected roads, paths, no random grass patches").
+  `tools/ground/` works only from the street lines, property boundaries, buildings and the plan itself:
+  - verges are read a metre at a time along each side of each street: asphalt to the kerb for 4 m or more is an
+    entry, anything shorter is lawn, and lawn gaps under 3 m inside an entry are asphalt. Concrete is left alone;
+  - on a property that is mostly sealed (a car park), lawn scraps under 150 m2 and loose concrete under 20 m2 are
+    asphalt; so are lawn scraps under 60 m2 ringed by asphalt on street land;
+  - footpaths are joined up along each street: main roads have one both sides the whole way, gaps under 60 m are
+    filled, a side with a path on 60% of it gets one the whole way, and a lone path under 30 m goes. A new path
+    sits 2.3 m from the kerb, or in the middle of a narrower verge;
+  - roads were already joined up and are unchanged.
 
 ## Moorooka's floods
 
