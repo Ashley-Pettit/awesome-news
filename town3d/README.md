@@ -94,10 +94,25 @@ Two things are different, and Ash asked for both:
   information, do not rely on this model, it is experimental, and it is not endorsed by Brisbane City Council.
 - A banner says the same for as long as a flood is showing.
 
-Where the water reached is Brisbane City Council's mapping (the mapped 1974, 2011 and 2022 floods, and its high,
-medium and low likelihood areas for 5%, 1% and 0.2%). How high it stood is worked out from the terrain, and the 2%
-flood is placed between the 5% and 1% ones: the council maps neither. Water running overland to the creeks is not
-shown. The method is written up in `scripts/moorooka/README.md` in the `ai-forge` repository.
+The floods are **our own simulation**, not council mapping (Ash, 12 November 2026: "make it as accurate as possible
+using your own modelling. Don't just use the council's existing mapping"). The code is in `tools/flood/` in this
+repository, which also builds `moorooka/floods.json` and the `flood-*.png` files:
+
+- **The ground:** the model's own 5 m terrain (State of Queensland survey), with buildings standing 2 m proud so water
+  goes round them. Creek beds are graded through road and rail embankments where the survey shows the embankment
+  but not the culvert under it.
+- **The rain:** the Bureau of Meteorology's 2016 design rainfall for Moorooka, as a 3 hour storm in which every
+  duration from 5 minutes to 3 hours reaches its design depth. Gardens and parks soak up the first 15 mm and 1 mm an
+  hour; roofs and roads 1 mm. Stormwater pipes in the streets take up to 30 mm an hour to the nearest creek.
+- **The water:** a 2D shallow-water model ("local inertial", the method in LISFLOOD-FP and in rain-on-grid models)
+  moves the water over the grid for five hours. Water 10 cm deep or more counts as flooded.
+- **Oxley Creek and the Brisbane River:** in big river floods they back up into the western flats. That level is
+  worked out from the Bureau's recorded Brisbane City gauge peaks (1974, 2011, 2022), raised for the distance up the
+  river. It is the least certain input. Each design flood is the higher of its storm and a matching river flood.
+- **Checked against council's mapping, not built from it:** see `tools/flood/README.md`.
+
+Water from creeks that start outside the model's 3.3 km square is not included. If the 3D model is rebuilt from
+`ai-forge`, keep these flood files: they come from `tools/flood/`, not from the model build.
 
 ## Where they come from
 
