@@ -65,7 +65,7 @@ surveyed: nothing here says a particular house has solar panels.
 | `ground.webp`, `lights.webp`, `cover.png` | Ground colour, the city's lights at night, and where the bushland is |
 | `roads.bin`, `buildings.bin` | Streets and surveyed building outlines |
 | `map.json` | Suburbs, council divisions, the railway, street names, and the council precinct: its buildings, houses, trees, and the shapes of its ground |
-| `flood.json`, `flood-1974.png`, `flood-2017.png`, `flood-2022.png`, `flood-aep1.png`, `flood-aep2.png`, `flood-aep5.png` | The floods: what they were, and each one's water levels |
+| `flood.json`, `flood-1974.png`, `flood-2017.png`, `flood-2022.png`, `flood-aep1.png`, `flood-aep2.png`, `flood-aep5.png`, `flood-creek1.png`, `flood-all1.png`, `flood-tide.png` | The floods: what they were, and each one's water levels |
 
 Nothing here is downloaded until someone opens the map (about 9 MB the first time). `build.py` copies `town3d/`,
 this folder included, into the site.
@@ -116,6 +116,14 @@ Every frame the app passes the camera Explore is moving to `model.setCamera(...)
   independent ones. First, for nine floods since 1947 the rain that fell on each river's catchment is set against
   the peak recorded at its gauges, and that relation is read at the Bureau's design rainfall for each chance.
   Second, each gauge's own recorded peaks are ranked by size and read at that chance.
+
+- Creeks, 1% AEP: creeks rising in a short, heavy storm. The terrain gives each creek and its catchment; the
+  Bureau's design rainfall for a storm as long as the catchment takes to drain gives a peak flow; the shape of
+  the valley gives the depth. Rough: the model cannot see creek channels, culverts, levees or drains.
+- Combined, 1% AEP: the river and creek floods laid together (they would not usually peak in the same hour).
+- Storm tide: the sea at 3.0 m above mean sea level, let in through the mouth of the Logan onto joined low
+  ground. That is the State's default level where no local study is used (highest tide plus 1.5 m).
+- Not modelled: water lying in streets and yards when drains cannot keep up.
 
 **How accurate.** Tested against the Bureau's recorded river heights with each flood held back in turn
 (`scripts/logan/check_flood.py` in `ai-forge`), the method's water levels are typically out by 1 to 1.5 m, which
