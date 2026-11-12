@@ -19,6 +19,7 @@ Two models, each separate from the weather's own scenes of the same place (which
 | `moorooka/ground.webp` | Ground colour: lawns, tree cover, sealed ground, streets, rail beds |
 | `moorooka/town.json` | Streets, railway, every surveyed building with its roof height and colour, trees, cars, back fences |
 | `moorooka/detail/` | The ground at twice the sharpness, in 16 tiles. The model fetches the ones nearest the camera (not on the slowest devices) |
+| `moorooka/sharp/` | A trial: the ground at 10 cm for about 825 m square around Moorooka Square and the Beaudesert Road shops, in 16 tiles, with `index.json` listing them. Fetched only close to the ground, on devices that can draw it (see below) |
 | `moorooka/floods.json`, `moorooka/flood-1974.png`, `flood-2011.png`, `flood-2022.png`, `flood-aep1.png`, `flood-aep2.png`, `flood-aep5.png`, `flood-aep02.png` | Moorooka's floods: what they were, and each one's water levels. Fetched only when Flood is used |
 
 Nothing here is downloaded until someone opens a model. `build.py` copies this folder into the site.
@@ -80,6 +81,22 @@ ground texture and the cars):
   bigger streets and one side of local streets. Generated: which streets really have a footpath is not surveyed.
 - **Cars:** sedans with a sloping bonnet and boot, a glazed cabin, round wheels, bumpers, plates, door seams and
   lights, in place of the earlier blocks. Generated.
+
+## Moorooka's 10 cm ground (a trial)
+
+Around Moorooka Square and the Beaudesert Road shops (about 825 m square) the model has the ground at 10 cm:
+parking bays, driveways, paths and garden edges from the Queensland aerial photograph, laid over the model's own
+ground colours. What the photograph caught on the day is painted on the ground too, parked cars and shadows
+included.
+
+- It opens on the ground it has always had; the sharp tiles for where you are come in after, a few at a time,
+  only when you are within about 400 m of the ground. While they are on their way the model shows a small
+  "Loading sharper ground" note with a spinner under the top buttons (it stands still for people who ask for
+  reduced motion).
+- Not every device gets it: never the slowest tier, a device reporting under 4 GB of memory, or one asking to
+  save data; and only once the model has been seen to draw at 24 frames a second or better. If the rate falls
+  away later, the sharp tiles are dropped and the model carries on as before.
+- `?sharp=1` on the address forces it on, `?sharp=0` off (for testing).
 
 ## Moorooka's floods
 
