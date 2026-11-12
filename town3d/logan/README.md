@@ -20,6 +20,9 @@ Wembley Road is in detail:
   in flower and conifers.
 - **Houses:** each surveyed house with its roof, windows, doors and fences, on a lawn, with a porch, front path,
   letterbox and wheelie bins, and here and there solar panels, an aerial, a rainwater tank or a clothes line.
+- **The council's entrance:** laid out from a photograph taken on its front lawn: the building's name on the
+  wall beside the entry, the covered entry on its columns, four flagpoles, and the grove of tall palms in its
+  hedged garden bed. The two roundels beside the name are plain stand-ins for the crest and the city's logo.
 - The railway and its wiring, and the named schools, parks and streets.
 
 Where the buildings, streets and trees are is surveyed. The vehicles, road markings, signs, what kind each tree
