@@ -1278,12 +1278,10 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
   max-height: min(62%, 440px); overflow-y: auto; padding: 6px; border-radius: 14px; background: rgba(16, 18, 34, 0.9); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
 .bs-town-list button { min-height: 40px; padding: 6px 12px; border: 0; border-radius: 10px; background: none; color: #fff; font: 600 0.86rem var(--ui); text-align: left; cursor: pointer; }
 .bs-town-list button:hover, .bs-town-list button:focus-visible { background: rgba(255, 255, 255, 0.18); outline: none; }
-/* The Logan model's "Fly to Browns Plains": under the Flood button, it flies you to the block drawn in detail */
-.bs-fly-x.bs-town-go { top: calc(106px + env(safe-area-inset-top)); left: auto; right: 16px; display: inline-flex; align-items: center; gap: 6px; }
-.bs-fly-x.bs-town-go[hidden] { display: none; }
-.bs-fly-x.bs-town-go svg { width: 15px; height: 15px; flex: none; }
-.bs-fly-x.bs-town-go.going { background: #fff; color: #1b1830; }
-body.bsfly.flypeek .bs-fly-x.bs-town-go { display: none !important; }
+/* The Logan model's "Fly to Browns Plains", first in Jump to: it flies you to the block drawn in detail */
+.bs-town-list button.bs-town-flyto { display: grid; grid-template-columns: 18px 1fr; column-gap: 8px; align-items: center; margin-bottom: 4px; background: rgba(255, 255, 255, 0.14); }
+.bs-town-list button.bs-town-flyto svg { width: 16px; height: 16px; grid-row: span 2; }
+.bs-town-list button.bs-town-flyto small { grid-column: 2; }
 /* The Logan model's floods: a Flood button under Jump, its list of floods, and (with a flood on) the water level above the time */
 .bs-fly-x.bs-town-flood { top: calc(60px + env(safe-area-inset-top)); left: auto; right: 16px; }
 .bs-fly-x.bs-town-flood[aria-pressed="true"] { background: #fff; color: #1b1830; }
@@ -1798,7 +1796,6 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <div class="bs-town-ask" id="bsTownAsk" role="alertdialog" aria-labelledby="bsTownAskText" hidden><p id="bsTownAskText"></p><div><button type="button" data-ask="yes">Yes</button><button type="button" data-ask="no">No</button></div></div>
     <div class="bs-fly-time bs-town-tide bs-town-rise" id="bsTownRise" hidden><span>Water</span><input type="range" id="bsTownRiseIn" min="0" max="1" step="0.01" value="1" aria-label="Flood water level"><output id="bsTownRiseOut" for="bsTownRiseIn"></output></div>
     <button class="bs-fly-x bs-fly-jump" type="button" id="bsFlyJump" hidden>Jump to Norman Rd</button>
-    <button class="bs-fly-x bs-town-go" type="button" id="bsTownGo" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 13.5 21 4l-6.5 17-3-7.5z"/></svg><span id="bsTownGoT">Fly to</span></button>
     <button class="bs-fly-x bs-fly-lock" type="button" id="bsFlyLock" hidden>Use this view for the weather</button>
     <div class="bs-ud" role="group" aria-label="Fly up or down">
       <button type="button" class="bs-udb" data-ud="1" aria-label="Fly up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg><span>Up</span></button>
@@ -7750,8 +7747,8 @@ const handle = async (m, post) => {
   // stays up at most, ms), ceil (how high you can fly, m), fast (top speed, as a multiple of walking pace), far and out (how far
   // off the ground you're looking at can be, and how far back a pinch can take you, m), stride (how the steps grow when looking
   // for that ground), pad (how far outside the model you can fly, m), stand (where Jump stands you: a share of the way back to
-  // the camera, up to so many metres), flyTo (a place that gets a button of its own, flying you there: Browns Plains, the block
-  // drawn in detail) and floodLook (where its floods are widest: the lower Logan from the south-west, as
+  // the camera, up to so many metres), flyTo (a place put first in Jump to, flying you there: Browns Plains, the block drawn in
+  // detail) and floodLook (where its floods are widest: the lower Logan from the south-west, as
   // latitude, longitude, metres back, tilt and bearing). A model with floods can also set floodOf (what its flooded area is a share
   // of: "Logan"), floodNote (the line under the list) and floodWarn (show the not-official notice first, and a banner while a flood is on).
   const TOWNS = {
@@ -7913,30 +7910,25 @@ const handle = async (m, post) => {
         tideIn.min = m.tide.min; tideIn.max = m.tide.max; tideIn.value = m.tide.initial; tideOut.textContent = tideName(m.tide.initial);
         tideIn.oninput = () => { m.setTide(+tideIn.value); tideOut.textContent = tideName(+tideIn.value); };
 
-        // ---- Jump: a list of places. Walking, it stands you there; flying, it shows the place from above. ----
+        // ---- Jump: a list of places. Walking, it stands you there; flying, it shows the place from above. First in it (Logan) is
+        // "Fly to Browns Plains" (cfg.flyTo, the block drawn in detail): it flies you there, up and over, the higher and the longer
+        // the further it is, and down to the view from above it. ----
         const go = (p, walk) => { T.tween = null; if (walk !== T.walk) setMode(walk);
           if (walk) { F.pos.set(p.walk.x, ground(p.walk.x, p.walk.z) + F.eye, p.walk.z); F.yaw = p.walk.yaw; F.pitch = p.walk.pitch; }
           else { const v = typeof p.fly === "function" ? p.fly() : p.fly; F.pos.set(v.x, v.y, v.z); F.yaw = v.yaw; F.pitch = v.pitch; } };
-        list.innerHTML = places.map((p, i) => `<button type="button" role="menuitem" data-town-go="${i}">${esc(p.name[0].toUpperCase() + p.name.slice(1))}</button>`).join("");
+        const goTo = cfg.flyTo && places.find(p => p.id === cfg.flyTo.id);
+        const flyTo = () => { closeAsk(); if (T.walk) setMode(false);
+          const v = goTo.fly, a = { x: F.pos.x, y: F.pos.y, z: F.pos.z, yaw: F.yaw, pitch: F.pitch }, d = Math.hypot(v.x - a.x, v.z - a.z);
+          T.tween = { a, b: { x: v.x, y: v.y, z: v.z, yaw: v.yaw, pitch: v.pitch }, t0: performance.now(), ms: bsClamp(1400 + d * 0.32, 1600, 6500), arc: Math.min(d * 0.28, 2600) };
+          tip.classList.add("dim"); };
+        list.innerHTML = (goTo ? `<button type="button" role="menuitem" class="bs-town-flyto" data-town-fly><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 13.5 21 4l-6.5 17-3-7.5z"/></svg>${esc(cfg.flyTo.label)}<small>Drawn in detail: houses, pools, yards and the park</small></button>` : "")
+          + places.map((p, i) => p === goTo ? "" : `<button type="button" role="menuitem" data-town-go="${i}">${esc(p.name[0].toUpperCase() + p.name.slice(1))}</button>`).join("");
         const openList = on => { list.hidden = !on; jump.setAttribute("aria-expanded", String(on)); if (on) { fl.hidden = true; fb.setAttribute("aria-expanded", "false"); list.querySelector("button")?.focus({ preventScroll: true }); } };
         jump.hidden = !places.length; jump.textContent = "Jump to…"; jump.setAttribute("aria-haspopup", "menu"); openList(false);
         jump.onclick = () => openList(list.hidden);
-        list.onclick = e => { const bn = e.target.closest("[data-town-go]"); if (!bn) return; const p = places[+bn.dataset.townGo]; openList(false); go(p, T.walk && !p.water);  // the inlet and the strait are best seen from the air
+        list.onclick = e => { if (e.target.closest("[data-town-fly]")) { openList(false); flyTo(); jump.focus({ preventScroll: true }); return; }
+          const bn = e.target.closest("[data-town-go]"); if (!bn) return; const p = places[+bn.dataset.townGo]; openList(false); go(p, T.walk && !p.water);  // the inlet and the strait are best seen from the air
           jump.focus({ preventScroll: true }); };
-
-        // ---- Fly to (Logan: Browns Plains, the block drawn in detail): a button of its own, under Flood, that flies you there:
-        // up and over, the higher and the longer the further it is, and down to the view from above the place ----
-        const goBtn = $("bsTownGo"), goTo = cfg.flyTo && places.find(p => p.id === cfg.flyTo.id);
-        goBtn.hidden = !goTo; goBtn.classList.remove("going");
-        if (goTo) {
-          $("bsTownGoT").textContent = cfg.flyTo.label; goBtn.setAttribute("aria-label", `${cfg.flyTo.label}, drawn in detail`);
-          goBtn.onclick = () => { openList(false); fl.hidden = true; fb.setAttribute("aria-expanded", "false"); closeAsk();
-            if (T.walk) setMode(false);
-            const v = goTo.fly, a = { x: F.pos.x, y: F.pos.y, z: F.pos.z, yaw: F.yaw, pitch: F.pitch }, d = Math.hypot(v.x - a.x, v.z - a.z);
-            T.tween = { a, b: { x: v.x, y: v.y, z: v.z, yaw: v.yaw, pitch: v.pitch }, t0: performance.now(), ms: bsClamp(1400 + d * 0.32, 1600, 6500), arc: Math.min(d * 0.28, 2600) };
-            goBtn.classList.add("going"); clearTimeout(T.goT); T.goT = setTimeout(() => goBtn.classList.remove("going"), T.tween.ms);
-            tip.classList.add("dim"); };
-        }
 
         // ---- Flood (Logan, Moorooka): a list of floods to lay over the map, each with what it was. With one on, the button names it
         // and a slider lowers the water from its peak. Nothing pops up over the sticks: if the flood didn't reach where you are, a small
@@ -8012,7 +8004,7 @@ const handle = async (m, post) => {
         { const note = $("bsTownNote"); note.textContent = cfg.note || ""; note.hidden = !cfg.note; }  // Logan's standing note
         F.heightAt = () => F.pos.y - ground(); $("bsHeight").hidden = false;  // the height shown top left
         // a model that names places (Logan's) keeps them out from under the buttons along the top and, on a phone, the sliders and sticks
-        if (m.setLabelObstacles) { const lay = () => { const w = box.clientWidth, h = box.clientHeight; m.setLabelObstacles([[0, 0, w, goTo ? 150 : 104], ...(touch ? [[0, h - 300, w, h]] : [])]); };
+        if (m.setLabelObstacles) { const lay = () => { const w = box.clientWidth, h = box.clientHeight; m.setLabelObstacles([[0, 0, w, 104], ...(touch ? [[0, h - 300, w, h]] : [])]); };
           lay(); addEventListener("resize", lay); T.unlay = () => removeEventListener("resize", lay); }
       });
     }).catch(e => fail(e?.message && !/^no (model|script)$/.test(e.message) ? e.message
@@ -8445,7 +8437,7 @@ const handle = async (m, post) => {
     try { T.model?.dispose(); } catch {}
     const box = $("bsTown"); box.hidden = true; box.textContent = "";
     document.body.classList.remove("bstown", "bswalk"); $("bsHeight").hidden = true; $("bsTownTide").hidden = true; $("bsTideBtn").hidden = true; $("bsTownMode").hidden = true; $("bsTownList").hidden = true;
-    $("bsTownFlood").hidden = true; $("bsTownFlood").textContent = "Flood"; $("bsTownFloods").hidden = true; $("bsTownGo").hidden = true; clearTimeout(T.goT); $("bsTownRise").hidden = true; $("bsTownAsk").hidden = true; $("bsTownNote").hidden = true;
+    $("bsTownFlood").hidden = true; $("bsTownFlood").textContent = "Flood"; $("bsTownFloods").hidden = true; $("bsTownRise").hidden = true; $("bsTownAsk").hidden = true; $("bsTownNote").hidden = true;
   }
   // "Virtually explore Inverloch": the whole-town model, on foot at the clock. "Virtually explore Moorooka": the suburb,
   // on foot at the shops. "Virtually explore Logan": the whole city, from the air over the council's administration centre.
