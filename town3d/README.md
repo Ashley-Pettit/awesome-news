@@ -84,8 +84,9 @@ ground texture and the cars):
 
 - **Ground tiles load a strip at a time:** the sharper ground tiles near the camera used to arrive whole, which
   held up a frame each time (a tile is 16 MB once unpacked). Each tile is now fetched and unpacked on a worker and
-  sent to the graphics card a few strips per frame, with a small "Loading sharper ground" note under the top
-  buttons while tiles are on their way (it stands still for people who ask for reduced motion).
+  sent to the graphics card a few strips per frame, and while tiles are on their way a tiny spinner turns in the
+  bottom right corner of the model (Ash: "make it just a tiny spin in corner"). Screen readers are still told
+  "Loading sharper ground", and it stands still for people who ask for reduced motion.
 
 ## Moorooka's ground drawn by kind (a pilot)
 
@@ -103,6 +104,14 @@ lines, found on the photograph.
   is the ground picture: Ash did not like pictures on the ground from near. Its broad colour still tints the
   lawn and soil (read very coarsely, so no pixels or blotches show), and from further off the picture takes over.
 - Pools are not sorted yet, so a pool shows as soil.
+- **Cars park properly** (in the pilot area): they stand in the painted bays found in each car park, square to
+  the row, and along the street a little in from the measured kerb, facing the way the traffic goes. Cars that
+  stood in a traffic lane, or loose in a car park whose bays were found, are gone. These are in `town.json`, so
+  every device gets them.
+- **Beaudesert Road is two lanes each way:** traffic on a one-way carriageway keeps to two lanes counted out
+  from the median, and the kerb lane is left for parked cars. It used to spread over three.
+- **Shop signs are twice as sharp**, and the cafe at Moorooka Square has its name. Only businesses seen in Ash's
+  street photographs are named (the supermarket, the dental and medical practices, the cafe).
 - **Streets and car parks are worked out, not copied patch by patch** (Ash: "do some inference to fix car parks,
   roads, footpaths"):
   - each street's carriageway is as wide as its asphalt really reaches either side of the surveyed centre line
@@ -124,15 +133,17 @@ lines, found on the photograph.
 ## Moorooka's floods
 
 **Flood** in Explore Moorooka works the way it does in the Logan model (see `logan/README.md`), through the same
-code in `app.html`: a list of floods, the water rising to its peak, a **Water** slider that lowers it by up to 8 m,
+code in `app.html`: a list of floods, the water rising to its peak,
 and a card offering to fly to where it flooded if it did not flood where you are. The list has January 1974,
 January 2011 and February 2022, and 1%, 2%, 5% and 0.2% AEP floods.
 
-Two things are different, and Ash asked for both:
+Three things are different, and Ash asked for each:
 
 - The first press shows a notice that has to be accepted before the list opens: this is not official flood
   information, do not rely on this model, it is experimental, and it is not endorsed by Brisbane City Council.
 - A banner says the same for as long as a flood is showing.
+- There is no **Water** slider (the one that reads "At the peak" and lowers the water): the flood rises to its
+  peak and stays there. Logan keeps its slider. It is `noFloodSlider` in Moorooka's entry of `TOWNS`.
 
 The floods are **our own simulation**, not council mapping (Ash, 12 November 2026: "make it as accurate as possible
 using your own modelling. Don't just use the council's existing mapping"). The code is in `tools/flood/` in this
