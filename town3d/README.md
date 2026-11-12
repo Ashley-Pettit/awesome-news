@@ -130,6 +130,73 @@ lines, found on the photograph.
   away later, it is dropped and the model carries on as before. `?sharp=1` on the address forces it on,
   `?sharp=0` off.
 
+## Moorooka's ground drawn by kind (a pilot)
+
+Around Moorooka Square and the Beaudesert Road shops (about 825 m square) the model knows what the ground is made
+of: lawn, asphalt or concrete, sorted from the 10 cm Queensland aerial photograph. It does not show the
+photograph. It draws each kind itself with a generated surface (blades and dry patches, aggregate and cracks,
+weathered concrete), so the edge between a lawn and a path stays sharp however close you get, and nothing the
+photograph caught on the day (parked cars, shadows) is painted on the ground. Car parks also get their painted
+lines, found on the photograph.
+
+- Each block stores, for each kind, how far every point is inside or outside it, at 0.4 m. Read back smoothly,
+  the edge is good to about 20 cm. A block is about 120 KB to fetch and 1 MB on the graphics card (the reversed
+  10 cm photo tiles were 16 MB each).
+- What is none of the three (garden beds, bare earth) is drawn as soil and mulch. Close up, nothing in a block
+  is the ground picture: Ash did not like pictures on the ground from near. Its broad colour still tints the
+  lawn and soil (read very coarsely, so no pixels or blotches show), and from further off the picture takes over.
+- Pools are not sorted yet, so a pool shows as soil.
+- **Cars park properly** (in the pilot area): they stand in the painted bays found in each car park, square to
+  the row, and along the street a little in from the measured kerb, facing the way the traffic goes. Cars that
+  stood in a traffic lane, or loose in a car park whose bays were found, are gone. These are in `town.json`, so
+  every device gets them.
+- **Beaudesert Road is two lanes each way:** traffic on a one-way carriageway keeps to two lanes counted out
+  from the median, and the kerb lane is left for parked cars. It used to spread over three.
+- **Shop signs are twice as sharp**, and the cafe at Moorooka Square has its name. Only businesses seen in Ash's
+  street photographs are named (the supermarket, the dental and medical practices, the cafe).
+- **Streets and car parks are worked out, not copied patch by patch** (Ash: "do some inference to fix car parks,
+  roads, footpaths"):
+  - each street's carriageway is as wide as its asphalt really reaches either side of the surveyed centre line
+    (1.9 m wider than the street data on average), so the kerbs stand on the real edge;
+  - the verge, from the kerb to the property boundary, is lawn; a driveway is drawn where sealed ground crosses
+    the whole verge; outside shops (a building on the boundary) the footpath is paved to the wall;
+  - a footpath is drawn on the sides where the photograph shows one along at least a third of the street, at
+    its usual distance from the kerb, and not on the sides where it shows none;
+  - a car park is one surface (worn and patched asphalt is not concrete), and its bay lines are redrawn at a
+    steady pitch with the gaps filled in; lines that fit no row are dropped.
+  The street widths and footpath sides are in `town.json` (`footpaths`), so every device gets them.
+- **Every property is drawn as a plan, not as a picture** (Ash, after the last round: "Paths and roads grass
+  still don't make sense. Use inference"). The wavy blobs of lawn, concrete and soil were mostly tree canopy read
+  as lawn, and each property copied patch by patch. Now:
+  - a tree's canopy (darker and rougher than mown grass) is not lawn. Like deep shade it hides the ground, which
+    is filled in from beside it and is not counted as evidence of anything;
+  - a property has one main surface: lawn for a house and its yard, asphalt for a car park, concrete for a paved
+    yard, whichever covers most of the open ground that shows;
+  - whatever else is there (a drive, a patio, a lawn beside a car park) is drawn as rectangles, square to the
+    property or along the piece's own length. Garden beds, bare earth and pieces that fit no rectangle take the
+    main surface;
+  - the street land left over between the streets, verges and properties (corners, parking lanes, traffic
+    islands) is done the same way, square to the street beside it.
+  So a curved drive or a round garden bed comes out squared off, and a small path or bed (under 6 to 10 square
+  metres) is not drawn at all.
+- The edges are smooth curves, so square corners come out rounded, and a few patches are misread (worn asphalt
+  as concrete, deep shade guessed from the ground beside it).
+- Not every device gets it: never the slowest tier, a device reporting under 4 GB of memory, or one asking to
+  save data; and only once the model has been seen to draw at 24 frames a second or better. If the rate falls
+  away later, it is dropped and the model carries on as before. `?sharp=1` on the address forces it on,
+  `?sharp=0` off.
+
+- **Reviewed: designed, not traced** (Ash, 13 November 2026: "infer correct design of car parks, driveways, roads,
+  footpaths ... removing the literalness in the place of inferring something that makes sense"). After the plan
+  above, `scripts/moorooka/design_lots.py` in `ai-forge` draws each block as it would have been built:
+  - a house block is a lawn with one driveway, 3 m of concrete square to the street, with its crossover across the
+    verge. It goes where the photograph shows the most sealed ground along the frontage, or else down the wider
+    side of the house if a car fits, and runs into the garage or 6 m past the front of the house. Concrete right
+    against the house (8 m2 or more) stays as a patio; everything else on the block is lawn;
+  - units and townhouses share one 3.5 m driveway down a side of the block to the last of them;
+  - any sealed ground off the street of 500 m2 or more is an asphalt car park (pale asphalt was read as concrete);
+  - blocks it can't read (shops, yards, blocks behind others) keep the plan above.
+
 ## Moorooka's floods
 
 **Flood** in Explore Moorooka works the way it does in the Logan model (see `logan/README.md`), through the same
