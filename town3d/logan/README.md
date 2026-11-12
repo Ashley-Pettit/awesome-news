@@ -22,6 +22,8 @@ Wembley Road is in detail:
 - **Trees across the whole city:** each crown is three lumpy masses on a trunk, different on every tree, and about
   one in thirty is in flower. **Windows** have frames, glazing bars, sills, some sky in the glass and, on some, a
   blind. Generated, not surveyed.
+- **Footpaths across the whole city:** close up, connector and local streets have a concrete footpath beside them.
+  Generated: which streets really have one is not surveyed.
 - **Houses across the whole city:** each keeps its surveyed size and heights; close up it also has overhanging
   eaves, a hipped or gabled roof in tiles or ribbed sheet metal, window frames, a front door, a garage door and,
   on about a quarter, solar panels. Those additions are generated, not surveyed.
