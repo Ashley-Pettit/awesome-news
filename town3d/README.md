@@ -16,7 +16,8 @@ Two models, each separate from the weather's own scenes of the same place (which
 | `moorooka/moorooka-model.js` | The Moorooka model as one script (`window.MoorookaModel`), with its own copy of three.js |
 | `moorooka/height.png` | Terrain heights, from the river flats up to Toohey Forest |
 | `moorooka/ground.webp` | Ground colour: lawns, tree cover, sealed ground, streets, rail beds |
-| `moorooka/town.json` | Streets, railway, every surveyed building with its roof height and colour, trees, cars |
+| `moorooka/town.json` | Streets, railway, every surveyed building with its roof height and colour, trees, cars, back fences |
+| `moorooka/detail/` | The ground at twice the sharpness, in 16 tiles. The model fetches the ones nearest the camera (not on the slowest devices) |
 
 Nothing here is downloaded until someone opens a model. `build.py` copies this folder into the site.
 
@@ -77,7 +78,7 @@ These files are built, not written by hand. The source is the `ai-forge` reposit
 | build | `npm run build:inverloch-embed` | `npm run build:moorooka-embed` |
 | output | `dist-embed/` | `dist-embed/moorooka/` |
 
-To update one, run its build there and copy its four files into its folder here. If the script changes, bump the
+To update one, run its build there and copy its four files (and Moorooka's `detail/` folder) into its folder here. If the script changes, bump the
 `?v=` on it in `TOWNS` in `app.html` so phones fetch the new one.
 
 ## Credits

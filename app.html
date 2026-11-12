@@ -1286,6 +1286,20 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
 .bs-town-list button[aria-checked="true"] { background: rgba(255, 255, 255, 0.14); }
 .bs-town-list p { margin: 4px 12px 6px; font: 500 0.72rem/1.4 var(--ui); color: rgba(255, 255, 255, 0.78); }
 .bs-town-rise output { min-width: 88px; }
+/* Moorooka's flood simulation: a notice that must be accepted before it shows, and a banner for as long as it does */
+.bs-flood-warn { pointer-events: auto; position: absolute; inset: 0; z-index: 6; display: grid; place-items: center; padding: 16px; background: rgba(8, 10, 22, 0.72); }
+.bs-flood-warn[hidden], .bs-flood-banner[hidden] { display: none; }
+.bs-flood-warn > div { width: min(430px, 100%); max-height: 100%; overflow: auto; box-sizing: border-box; padding: 18px 18px 16px; border-radius: 16px; border-top: 6px solid #f5b301; background: #fff; color: #1b1830; font: 500 0.9rem/1.45 var(--ui); }
+.bs-flood-warn h2 { margin: 0 0 8px; font: 800 1.08rem/1.25 var(--ui); }
+.bs-flood-warn p { margin: 0 0 8px; }
+.bs-flood-warn ul { margin: 0 0 10px; padding-left: 20px; }
+.bs-flood-warn li { margin-bottom: 4px; }
+.bs-flood-warn-go { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.bs-flood-warn button { min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid #8a8799; background: #fff; color: #1b1830; font: 700 0.86rem var(--ui); cursor: pointer; }
+.bs-flood-warn button[data-warn="yes"] { border-color: #1b1830; background: #1b1830; color: #fff; }
+.bs-flood-warn button:focus-visible { outline: 3px solid #f5b301; outline-offset: 2px; }
+.bs-flood-banner { position: absolute; left: 50%; transform: translateX(-50%); top: calc(106px + env(safe-area-inset-top)); z-index: 2; box-sizing: border-box; width: min(430px, calc(100% - 32px)); margin: 0; padding: 7px 12px; border-radius: 10px;
+  pointer-events: none; background: #f5b301; color: #1b1400; font: 700 0.78rem/1.35 var(--ui); text-align: center; }
 /* A question over the model ("It didn't flood here. Fly to where it did?"): under the top rows, well clear of the sticks */
 .bs-town-ask { pointer-events: auto; position: absolute; top: calc(112px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 3; width: min(300px, calc(100% - 32px));
   padding: 12px 14px; border-radius: 14px; background: rgba(16, 18, 34, 0.92); color: #fff; text-align: center; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
@@ -1767,6 +1781,14 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <div class="bs-town-list bs-town-floods" id="bsTownFloods" role="menu" aria-label="Floods to show on the map" hidden></div>
     <div class="bs-slides" role="group" aria-label="Share, tide, time and flood"><button class="bs-fly-x bs-ic" type="button" id="bsShareBtn" aria-label="Share a link to this 3D model" title="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false" aria-label="Time of day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span id="bsTimeBtnT">Time</span></button><button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button></div>
     <p class="bs-town-note" id="bsTownNote" hidden></p>
+    <p class="bs-flood-banner" id="bsFloodBanner" role="alert" hidden>Experimental simulation. Not official flood information. Do not rely on this model. Not endorsed by Brisbane City Council.</p>
+    <div class="bs-flood-warn" id="bsFloodWarn" role="alertdialog" aria-modal="true" aria-labelledby="bsFloodWarnH" aria-describedby="bsFloodWarnD" hidden><div>
+      <h2 id="bsFloodWarnH">This is not official flood information</h2>
+      <div id="bsFloodWarnD"><p><b>Do not rely on this model.</b></p>
+      <ul><li>It is <b>experimental</b>: a simple simulation made for interest, with many things left out.</li><li>It is <b>not endorsed by Brisbane City Council (BCC)</b> or anyone else.</li><li>Do not use it to decide whether a property floods, or what to do in a flood.</li></ul>
+      <p>For real flood information use Brisbane City Council's Flood Awareness Map, and follow the Bureau of Meteorology's warnings in an emergency.</p></div>
+      <div class="bs-flood-warn-go"><button type="button" data-warn="no">Cancel</button><button type="button" data-warn="yes">I understand. Show the simulation</button></div>
+    </div></div>
     <div class="bs-town-ask" id="bsTownAsk" role="alertdialog" aria-labelledby="bsTownAskText" hidden><p id="bsTownAskText"></p><div><button type="button" data-ask="yes">Yes</button><button type="button" data-ask="no">No</button></div></div>
     <div class="bs-fly-time bs-town-tide bs-town-rise" id="bsTownRise" hidden><span>Water</span><input type="range" id="bsTownRiseIn" min="0" max="1" step="0.01" value="1" aria-label="Flood water level"><output id="bsTownRiseOut" for="bsTownRiseIn"></output></div>
     <button class="bs-fly-x bs-fly-jump" type="button" id="bsFlyJump" hidden>Jump to Norman Rd</button>
@@ -7721,7 +7743,7 @@ const handle = async (m, post) => {
   // latitude, longitude, metres back, tilt and bearing).
   const TOWNS = {
     inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=8", assets: TOWN3D, place: "inv", up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
-    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=1", assets: TOWN3D + "moorooka/", place: "moo", up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
+    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=5", assets: TOWN3D + "moorooka/", place: "moo", up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
       walkStart: { x: -269.8, z: -991.4, yaw: -1.623 } },  // Ash's pick for where Moorooka starts: the Beaudesert Road footpath, looking at the house he chose
     logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=12", assets: TOWN3D + "logan/", place: "logan", up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
       start: "council", onFoot: true, wait: 90000, ceil: 110000, fast: 600, far: 150000, out: 130000, stride: 0.02, pad: 80000, stand: [0.45, 400], floodLook: [-27.69, 153.17, 12000, 55, -35],
@@ -7921,6 +7943,34 @@ const handle = async (m, post) => {
             if (!events) { try { events = await m.floods(); } catch { events = null; toast("The floods couldn't load. Check your connection and try again."); return; } if (T.dead) return; draw(); }
             openFloods(true); };
           fl.onclick = e => { const bn = e.target.closest("[data-town-flood]"); if (!bn) return; openFloods(false); pick(bn.dataset.townFlood); fb.focus({ preventScroll: true }); };
+        }
+
+        // ---- Simulate flood (Moorooka): rain run over the terrain. EXPERIMENTAL and not official: pressing the button first
+        // shows a notice that has to be accepted, and a banner says the same for as long as the water is showing. A slider
+        // steps through the hours of rain. ----
+        if (m.simulateFlood) {
+          const warn = $("bsFloodWarn"), banner = $("bsFloodBanner"), label = riseBox.querySelector("span"); let on = false, info = null;
+          const hourName = h => info ? `Hour ${Math.round(h)}, ${Math.round(info.totalRainMm * h / info.hours)} mm` : "";
+          const off = () => { on = false; m.simulateFlood.show(false); fb.setAttribute("aria-pressed", "false"); fb.textContent = "Simulate flood"; riseBox.hidden = true; banner.hidden = true; };
+          const closeWarn = () => { warn.hidden = true; warn.onclick = warn.onkeydown = null; fb.focus({ preventScroll: true }); };
+          const start = async () => { fb.disabled = true; fb.textContent = "Loading flood…";
+            try { info = await m.simulateFlood.show(true); } catch { info = null; }
+            fb.disabled = false;
+            if (T.dead) return;
+            if (!info) { fb.textContent = "Simulate flood"; toast("The flood simulation couldn't load. Check your connection and try again."); return; }
+            on = true; fb.setAttribute("aria-pressed", "true"); fb.textContent = "Stop flood"; banner.hidden = false;
+            label.textContent = "Rain"; riseIn.min = 0; riseIn.max = info.hours; riseIn.step = 1; riseIn.value = info.hours; riseIn.setAttribute("aria-label", "Hours since the rain began");
+            riseOut.textContent = hourName(info.hours); m.simulateFlood.setHour(info.hours); riseBox.hidden = false;
+            riseIn.oninput = () => { m.simulateFlood.setHour(+riseIn.value); riseOut.textContent = hourName(+riseIn.value); }; };
+          // the notice: Cancel has the focus to start with, Escape cancels, Tab stays inside it
+          const openWarn = () => { openList(false); warn.hidden = false; const [no, yes] = warn.querySelectorAll("button"); no.focus({ preventScroll: true });
+            warn.onclick = e => { const bn = e.target.closest("[data-warn]"); if (!bn) return; closeWarn(); if (bn.dataset.warn === "yes") start(); };
+            warn.onkeydown = e => { if (e.key === "Escape") { e.preventDefault(); closeWarn(); }
+              else if (e.key === "Tab") { e.preventDefault(); (document.activeElement === no ? yes : no).focus({ preventScroll: true }); } e.stopPropagation(); }; };
+          T.unflood = () => { warn.hidden = true; warn.onclick = warn.onkeydown = null; banner.hidden = true; fb.disabled = false; fb.removeAttribute("aria-haspopup"); fb.setAttribute("aria-haspopup", "menu");
+            label.textContent = "Water"; riseIn.min = 0; riseIn.max = 1; riseIn.step = 0.01; riseIn.value = 1; riseIn.setAttribute("aria-label", "Flood water level"); riseIn.oninput = null; };
+          fb.hidden = false; fb.textContent = "Simulate flood"; fb.setAttribute("aria-pressed", "false"); fb.setAttribute("aria-haspopup", "dialog"); fb.removeAttribute("aria-expanded");
+          fb.onclick = () => { if (on) off(); else openWarn(); };
         }
 
         // Inverloch: start on foot at the clock, as Explore always has (R comes back here); with no clock, from the air.
@@ -8369,7 +8419,7 @@ const handle = async (m, post) => {
   }
   function townModelOff() {
     const T = BS.town; if (!T) return;
-    BS.town = null; T.dead = true; T.on = false; T.ungest?.(); T.unlay?.();
+    BS.town = null; T.dead = true; T.on = false; T.ungest?.(); T.unlay?.(); T.unflood?.();
     if (BS.fly) { const F = BS.fly; F.walk = F.speed = F.floor = F.hot = null; F.ceil = 0; F.lim = null; }  // Explore, if it carries on, is its old self
     try { T.model?.dispose(); } catch {}
     const box = $("bsTown"); box.hidden = true; box.textContent = "";
