@@ -14,6 +14,9 @@ Wembley Road is in detail:
   car park is a shape with a sharp edge, filled with its material: grass, asphalt, concrete, the exposed
   aggregate of the council's own paths. The grain (blades, pebbles, grit, mowing stripes) is worked out for
   each pixel. The colours are indicative; only the council's entrance path was matched to a photograph.
+- **Checked against an aerial view:** the paths and car parks nearest the council (the long straight path, the
+  path curving across the lawn to the entry, the path along the west wing, where the front and west car parks sit)
+  were lined up with an aerial view and corrected, good to about 5 m. The surveyed streets agreed with it.
 - **Roads:** real street surfaces with sharp-edged lane lines, stop lines, arrows and crossings, footpaths and
   grassed verges, street lights, power poles and wires along the local streets, give-way, street name and bus
   stop signs, bus shelters with a bus at one, cars, utes and vans parked and on the road (those being driven
@@ -67,7 +70,7 @@ over the weather's. If the map cannot load, Virtually explore Logan carries on i
 Every frame the app passes the camera Explore is moving to `model.setCamera(...)`, and the time slider to
 `model.setMinutes(...)`.
 
-- **Walk** (how it opens, behind the loading screen): you stand on the path across the council's front lawn, eyes
+- **Walk** (how it opens, behind the loading screen): you stand on the council's front lawn beside the path that curves across it, eyes
   3 m up, facing the wall with the building's name on it, with the palms, the flags and the covered entry in view.
   The model picks that spot (the council place's `stand` in `spots()`); `onFoot` in `TOWNS` says to open there
   rather than in the air above. Anywhere else, Walk puts you down on the ground you were looking at. The council
