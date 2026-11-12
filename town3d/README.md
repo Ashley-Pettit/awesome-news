@@ -99,7 +99,10 @@ lines, found on the photograph.
 - Each block stores, for each kind, how far every point is inside or outside it, at 0.4 m. Read back smoothly,
   the edge is good to about 20 cm. A block is about 120 KB to fetch and 1 MB on the graphics card (the reversed
   10 cm photo tiles were 16 MB each).
-- Garden beds, bare earth and pools are not sorted yet: there the model's own ground painting shows, as before.
+- What is none of the three (garden beds, bare earth) is drawn as soil and mulch. Close up, nothing in a block
+  is the ground picture: Ash did not like pictures on the ground from near. Its broad colour still tints the
+  lawn and soil (read very coarsely, so no pixels or blotches show), and from further off the picture takes over.
+- Pools are not sorted yet, so a pool shows as soil.
 - The edges are smooth curves, so square corners come out rounded, and a few patches are misread (worn asphalt
   as concrete, deep shade guessed from the ground beside it).
 - Not every device gets it: never the slowest tier, a device reporting under 4 GB of memory, or one asking to

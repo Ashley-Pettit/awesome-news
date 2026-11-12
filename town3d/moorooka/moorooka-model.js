@@ -4332,10 +4332,16 @@ float invNoise(vec2 p) {
           float fine = nearBy * (1.0 - smoothstep(0.03, 0.16, px));
           float mid = nearBy * (1.0 - smoothstep(0.2, 0.9, px));
           vec3 painted = diffuseColor.rgb;
+          // the broad colour of the ground here: the ground picture read very coarsely (13 m), so none of its
+          // pixels or blotches show. Close up, nothing in a block is the picture itself.
+          vec3 tone = painted;
+          #ifdef USE_MAP
+            tone = texture2D(map, vMapUv, 4.0).rgb;
+          #endif
           vec3 col[4];
           {
             // lawn: the painted green where there is one, with clumps, blades and patches gone dry
-            vec3 c = mix(vec3(0.105, 0.215, 0.052), painted, 0.45 * smoothstep(0.0, 0.05, painted.g - max(painted.r, painted.b)));
+            vec3 c = mix(vec3(0.105, 0.215, 0.052), tone, 0.45 * smoothstep(0.0, 0.05, tone.g - max(tone.r, tone.b)));
             float clumps = invNoise(w * 2.3) * 0.6 + invNoise(w * 6.1 + 3.0) * 0.4;
             float blades = invNoise(vec2(w.x * 26.0 + invNoise(w * 3.1) * 5.0, w.y * 11.0));
             float dry = smoothstep(0.55, 0.82, invNoise(w * 0.17 + 7.0));
@@ -4357,7 +4363,12 @@ float invNoise(vec2 p) {
             float crack = (1.0 - smoothstep(0.0, 0.012, abs(invNoise(w * 0.6 + 80.0) - 0.5))) * step(0.6, invNoise(w * 0.15 + 9.0));
             col[2] = vec3(0.50, 0.485, 0.435) * mix(1.0, 0.9 + 0.2 * stain, mid) * (1.0 + (grit - 0.5) * 0.22 * fine) * (1.0 - 0.3 * crack * mid);
           }
-          col[3] = painted;
+          {
+            // everything else (garden beds, bare earth): soil and mulch, lumpy, with leaf litter
+            float lumps = invNoise(w * 3.3 + 13.0) * 0.6 + invNoise(w * 9.0) * 0.4;
+            float litter = invHash(floor(w * 21.0)) * 0.6 + invNoise(w * 12.0 + 4.0) * 0.4;
+            col[3] = mix(vec3(0.118, 0.085, 0.058), tone, 0.4) * mix(1.0, 0.78 + 0.44 * lumps, mid) * (1.0 + (litter - 0.5) * 0.55 * fine);
+          }
           // the edge between the two kinds that matter here: sharp, softened only across one screen pixel
           float gap = a - b;
           float t = 0.5 + 0.5 * smoothstep(0.0, max(fwidth(gap), 1e-5) * 1.2, gap);
@@ -4365,10 +4376,9 @@ float invNoise(vec2 p) {
           // a thin dark line along the edge, as where lawn meets a path
           float edgeMetres = gap * (255.0 / 80.0) * (top == 3 || next == 3 ? 1.0 : 0.5);
           c *= 1.0 - 0.22 * (1.0 - smoothstep(0.02, 0.07, edgeMetres)) * fine;
-          // how much of this pixel is one of the three kinds (the rest stays as painted)
-          float decided = mix(next == 3 ? 0.0 : 1.0, top == 3 ? 0.0 : 1.0, t);
+          // from further off the ground picture takes over again
           diffuseColor.rgb = mix(painted, c, nearBy);
-          sharp = decided * nearBy;
+          sharp = nearBy;
         }`;function $_(i,t,e,n,s={}){const{nx:r,nz:a}=i,o=new Float32Array(r*a*3),l=new Float32Array(r*a*3),c=new Float32Array(r*a*2);for(let v=0;v<a;v++)for(let b=0;b<r;b++){const R=v*r+b,A=i.xMin+b*i.dx,D=i.zMin+v*i.dz;o[R*3]=A,o[R*3+1]=i.y[R],o[R*3+2]=D,c[R*2]=(A+i.sizeX/2)/i.sizeX,c[R*2+1]=1-(D+i.sizeZ/2)/i.sizeZ;const O=i.y[v*r+Math.max(b-1,0)],z=i.y[v*r+Math.min(b+1,r-1)],I=i.y[Math.max(v-1,0)*r+b],Z=i.y[Math.min(v+1,a-1)*r+b],H=(z-O)/(2*i.dx),q=(Z-I)/(2*i.dz),k=Math.hypot(H,1,q);l[R*3]=-H/k,l[R*3+1]=1/k,l[R*3+2]=-q/k}const h=new Uint32Array((r-1)*(a-1)*6);let d=0;for(let v=0;v<a-1;v++)for(let b=0;b<r-1;b++){const R=v*r+b,A=R+1,D=R+r,O=D+1;h[d++]=R,h[d++]=D,h[d++]=A,h[d++]=A,h[d++]=D,h[d++]=O}const f=new Te;f.setAttribute("position",new we(o,3)),f.setAttribute("normal",new we(l,3)),f.setAttribute("uv",new we(c,2)),f.setIndex(new we(h,1)),f.computeBoundingSphere();const u=new Je({map:t,roughness:.96,metalness:0}),m=new vs(new Uint8Array([128,128,128,255]),1,1);m.needsUpdate=!0;const x=Ls+Nh,p=Array.from({length:x},()=>({value:m})),g=Array.from({length:x},()=>({value:new ge(0,0,1,1)})),_=Array.from({length:x},()=>({value:0})),M={set(v,b,R){p[v].value=b??m,_[v].value=b?1:0,R&&g[v].value.set(...R)}},S=Array.from({length:x},(v,b)=>b);u.onBeforeCompile=v=>{v.uniforms.uTide=e,v.uniforms.uJitter={value:new Ut(.6/i.sizeX,.6/i.sizeZ)};for(const b of S)v.uniforms[`uDetail${b}`]=p[b],v.uniforms[`uDetailRect${b}`]=g[b],v.uniforms[`uDetailOn${b}`]=_[b];v.vertexShader=v.vertexShader.replace("#include <common>",`#include <common>
 varying vec3 vWPos;`).replace("#include <begin_vertex>",`#include <begin_vertex>
 vWPos = (modelMatrix * vec4(transformed, 1.0)).xyz;`),v.fragmentShader=v.fragmentShader.replace("#include <common>",`#include <common>

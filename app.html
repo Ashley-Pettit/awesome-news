@@ -1298,7 +1298,7 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
 .bs-flood-warn button { min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid #8a8799; background: #fff; color: #1b1830; font: 700 0.86rem var(--ui); cursor: pointer; }
 .bs-flood-warn button[data-warn="yes"] { border-color: #1b1830; background: #1b1830; color: #fff; }
 .bs-flood-warn button:focus-visible { outline: 3px solid #f5b301; outline-offset: 2px; }
-.bs-flood-banner { position: absolute; left: 50%; transform: translateX(-50%); top: calc(106px + env(safe-area-inset-top)); z-index: 2; box-sizing: border-box; width: min(430px, calc(100% - 32px)); margin: 0; padding: 7px 12px; border-radius: 10px;
+.bs-flood-banner { position: absolute; left: 50%; transform: translateX(-50%); top: calc(106px + env(safe-area-inset-top)); z-index: 1; /* under the Jump and Flood lists (2) and the fly-to card (3), which open over it */ box-sizing: border-box; width: min(430px, calc(100% - 32px)); margin: 0; padding: 7px 12px; border-radius: 10px;
   pointer-events: none; background: #f5b301; color: #1b1400; font: 700 0.78rem/1.35 var(--ui); text-align: center; }
 /* A question over the model ("It didn't flood here. Fly to where it did?"): under the top rows, well clear of the sticks */
 .bs-town-ask { pointer-events: auto; position: absolute; top: calc(112px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 3; width: min(300px, calc(100% - 32px));
