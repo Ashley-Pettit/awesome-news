@@ -8152,6 +8152,7 @@ const handle = async (m, post) => {
             if (sink) tri.forEach(q2 => { q2[1] -= sink; }); }
           for (const piece of TOWN_BLOCK) { const poly = trim(tri, piece); for (let k = 1; k + 1 < poly.length; k++) { put(bk, poly[0]); put(bk, poly[k]); put(bk, poly[k + 1]); } }
           continue; }
+        if (drop?.(mx, mz, false, 0)) continue;  // (a piece of something the model builds afresh, joined to something it keeps)
         // part of a building: inside its outline, a little behind the face
         const fh = Math.hypot(fx, fz), own = inside(fh > 0.3 ? mx - fx / fh * 0.25 : mx, fh > 0.3 ? mz - fz / fh * 0.25 : mz);
         if (!(own >= 0 ? B[own].inn : sh.inn)) continue;
@@ -8196,7 +8197,21 @@ const handle = async (m, post) => {
     { const [ox, oz, t] = TOWN_PLAZA, pl = (a, b) => [ox + Math.cos(t) * a - Math.sin(t) * b, oz + Math.sin(t) * a + Math.cos(t) * b];
       const slab = (a, b, w, d, bk, colour, h = PL) => { const [x, z] = pl(a, b); add(bk, box(w, h, d), colour, x, h / 2, z, -t); };
       slab(0, 0, 11, 7.8, mesh({ map: bc, mapRepeat: [6.9, 4.9], roughness: 0.95 }), 0); slab(1.25, 7.95, 8.5, 8.1, mesh({ map: bc, mapRepeat: [5.3, 5.1], roughness: 0.95 }), 0);
-      [[0, -4.05, 11.6, 0.3], [-5.65, 0, 0.3, 7.8], [5.65, 3.95, 0.3, 16.1], [-4.4, 4.05, 2.8, 0.3], [-3.15, 8.1, 0.3, 7.8], [1.25, 12.15, 9.1, 0.3]].forEach(([a, b, w, d]) => slab(a, b, w, d, bits, 0xd6c8a8, PL + 0.015)); }
+      [[0, -4.05, 11.6, 0.3], [-5.65, 0, 0.3, 7.8], [5.65, 3.95, 0.3, 16.1], [-4.4, 4.05, 2.8, 0.3], [-3.15, 8.1, 0.3, 7.8], [1.25, 12.15, 9.1, 0.3],
+        [1.25, 4.05, 8.5, 0.3], [1.25, 8.6, 8.5, 0.22], [-3.6, 0, 0.22, 7.8], [3.6, 0, 0.22, 7.8]].forEach(([a, b, w, d]) => slab(a, b, w, d, bits, 0xd6c8a8, PL + 0.015));
+      // seats facing the memorial, a bin, and planting along the plaza's edges: tussocks and low shrubs in mulch
+      const thing = (geo, colour, a, y, b, ry = 0, rx = 0, rz = 0, sx = 1, sy = 1, sz = 1) => { const [x, z] = pl(a, b); add(bits, geo, colour, x, y, z, -t + ry, rx, rz, sx, sy, sz); };
+      [[-4.75, 1.4, Math.PI / 2], [4.75, -1.6, -Math.PI / 2]].forEach(([a, b, r]) => { const c = Math.cos(r), sn = Math.sin(r);
+        for (let k = 0; k < 4; k++) thing(box(1.8, 0.04, 0.11), 0x8a6a45, a + sn * (k * 0.13 - 0.2), PL + 0.46, b + c * (k * 0.13 - 0.2), r);
+        for (let k = 0; k < 3; k++) thing(box(1.8, 0.1, 0.035), 0x8a6a45, a - sn * 0.3, PL + 0.6 + k * 0.14, b - c * 0.3, r, -0.12);
+        [-0.8, 0.8].forEach(o => { thing(box(0.06, 0.46, 0.5), 0x2d3033, a + c * o, PL + 0.23, b - sn * o, r); thing(box(0.06, 0.5, 0.05), 0x2d3033, a + c * o - sn * 0.3, PL + 0.7, b - sn * o - c * 0.3, r, -0.12); }); });
+      thing(rod(0.27, 0.9, 12, 0.3), 0x2f5a3a, 4.8, PL + 0.45, 1.2); thing(rod(0.31, 0.06, 12), 0x24452d, 4.8, PL + 0.93, 1.2);
+      const blade = new THREE.ConeGeometry(0.07, 1, 3), bush = new THREE.IcosahedronGeometry(0.5, 1), GR = [0x6f8f3c, 0xb7a258, 0x587a34, 0xc2ad62];
+      const bed = (a, b, w, d) => { thing(box(w, 0.1, d), 0x4a3a2c, a, 0.13, b); const n = Math.round(w * d / 1.1);
+        for (let k = 0; k < n; k++) { const pa = a + (rnd(k * 3.1 + a) - 0.5) * (w - 0.5), pb = b + (rnd(k * 5.7 + b) - 0.5) * (d - 0.5);
+          if (k % 4 === 0) { const q = 0.7 + rnd(k + 9) * 0.5; thing(bush, [0x355a2b, 0x40662f][k % 8 ? 0 : 1], pa, 0.18 + 0.26 * q, pb, k, 0, 0, 1.15 * q, 0.7 * q, q); continue; }
+          const h = 0.6 + rnd(k + 60) * 0.5; for (let j = 0; j < 9; j++) { const tt = j / 9 * Math.PI * 2, lean = 0.28 + rnd(k * 7 + j) * 0.3; thing(blade, GR[k % 4], pa + Math.cos(tt) * 0.12, 0.18 + h * 0.46, pb + Math.sin(tt) * 0.12, 0, Math.sin(tt) * lean, -Math.cos(tt) * lean, 1, h, 1); } } };
+      bed(-4.6, 8.1, 2.2, 7.6); bed(6.55, -0.6, 1.2, 6.4); bed(-6.5, 1.2, 1.2, 4.6); }
 
     // ---- the foot of the clock, in its own frame: a across (to the right, seen from the lawn side), b out towards the lawn
     if (W.invClock) { const cr = D.c[2], at = (a, b) => [TOWN_CLOCK[0] + Math.cos(cr) * a + Math.sin(cr) * b, TOWN_CLOCK[1] - Math.sin(cr) * a + Math.cos(cr) * b];
@@ -8237,9 +8252,19 @@ const handle = async (m, post) => {
       const CONC = 0xc6cacc, CONC2 = 0xb4b9bc, GRANITE = 0xcfcdd0, Q = Math.PI / 4;
       put(bits, box(4.1, 0.03, 4.1), 0xb9bcbc, 0, PL + 0.015, 0.1, Q);                     // the pad it stands on, set cornerwise
       // the plinth with its sloping shoulder, the shaft and its pyramid top
-      put(bits, box(2.5, 0.16, 2.5), CONC2, 0, PL + 0.11, 0); put(bits, box(2.3, 1.45, 2.3), CONC, 0, PL + 0.915, 0);
+      // (old concrete: mottled, with dark streaks run down from the ledges)
+      const cc = document.createElement("canvas"); cc.width = cc.height = 256; { const g = cc.getContext("2d"); g.fillStyle = "#c9cdcf"; g.fillRect(0, 0, 256, 256);
+        for (let i = 0; i < 260; i++) { g.fillStyle = `rgba(${rnd(i) > 0.5 ? "255,255,255" : "70,78,84"},${0.03 + rnd(i * 3) * 0.06})`; g.beginPath(); g.ellipse(rnd(i * 7) * 256, rnd(i * 5) * 256, 6 + rnd(i * 2) * 26, 4 + rnd(i * 9) * 14, rnd(i) * 3, 0, 7); g.fill(); }
+        for (let i = 0; i < 46; i++) { const x = rnd(i * 13 + 2) * 256, gr = g.createLinearGradient(0, 0, 0, 90 + rnd(i) * 150); gr.addColorStop(0, "rgba(60,66,70,0.3)"); gr.addColorStop(1, "rgba(60,66,70,0)"); g.fillStyle = gr; g.fillRect(x, 0, 2 + rnd(i * 4) * 5, 256); } }
+      put(bits, box(2.5, 0.16, 2.5), CONC2, 0, PL + 0.11, 0); put(mesh({ map: cc, roughness: 0.95 }), box(2.3, 1.45, 2.3), 0, 0, PL + 0.915, 0);
       put(bits, new THREE.CylinderGeometry(1.3, 1.63, 0.16, 4), CONC2, 0, PL + 1.72, 0, Q);
-      put(bits, new THREE.CylinderGeometry(0.8, 1.24, 3.3, 4), CONC, 0, PL + 3.45, 0, Q); put(bits, new THREE.ConeGeometry(0.86, 0.5, 4), CONC2, 0, PL + 5.35, 0, Q);
+      put(mesh({ map: cc, mapRepeat: [4, 1.6], roughness: 0.95 }), new THREE.CylinderGeometry(0.8, 1.24, 3.3, 4), 0, 0, PL + 3.45, 0, Q); put(bits, new THREE.ConeGeometry(0.86, 0.5, 4), CONC2, 0, PL + 5.35, 0, Q);
+      // the marble panel on the side facing the street: "Commemorating Inverloch Volunteers, Great War 1914-18"
+      { const mc = document.createElement("canvas"); mc.width = 384; mc.height = 288; const g = mc.getContext("2d"); g.fillStyle = "#eceae4"; g.fillRect(0, 0, 384, 288);
+        for (let i = 0; i < 14; i++) { g.strokeStyle = `rgba(120,125,135,${0.08 + rnd(i + 500) * 0.1})`; g.lineWidth = 1 + rnd(i) * 2; g.beginPath(); g.moveTo(rnd(i * 3) * 384, 0); g.bezierCurveTo(rnd(i * 5) * 384, 90, rnd(i * 7) * 384, 190, rnd(i * 11) * 384, 288); g.stroke(); }
+        g.fillStyle = "#2f3f66"; g.textAlign = "center"; g.textBaseline = "middle"; g.font = '700 34px Georgia, "Times New Roman", serif';
+        ["COMMEMORATING", "INVERLOCH VOLUNTEERS", "GREAT WAR 1914-18"].forEach((tx, i) => { g.font = `700 ${i === 1 ? 29 : 34}px Georgia, "Times New Roman", serif`; g.fillText(tx, 192, 70 + i * 76); });
+        put(bits, box(1.42, 1.08, 0.03), 0xb4b9bc, 0, PL + 0.93, -1.158, Math.PI); put(mesh({ map: mc, roughness: 0.5 }), new THREE.PlaneGeometry(1.3, 0.96), 0, 0, PL + 0.93, -1.178, Math.PI); }
       // its plaques: the weather's own, widest on the front of the plinth, the next on the back, the small one on the shaft
       const pics = [], [OX, OZ] = TOWN_OLD_MEMORIAL; W.invTG?.traverse(o => { const mp = o.isMesh && o.geometry?.type === "PlaneGeometry" && o.material?.map, q = o.geometry?.parameters; if (!mp?.image || !q || q.width > 1.6) return;
         const pw = new THREE.Vector3().setFromMatrixPosition(o.matrixWorld).applyMatrix4(new THREE.Matrix4().copy(W.invTG.matrixWorld).invert());
@@ -8247,7 +8272,7 @@ const handle = async (m, post) => {
       pics.sort((p, q) => q.w - p.w);
       const plaque = (k, a, y, b, ry, rx, sc = 1, rim = 0x1b1c1e) => { const pic = pics[k], w = (pic ? pic.w : 0.9) * sc, h = (pic ? pic.h : 0.5) * sc, [ox, oz] = [Math.sin(ry) * 0.012, Math.cos(ry) * 0.012];
         put(bits, box(w + 0.1, h + 0.1, 0.02), rim, a, y, b, ry, rx); if (pic) put(mesh({ map: pic.img, roughness: 0.5, metalness: 0.3 }), new THREE.PlaneGeometry(w, h), 0, a + ox, y, b + oz, ry, rx); };
-      plaque(0, 0, PL + 0.95, 1.162, 0, 0, 0.85); plaque(1, 0, PL + 0.95, -1.162, Math.PI, 0, 0.95, 0xe6e3da); plaque(3, 0, PL + 3.0, 0.775, 0, -0.133, 1.2);
+      plaque(0, 0, PL + 0.95, 1.162, 0, 0, 0.85); plaque(3, 0, PL + 3.0, 0.775, 0, -0.133, 1.2);
       // the bollards: little granite obelisks with a poppy, round the pad
       [[-1.9, 1.3], [-0.75, 2.2], [0.75, 2.2], [1.9, 1.3], [-2.2, -0.4], [2.2, -0.4]].forEach(([a, b]) => { put(bits, new THREE.CylinderGeometry(0.13, 0.2, 1.05, 4), GRANITE, a, PL + 0.525, b, Q);
         put(bits, new THREE.ConeGeometry(0.13, 0.2, 4), GRANITE, a, PL + 1.15, b, Q); put(bits, new THREE.SphereGeometry(0.05, 8, 6), 0xc21b2a, a, PL + 0.85, b + 0.13); });
