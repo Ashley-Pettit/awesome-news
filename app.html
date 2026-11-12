@@ -6012,6 +6012,10 @@ const handle = async (m, post) => {
       g.fillStyle = "#1d3fa0"; g.beginPath(); g.arc(C, C, C * 0.93, 0, Math.PI * 2); g.fill();
       g.strokeStyle = "#e9ad2c"; g.lineWidth = 9; g.beginPath(); g.arc(C, C, C * 0.885, 0, Math.PI * 2); g.stroke();
       g.lineWidth = 10; g.beginPath(); g.arc(C, C, C * 0.665, 0, Math.PI * 2); g.stroke();
+      { g.fillStyle = "#f0b432"; g.textAlign = "center"; g.textBaseline = "middle"; g.font = "700 34px system-ui, Arial, sans-serif";
+        const arc = (txt, mid, r, out) => { const step = 0.112; [...txt].forEach((ch, i) => { const a = mid + (i - (txt.length - 1) / 2) * step * (out ? 1 : -1);
+          g.save(); g.translate(C + Math.cos(a) * r, C + Math.sin(a) * r); g.rotate(a + (out ? Math.PI / 2 : -Math.PI / 2)); g.fillText(ch, 0, 0); g.restore(); }); };
+        arc("ROTARY", -Math.PI / 2, C * 0.775, true); arc("INTERNATIONAL", Math.PI / 2, C * 0.775, false); }
       g.fillStyle = "#16181d"; g.beginPath(); g.arc(C, C, C * 0.645, 0, Math.PI * 2); g.fill();
       g.fillStyle = "#f7f6f1"; g.beginPath(); g.arc(C, C, C * 0.625, 0, Math.PI * 2); g.fill();
       g.strokeStyle = "#1b1d22"; for (let k = 0; k < 60; k++) { const a2 = k / 60 * Math.PI * 2, big = k % 5 === 0; g.lineWidth = big ? 4 : 1.6; g.beginPath(); g.moveTo(C + Math.cos(a2) * C * (big ? 0.56 : 0.585), C + Math.sin(a2) * C * (big ? 0.56 : 0.585)); g.lineTo(C + Math.cos(a2) * C * 0.605, C + Math.sin(a2) * C * 0.605); g.stroke(); }
@@ -8008,7 +8012,11 @@ const handle = async (m, post) => {
   const TOWN_OLD_MEMORIAL = [25, 0.5];             // where the weather's own memorial stands: left out of the model
   const TOWN_PLAZA = [18, 18.6, 0.115];            // the plaza's frame: a point in it, and A'Beckett Street's slant
   const TOWN_MEMORIAL = [17.2, 18.0, Math.PI - 0.115];  // the memorial: where it stands and which way it faces (the lawn)
-  const TOWN_CLOCK = [14.4, 30.7, -0.26];           // the clock, in its bed at the kerb, south-west of the memorial; its faces look to the street and to the lawn
+  // The Rotary clock as in Ash's map and Street View (13 November 2026): it stands where Google Maps marks "Inverloch Mosaic
+  // Art", in the garden on the corner of the plaza, 3 m east and 11 m south of the memorial. Its faces look up and down
+  // A'Beckett Street (west and east), its ship sails south, and it is about 2.1 m across, its dial's foot 4.4 m up.
+  const TOWN_CLOCK = [20.2, 29.0, -1.45];           // where it stands, and which way its faces look
+  const TOWN_CLOCK_SIZE = 0.7;                       // the model's clock at its real size (the weather's is drawn bigger)
   // a across the plaza (along the street, east), b down it (towards the street): from the town's metres
   const townPlazaAB = (x, z) => { const [ox, oz, t] = TOWN_PLAZA, dx = x - ox, dz = z - oz; return [dx * Math.cos(t) + dz * Math.sin(t), -dx * Math.sin(t) + dz * Math.cos(t)]; };
   const townOnPlaza = (x, z) => { const [a, b] = townPlazaAB(x, z); return (a > -5.8 && a < 5.1 && b > -4.2 && b < 3.4) || (a > -5.8 && a < 1.5 && b >= 3.4 && b < 14) || (a >= 1.5 && a < 5.8 && b > 10.1 && b < 14); };
@@ -8080,13 +8088,14 @@ const handle = async (m, post) => {
         return (flat ? top > 0.102 && (d < 2.6 || (d < 14 && top < 0.1285)) : d < 7) || (flat && (townOnPlaza(x, z) || (top > 0.132 && Math.hypot(x - 15, z - 35.5) < 5.5))) || (!flat && Math.hypot(x - D.c[0], z - D.c[1]) < 9.5); } }); } catch (e) { console.warn("Town model: the town centre couldn't be added", e); }
       if (block) T.block = { parts: block.parts, corners: block.corners, ms: Math.round(performance.now() - t0) }; }
     if (block) { const [cx, cz] = block.at(D.c[0], D.c[1]);
-      const [kx, kz] = block.at(TOWN_CLOCK[0], TOWN_CLOCK[1]), clockPlace = new THREE.Matrix4().makeTranslation(kx, block.place(TOWN_CLOCK[0], TOWN_CLOCK[1]).elements[13], kz)
-        .multiply(new THREE.Matrix4().makeRotationY(TOWN_CLOCK[2] - D.c[2])).multiply(new THREE.Matrix4().makeTranslation(-D.c[0], 0, -D.c[1]));  // lifted from where the weather's stands, turned, and set down
+      const [kx, kz] = block.at(TOWN_CLOCK[0], TOWN_CLOCK[1]), clockPlace = new THREE.Matrix4().makeTranslation(kx, block.place(TOWN_CLOCK[0], TOWN_CLOCK[1]).elements[13] + 2.15, kz)
+        .multiply(new THREE.Matrix4().makeRotationY(TOWN_CLOCK[2] - D.c[2])).multiply(new THREE.Matrix4().makeScale(TOWN_CLOCK_SIZE, TOWN_CLOCK_SIZE, TOWN_CLOCK_SIZE))
+        .multiply(new THREE.Matrix4().makeTranslation(-D.c[0], -2.15, -D.c[1]));  // lifted from where the weather's stands, turned, brought to its real size and set down
       whole(tower, clockPlace);
       flags.forEach(f => { v.setFromMatrixPosition(f.matrixWorld).applyMatrix4(toTG); if (Math.hypot(v.x - TOWN_OLD_MEMORIAL[0], v.z - TOWN_OLD_MEMORIAL[1]) > 7) whole(f, block.place(v.x, v.z)); });  // (the memorial has its own two)
       // somewhere to stand for the bakery (out in the mouth of Reilly Street, across from it) and for the war memorial (in front of it)
       const standAt = (name, fx, fz, tx, tz, pitch) => { const [x, z] = block.at(fx, fz), [ax, az] = block.at(tx, tz); jumps.push({ name, target: [ax, az], walk: { x, z, yaw: Math.atan2(x - ax, z - az), pitch } }); };
-      standAt("the clock", 16.5, 6.5, 16.2, 22, 0.1);  // from the lawn: the memorial in front, the clock beyond to the right, the shops across the street
+      standAt("the clock", 11.5, 33.5, TOWN_CLOCK[0], TOWN_CLOCK[1], 0.16);  // from beside the car park, as in Street View: the clock in front, the memorial to the left
       const pie = D.u.find(u => /PIEMAN/.test(u[9] || ""));
       if (pie) { const mx = (pie[0] + pie[2]) / 2, mz = (pie[1] + pie[3]) / 2; standAt("the bakery", mx + pie[4] * 27, mz + pie[5] * 27, mx, mz, 0.06); }
       standAt("the war memorial", TOWN_MEMORIAL[0] + 1.5, TOWN_MEMORIAL[1] - 11, TOWN_MEMORIAL[0], TOWN_MEMORIAL[1], 0.05);
@@ -8275,21 +8284,22 @@ const handle = async (m, post) => {
       put(bits, disc, 0xbdb6a6, 0, PL + 0.07, -0.4, 0, 0, 0, 2.25, 0.14, 1.55); put(bits, disc, 0x4a3a2c, 0, PL + 0.11, -0.4, 0, 0, 0, 2.1, 0.22, 1.4);
       const BED = PL + 0.22, blade = new THREE.ConeGeometry(0.07, 1, 3), GRASS = [0x6f8f3c, 0xb7a258, 0x587a34, 0xc2ad62, 0x7b9a45];
       for (let k = 0; k < 18; k++) { const ang = k / 18 * Math.PI * 2 + rnd(k) * 0.4, rr = 0.4 + rnd(k + 40) * 0.55, a = Math.cos(ang) * 1.85 * rr, b = -0.4 + Math.sin(ang) * 1.15 * rr;
-        if (Math.hypot(Math.abs(a) - 0.45, b) < 0.5) continue;  // not on the poles
+        if (Math.hypot(Math.abs(a) - 0.452 * TOWN_CLOCK_SIZE, b) < 0.4) continue;  // not on the poles
         const h = 0.7 + rnd(k + 80) * 0.5, colour = GRASS[k % GRASS.length];
         for (let j = 0; j < 11; j++) { const tt = j / 11 * Math.PI * 2, lean = 0.28 + rnd(k * 11 + j) * 0.3;
           put(bits, blade, colour, a + Math.cos(tt) * 0.13, BED + h * 0.46, b + Math.sin(tt) * 0.13, 0, Math.sin(tt) * lean, -Math.cos(tt) * lean, 1, h, 1); } }
       const bush = new THREE.IcosahedronGeometry(0.5, 1);
       [[-1.5, -0.6, 0.8], [1.5, -0.5, 0.85], [-0.1, -1.3, 0.9]].forEach(([a, b, k], i) => put(bits, bush, [0x355a2b, 0x2f4f29, 0x40662f][i % 3], a, BED + 0.28 * k, b, i, 0, 0, 1.2 * k, 0.72 * k, 1.05 * k));
       // the poles' feet: a broad teal base with a collar round its top, on a flange
-      [-0.452, 0.452].forEach(a => { put(bits, rod(0.3, 0.1, 14), 0x2c6f68, a, BED + 0.05, 0); put(bits, rod(0.22, 1.25, 14, 0.2), 0x3b8f86, a, BED + 0.72, 0);
-        put(bits, rod(0.255, 0.08, 14), 0x2c6f68, a, BED + 1.36, 0); put(bits, rod(0.24, 0.06, 14), 0x2c6f68, a, BED + 0.5, 0); });
-      // the four mosaic blocks: concrete wedges in a slanting row running north-east from the clock, a picture on each sloping face
+      const K = TOWN_CLOCK_SIZE;
+      [-0.452 * K, 0.452 * K].forEach(a => { put(bits, rod(0.3 * K, 0.1, 14), 0x2c6f68, a, BED + 0.05, 0); put(bits, rod(0.22 * K, 1.25 * K, 14, 0.2 * K), 0x3b8f86, a, BED + 0.72 * K, 0);
+        put(bits, rod(0.255 * K, 0.08, 14), 0x2c6f68, a, BED + 1.36 * K, 0); put(bits, rod(0.24 * K, 0.06, 14), 0x2c6f68, a, BED + 0.5 * K, 0); });
+      // the four mosaic blocks: concrete wedges in a row running north-west from the poles towards the memorial, a picture on each sloping face
       const maps = []; W.invClock.traverse(o => { const mp = o.isMesh && o.geometry?.type === "PlaneGeometry" && o.material?.map; if (mp?.image && !maps.includes(mp.image)) maps.push(mp.image); });
       const wedge = new THREE.ExtrudeGeometry(new THREE.Shape([[-0.37, 0], [0.37, 0], [0.13, 1.02], [-0.13, 1.02]].map(([x, y]) => new THREE.Vector2(x, y))), { depth: 0.96, bevelEnabled: false });
       wedge.translate(0, 0, -0.48); wedge.rotateY(Math.PI / 2);
-      const tilt = Math.atan2(0.24, 1.02), pane = new THREE.PlaneGeometry(0.76, 0.8), ry = Math.PI / 4;
-      for (let k = 0; k < 4; k++) { const x = TOWN_CLOCK[0] + 1.5 + k * 0.82, z = TOWN_CLOCK[1] + 0.1 - k * 0.82;
+      const tilt = Math.atan2(0.24, 1.02), pane = new THREE.PlaneGeometry(0.76, 0.8), ry = -Math.PI / 4;
+      for (let k = 0; k < 4; k++) { const x = TOWN_CLOCK[0] - 1.0 - k * 0.82, z = TOWN_CLOCK[1] - 1.0 - k * 0.82;
         add(bits, wedge, 0xcfcbc1, x, PL, z, ry); add(bits, box(1.0, 0.05, 0.3), 0xdedad0, x, PL + 1.045, z, ry); add(bits, box(1.04, 0.06, 0.82), 0xb9b4a8, x, PL + 0.03, z, ry);
         const pic = maps[k] ? mesh({ map: maps[k], roughness: 0.4, metalness: 0.1 }) : null;
         [1, -1].forEach(sd => { const off = (0.25 + 0.012) * sd, px = x + Math.sin(ry) * off, pz = z + Math.cos(ry) * off;
