@@ -376,3 +376,26 @@ good only to half a pixel, which made footpaths and kerb lines lumpy. Properties
 An alternative set of blocks for the whole suburb, worked out from the photograph first and then designed (real
 driveways, car parks and footpath sides rather than ones placed by rule), is in ai-forge at commit 828c929 on
 `claude/eager-bohr-p8oslj`. It is not used here.
+
+## Street names in every model
+
+Ash, 13 November 2026: "On each of the models I want to be able to turn street names on or off. Follow best practices
+for this". The app draws the names over the model (`townStreetNames` in `app.html`), so Inverloch, Moorooka and Logan
+follow the same rules:
+
+- **The switch:** a signpost button beside Share in Explore, or **N** on a keyboard. On to start with, and the choice is
+  remembered on this device for every model (`localStorage` key `an3d-streets`). Logan's own chips for some of its
+  main roads go off with the rest.
+- **Where a name goes:** each street is joined up end to end and offered a name about every 120 m, on its straightest
+  stretch. A name shows only where that stretch is long enough on screen to hold it. It runs along the street, never
+  upside down and never steeper than 65 degrees.
+- **How many:** main roads first, and readable from further off (motorways about 2.2 km, local streets about 500 m), so
+  names thin out as you fly higher. At most 18 on a phone and 36 on a bigger screen. No overlaps with each other, the
+  model's place names or the buttons and sticks. A street the model already names isn't named again. Names that are
+  showing keep their place (no flicker) and fade in and out (not with reduced motion).
+- **Walking:** only streets you could see, with no building in the way (from each model's building outlines), within
+  400 m. Each nearby street is also named where it passes closest to a point 22 m ahead of you, so a cross street in
+  front is named and the name slides along as you walk.
+- **Data:** the same files the model loaded (`town.json`; Logan's `roads.bin`, `map.json` and, when you walk,
+  `buildings.bin`), fetched from the same addresses so the browser has them cached. Paths, tracks and unnamed lanes get
+  no name. Logan's setup runs in small pieces so the model keeps moving.
