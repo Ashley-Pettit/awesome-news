@@ -8059,7 +8059,8 @@ const handle = async (m, post) => {
               if (T.walk) setMode(false);
               T.tween = { a: { x: F.pos.x, y: F.pos.y, z: F.pos.z, yaw: F.yaw, pitch: F.pitch }, b: lookFrom(...cfg.floodLook), t0: performance.now(), ms: 1800 }; };
             ask.querySelector('[data-ask="yes"]').focus({ preventScroll: true }); };
-          fb.hidden = false; fb.setAttribute("aria-pressed", "false"); openFloods(false);
+          // Logan's floods are for Ash only for now (Ash, 13 November 2026: "Just for logan hide the flood btn unless the users name is Ash or Ashley")
+          fb.hidden = cfg.place === "logan" && !/^ash(ley)?$/i.test((S.name || "").trim()); fb.setAttribute("aria-pressed", "false"); openFloods(false);
           // the notice: Cancel has the focus to start with, Escape cancels, Tab stays inside it
           const closeWarn = () => { warn.hidden = true; warn.onclick = warn.onkeydown = null; fb.focus({ preventScroll: true }); };
           const openWarn = () => { openList(false); warn.hidden = false; const [no, yes] = warn.querySelectorAll("button"); no.focus({ preventScroll: true });
