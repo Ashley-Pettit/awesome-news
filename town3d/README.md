@@ -349,6 +349,14 @@ correctness". Two things were still showing the old ground painted from the phot
 The blocks, `town.json` and `yards.bin` are untouched: they are the other Moorooka chat's (#53). On the slowest tier
 only `ground.webp` is drawn, at 0.8 m, so the gain there is small.
 
+**Street corridors drawn exactly** (Ash, asked what was wrong: "edges soft and wobbly"). In all 256 blocks the
+street land is redrawn from the street centre lines by geometry: kerb lines as offsets of the centre line, true 5 m
+arcs where two streets meet, the footpath as one 1.3 m band carried round each corner, and crossovers, car park
+entries and paved frontages as straight-sided pieces square to the street. Their places are read from #53's blocks,
+so driveways, cars and backyards still line up. Before, those distances were measured on a picture of the plan,
+good only to half a pixel, which made footpaths and kerb lines lumpy. Properties are untouched. Made by
+`scripts/moorooka/street_corridor.py` in ai-forge.
+
 An alternative set of blocks for the whole suburb, worked out from the photograph first and then designed (real
 driveways, car parks and footpath sides rather than ones placed by rule), is in ai-forge at commit 828c929 on
 `claude/eager-bohr-p8oslj`. It is not used here.
