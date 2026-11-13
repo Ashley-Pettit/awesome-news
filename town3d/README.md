@@ -349,6 +349,12 @@ correctness". Two things were still showing the old ground painted from the phot
 The blocks, `town.json` and `yards.bin` are untouched: they are the other Moorooka chat's (#53). On the slowest tier
 only `ground.webp` is drawn, at 0.8 m, so the gain there is small.
 
+**The crisp ground is drawn on the light setting too.** Since 13 November the app opens every phone on its light
+setting (the model's lowest quality) and only moves to the sharp one if the phone holds 60 frames a second. The
+ground blocks were left out of the lowest quality, so on most phones none of the designed ground was ever drawn:
+only `ground.webp` at 0.8 m, which is where "edges soft and wobbly" came from. The model (script `?v=16`) now draws
+the blocks on every quality setting, except on a device reporting under 4 GB of memory or asking to save data.
+
 **Street corridors drawn exactly** (Ash, asked what was wrong: "edges soft and wobbly"). In the 240 blocks outside
 the square round the shops (that square is the Awesome News chat's, redrawn in `tools/ground/design2.py`) the
 street land is redrawn from the street centre lines by geometry: kerb lines as offsets of the centre line, true 5 m
