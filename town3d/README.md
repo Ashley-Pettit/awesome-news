@@ -268,6 +268,15 @@ no imagery, only the street data, buildings and houses in `town.json` (`tools/gr
 - checked and fine as they were: no grass islands inside car parks or paving in the close-up ground, every painted
   road matches a street, no houses on streets or overlapping, no parked cars off sealed ground.
 
+## Inverloch's power poles cast no shadows
+
+Ash, 13 November 2026: "remove power pole shadows from Inverloch". The timber power poles and their wires along the
+streets (street-level detail round the clock and number 11) are now their own mesh, `power-poles`, a child of
+`street-detail`, that does not cast shadows. Letterboxes and bins still do. The change is in the built
+`inverloch-model.js` (`?v=14`); the matching source change, if the model is rebuilt from ai-forge, is in
+`buildStreetDetail` in `src/features/inverloch3d/landmarks.ts`: draw the poles and wires with a second builder and
+give that mesh `castShadow = false`.
+
 ## Moorooka's floods
 
 **Flood** in Explore Moorooka works the way it does in the Logan model (see `logan/README.md`), through the same
