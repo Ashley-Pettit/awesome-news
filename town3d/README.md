@@ -383,8 +383,8 @@ Ash, 13 November 2026: "On each of the models I want to be able to turn street n
 for this". The app draws the names over the model (`townStreetNames` in `app.html`), so Inverloch, Moorooka and Logan
 follow the same rules:
 
-- **The switch:** a signpost button beside Share in Explore, or **N** on a keyboard. On to start with, and the choice is
-  remembered on this device for every model (`localStorage` key `an3d-streets`). Logan's own chips for some of its
+- **The switch:** a signpost button beside Share in Explore, or **N** on a keyboard. Off to start with (Ash, 14
+  November 2026: "Names start off"), and the choice is remembered on this device for every model (`localStorage` key `an3d-streets`). Logan's own chips for some of its
   main roads go off with the rest.
 - **Where a name goes:** each street is joined up end to end and offered a name about every 120 m, on its straightest
   stretch. A name shows only where that stretch is long enough on screen to hold it. It runs along the street, never
@@ -399,3 +399,10 @@ follow the same rules:
 - **Data:** the same files the model loaded (`town.json`; Logan's `roads.bin`, `map.json` and, when you walk,
   `buildings.bin`), fetched from the same addresses so the browser has them cached. Paths, tracks and unnamed lanes get
   no name. Logan's setup runs in small pieces so the model keeps moving.
+
+## Explore's top buttons
+
+Ash, 14 November 2026: "Optimise top btn layout". The tools (Share, Street names, Tide, Time, Flood) sit in one pill,
+built like Walk and Fly, so the top reads as a few groups: Exit explore, Walk or Fly, Jump to, then the height and the
+tools. On a phone or tablet that is two rows. From 1000 px wide it is one row: Exit explore and the height on the left,
+Walk or Fly in the middle, the tools and Jump to on the right (the CSS after `.bs-town-flood` in `app.html`).
