@@ -327,3 +327,28 @@ Moorooka: buildings, streets, railway, terrain and imagery © State of Queenslan
 Council, CC BY 4.0.
 
 Each model shows its credit on screen.
+
+## Moorooka: the designed ground is what every device draws
+
+Ash (13 November 2026): "its a bit laggy, quite a few roads and pathways are broken. lots of wavey paths rather
+than straight", and "the aerial photos are not by themselves reliable enough. After using them you need to infer
+correctness". Two things were still showing the old ground painted from the photograph:
+
+- **The clean ground dropped out when the phone was slow.** The ground blocks came in only after the model was seen
+  to draw at 24 frames a second, and went again when frames were slow, so lag and wavy paths arrived together. Now
+  they come in straight away and stay (still not on the slowest tier, a device reporting under 4 GB, or one asking to
+  save data). Their cost, four texture reads, is nothing beside the model's geometry: drawing work per frame was
+  counted in the version Ash called fast and in this morning's, and it was the same (about 1.4 to 2 million
+  triangles in 30 to 55 draw calls at the highest quality).
+- **The ground under the blocks was still the old painting.** `detail/*.webp` (0.4 m) and `ground.webp` (0.8 m) show
+  wherever the blocks are not drawn: while they load, on the slowest tier, and from further off. They are now painted
+  from the blocks themselves: sealed ground (streets, drives, footpaths, car parks) from the plan; unsealed ground
+  keeps the old painting where it is green or water (parks, playing fields, bushland, creeks) and becomes plain lawn
+  where it was a blot of grey, brown or pale. Made by `scripts/moorooka/ground_base.py` in ai-forge.
+
+The blocks, `town.json` and `yards.bin` are untouched: they are the other Moorooka chat's (#53). On the slowest tier
+only `ground.webp` is drawn, at 0.8 m, so the gain there is small.
+
+An alternative set of blocks for the whole suburb, worked out from the photograph first and then designed (real
+driveways, car parks and footpath sides rather than ones placed by rule), is in ai-forge at commit 828c929 on
+`claude/eager-bohr-p8oslj`. It is not used here.
