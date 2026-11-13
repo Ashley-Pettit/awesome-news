@@ -19,7 +19,8 @@ Two models, each separate from the weather's own scenes of the same place (which
 | `moorooka/ground.webp` | Ground colour: lawns, tree cover, sealed ground, streets, rail beds |
 | `moorooka/town.json` | Streets, railway, every surveyed building with its roof height and colour, trees, cars, back fences |
 | `moorooka/detail/` | The ground at twice the sharpness, in 16 tiles. The model fetches the ones nearest the camera (not on the slowest devices) |
-| `moorooka/surface/` | A pilot: what the ground is made of (lawn, asphalt, concrete) for about 825 m square around Moorooka Square and the Beaudesert Road shops, in 16 small blocks, with `index.json` listing them and holding the car parks' painted lines. Fetched only close to the ground, on devices that can draw it (see below) |
+| `moorooka/surface/` | What the ground is made of (lawn, asphalt, concrete) across the whole model, in 256 blocks of about 206 m (0.2 m detail), with `index.json` listing them and holding the car parks' painted lines. Fetched only close to the ground, four at a time, on devices that can draw it (see below) |
+| `moorooka/yards.bin` | What stands in the backyards: pools, clothes lines, sheds, trampolines, tanks, outdoor settings, bins, letterboxes, front fences, shrubs, the odd dog (about 25,000 things, 300 KB). Fetched once the model is up, not on the slowest devices; only the yards near the camera are built |
 | `moorooka/floods.json`, `moorooka/flood-1974.png`, `flood-2011.png`, `flood-2022.png`, `flood-aep1.png`, `flood-aep2.png`, `flood-aep5.png`, `flood-aep02.png` | Moorooka's floods: what they were, and each one's water levels. Fetched only when Flood is used |
 
 Nothing here is downloaded until someone opens a model. `build.py` copies this folder into the site.
@@ -87,6 +88,34 @@ ground texture and the cars):
   sent to the graphics card a few strips per frame, and while tiles are on their way a tiny spinner turns in the
   bottom right corner of the model (Ash: "make it just a tiny spin in corner"). Screen readers are still told
   "Loading sharper ground", and it stands still for people who ask for reduced motion.
+
+## Moorooka in close detail, the whole suburb
+
+The detail of the Browns Plains block in Logan, done across all of Moorooka (Ash: "Do the same over all of moorooka",
+"Consider lag", "There are mistakes in roads and paths to fix up"). The ground is inferred, not traced: no imagery
+(Ash's rule for Moorooka's ground). The one exception Ash agreed to is pools, read off the aerial photograph.
+
+- **The ground everywhere** (beyond the designed square, which stays as `design.py` drew it): every street at its
+  width with rounded corners, lawn verges, footpaths on the sides that have them carried round corners, crossovers,
+  and on each property by what stands on it: a house gets a driveway (down the side with room for a car, else to a
+  garage in the house), most a path to the front door, a garden bed along the front and a patio out the back; units
+  share a driveway; shops, works and schools get asphalt round the buildings with lawn beyond; parks are lawn, bush
+  floor under thick trees; the railway sits on ballast. `tools/ground/suburb_ground.py`.
+- **Streets fixed:** outside the designed square every local street was drawn at a 7.2 m default and every
+  connector at 6 m, so verges were far too wide. Each now gets 52% of its own road reserve (property line to property
+  line), between 7.2 and 10.6 m, which is what the designed square's measured streets come to. Footpaths no longer
+  run down the median of a divided road (Beaudesert Road), local streets have one on the side with the wider verge,
+  and the raised footpath strips are hidden wherever the ground draws its own (they used to double up).
+  `tools/ground/suburb_streets.py`.
+- **Cars:** those at the kerb moved out with the wider streets, those left on lawn by the new ground gone, and a car
+  on about half the side driveways and a third of the garage ones. `tools/ground/suburb_cars.py`.
+- **Backyards** (`yards.bin`, `tools/ground/suburb_yards.py`): 336 pools from the photograph, each with a concrete
+  surround and a black pool fence; the rest placed by rule on the ground plan, never on a building, a driveway, a
+  pool or a tree, the same every time.
+- **People walking** the footpaths near the camera, about a third with a dog on a lead. Generated as you go.
+- **Lag:** the yards are built only within about 220 m of the view (140 m on phones), a 90 m cell a frame, and let go
+  behind it; none above about 330 m. Walkers are a handful of draw calls in all and only show below 240 m. Nothing new
+  on the slowest tier. The ground blocks are fetched four at a time as before (about 75 KB each).
 
 ## Moorooka's ground drawn by kind (a pilot)
 
