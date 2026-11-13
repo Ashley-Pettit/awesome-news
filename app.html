@@ -1289,6 +1289,24 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
 /* The Logan model's floods: a Flood button under Jump, its list of floods, and (with a flood on) the water level above the time */
 .bs-fly-x.bs-town-flood { top: calc(60px + env(safe-area-inset-top)); left: auto; right: 16px; }
 .bs-fly-x.bs-town-flood[aria-pressed="true"] { background: #fff; color: #1b1830; }
+/* The top of Explore (Ash, 14 November 2026: "Optimise top btn layout"). The tools (share, street names, tide, time, flood)
+   sit in one pill, built like Walk and Fly, so the top reads as a few groups instead of a row of loose chips: exit, walk or
+   fly, places, then the height and the tools. From 1000 px wide it is all one row: exit and height on the left, walk or fly in
+   the middle, the tools and places on the right (--bs-exitw and --bs-jumpw are those buttons' widths, set as they change). */
+.bs-fly .bs-slides { height: 38px; box-sizing: border-box; padding: 3px; gap: 2px; border-radius: 999px; background: var(--bs-scrim);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22), inset 0 0 0 1px rgba(255, 255, 255, 0.14); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.bs-fly .bs-slides > .bs-fly-x { height: 32px; padding: 0 12px; background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.bs-fly .bs-slides > .bs-fly-x.bs-ic { width: 34px; padding: 0; }
+@media (hover: hover) { .bs-fly .bs-slides > .bs-fly-x:hover { background: rgba(255, 255, 255, 0.16); } }
+.bs-fly .bs-slides > .bs-fly-x[aria-pressed="true"], .bs-fly .bs-slides > .bs-fly-x[aria-expanded="true"] { background: #fff; color: #1b1830; }
+.bs-fly .bs-slides > .bs-fly-x:focus-visible { outline-offset: 0; }
+@media (min-width: 1000px) {
+  body.bstown .bs-slides { top: calc(14px + env(safe-area-inset-top)); right: calc(24px + var(--bs-jumpw, 104px)); }
+  body.bstown .bs-height { top: calc(21px + env(safe-area-inset-top)); left: calc(24px + var(--bs-exitw, 116px)); }
+  body.bstown .bs-hires { top: calc(62px + env(safe-area-inset-top)); }
+  body.bstown .bs-town-list.bs-town-floods { top: calc(60px + env(safe-area-inset-top)); right: calc(24px + var(--bs-jumpw, 104px)); }
+  body.bstown .bs-flood-banner { top: calc(62px + env(safe-area-inset-top)); }
+}
 /* street names in the town models: drawn by the app over the model, along each street, never upside down */
 .bs-streets { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
 .bs-streets span { position: absolute; left: 0; top: 0; white-space: nowrap; font: 600 12px/1 var(--ui); letter-spacing: .01em; color: #23272f;
@@ -1796,7 +1814,7 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <div class="bs-town-mode" id="bsTownMode" role="group" aria-label="Walk or fly" hidden><button type="button" data-town-mode="walk" aria-pressed="true">Walk</button><button type="button" data-town-mode="fly" aria-pressed="false">Fly</button></div>
     <div class="bs-town-list" id="bsTownList" role="menu" aria-label="Places to jump to" hidden></div>
     <div class="bs-town-list bs-town-floods" id="bsTownFloods" role="menu" aria-label="Floods to show on the map" hidden></div>
-    <div class="bs-slides" role="group" aria-label="Share, street names, tide, time and flood"><button class="bs-fly-x bs-ic" type="button" id="bsShareBtn" aria-label="Share a link to this 3D model" title="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button><button class="bs-fly-x bs-ic" type="button" id="bsNamesBtn" aria-pressed="true" aria-label="Street names" title="Hide street names (N)" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M9 21h6"/><path d="M5 5h11l3 2.5L16 10H5z"/><path d="M19 12H8l-3 2.5L8 17h11z"/></svg></button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false" aria-label="Time of day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span id="bsTimeBtnT">Time</span></button><button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button></div>
+    <div class="bs-slides" role="group" aria-label="Share, street names, tide, time and flood"><button class="bs-fly-x bs-ic" type="button" id="bsShareBtn" aria-label="Share a link to this 3D model" title="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button><button class="bs-fly-x bs-ic" type="button" id="bsNamesBtn" aria-pressed="false" aria-label="Street names" title="Show street names (N)" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M9 21h6"/><path d="M5 5h11l3 2.5L16 10H5z"/><path d="M19 12H8l-3 2.5L8 17h11z"/></svg></button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false" aria-label="Time of day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span id="bsTimeBtnT">Time</span></button><button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button></div>
     <p class="bs-town-note" id="bsTownNote" hidden></p>
     <p class="bs-flood-banner" id="bsFloodBanner" role="alert" hidden>Experimental. Not official flood information. Do not rely on this model. Not endorsed by <span data-fw="council">Brisbane City Council</span>.</p>
     <div class="bs-flood-warn" id="bsFloodWarn" role="alertdialog" aria-modal="true" aria-labelledby="bsFloodWarnH" aria-describedby="bsFloodWarnD" hidden><div>
@@ -8097,7 +8115,10 @@ const handle = async (m, post) => {
         T.atStart = () => first?.walk && F.pos.distanceTo(F.start.pos) < 3;  // still where Explore opened
         // the keys (desktop): F walk or fly, J the places list, R back to the start
         T.first = first;
-        // street names: on or off with the signpost button or N, remembered on this device (on to start with)
+        // the one-row top on a wide screen needs the widths of Exit explore and Jump to (they change with the font and the words)
+        { const fly = $("bsFly"), ex = $("bsFlyX"), jb = $("bsFlyJump"), ro = new ResizeObserver(() => { if (ex.offsetWidth) fly.style.setProperty("--bs-exitw", ex.offsetWidth + "px"); if (jb.offsetWidth) fly.style.setProperty("--bs-jumpw", jb.offsetWidth + "px"); });
+          ro.observe(ex); ro.observe(jb); T.unbar = () => ro.disconnect(); }
+        // street names: on or off with the signpost button or N, remembered on this device (off to start with)
         T.streets = townStreetNames(T, cfg, box, m);
         { const nb = $("bsNamesBtn"), show = on => { T.streets.set(on); nb.setAttribute("aria-pressed", String(on)); nb.title = on ? "Hide street names (N)" : "Show street names (N)"; };
           show(streetsPref()); nb.hidden = false; nb.onclick = () => { const on = nb.getAttribute("aria-pressed") !== "true"; show(on); streetsSave(on); };
@@ -8529,7 +8550,7 @@ const handle = async (m, post) => {
   //   thin out as you fly higher and are gone from high above;
   // - names never overlap each other, the model's place names or the buttons, the same name isn't repeated within 280 px
   //   (500 px close to the ground), names already showing keep their spot (no flicker), and they fade in and out (not with reduced motion);
-  // - on to start with; the signpost button (or N) turns them off or on, remembered on this device for every model. Logan's
+  // - off to start with; the signpost button (or N) turns them on or off, remembered on this device for every model. Logan's
   //   model draws chips for some of its main roads itself: those go off with the rest, and a street the model already names
   //   (there, or Inverloch's A'Beckett Street) isn't named twice;
   // - close to the ground, names only for streets you could see (no building in the way) within 400 m, and each nearby
@@ -8537,7 +8558,7 @@ const handle = async (m, post) => {
   // The streets come from the files the model has already loaded (town.json; Logan's roads.bin and map.json), so the browser
   // has them cached. Paths, tracks and unnamed lanes get no name.
   const STREETS_KEY = "an3d-streets";
-  const streetsPref = () => { try { return localStorage.getItem(STREETS_KEY) !== "0"; } catch { return true; } };
+  const streetsPref = () => { try { return localStorage.getItem(STREETS_KEY) === "1"; } catch { return false; } };  // off to start with (Ash, 14 November 2026: "Names start off")
   const streetsSave = on => { try { localStorage.setItem(STREETS_KEY, on ? "1" : "0"); } catch {} };
   // the address the model itself fetched a file from (Logan adds ?v=), so the browser serves it from its cache
   // (watched from when Explore opens a model: the browser's own list stops at 250 files)
@@ -8736,6 +8757,7 @@ const handle = async (m, post) => {
     const T = BS.town; if (!T) return;
     BS.town = null; T.dead = true; T.on = false; T.ungest?.(); T.unlay?.(); T.unflood?.();
     T.streets?.dispose(); T.streets = null; $("bsNamesBtn").hidden = true;
+    T.unbar?.();
     if (BS.fly) { const F = BS.fly; F.walk = F.speed = F.floor = F.hot = null; F.ceil = 0; F.lim = null; }  // Explore, if it carries on, is its old self
     try { T.model?.dispose(); } catch {}
     const box = $("bsTown"); box.hidden = true; box.textContent = "";
