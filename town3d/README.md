@@ -349,7 +349,8 @@ correctness". Two things were still showing the old ground painted from the phot
 The blocks, `town.json` and `yards.bin` are untouched: they are the other Moorooka chat's (#53). On the slowest tier
 only `ground.webp` is drawn, at 0.8 m, so the gain there is small.
 
-**Street corridors drawn exactly** (Ash, asked what was wrong: "edges soft and wobbly"). In all 256 blocks the
+**Street corridors drawn exactly** (Ash, asked what was wrong: "edges soft and wobbly"). In the 240 blocks outside
+the square round the shops (that square is the Awesome News chat's, redrawn in `tools/ground/design2.py`) the
 street land is redrawn from the street centre lines by geometry: kerb lines as offsets of the centre line, true 5 m
 arcs where two streets meet, the footpath as one 1.3 m band carried round each corner, and crossovers, car park
 entries and paved frontages as straight-sided pieces square to the street. Their places are read from #53's blocks,

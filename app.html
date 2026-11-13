@@ -1272,6 +1272,10 @@ body.bstown .bs-ud { top: auto; right: auto; left: 50%; bottom: calc(22px + env(
 .bs-height { position: absolute; top: calc(66px + env(safe-area-inset-top)); left: 16px; z-index: 2; padding: 4px 10px; border-radius: 999px; pointer-events: none;
   background: rgba(16, 18, 34, 0.6); color: #fff; font: 700 0.78rem var(--ui); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
 .bs-height[hidden] { display: none; }
+.bs-hires { position: absolute; top: calc(104px + env(safe-area-inset-top)); left: 16px; z-index: 2; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; pointer-events: none;
+  background: rgba(20, 24, 32, 0.5); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22), inset 0 0 0 1px rgba(255, 255, 255, 0.14); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.bs-hires i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.28); border-top-color: #ffd36b; animation: exspin 0.9s linear infinite; }
+.bs-hires[hidden] { display: none; }
 /* Jump: top right, opening a list of places */
 body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); }
 .bs-town-list { pointer-events: auto; position: absolute; top: calc(60px + env(safe-area-inset-top)); right: 16px; z-index: 2; display: grid; gap: 2px; width: min(270px, calc(100% - 32px));
@@ -1780,6 +1784,7 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <div class="bs-fly-time" id="bsFlyTimeBox" hidden><input type="range" id="bsFlyTime" min="0" max="1439" step="5" aria-label="Time of day"><output id="bsFlyTimeOut" for="bsFlyTime"></output></div>
     <div class="bs-fly-time bs-town-tide" id="bsTownTide" hidden><span>Tide</span><input type="range" id="bsTownTideIn" step="0.05" aria-label="Tide level"><output id="bsTownTideOut" for="bsTownTideIn"></output></div>
     <div class="bs-height" id="bsHeight" hidden aria-hidden="true"></div>
+    <span class="bs-hires" id="bsHiRes" role="status" aria-label="Loading the sharper view" title="Loading the sharper view" hidden><i></i></span>
     <div class="bs-town-mode" id="bsTownMode" role="group" aria-label="Walk or fly" hidden><button type="button" data-town-mode="walk" aria-pressed="true">Walk</button><button type="button" data-town-mode="fly" aria-pressed="false">Fly</button></div>
     <div class="bs-town-list" id="bsTownList" role="menu" aria-label="Places to jump to" hidden></div>
     <div class="bs-town-list bs-town-floods" id="bsTownFloods" role="menu" aria-label="Floods to show on the map" hidden></div>
@@ -7752,7 +7757,7 @@ const handle = async (m, post) => {
   // latitude, longitude, metres back, tilt and bearing). A model with floods can also set floodOf (what its flooded area is a share
   // of: "Logan"), floodNote (the line under the list) and floodWarn (show the not-official notice first, and a banner while a flood is on).
   const TOWNS = {
-    inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=11", assets: TOWN3D, place: "inv", up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
+    inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=13", assets: TOWN3D, place: "inv", up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
     moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=15", assets: TOWN3D + "moorooka/", place: "moo", up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
       walkStart: { x: -269.8, z: -991.4, yaw: -1.623 },  // Ash's pick for where Moorooka starts: the Beaudesert Road footpath, looking at the house he chose
       // its floods: widest over the Oxley Creek flats along the model's western edge, seen from the east. floodWarn: the not-official notice has to be accepted
@@ -7760,7 +7765,7 @@ const handle = async (m, post) => {
       floodLook: [-27.5375, 153.0115, 1100, 40, 100], floodOf: "this map", noFloodSlider: true,  // Ash: no water level slider ("At the peak") in Moorooka: a flood just rises to its peak
       floodWarn: { council: "Brisbane City Council", short: "BCC", how: "our own computer simulation of rain running over the ground and the creeks rising (and, in big river floods, Oxley Creek backing up), on a 5 m model of the terrain", map: "Brisbane City Council's Flood Awareness Map and FloodWise Property Report" },
       floodNote: "A guide only: our own simulation, from the terrain, the buildings and the Bureau's design rainfall for Moorooka. It includes water running over the ground to the creeks. No council flood mapping is used. For property, insurance or planning decisions, use Brisbane City Council's Flood Awareness Map and FloodWise Property Report." },
-    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=27", assets: TOWN3D + "logan/", place: "logan", up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
+    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=29", assets: TOWN3D + "logan/", place: "logan", up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
       start: "council", onFoot: true, noFloodSlider: true, flyTo: { id: "brownsplains", label: "Fly to Browns Plains" }, wait: 90000, ceil: 110000, fast: 600, far: 150000, out: 130000, stride: 0.02, pad: 80000, stand: [0.45, 400], floodLook: [-27.69, 153.17, 12000, 55, -35],
       note: "Prototype - not official council flood mapping",
       // the same not-official notice and banner as Moorooka's (Ash, 12 November 2026)
@@ -7808,6 +7813,88 @@ const handle = async (m, post) => {
     };
     go();
   }
+  // Light first, then sharp (Ash, 13 November 2026: "With loading initially low lower res if its going to take more than 5
+  // secs, show a tiny spinning btn left if moving to high res. should not jitter too much or a max of once when high res
+  // kicks in"). A model opens at its light setting (no shadows, fewer trees, a coarser ground, fewer pixels: about half the
+  // drawing) unless this device opened the sharp setting in under 5 s last time. Once it's on screen and running smoothly
+  // (a steady 60 frames a second), the sharp one is built out of sight behind it, with a small spinner top left, and swapped
+  // in whole: one change, not things popping in. If the sharp one then can't keep up (under 40 frames a second), the
+  // light one comes back and this device keeps to it from then on. Everything the app has put into or set on the model
+  // (Inverloch's town centre, the tide, a flood, the time, the camera) is replayed into the sharp one before it shows.
+  // T.model is a stand-in that always reaches whichever model is showing.
+  function townModelPair(T, lib, box, cfg, opts, cb) {
+    const key = "an3d-" + cfg.place, mem = navigator.deviceMemory || 8, touch = matchMedia("(pointer: coarse)").matches;
+    let seen = {}; try { seen = JSON.parse(localStorage.getItem(key) || "{}") || {}; } catch {}
+    const save = o => { seen = { ...seen, ...o }; try { localStorage.setItem(key, JSON.stringify(seen)); } catch {} };
+    const best = navigator.connection?.saveData || mem < 4 ? "low" : touch || mem <= 4 ? "medium" : "high";
+    const direct = best === "low" || seen.slow || (seen.q === best && seen.ms < 5000);
+    const first = direct ? (seen.slow ? "low" : best) : "low";
+    const hiBox = $("bsHiRes");
+    let cur = null, next = null, dead = false;
+    const log = [], last = {}, LAST = ["setLabelObstacles", "setTide", "setFlood", "setFloodLevel", "setMinutes", "setCamera"];
+    const make = (q, own) => { const t0 = performance.now(); let mm = null;
+      mm = lib.create(box, { ...opts, quality: q, onProgress: own ? cb.onProgress : undefined,
+        onFloodLevel: v => { if (mm === cur) cb.onFloodLevel(v); },
+        onError: msg => { if (mm === cur) cb.onError(msg); else if (mm === next) drop(); } });
+      mm.t0 = t0; return mm; };
+    // a handle Inverloch's town centre moves things with: always the one in the model that's showing
+    const handle = real => { const H = { real, calls: new Map() };
+      H.proxy = new Proxy(H, { get: (h, k) => { const v = h.real[k]; if (typeof v !== "function") return v;
+        return (...a) => { h.calls.set(k + ":" + a[0], a); return h.real[k](...a); }; } });
+      return H; };
+    const handles = [];
+    let ids = 0; const tag = mm => { mm.id = ++ids; const el = box.lastElementChild; if (el) el.dataset.anModel = String(mm.id); };
+    cur = make(first, true);
+    const m = new Proxy({}, { get: (_, k) => {
+      if (k === "ready") return ready;
+      if (k === "dispose") return () => { dead = true; hiBox.hidden = true; try { cur.dispose(); } catch {} try { next?.dispose(); } catch {} };
+      const v = cur[k]; if (typeof v !== "function") return v;
+      return (...a) => { const r = v.apply(cur, a);
+        if (k === "addParts") { const H = handle(r); handles.push(H); log.push(["addParts", a, H]); return H.proxy; }
+        if (k === "addPad") log.push(["addPad", a]); else if (LAST.includes(k)) last[k] = a;
+        if ((k === "setCamera" || k === "setMinutes") && next) try { next[k](...a); } catch {}  // the one being built out of sight looks the same way
+        return r; }; } });
+    const drop = () => { const n = next; next = null; hiBox.hidden = true; if (n) try { n.dispose(); } catch {} };
+    const rootOf = mm => [...box.children].find(el => el.dataset.anModel === String(mm.id));
+    tag(cur);
+    // frames a second over a short while
+    const fps = ms => new Promise(ok => { let n = 0, t0 = 0; const f = t => { if (dead) return ok(0); if (!t0) t0 = t; n++; if (t - t0 < ms) requestAnimationFrame(f); else ok(n * 1000 / (t - t0)); }; requestAnimationFrame(f); });
+    const swapTo = async (to, q) => {
+      for (const [name, a, H] of log) { if (name === "addParts") H.real = to.addParts(...a); else to.addPad(...a); }
+      for (const H of handles) for (const [ck, a] of H.calls) { const fn = ck.split(":")[0]; try { H.real[fn](...a); } catch {} }
+      for (const k of LAST) if (last[k]) { try { const r = to[k](...last[k]); if (r?.then) await r; } catch {} }
+      await new Promise(ok => requestAnimationFrame(() => requestAnimationFrame(ok)));
+      if (dead || BS.town !== T) return;
+      const old = cur, oldEl = rootOf(old), el = rootOf(to);
+      cur = to; next = null; if (el) el.style.visibility = ""; if (oldEl) oldEl.style.visibility = "hidden";
+      try { old.dispose(); } catch {}
+      hiBox.hidden = true;
+    };
+    const upgrade = async () => {
+      // wait for the view to be on screen, then see how smoothly the light one runs
+      for (let i = 0; i < 600 && !T.on && !dead; i++) await new Promise(ok => setTimeout(ok, 100));
+      await new Promise(ok => setTimeout(ok, 1500));
+      if (dead || BS.town !== T) return;
+      const f = await fps(2000);
+      if (f < 55 && !window.__anForceUp) return;  // not a steady 60: stay light (__anForceUp: for testing on slow machines)
+      hiBox.hidden = false;
+      next = make(best, false); tag(next); const el = rootOf(next); if (el) el.style.visibility = "hidden";
+      const n = next;
+      try { await n.ready; } catch { if (next === n) drop(); return; }
+      if (dead || next !== n || BS.town !== T) return;
+      save({ q: best, ms: Math.round(performance.now() - n.t0) });
+      await swapTo(n, best);
+      // the sharp one has to keep up: if it can't, back to light, and this device stays light
+      await new Promise(ok => setTimeout(ok, 1500));
+      if (dead || BS.town !== T) return;
+      const g = await fps(2500);
+      if (g && g < 40 && !window.__anForceUp) { save({ slow: true }); const back = make("low", false); tag(back); const be = rootOf(back); if (be) be.style.visibility = "hidden";
+        try { await back.ready; } catch { return; } if (!dead && BS.town === T) await swapTo(back, "low"); }
+    };
+    T.pair = { get cur() { return cur; }, get next() { return next; } };  // for checking it in a browser's console
+    const ready = cur.ready.then(() => { if (!direct) upgrade(); else if (first === best) save({ q: best, ms: Math.round(performance.now() - cur.t0) }); });
+    return m;
+  }
   function townModelOn(T) {
     const F = BS.fly, box = $("bsTown"), tip = $("bsFlyTip"), jump = $("bsFlyJump"), list = $("bsTownList"), modeBox = $("bsTownMode");
     const fb = $("bsTownFlood"), fl = $("bsTownFloods"), riseBox = $("bsTownRise"), riseIn = $("bsTownRiseIn"), riseOut = $("bsTownRiseOut");
@@ -7827,10 +7914,10 @@ const handle = async (m, post) => {
     if (inv && BS.W.invTG && BS.W.invClock) TOWN_BLOCK.forEach(P => clearPolygons.push({ latLon: P.map(([x, z]) => townLL(x, z)), roads: true }));  // the town centre comes across whole
     townModelLoad(cfg).then(lib => {
       if (T.dead) return;
-      const m = T.model = lib.create(box, { assets: cfg.assets, clearLatLon, clearPolygons, detailLatLon,
-        onProgress: (f, label) => { if (!T.on && !T.dead) tip.textContent = `Loading the town model: ${String(label).toLowerCase()}…`; },
-        onFloodLevel: v => T.onFlood?.(v),
-        onError: msg => fail(msg) });
+      const m = T.model = townModelPair(T, lib, box, cfg, { assets: cfg.assets, clearLatLon, clearPolygons, detailLatLon },
+        { onProgress: (f, label) => { if (!T.on && !T.dead) tip.textContent = `Loading the town model: ${String(label).toLowerCase()}…`; },
+          onFloodLevel: v => T.onFlood?.(v),
+          onError: msg => fail(msg) });
       return m.ready.then(() => {
         if (T.dead || BS.fly !== F) { try { m.dispose(); } catch {} return; }
         const EYE = 3, touch = matchMedia("(pointer: coarse)").matches;  // walking: your eyes 3 m up to start, for a clear view over the cars and fences (Up and Down change it)
@@ -7972,7 +8059,8 @@ const handle = async (m, post) => {
               if (T.walk) setMode(false);
               T.tween = { a: { x: F.pos.x, y: F.pos.y, z: F.pos.z, yaw: F.yaw, pitch: F.pitch }, b: lookFrom(...cfg.floodLook), t0: performance.now(), ms: 1800 }; };
             ask.querySelector('[data-ask="yes"]').focus({ preventScroll: true }); };
-          fb.hidden = false; fb.setAttribute("aria-pressed", "false"); openFloods(false);
+          // Logan's floods are for Ash only for now (Ash, 13 November 2026: "Just for logan hide the flood btn unless the users name is Ash or Ashley")
+          fb.hidden = cfg.place === "logan" && !/^ash(ley)?$/i.test((S.name || "").trim()); fb.setAttribute("aria-pressed", "false"); openFloods(false);
           // the notice: Cancel has the focus to start with, Escape cancels, Tab stays inside it
           const closeWarn = () => { warn.hidden = true; warn.onclick = warn.onkeydown = null; fb.focus({ preventScroll: true }); };
           const openWarn = () => { openList(false); warn.hidden = false; const [no, yes] = warn.querySelectorAll("button"); no.focus({ preventScroll: true });
