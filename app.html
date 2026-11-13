@@ -1289,6 +1289,14 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
 /* The Logan model's floods: a Flood button under Jump, its list of floods, and (with a flood on) the water level above the time */
 .bs-fly-x.bs-town-flood { top: calc(60px + env(safe-area-inset-top)); left: auto; right: 16px; }
 .bs-fly-x.bs-town-flood[aria-pressed="true"] { background: #fff; color: #1b1830; }
+/* street names in the town models: drawn by the app over the model, along each street, never upside down */
+.bs-streets { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+.bs-streets span { position: absolute; left: 0; top: 0; white-space: nowrap; font: 600 12px/1 var(--ui); letter-spacing: .01em; color: #23272f;
+  text-shadow: 0 0 2px #fff, 0 0 2px #fff, 0 0 3px #fff, 0 0 5px rgba(255,255,255,.85); opacity: 0; transition: opacity .2s ease-out; will-change: transform, opacity; }
+.bs-streets span.major { font-size: 13px; font-weight: 700; }
+.bs-streets span.on { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .bs-streets span { transition: none; } }
+#bsTown.bs-nonames .lgn-label--road { display: none !important; }  /* Logan's own chips for its main roads go with the rest */
 .bs-town-list.bs-town-floods { top: calc(106px + env(safe-area-inset-top)); }
 .bs-town-list button small { display: block; margin-top: 2px; font: 500 0.74rem/1.3 var(--ui); color: rgba(255, 255, 255, 0.78); }
 .bs-town-list button[aria-checked="true"] { background: rgba(255, 255, 255, 0.14); }
@@ -1788,7 +1796,7 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <div class="bs-town-mode" id="bsTownMode" role="group" aria-label="Walk or fly" hidden><button type="button" data-town-mode="walk" aria-pressed="true">Walk</button><button type="button" data-town-mode="fly" aria-pressed="false">Fly</button></div>
     <div class="bs-town-list" id="bsTownList" role="menu" aria-label="Places to jump to" hidden></div>
     <div class="bs-town-list bs-town-floods" id="bsTownFloods" role="menu" aria-label="Floods to show on the map" hidden></div>
-    <div class="bs-slides" role="group" aria-label="Share, tide, time and flood"><button class="bs-fly-x bs-ic" type="button" id="bsShareBtn" aria-label="Share a link to this 3D model" title="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false" aria-label="Time of day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span id="bsTimeBtnT">Time</span></button><button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button></div>
+    <div class="bs-slides" role="group" aria-label="Share, street names, tide, time and flood"><button class="bs-fly-x bs-ic" type="button" id="bsShareBtn" aria-label="Share a link to this 3D model" title="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button><button class="bs-fly-x bs-ic" type="button" id="bsNamesBtn" aria-pressed="true" aria-label="Street names" title="Hide street names (N)" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M9 21h6"/><path d="M5 5h11l3 2.5L16 10H5z"/><path d="M19 12H8l-3 2.5L8 17h11z"/></svg></button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false" aria-label="Time of day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span id="bsTimeBtnT">Time</span></button><button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button></div>
     <p class="bs-town-note" id="bsTownNote" hidden></p>
     <p class="bs-flood-banner" id="bsFloodBanner" role="alert" hidden>Experimental. Not official flood information. Do not rely on this model. Not endorsed by <span data-fw="council">Brisbane City Council</span>.</p>
     <div class="bs-flood-warn" id="bsFloodWarn" role="alertdialog" aria-modal="true" aria-labelledby="bsFloodWarnH" aria-describedby="bsFloodWarnD" hidden><div>
@@ -7528,6 +7536,7 @@ const handle = async (m, post) => {
         if (e.key === "?") { bsTipToggle(); return; }
         if (e.code === "KeyF" && F.hot?.f) { F.hot.f(); return; }  // walk or fly (the town models)
         if (e.code === "KeyJ") { if (F.hot?.j) F.hot.j(); else if (!$("bsFlyJump").hidden) $("bsFlyJump").click(); return; }  // jump to a place
+        if (e.code === "KeyN" && F.hot?.n) { F.hot.n(); return; }  // street names on or off (the town models)
         if (e.code === "KeyR") { if (F.hot?.r) F.hot.r(); else { F.pos.copy(F.start.pos); F.yaw = F.start.yaw; F.pitch = F.start.pitch; } }
       },
       keyup: e => F.keys.delete(e.code),
@@ -7783,6 +7792,7 @@ const handle = async (m, post) => {
   // in the weather's own town instead. which: "inv" (the default), "moo" or "logan".
   function townModelOpen(viaExplore, which) {
     if (BS.town) return;
+    townAssetWatch();
     const cfg = TOWNS[which] || TOWNS.inv;
     // The weather's still on its way: show the loader straight away and carry on once it's here (no "try again" message)
     if (!state.wx) { exLoadShow(exploreName(cfg.place)); if (BS.wxWait) return; const t0 = Date.now();
@@ -7956,8 +7966,8 @@ const handle = async (m, post) => {
           F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.vert = 0; F.keys.clear();
           // one set of controls for every town model (Inverloch, Moorooka, Logan)
           if (touch) tip.textContent = walk ? "Left stick to walk, right stick to look around." : "Fly with the sticks, or drag the view: pinch to zoom, two fingers to turn. Up and Down are between the sticks.";
-          else bsTip(walk ? "Drag to look around\nW A S D or the arrows to walk\nShift to run\nSpace higher · C lower\nF to fly · J to jump to a place\nR to start again · Esc to exit\n? to hide this list"
-            : "Left button drag to move\nRight button drag to turn\nScroll to zoom\nW A S D or the arrows to fly\nShift to go faster\nSpace to go up · C to go down\nF to walk · J to jump to a place\nR to start again · Esc to exit\n? to hide this list");
+          else bsTip(walk ? "Drag to look around\nW A S D or the arrows to walk\nShift to run\nSpace higher · C lower\nF to fly · J to jump to a place\nN street names on or off\nR to start again · Esc to exit\n? to hide this list"
+            : "Left button drag to move\nRight button drag to turn\nScroll to zoom\nW A S D or the arrows to fly\nShift to go faster\nSpace to go up · C to go down\nF to walk · J to jump to a place\nN street names on or off\nR to start again · Esc to exit\n? to hide this list");
           tip.classList.remove("dim"); clearTimeout(F.tipT); F.tipT = setTimeout(() => tip.classList.add("dim"), 7000);
           T.tween = to ? { a: { x: F.pos.x, y: F.pos.y, z: F.pos.z, yaw: F.yaw, pitch: F.pitch }, b: to, t0: performance.now(), ms: 900 } : null; };
         // Fly: up and back from where you're standing, so the same spot stays in view. Walk: down to the ground you're looking at.
@@ -8087,7 +8097,13 @@ const handle = async (m, post) => {
         T.atStart = () => first?.walk && F.pos.distanceTo(F.start.pos) < 3;  // still where Explore opened
         // the keys (desktop): F walk or fly, J the places list, R back to the start
         T.first = first;
+        // street names: on or off with the signpost button or N, remembered on this device (on to start with)
+        T.streets = townStreetNames(T, cfg, box, m);
+        { const nb = $("bsNamesBtn"), show = on => { T.streets.set(on); nb.setAttribute("aria-pressed", String(on)); nb.title = on ? "Hide street names (N)" : "Show street names (N)"; };
+          show(streetsPref()); nb.hidden = false; nb.onclick = () => { const on = nb.getAttribute("aria-pressed") !== "true"; show(on); streetsSave(on); };
+          T.namesToggle = () => nb.click(); }
         F.hot = { f: () => toMode(!T.walk),
+          n: () => T.namesToggle?.(),
           j: () => openList(list.hidden),
           esc: () => { if (!ask.hidden) { closeAsk(); return true; } if (!list.hidden) { openList(false); return true; } if (!fl.hidden) { fl.hidden = true; fb.setAttribute("aria-expanded", "false"); return true; } return false; },
           r: () => { T.tween = null; F.eye = EYE; if (T.walk !== startWalk) setMode(startWalk); F.pos.copy(F.start.pos); F.yaw = F.start.yaw; F.pitch = F.start.pitch; } };
@@ -8504,6 +8520,200 @@ const handle = async (m, post) => {
       ...b.spec, matrix: new THREE.Matrix4().elements, onGround: true }));
     if (out.length) m.addParts(out);
   }
+  // ---- Street names, in every town model (Ash, 13 November 2026: "On each of the models I want to be able to turn street
+  // names on or off. Follow best practices for this"). The app draws them over the model, so all three follow one set of rules:
+  // - each street is joined up end to end and offered a name about every 120 m, in the middle of its straightest stretch;
+  // - a name shows only where that stretch is long enough on screen to hold it, turned to run along the street, never upside
+  //   down and never steeper than 65 degrees (a street running away from you is left unnamed rather than written up the screen);
+  // - main roads come first and can be read from further off (motorways about 2.2 km, local streets 450 to 550 m), so names
+  //   thin out as you fly higher and are gone from high above;
+  // - names never overlap each other, the model's place names or the buttons, the same name isn't repeated within 280 px
+  //   (500 px close to the ground), names already showing keep their spot (no flicker), and they fade in and out (not with reduced motion);
+  // - on to start with; the signpost button (or N) turns them off or on, remembered on this device for every model. Logan's
+  //   model draws chips for some of its main roads itself: those go off with the rest, and a street the model already names
+  //   (there, or Inverloch's A'Beckett Street) isn't named twice;
+  // - close to the ground, names only for streets you could see (no building in the way) within 400 m, and each nearby
+  //   street is named where it passes closest to a point 22 m ahead of you, so the name slides along as you walk.
+  // The streets come from the files the model has already loaded (town.json; Logan's roads.bin and map.json), so the browser
+  // has them cached. Paths, tracks and unnamed lanes get no name.
+  const STREETS_KEY = "an3d-streets";
+  const streetsPref = () => { try { return localStorage.getItem(STREETS_KEY) !== "0"; } catch { return true; } };
+  const streetsSave = on => { try { localStorage.setItem(STREETS_KEY, on ? "1" : "0"); } catch {} };
+  // the address the model itself fetched a file from (Logan adds ?v=), so the browser serves it from its cache
+  // (watched from when Explore opens a model: the browser's own list stops at 250 files)
+  const townAssetWatch = () => { if (BS.assetSeen) return; BS.assetSeen = new Map();
+    const note = list => { for (const r of list.getEntries ? list.getEntries() : list) { try { BS.assetSeen.set(new URL(r.name).pathname, r.name); } catch {} } };
+    note(performance.getEntriesByType("resource")); try { new PerformanceObserver(note).observe({ type: "resource", buffered: true }); } catch {} };
+  const townAsset = (cfg, f) => BS.assetSeen?.get(new URL(cfg.assets + f, document.baseURI).pathname) || cfg.assets + f;
+  async function townStreetData(cfg) {
+    if (cfg.place === "logan") {
+      const [buf, map] = await Promise.all([fetch(townAsset(cfg, "roads.bin")).then(r => { if (!r.ok) throw new Error("roads"); return r.arrayBuffer(); }),
+        fetch(townAsset(cfg, "map.json")).then(r => { if (!r.ok) throw new Error("map"); return r.json(); })]);
+      const dv = new DataView(buf); if (dv.getUint32(0, true) !== 0x3152474c) throw new Error("roads");
+      const n = dv.getUint32(4, true), roads = []; let p = 8;
+      for (let i = 0; i < n; i++) {
+        const cls = dv.getUint8(p), flags = dv.getUint8(p + 1), name = dv.getUint16(p + 2, true), count = dv.getUint16(p + 4, true); let x = dv.getInt32(p + 6, true), z = dv.getInt32(p + 10, true); p += 14;
+        const pts = new Float32Array(count * 2); pts[0] = x / 4; pts[1] = z / 4;
+        for (let k = 1; k < count; k++) { x += dv.getInt16(p, true); z += dv.getInt16(p + 2, true); p += 4; pts[k * 2] = x / 4; pts[k * 2 + 1] = z / 4; }
+        if (!(flags & 6)) roads.push({ cls, name, pts });  // not slip lanes or roundabouts
+      }
+      return { names: map.roadNames, roads };
+    }
+    const t = await fetch(townAsset(cfg, "town.json")).then(r => { if (!r.ok) throw new Error("town"); return r.json(); });
+    return { names: t.names, roads: t.roads.map(r => ({ cls: r[0], name: r[4], pts: Float32Array.from(r[5], v => v / 10) })), town: t };
+  }
+  // What can stand between you and a street when you're down near the ground: each building's outline (Moorooka; Inverloch's
+  // bigger buildings), a disc inside each Inverloch house, and Logan's buildings as turned boxes. In a 40 m grid.
+  async function townStreetBlocks(cfg, town) {
+    const polys = [], boxes = [], b64 = s => { const b = atob(s), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return new Int16Array(u.buffer); };
+    if (cfg.place === "logan") {
+      const [buf, map] = await Promise.all([fetch(townAsset(cfg, "buildings.bin")).then(r => { if (!r.ok) throw new Error("buildings"); return r.arrayBuffer(); }), fetch(townAsset(cfg, "map.json")).then(r => r.json())]);
+      const dv = new DataView(buf); if (dv.getUint32(0, true) !== 0x3142474c) throw new Error("buildings");
+      const n = dv.getUint32(4, true), qx = new Uint16Array(buf, 8, n), qz = new Uint16Array(buf, 8 + 2 * n, n), u8 = new Uint8Array(buf, 8 + 4 * n, 5 * n), [sx, sz] = map.meta.size;
+      for (let i = 0; i < n; i++) { const a = u8[2 * n + i] / 256 * Math.PI; boxes.push([(qx[i] / 65535 - 0.5) * sx, (qz[i] / 65535 - 0.5) * sz, u8[i] / 4, u8[n + i] / 4, Math.cos(a), Math.sin(a)]); }
+    } else if (typeof town.buildings === "string") {  // Moorooka: corner count, eave, ridge, colour, kind, then x, z pairs (dm)
+      const B = b64(town.buildings); for (let i = 0; i < B.length;) { const k = B[i]; if (k >= 3) { const p = new Float32Array(k * 2); for (let q = 0; q < k * 2; q++) p[q] = B[i + 7 + q] / 10; polys.push(p); } i += 7 + 2 * k; }
+    } else {  // Inverloch: outlines of the bigger buildings, and the houses as x, z (quarter metres), width, depth (dm)
+      for (const b of town.buildings || []) if (b.p?.length >= 6) polys.push(Float32Array.from(b.p, v => v / 10));
+      const H = town.houses ? b64(town.houses) : []; for (let i = 0; i + 9 < H.length; i += 10) { const r = Math.min(H[i + 2], H[i + 3]) / 20; if (r > 1) boxes.push([H[i] / 4, H[i + 1] / 4, r, r, 1, 0]); }
+    }
+    const CELL = 40, grid = new Map(), put = (x0, z0, x1, z1, it) => { for (let i = Math.floor(x0 / CELL); i <= Math.floor(x1 / CELL); i++) for (let j = Math.floor(z0 / CELL); j <= Math.floor(z1 / CELL); j++) { const k = i * 65536 + j; let a = grid.get(k); if (!a) grid.set(k, a = []); a.push(it); } };
+    for (const p of polys) { let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (let q = 0; q < p.length; q += 2) { x0 = Math.min(x0, p[q]); x1 = Math.max(x1, p[q]); z0 = Math.min(z0, p[q + 1]); z1 = Math.max(z1, p[q + 1]); } put(x0, z0, x1, z1, p); }
+    for (const b of boxes) { const r = Math.hypot(b[2], b[3]); put(b[0] - r, b[1] - r, b[0] + r, b[1] + r, b); }
+    // does the line from (ax, az) to (bx, bz) pass through a building?
+    const cross = (ax, az, bx, bz, cx, cz, dx, dz) => { const d1 = (bx - ax) * (cz - az) - (bz - az) * (cx - ax), d2 = (bx - ax) * (dz - az) - (bz - az) * (dx - ax), d3 = (dx - cx) * (az - cz) - (dz - cz) * (ax - cx), d4 = (dx - cx) * (bz - cz) - (dz - cz) * (bx - cx); return d1 * d2 < 0 && d3 * d4 < 0; };
+    let stamp = 0; const seen = new Map();
+    return (ax, az, bx, bz) => {
+      stamp++; const L = Math.hypot(bx - ax, bz - az), n = Math.max(1, Math.ceil(L / (CELL / 2)));
+      for (let s = 0; s <= n; s++) { const x = ax + (bx - ax) * s / n, z = az + (bz - az) * s / n, a = grid.get(Math.floor(x / CELL) * 65536 + Math.floor(z / CELL)); if (!a) continue;
+        for (const it of a) { if (seen.get(it) === stamp) continue; seen.set(it, stamp);
+          if (it.length === 6 && !(it instanceof Float32Array)) { const [x0, z0, hw, hd, c, sn] = it, l = t => { const px = ax + (bx - ax) * t - x0, pz = az + (bz - az) * t - z0; return [px * c + pz * sn, -px * sn + pz * c]; };
+            const P = l(0), Q = l(1); let t0 = 0, t1 = 1, ok = true;  // the line against the turned box, side by side
+            for (const [p0, d, h] of [[P[0], Q[0] - P[0], hw], [P[1], Q[1] - P[1], hd]]) { if (Math.abs(d) < 1e-9) { if (Math.abs(p0) > h) { ok = false; break; } continue; }
+              let ta = (-h - p0) / d, tb = (h - p0) / d; if (ta > tb) [ta, tb] = [tb, ta]; t0 = Math.max(t0, ta); t1 = Math.min(t1, tb); if (t0 > t1) { ok = false; break; } }
+            if (ok) return true; continue; }
+          for (let q = 0, m = it.length; q < m; q += 2) if (cross(ax, az, bx, bz, it[q], it[q + 1], it[(q + 2) % m], it[(q + 3) % m])) return true; } }
+      return false; };
+  }
+  // Where names can go: each street joined end to end, then a spot about every 300 m with the straight stretch around it
+  async function townStreetSpots({ names, roads }) {
+    const by = new Map();
+    for (const r of roads) if (r.cls <= 5 && r.name >= 0 && names[r.name] && r.pts.length >= 4) { let g = by.get(r.name); if (!g) by.set(r.name, g = []); g.push(r); }
+    const key = (x, z) => Math.round(x / 2) + "," + Math.round(z / 2), spots = [], chains = [], cgrid = new Map(), SP = 120, CC = 100;
+    let t0 = performance.now();
+    for (const [ni, segs] of by) {
+      if (performance.now() - t0 > 30) { await new Promise(r => setTimeout(r)); t0 = performance.now(); }  // in small pieces, so the model keeps moving (Logan has about 35,000 spots)
+      const ends = new Map(), used = new Set();
+      segs.forEach((r, i) => { const n = r.pts.length; for (const k of [key(r.pts[0], r.pts[1]), key(r.pts[n - 2], r.pts[n - 1])]) { let a = ends.get(k); if (!a) ends.set(k, a = []); a.push(i); } });
+      const pts = (r, rev) => { const a = []; for (let k = 0; k < r.pts.length; k += 2) a.push([r.pts[k], r.pts[k + 1]]); return rev ? a.reverse() : a; };
+      for (let i0 = 0; i0 < segs.length; i0++) {
+        if (used.has(i0)) continue; used.add(i0);
+        let line = pts(segs[i0]), cls = segs[i0].cls;
+        for (const fwd of [true, false]) for (;;) {  // grow the line from its end, then from its start
+          const tip = fwd ? line[line.length - 1] : line[0], next = (ends.get(key(tip[0], tip[1])) || []).find(j => !used.has(j)); if (next === undefined) break;
+          used.add(next); const r = segs[next], n = r.pts.length, atStart = key(r.pts[0], r.pts[1]) === key(tip[0], tip[1]); cls = Math.min(cls, r.cls);
+          const add = pts(r, fwd ? !atStart : atStart); line = fwd ? line.concat(add.slice(1)) : add.slice(0, -1).concat(line);
+        }
+        const P = new Float32Array(line.length * 2), cum = new Float32Array(line.length); line.forEach((q, k) => { P[k * 2] = q[0]; P[k * 2 + 1] = q[1]; if (k) cum[k] = cum[k - 1] + Math.hypot(q[0] - line[k - 1][0], q[1] - line[k - 1][1]); });
+        const L = cum[cum.length - 1]; if (L < 25) continue;
+        const at = s => { s = Math.max(0, Math.min(L, s)); let lo = 0, hi = cum.length - 1; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (cum[m] <= s) lo = m; else hi = m; }
+          const f = (s - cum[lo]) / ((cum[hi] - cum[lo]) || 1); return [P[lo * 2] + (P[hi * 2] - P[lo * 2]) * f, P[lo * 2 + 1] + (P[hi * 2 + 1] - P[lo * 2 + 1]) * f]; };
+        // the whole street, for naming it close up (wherever it is just ahead of you), in a 100 m grid
+        const ci = chains.push({ name: names[ni], cls, P, cum, L, at }) - 1;
+        for (let k = 0; k * 40 <= L; k++) { const q = at(k * 40), g = Math.floor(q[0] / CC) * 65536 + Math.floor(q[1] / CC); let a = cgrid.get(g); if (!a) cgrid.set(g, a = []); if (a[a.length - 1] !== ci) a.push(ci); }
+        const dir = (a, b) => { const p = at(a), q = at(b); return Math.atan2(q[1] - p[1], q[0] - p[0]); };
+        const n = Math.max(1, Math.round(L / SP));
+        for (let k = 0; k < n; k++) {
+          const s = (k + 0.5) * L / n, t = dir(s - 10, s + 10), off = a => Math.abs(Math.atan2(Math.sin(a - t), Math.cos(a - t))) > 0.31;  // about 18 degrees
+          let a = s, b = s; while (a > Math.max(0, s - 90) && !off(dir(a - 5, a))) a -= 5; while (b < Math.min(L, s + 90) && !off(dir(b, b + 5))) b += 5;
+          a = Math.max(0, a); b = Math.min(L, b); if (b - a < 15) continue;
+          const c = at((a + b) / 2), p = at(a), q = at(b);
+          spots.push({ name: names[ni], cls, x: c[0], z: c[1], ax: p[0], az: p[1], bx: q[0], bz: q[1], y: null });
+        }
+      }
+    }
+    return { spots, chains, cgrid };
+  }
+  function townStreetNames(T, cfg, box, m) {
+    const THREE = BS.B.THREE, cam = new THREE.PerspectiveCamera(60, 1, 1, 1e7), v = new THREE.Vector3(), CELL = 250;
+    const LIM = [2200, 1800, 1300, 800, 550, 450];  // how far off a name can be read, by class of road (m)
+    const touch = matchMedia("(pointer: coarse)").matches, MAX = touch ? 18 : 36;
+    const layer = document.createElement("div"); layer.className = "bs-streets"; layer.setAttribute("aria-hidden", "true"); box.appendChild(layer);
+    const S = { on: false, spots: null, grid: null, loading: null, dead: false, last: "", w: box.clientWidth, h: box.clientHeight, live: new Map(), pool: [], frame: 0, places: [], placeNames: new Set() };
+    const ro = new ResizeObserver(() => { S.w = box.clientWidth; S.h = box.clientHeight; S.last = ""; }); ro.observe(box);
+    const ctx = document.createElement("canvas").getContext("2d"), widths = new Map(), ff = getComputedStyle(document.body).fontFamily;
+    const textW = (name, major) => { const k = (major ? 1 : 0) + name; let w = widths.get(k); if (w === undefined) { ctx.font = (major ? "700 13px " : "600 12px ") + ff; w = ctx.measureText(name).width; widths.set(k, w); } return w; };
+    const load = () => S.loading || (S.loading = townStreetData(cfg).then(d => { S.town = d.town; return townStreetSpots(d); }).then(({ spots, chains, cgrid }) => {
+      if (S.dead) return; S.spots = spots; S.chains = chains; S.cgrid = cgrid; S.grid = new Map();
+      S.spots.forEach((p, i) => { const k = Math.floor(p.x / CELL) * 65536 + Math.floor(p.z / CELL); let a = S.grid.get(k); if (!a) S.grid.set(k, a = []); a.push(i); });
+      S.last = "";
+    }).catch(e => { console.warn("Town model: street names couldn't load", e); S.loading = null; }));
+    // the buildings, fetched the first time you come down near the ground (Logan's are a separate file)
+    const blocks = () => S.blocking || (S.blocking = townStreetBlocks(cfg, S.town).then(f => { S.hid = f; S.town = null; S.last = ""; }).catch(e => { console.warn("Town model: street names can't see buildings", e); S.hid = () => false; }));
+    const hideAll = () => { for (const [, el] of S.live) { el.classList.remove("on"); el._off = performance.now(); S.pool.push(el); } S.live.clear(); };
+    return {
+      set(on) { S.on = on; layer.hidden = !on; box.classList.toggle("bs-nonames", !on); if (on) { load(); S.last = ""; } else hideAll(); },
+      dispose() { S.dead = true; ro.disconnect(); layer.remove(); box.classList.remove("bs-nonames"); },
+      get state() { return S; },  // for checking in the console
+      update() {
+        if (!S.on || !S.spots || !S.w) return;
+        const F = BS.fly, w = S.w, h = S.h, now = performance.now();
+        // the model's own place names, read every few frames so names keep clear of them
+        if (S.frame++ % 6 === 0) { const r0 = box.getBoundingClientRect(); S.places = []; S.placeNames = new Set();
+          for (const el of box.querySelectorAll(".inv-label, .lgn-label")) {  // the models' own names (some of Logan's are spans) if (el.style.visibility === "hidden" || el.closest("[data-an-model]")?.style.visibility === "hidden") continue;
+            const r = el.getBoundingClientRect(); if (r.width && r.right > r0.left && r.left < r0.right && r.bottom > r0.top && r.top < r0.bottom && getComputedStyle(el).visibility === "visible") { S.places.push([r.left - r0.left, r.top - r0.top, r.right - r0.left, r.bottom - r0.top]); S.placeNames.add(el.textContent.trim()); } } }
+        const fov = m.fov ? m.fov() : 60, keyNow = [F.pos.x.toFixed(2), F.pos.y.toFixed(2), F.pos.z.toFixed(2), F.yaw.toFixed(4), F.pitch.toFixed(4), w, h, fov, S.places.length].join();
+        if (keyNow === S.last) return; S.last = keyNow;
+        cam.fov = fov; cam.aspect = w / h; cam.updateProjectionMatrix(); cam.position.set(F.pos.x, F.pos.y, F.pos.z); cam.rotation.set(F.pitch, F.yaw, 0, "YXZ"); cam.updateMatrixWorld();
+        const proj = (x, y, z) => { v.set(x, y, z).project(cam); return v.z > -1 && v.z < 1 ? [(v.x + 1) / 2 * w, (1 - v.y) / 2 * h] : null; };
+        // near the ground: no names through buildings, and none further off than 400 m
+        const low = F.pos.y - m.groundAt(F.pos.x, F.pos.z) < 15; if (low && !S.hid) blocks();
+        const R = LIM[0], cx = Math.floor(F.pos.x / CELL), cz = Math.floor(F.pos.z / CELL), rc = Math.ceil(R / CELL), cand = [];
+        for (let i = -rc; i <= rc; i++) for (let j = -rc; j <= rc; j++) { const a = S.grid.get((cx + i) * 65536 + cz + j); if (!a) continue;
+          for (const id of a) { const p = S.spots[id];
+            if (p.y === null) { const g = m.groundAt(p.x, p.z); p.y = (Number.isFinite(g) ? g : 0) + 1.2; }
+            const d = Math.hypot(p.x - F.pos.x, p.y - F.pos.y, p.z - F.pos.z); if (d > LIM[p.cls] || (low && d > 400)) continue;
+            const c = proj(p.x, p.y, p.z); if (!c || c[0] < -40 || c[0] > w + 40 || c[1] < -20 || c[1] > h + 20) continue;
+            const A = proj(p.ax, p.y, p.az), B = proj(p.bx, p.y, p.bz); if (!A || !B) continue;
+            const major = p.cls <= 2, tw = textW(p.name, major), len = Math.hypot(B[0] - A[0], B[1] - A[1]); if (len < tw + 12) continue;
+            let ang = Math.atan2(B[1] - A[1], B[0] - A[0]); if (ang > Math.PI / 2) ang -= Math.PI; else if (ang < -Math.PI / 2) ang += Math.PI;
+            if (Math.abs(ang) > 1.13) continue;  // 65 degrees
+            cand.push({ id, p, c, ang, tw, major, score: p.cls * 10 + d / LIM[p.cls] * 5 - (S.live.has(id) ? 8 : 0) }); } }
+        // close to the ground, each street within reach is also offered a name where it passes closest to a point 22 m ahead
+        // of you, so a cross street in front is named and the name slides along with you
+        if (low) { const fx = -Math.sin(F.yaw), fz = -Math.cos(F.yaw), hx = F.pos.x + fx * 22, hz = F.pos.z + fz * 22, near = new Set();
+          for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) for (const ci of S.cgrid.get((Math.floor(hx / 100) + i) * 65536 + Math.floor(hz / 100) + j) || []) near.add(ci);
+          for (const ci of near) { const C = S.chains[ci], P = C.P; let best = 1e9, bs = 0;
+            for (let k = 0; k + 3 < P.length; k += 2) { const ax = P[k], az = P[k + 1], dx = P[k + 2] - ax, dz = P[k + 3] - az, l2 = dx * dx + dz * dz || 1, t = Math.max(0, Math.min(1, ((hx - ax) * dx + (hz - az) * dz) / l2)), d = Math.hypot(ax + dx * t - hx, az + dz * t - hz);
+              if (d < best) { best = d; bs = C.cum[k / 2] + t * Math.sqrt(l2); } }
+            if (best > 60) continue;
+            const c0 = C.at(bs), a0 = C.at(bs - 16), b0 = C.at(bs + 16), y = m.groundAt(c0[0], c0[1]) + 1.2, id = "c" + ci;
+            const c = proj(c0[0], y, c0[1]), A = proj(a0[0], y, a0[1]), B = proj(b0[0], y, b0[1]); if (!c || !A || !B || c[0] < -40 || c[0] > w + 40 || c[1] < -20 || c[1] > h + 20) continue;
+            const major = C.cls <= 2, tw = textW(C.name, major), len = Math.hypot(B[0] - A[0], B[1] - A[1]); if (len < tw + 12) continue;
+            let ang = Math.atan2(B[1] - A[1], B[0] - A[0]); if (ang > Math.PI / 2) ang -= Math.PI; else if (ang < -Math.PI / 2) ang += Math.PI; if (Math.abs(ang) > 1.13) continue;
+            cand.push({ id, p: { name: C.name, x: c0[0], z: c0[1] }, c, ang, tw, major, score: -20 - (S.live.has(id) ? 8 : 0) + best / 10 }); } }
+        cand.sort((a, b) => a.score - b.score);
+        if (low) { if (!S.hid) cand.length = 0; else for (let i = cand.length - 1; i >= 0; i--) { const k = cand[i]; if (S.hid(F.pos.x, F.pos.z, k.p.x, k.p.z)) cand.splice(i, 1); } }
+        const kept = [[0, 0, w, 104], ...(touch ? [[0, h - 300, w, h]] : []), ...S.places], put = [];
+        for (const k of cand) { if (put.length >= MAX) break;
+          const lw = k.tw + 8, lh = k.major ? 17 : 16, cs = Math.abs(Math.cos(k.ang)), sn = Math.abs(Math.sin(k.ang)), hw = (lw * cs + lh * sn) / 2, hh = (lw * sn + lh * cs) / 2;
+          const bx = [k.c[0] - hw, k.c[1] - hh, k.c[0] + hw, k.c[1] + hh];
+          if (bx[0] < 0 || bx[2] > w || bx[1] < 0 || bx[3] > h) continue;
+          if (kept.some(q => bx[0] < q[2] + 4 && bx[2] > q[0] - 4 && bx[1] < q[3] + 3 && bx[3] > q[1] - 3)) continue;
+          if (S.placeNames.has(k.p.name) || put.some(q => q.p.name === k.p.name && Math.hypot(q.c[0] - k.c[0], q.c[1] - k.c[1]) < (low ? 500 : 280))) continue;  // not already named by the model (Logan's main roads, Inverloch's A'Beckett Street)
+          kept.push(bx); put.push(k); }
+        // draw: names that stay keep their element, new ones fade in, gone ones fade out where they were
+        const keep = new Set(put.map(k => k.id));
+        for (const [id, el] of S.live) if (!keep.has(id)) { el.classList.remove("on"); el._off = now; S.pool.push(el); S.live.delete(id); }
+        for (const k of put) {
+          let el = S.live.get(k.id);
+          if (!el) { const i = S.pool.findIndex(e => now - e._off > 250); el = i >= 0 ? S.pool.splice(i, 1)[0] : layer.appendChild(document.createElement("span"));
+            el.textContent = k.p.name; el.classList.toggle("major", k.major); el.classList.remove("on"); S.live.set(k.id, el); requestAnimationFrame(() => S.live.get(k.id) === el && el.classList.add("on")); }
+          el.style.transform = `translate(${k.c[0].toFixed(1)}px,${k.c[1].toFixed(1)}px) translate(-50%,-50%) rotate(${k.ang.toFixed(3)}rad)`;
+        }
+      },
+    };
+  }
   function townModelFrame() {
     const T = BS.town, F = BS.fly, m = T.model;
     // gliding between walking and flying
@@ -8512,6 +8722,7 @@ const handle = async (m, post) => {
       if (k >= 1) T.tween = null; }
     m.setCamera(F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch);
     m.setMinutes(bsMins(BS.view.ms));
+    T.streets?.update();
     // the clock's hands, the koala and the wombats: wherever the weather's own are now
     if (T.live?.length) { const M = T.mtx || (T.mtx = new BS.B.THREE.Matrix4());
       T.roots.forEach(r => r.updateWorldMatrix(true, true));
@@ -8524,6 +8735,7 @@ const handle = async (m, post) => {
   function townModelOff() {
     const T = BS.town; if (!T) return;
     BS.town = null; T.dead = true; T.on = false; T.ungest?.(); T.unlay?.(); T.unflood?.();
+    T.streets?.dispose(); T.streets = null; $("bsNamesBtn").hidden = true;
     if (BS.fly) { const F = BS.fly; F.walk = F.speed = F.floor = F.hot = null; F.ceil = 0; F.lim = null; }  // Explore, if it carries on, is its old self
     try { T.model?.dispose(); } catch {}
     const box = $("bsTown"); box.hidden = true; box.textContent = "";
