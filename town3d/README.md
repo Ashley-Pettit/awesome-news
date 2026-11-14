@@ -757,3 +757,14 @@ the street, checked in a picture from above. Jump to has it.
 Ash: "In settings the player should be able to set their environment as one of the three suburbs. Don't overengineer
 this - just a hyperlink to the suburb." Settings has a "Your suburb" group with a link each to Moorooka, Inverloch
 and Logan (the edition's own page, which holds its news and its 3D map).
+
+## The dashed line across the road where two ground tiles meet (15 November 2026)
+
+Ash sent a picture of a dashed green line straight across Beaudesert Road: "I believe these are the lag break
+points." It is the edge between two of the sharper ground tiles. The ground's shader read each tile inside an "if",
+and at the pixels where two tiles meet the graphics card could not tell how fast the picture was changing, picked
+the tile's smallest copy and drew its average colour (green) in little 2 by 2 blocks: a dashed line. The tiles are
+now read with the gradients of the ground's own coordinates, taken outside the "if" (`textureGrad`, in ai-forge
+`town3d/terrain.ts`). Moorooka (`?v=23`) and Inverloch (`?v=16`) are rebuilt with it. The software renderer used
+for checking does not load the sharper tiles, so the line could not be reproduced or seen gone here: the build was
+checked to draw the ground as before with no shader errors, and the fix rests on the cause.

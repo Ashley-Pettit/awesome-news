@@ -4400,10 +4400,15 @@ ${Zg}`).replace("#include <map_fragment>",`
           diffuseColor *= texture2D(map, guv);
         #endif
         float sharp = 0.0;
+        // how fast the picture's coordinates change across the screen, taken here, outside any branch: a tile read
+        // inside an "if" at the pixel where two tiles meet otherwise gets a wild answer, picks its smallest copy and
+        // draws that tile's average colour there (a dashed green line across a road, at every tile edge)
+        vec2 mapDx = dFdx(vMapUv), mapDy = dFdy(vMapUv);
         ${S.slice(0,Xo).map(M=>`if (uDetailOn${M} > 0.5) {
           // a slot with no tile in it is skipped altogether: nothing is read for it
           vec2 duv = (guv - uDetailRect${M}.xy) / (uDetailRect${M}.zw - uDetailRect${M}.xy);
-          vec4 fine = texture2D(uDetail${M}, clamp(duv, 0.0, 1.0));
+          vec2 dsize = uDetailRect${M}.zw - uDetailRect${M}.xy;
+          vec4 fine = textureGrad(uDetail${M}, clamp(duv, 0.0, 1.0), mapDx / dsize, mapDy / dsize);
           float inside = step(0.0, duv.x) * step(duv.x, 1.0) * step(0.0, duv.y) * step(duv.y, 1.0);
           diffuseColor.rgb = mix(diffuseColor.rgb, fine.rgb, inside);
         }`).join(`
@@ -4412,7 +4417,7 @@ ${Zg}`).replace("#include <map_fragment>",`
         vec4 kinds = vec4(0.0);
         ${S.slice(Xo).map(M=>`if (uDetailOn${M} > 0.5) {
           vec2 duv = (vMapUv - uDetailRect${M}.xy) / (uDetailRect${M}.zw - uDetailRect${M}.xy);
-          if (duv.x >= 0.0 && duv.x <= 1.0 && duv.y >= 0.0 && duv.y <= 1.0) kinds = vec4(texture2D(uDetail${M}, duv).rgb, 1.0);
+          if (duv.x >= 0.0 && duv.x <= 1.0 && duv.y >= 0.0 && duv.y <= 1.0) kinds = vec4(textureGrad(uDetail${M}, duv, mapDx / (uDetailRect${M}.zw - uDetailRect${M}.xy), mapDy / (uDetailRect${M}.zw - uDetailRect${M}.xy)).rgb, 1.0);
         }`).join(`
 `)}
         ${Jg}
