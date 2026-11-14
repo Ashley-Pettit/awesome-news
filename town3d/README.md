@@ -606,3 +606,27 @@ Ash: "Make the car top speed 100, boost shows an icon around the car with boost 
   orange), over a faint full circle. It shows while the boost is on and until the charge is full again. The Boost
   button fills and empties with it.
 - The plane's boost is as it was: no charge, no ring.
+
+## Two planes, their keys on screen, and the arrows work the nose (14 November 2026)
+
+Ash: "with the plane show plane controls when in it, add a 2nd plane near the moorooka shops. I want up and down arrows
+to adjust my pitch so that if i press down my plane shifts upwards and vica versa."
+
+- **Two planes** (`MOO_PLANES` in `app.html`, each with where it lives and its line in Jump to). The first is still in
+  Stimpson Park. The second stands in the car park out the front of Moorooka Central (132-146 Beaudesert Road), across
+  the road from the post office, nose up Beaudesert Road at 206 degrees: from there the next 140 m are clear of
+  buildings to 15 m wide (checked against `solidAt`), so holding W takes it over the footpath, onto the road and up to
+  flying speed without turning. Each plane stays where you leave it; one left in the air goes back to its own spot.
+- **The nose:** in a plane the down arrow lifts the nose and the up arrow lowers it, the way pulling back and pushing
+  on a plane's stick does. Let go and it levels out. Space and C still do the same, and so do the Up and Down buttons
+  on a phone (renamed Climb and Dive while you are in a plane). The up and down arrows no longer work the plane's
+  power: that is W and S (or the left stick). In a car the arrows drive as before.
+- **The keys, on screen** (`#bsKeys`, `KEYS` in `townCar`): while you are in a plane or a car, a desktop lists the keys
+  that work it bottom left, in place of the walking list, as keycaps with what each does. "?" hides the list and brings
+  it back. In a plane a line on top says what to do next: hold W for power, it flies at 95 km/h, fast enough so press
+  the down arrow, flying, too slow to stay up. On a phone, where the sticks and buttons are already named, only that
+  line shows, under the top bar, and the left stick reads "Power and turn" (or "Drive" in a car).
+- Checked in the app at desktop and phone sizes on a software renderer with simulated keys and touches: both planes in
+  Jump to; the shops plane reaches 115 km/h in 5 s on W alone without touching anything, leaves the ground with the
+  down arrow, noses down with the up arrow, and levels out with neither; the up arrow alone gives no power on the
+  ground; the arrows still drive a car. Not tried on a real phone or keyboard.
