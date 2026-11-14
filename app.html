@@ -1302,7 +1302,7 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
 .bs-fly .bs-slides > .bs-fly-x:focus-visible { outline-offset: 0; }
 @media (min-width: 1000px) {
   body.bstown .bs-slides { top: calc(14px + env(safe-area-inset-top)); right: calc(24px + var(--bs-jumpw, 104px)); }
-  body.bstown .bs-height { top: calc(21px + env(safe-area-inset-top)); left: calc(24px + var(--bs-exitw, 116px)); }
+  body.bstown:not(.bsme) .bs-height { top: calc(21px + env(safe-area-inset-top)); left: calc(24px + var(--bs-exitw, 116px)); }
   body.bstown .bs-hires { top: calc(62px + env(safe-area-inset-top)); }
   body.bstown .bs-town-list.bs-town-floods { top: calc(60px + env(safe-area-inset-top)); right: calc(24px + var(--bs-jumpw, 104px)); }
   body.bstown .bs-flood-banner { top: calc(62px + env(safe-area-inset-top)); }
@@ -1316,8 +1316,13 @@ body.bsdrive:not(.bsplane) .bs-fly-x.bs-car { bottom: calc(68px + env(safe-area-
 /* Boost: held down while you drive or fly (Shift on a keyboard). Over the right stick on a phone, by Get out on a desktop */
 .bs-fly-x.bs-boost { top: auto; left: auto; right: 34px; bottom: calc(192px + env(safe-area-inset-bottom)); background: linear-gradient(90deg, #ffd166 var(--charge, 100%), #8d8676 var(--charge, 100%)); color: #1b1830; z-index: 2; touch-action: none; user-select: none; -webkit-user-select: none; }
 .bs-fly-x.bs-boost[hidden] { display: none; }
+/* touch only: the handbrake sits above the Look stick while you drive a car, and Boost moves up to make room */
+.bs-fly-x.bs-hand { top: auto; left: auto; right: 34px; bottom: calc(192px + env(safe-area-inset-bottom)); z-index: 2; touch-action: none; user-select: none; -webkit-user-select: none; }
+.bs-fly-x.bs-hand[hidden] { display: none; }
+.bs-fly-x.bs-hand.on { background: #fff; color: #1b1830; }
+body.bsdrive:not(.bsplane) .bs-fly-x.bs-boost { bottom: calc(240px + env(safe-area-inset-bottom)); }
 .bs-fly-x.bs-boost.on { background: linear-gradient(90deg, #ff9f1c var(--charge, 100%), #8d8676 var(--charge, 100%)); }
-@media (hover: hover) and (pointer: fine) { .bs-fly-x.bs-boost { right: auto; left: calc(50% + 70px); bottom: calc(68px + env(safe-area-inset-bottom)); } body.bsplane .bs-fly-x.bs-boost { bottom: calc(166px + env(safe-area-inset-bottom)); left: calc(50% + 100px); } }
+@media (hover: hover) and (pointer: fine) { .bs-fly-x.bs-hand { display: none; } body.bsdrive:not(.bsplane) .bs-fly-x.bs-boost { bottom: calc(68px + env(safe-area-inset-bottom)); } .bs-fly-x.bs-boost { right: auto; left: calc(50% + 70px); bottom: calc(68px + env(safe-area-inset-bottom)); } body.bsplane .bs-fly-x.bs-boost { bottom: calc(166px + env(safe-area-inset-bottom)); left: calc(50% + 100px); } }
 /* What the keys do while you drive or fly (Ash, 14 November 2026: "with the plane show plane controls when in it"). On a desktop
    it takes the place of the walking list, bottom left, with a line on top that says what to do next. On a phone, where the sticks
    and buttons carry their own names, only that line shows, under the top bar. */
@@ -1327,6 +1332,26 @@ body.bsdrive:not(.bsplane) .bs-fly-x.bs-car { bottom: calc(68px + env(safe-area-
 /* another player's name, over them (townPeers) */
 .bs-peer { position: absolute; left: 0; top: 0; z-index: 1; padding: 2px 8px; border-radius: 999px; background: rgba(20, 22, 34, 0.72); color: #fff; font: 600 0.72rem/1.4 var(--ui); white-space: nowrap; pointer-events: none; will-change: transform; }
 .bs-peer[hidden] { display: none; }
+/* my player: a button on the right edge, above Emote, and the small panel it opens */
+.bs-fly-x.bs-me-btn { position: absolute; left: auto; right: 16px; top: calc(46% - 48px); bottom: auto; }
+.bs-me { pointer-events: auto; position: absolute; z-index: 4; right: 16px; top: 46%; width: min(250px, calc(100% - 32px)); box-sizing: border-box; padding: 12px; border-radius: 16px; background: var(--bs-scrim); color: var(--bs-ink); font: 500 0.8rem/1.35 var(--ui); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14); }
+.bs-me[hidden] { display: none; }
+.bs-me label { display: grid; gap: 4px; font-weight: 650; }
+.bs-me input { width: 100%; box-sizing: border-box; height: 38px; padding: 0 10px; border: 0; border-radius: 10px; background: #fff; color: #1b1830; font: 600 16px var(--ui); }
+.bs-me-tops { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0; }
+.bs-me-tops button { width: 26px; height: 26px; padding: 0; border: 2px solid transparent; border-radius: 50%; cursor: pointer; }
+.bs-me-tops button[aria-pressed="true"] { border-color: #fff; box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.45); }
+.bs-me-show { width: 100%; min-height: 38px; border: 0; border-radius: 10px; background: rgba(255, 255, 255, 0.16); color: inherit; font: 650 0.8rem var(--ui); cursor: pointer; }
+.bs-me-show[aria-checked="true"] { background: #fff; color: #1b1830; }
+/* with Settings on screen, Exit explore and the height live inside it (the chip still shows the speed while driving) */
+body.bsme #bsFlyX { display: none; }
+body.bsme:not(.bsdrive) .bs-height { display: none; }
+body.bsme .bs-height { left: 16px; top: calc(16px + env(safe-area-inset-top)); }
+.bs-me-h { display: flex; justify-content: space-between; margin: 10px 0 0; font-weight: 650; }
+.bs-me-exit { width: 100%; min-height: 38px; margin-top: 10px; border: 0; border-radius: 10px; background: rgba(255, 255, 255, 0.16); color: inherit; font: 650 0.8rem var(--ui); cursor: pointer; }
+.bs-me p { margin: 8px 0 0; opacity: 0.75; font-size: 0.72rem; }
+.bs-me :focus-visible { outline: 2px solid #ffd36b; outline-offset: 2px; }
+@media (max-height: 560px) { .bs-fly-x.bs-me-btn { top: calc(22% - 44px); } .bs-me { top: 22%; } }
 /* things to do to other players: a button on the right edge, and what it opens */
 .bs-fly-x.bs-emote { position: absolute; left: auto; right: 16px; top: 46%; bottom: auto; }
 .bs-emotes { pointer-events: auto; position: absolute; z-index: 3; right: 16px; top: calc(46% + 48px); display: grid; grid-template-columns: 1fr 1fr; gap: 8px 6px; }
@@ -1908,10 +1933,13 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <div class="bs-town-ask" id="bsTownAsk" role="alertdialog" aria-labelledby="bsTownAskText" hidden><p id="bsTownAskText"></p><div><button type="button" data-ask="yes">Yes</button><button type="button" data-ask="no">No</button></div></div>
     <div class="bs-fly-time bs-town-tide bs-town-rise" id="bsTownRise" hidden><span>Water</span><input type="range" id="bsTownRiseIn" min="0" max="1" step="0.01" value="1" aria-label="Flood water level"><output id="bsTownRiseOut" for="bsTownRiseIn"></output></div>
     <button class="bs-fly-x bs-fly-jump" type="button" id="bsFlyJump" data-key="J" hidden>Jump to Norman Rd</button>
+    <button class="bs-fly-x bs-me-btn" type="button" id="bsMeBtn" aria-expanded="false" aria-controls="bsMe" hidden>Settings</button>
+    <div class="bs-me" id="bsMe" hidden></div>
     <button class="bs-fly-x bs-emote" type="button" id="bsEmoteBtn" data-key="E" aria-expanded="false" aria-controls="bsEmotes" hidden>Emote</button>
     <div class="bs-emotes" id="bsEmotes" hidden></div>
     <button class="bs-fly-x bs-car" type="button" id="bsCarBtn" data-key="Enter" hidden>Get in the car</button>
     <button class="bs-fly-x bs-boost" type="button" id="bsBoostBtn" data-key="Shift" hidden>Boost</button>
+    <button class="bs-fly-x bs-hand" type="button" id="bsHandBtn" hidden>Handbrake</button>
     <div class="bs-keys" id="bsKeys" hidden><p class="bs-keys-now" id="bsKeysNow"></p><dl id="bsKeysList"></dl><p class="bs-keys-q">? to hide this list</p></div>
     <button class="bs-fly-x bs-fly-lock" type="button" id="bsFlyLock" hidden>Use this view for the weather</button>
     <div class="bs-ud" role="group" aria-label="Fly up or down">
@@ -1992,9 +2020,27 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
   // ======================================================================
   // Per-device storage
   // ======================================================================
+  // Most settings are kept per edition (each has its own key prefix). The few in SHARED are kept once for every
+  // edition on this device, so the GitHub key saved in one suburb's app works in the others. A value saved before
+  // this (under an edition's own prefix) is still found, and is tidied away the next time the key is saved or cleared.
+  const SHARED = new Set(["brief.ghToken"]), SHARED_AT = "an-shared:", OLD_PREFIXES = ["", "fence:", "inlet:", "wire:"];
   const store = {
-    get(k, d) { try { const v = localStorage.getItem(KEY_PREFIX + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
-    set(k, v) { try { localStorage.setItem(KEY_PREFIX + k, JSON.stringify(v)); } catch {} },
+    get(k, d) {
+      try {
+        if (SHARED.has(k)) {
+          let v = localStorage.getItem(SHARED_AT + k);
+          if (v == null) for (const p of [KEY_PREFIX, ...OLD_PREFIXES]) { const o = localStorage.getItem(p + k); if (o != null && o !== '""') { v = o; break; } }
+          return v == null ? d : JSON.parse(v);
+        }
+        const v = localStorage.getItem(KEY_PREFIX + k); return v == null ? d : JSON.parse(v);
+      } catch { return d; }
+    },
+    set(k, v) {
+      try {
+        if (SHARED.has(k)) { localStorage.setItem(SHARED_AT + k, JSON.stringify(v)); for (const p of new Set([KEY_PREFIX, ...OLD_PREFIXES])) localStorage.removeItem(p + k); return; }
+        localStorage.setItem(KEY_PREFIX + k, JSON.stringify(v));
+      } catch {}
+    },
   };
   const defaults = {
     name: DEFAULT_NAME, region: DEFAULT_REGION,
@@ -2120,9 +2166,17 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
   let exLoad = null;
   const exLoadShow = (where = /moorooka/.test(location.pathname) ? "Moorooka" : "Inverloch") => { if (exLoad) { exLoad.querySelector("b").textContent = `Loading ${where} 3D model`; return; }
     const d = exLoad = document.createElement("div"); d.className = "ex-load"; d.setAttribute("role", "status");
-    d.innerHTML = `<i aria-hidden="true"></i><b>Loading ${where} 3D model</b><small>This takes a few seconds</small>`; document.body.appendChild(d); };
+    d.innerHTML = `<i aria-hidden="true"></i><b>Loading ${where} 3D model</b><small>This takes a few seconds</small>`; document.body.appendChild(d);
+    // still waiting after 5 seconds: say so kindly (Ash, 15 November 2026: "after the person has waited 5 secs, change this to show good things take time")
+    setTimeout(() => { if (exLoad === d) d.querySelector("small").textContent = "Good things take time"; }, 5000); };
   const exLoadDone = () => { const d = exLoad; if (!d) return; exLoad = null; d.classList.add("gone"); setTimeout(() => d.remove(), 600); };
   if (pendingExplore) exLoadShow(exploreName(pendingExplore));
+  // A link straight into Explore: start fetching everything the model needs now, side by side, not one after another as each
+  // script finds out what it wants (three.js, then the model's script, then its data: each used to wait for the one before)
+  if (pendingExplore) setTimeout(() => { try { const cfg = TOWNS[pendingExplore]; if (!cfg) return;
+      const hint = (href, as) => { const l = document.createElement("link"); l.rel = "preload"; l.as = as; l.href = href; if (as !== "script") l.crossOrigin = "anonymous"; document.head.appendChild(l); };
+      hint("https://cdnjs.cloudflare.com/ajax/libs/three.js/0.152.2/three.min.js", "script"); hint(cfg.src, "script");
+      for (const f of cfg.pre || []) hint(cfg.assets + f, /\.webp$/.test(f) && cfg.place !== "logan" ? "image" : "fetch"); } catch {} }, 0);
   const hash = pendingStory || pendingTV || pendingExplore ? "" : rawHash;
   const state = {
     tab: hash || store.get("brief.tab3", "foryou"),
@@ -7720,7 +7774,7 @@ const handle = async (m, post) => {
     if (F.walk) { if (u) F.eye = bsClamp((F.eye || 3) + u * 3 * lk, 1.5, 30);  // Up and Down: eyes higher or lower above the ground
       F.pos.y += (F.walk() - F.pos.y) * Math.min(1, lk * 10); }  // walking in the whole-town model: your eyes follow the ground, up hill and down
     else F.pos.y = bsClamp(F.pos.y + u * sp, F.floor ? F.floor() : 1.4, F.ceil || 180);
-    if (F.heightAt) { const h = Math.max(0, F.heightAt()), t = h < 10 ? `${h.toFixed(1)} m` : h < 10000 ? `${Math.round(h)} m` : `${(h / 1000).toFixed(1)} km`; if (t !== F.hText) { F.hText = t; $("bsHeight").textContent = t; } }
+    if (F.heightAt) { const h = Math.max(0, F.heightAt()), t = h < 10 ? `${h.toFixed(1)} m` : h < 10000 ? `${Math.round(h)} m` : `${(h / 1000).toFixed(1)} km`; if (t !== F.hText) { F.hText = t; $("bsHeight").textContent = t; } const mh = $("bsMeH"); if (mh && mh.textContent !== t) mh.textContent = t; }
   }
   function bsStrike() {
     const W = BS.W, a = W.bolt.geometry.attributes.position; let x = -170 + Math.random() * 340; const z = -240 - Math.random() * 80, y = 78, seg = (y - 2) / 15;
@@ -7891,15 +7945,15 @@ const handle = async (m, post) => {
   // latitude, longitude, metres back, tilt and bearing). A model with floods can also set floodOf (what its flooded area is a share
   // of: "Logan"), floodNote (the line under the list) and floodWarn (show the not-official notice first, and a banner while a flood is on).
   const TOWNS = {
-    inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=16", assets: TOWN3D, place: "inv", up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
-    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=23", assets: TOWN3D + "moorooka/", place: "moo", up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
+    inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=16", assets: TOWN3D, place: "inv", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
+    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=23", assets: TOWN3D + "moorooka/", place: "moo", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
       walkStart: { x: -269.8, z: -991.4, yaw: -1.623 },  // Ash's pick for where Moorooka starts: the Beaudesert Road footpath, looking at the house he chose
       // its floods: widest over the Oxley Creek flats along the model's western edge, seen from the east. floodWarn: the not-official notice has to be accepted
       // before the list opens, and a banner says the same while a flood is showing (Ash asked for both).
       floodLook: [-27.5375, 153.0115, 1100, 40, 100], floodOf: "this map", noFloodSlider: true,  // Ash: no water level slider ("At the peak") in Moorooka: a flood just rises to its peak
       floodWarn: { council: "Brisbane City Council", short: "BCC", how: "our own computer simulation of rain running over the ground and the creeks rising (and, in big river floods, Oxley Creek backing up), on a 5 m model of the terrain", map: "Brisbane City Council's Flood Awareness Map and FloodWise Property Report" },
       floodNote: "A guide only: our own simulation, from the terrain, the buildings and the Bureau's design rainfall for Moorooka. It includes water running over the ground to the creeks. No council flood mapping is used. For property, insurance or planning decisions, use Brisbane City Council's Flood Awareness Map and FloodWise Property Report." },
-    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=31", assets: TOWN3D + "logan/", place: "logan", up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
+    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=31", assets: TOWN3D + "logan/", place: "logan", pre: ["map.json", "height.png", "roads.bin", "buildings.bin", "ground.webp", "relief.webp", "lights.webp", "cover.png"], up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
       start: "council", onFoot: true, noFloodSlider: true, flyTo: { id: "brownsplains", label: "Fly to Browns Plains" }, wait: 90000, ceil: 110000, fast: 600, far: 150000, out: 130000, stride: 0.02, pad: 80000, stand: [0.45, 400], floodLook: [-27.69, 153.17, 12000, 55, -35],
       // the same not-official notice and banner as Moorooka's (Ash, 12 November 2026)
       floodWarn: { council: "Logan City Council", short: "LCC", how: "the 2017 flood as mapped, and the others worked out from river gauge heights and rainfall over a terrain model", map: "Logan City Council's flood maps" } },  // shown small in the bottom right corner the whole time the model is open
@@ -7935,7 +7989,7 @@ const handle = async (m, post) => {
         if (T.on) { const F = BS.fly, at = performance.now(); onAt ||= at;
           const k = F ? [F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch].map(v => v.toFixed(2)).join() : "";
           if (k !== last) { last = k; still = at; }
-          if (at - onAt > 1200 && at - still > 700 && (!T.model?.settled || T.model.settled() || at - onAt > 8000)) { exLoadDone(); return; } }
+          if (at - onAt > 700 && at - still > 400 && (!T.model?.settled || T.model.settled() || at - onAt > 8000)) { exLoadDone(); return; } }
         setTimeout(watch, 120); };
       setTimeout(watch, 120); }
     const t0 = Date.now(), go = () => {
@@ -9169,7 +9223,7 @@ const handle = async (m, post) => {
     if (!n) { let id = ""; try { id = localStorage.getItem("an-player-id") || ""; if (!id) { id = String(100 + Math.floor(Math.random() * 900)); localStorage.setItem("an-player-id", id); } } catch { id = "000"; } n = "Player " + id; } return n; };
   function townPeers(T, m, F, ground, place, box) {
     const P = { frame() {}, dispose() {}, count: 0 }; let off = false; try { off = localStorage.getItem("an-player-off") === "1"; } catch {}
-    if (off || !m.addParts || !m.getCamera) return P;
+    if (!m.addParts || !m.getCamera) return P;
     const THREE = BS.B.THREE, M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), ONE = new THREE.Vector3(1, 1, 1), NONE = new THREE.Matrix4().makeScale(0, 0, 0).elements;
     const TOPS = ["#d1495b", "#2e86ab", "#3a9d5d", "#e08e2b", "#7b5ea7", "#1f9e9e", "#c2577a", "#5b7f2f"], wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
     const SHAPES = { walk: c => townPlaneParts(c, "person"), car: c => townPlaneParts(c, true), gold: () => townPlaneParts("#e8b923", true), bus: () => townPlaneParts("#2f7fc4", "bus"),
@@ -9189,16 +9243,38 @@ const handle = async (m, post) => {
       let q = peers.get(id); if (!q) { if (peers.size >= 12) return; q = { el: label(id), name: "", kind: "", parts: null, a: null, b: null, colour: TOPS[[...String(id)].reduce((n, ch) => n + ch.charCodeAt(0), 0) % TOPS.length] }; peers.set(id, q); P.count = peers.size; }
       const now = performance.now(), s = { x: a[0], y: a[1], z: a[2], h: a[3], p: +a[5] || 0, r: +a[6] || 0, k: SHAPES[a[4]] ? a[4] : a[4] === "none" ? "none" : "walk", t: now };
       q.a = q.b && now - q.b.t < 1500 ? (q.shown || q.b) : s; q.b = s; q.from = now; };
-    const named = (n, id) => { const q = peers.get(id), name = String(n || "").replace(/[\u0000-\u001f<>]/g, "").trim().slice(0, 16) || "Player"; if (q) { if (!q.name) toast(`${name} is here.`, 2500); q.name = name; q.el.textContent = name; } else { got([0, -1e5, 0, 0, "none", 0, 0], id); const p2 = peers.get(id); if (p2) { p2.name = name; p2.el.textContent = name; toast(`${name} is here.`, 2500); } } };
+    const named = (raw, id) => { const n = Array.isArray(raw) ? raw[0] : raw, c = Array.isArray(raw) && TOPS[raw[1]]; if (c) { const q0 = peers.get(id); if (q0 && q0.colour !== c) { q0.colour = c; q0.kind = ""; } }
+      const q = peers.get(id), name = String(n || "").replace(/[\u0000-\u001f<>]/g, "").trim().slice(0, 16) || "Player"; if (q) { if (!q.name) toast(`${name} is here.`, 2500); q.name = name; q.el.textContent = name; } else { got([0, -1e5, 0, 0, "none", 0, 0], id); const p2 = peers.get(id); if (p2) { p2.name = name; p2.el.textContent = name; if (c) p2.colour = c; toast(`${name} is here.`, 2500); } } };
+    // ---- My player (Ash, 15 November 2026: "In multiplayer I want a settings btn where the person can control their player"):
+    // a button on the right edge opens the player's name, the colour of their top, and whether others see them. A change goes
+    // to everyone at once. Hidden, this device says nothing of where it is (and does not join at all if it opens that way).
+    const meBtn = $("bsMeBtn"), meBox = $("bsMe"), myColour = () => { let c = NaN; try { c = parseInt(localStorage.getItem("an-player-colour"), 10); } catch {} return c >= 0 && c < TOPS.length ? c : -1; };
+    const tell = id => { try { sendName?.([playerName(), myColour()], id); } catch {} };
+    const meDraw = () => { meBox.replaceChildren();
+      const lab = document.createElement("label"); lab.textContent = "Player name"; const inp = document.createElement("input"); inp.type = "text"; inp.maxLength = 16; inp.autocomplete = "off"; inp.placeholder = playerName(); try { inp.value = localStorage.getItem("an-player") || ""; } catch {}
+      inp.onkeydown = e => { e.stopPropagation(); if (e.key === "Enter") inp.blur(); }; inp.onkeyup = e => e.stopPropagation();
+      inp.onchange = () => { try { const v = inp.value.replace(/[<>]/g, "").trim().slice(0, 16); if (v) localStorage.setItem("an-player", v); else localStorage.removeItem("an-player"); } catch {} tell(); toast(`Your player name is ${playerName()}.`, 2200); };
+      lab.append(inp); const row = document.createElement("div"); row.className = "bs-me-tops"; row.setAttribute("role", "group"); row.setAttribute("aria-label", "The colour of your top");
+      TOPS.forEach((col, i) => { const bn = document.createElement("button"); bn.type = "button"; bn.style.background = col; bn.setAttribute("aria-label", `Top colour ${i + 1}`); bn.setAttribute("aria-pressed", String(myColour() === i));
+        bn.onclick = () => { try { localStorage.setItem("an-player-colour", String(i)); } catch {} tell(); meDraw(); }; row.append(bn); });
+      const sw = document.createElement("button"); sw.type = "button"; sw.className = "bs-me-show"; sw.setAttribute("role", "switch"); sw.setAttribute("aria-checked", String(!off)); sw.textContent = off ? "Hidden from other players" : "Other players can see me";
+      sw.onclick = () => { off = !off; try { if (off) localStorage.setItem("an-player-off", "1"); else localStorage.removeItem("an-player-off"); } catch {} if (!off && !room && !joining) join(0); lastSent = null; meDraw(); toast(off ? "Other players can't see you now." : "Other players can see you.", 2500); };
+      const tip = document.createElement("p"); tip.textContent = "Your name shows over you. Pick one you are happy for anyone to see.";
+      const hi = document.createElement("div"); hi.className = "bs-me-h"; const hl = document.createElement("span"); hl.textContent = "Height above the ground"; const ho = document.createElement("span"); ho.id = "bsMeH"; hi.append(hl, ho);
+      const ex = document.createElement("button"); ex.type = "button"; ex.className = "bs-me-exit"; ex.textContent = $("bsFlyX").textContent; ex.onclick = () => { meBox.hidden = true; $("bsFlyX").click(); };
+      meBox.append(lab, row, sw, tip, hi, ex); };
+    document.body.classList.add("bsme"); meBtn.hidden = false; meBtn.onclick = () => { meBox.hidden = !meBox.hidden; meBtn.setAttribute("aria-expanded", String(!meBox.hidden)); if (!meBox.hidden) meDraw(); meBtn.blur(); };
     // nothing is fetched or connected until the model has had a moment to itself
-    const start = setTimeout(async () => { try { const lib = await import(new URL(TOWN3D + "vendor/trystero-nostr.js?v=1", document.baseURI).href); if (dead) return;
+    let joining = null;
+    const join = wait => { joining = setTimeout(async () => { try { const lib = await import(new URL(TOWN3D + "vendor/trystero-nostr.js?v=1", document.baseURI).href); if (dead) return;
         room = lib.joinRoom({ appId: "awesome-news-explore-1" }, "town-" + place);
         const [sp, gp] = room.makeAction("pose"), [sn, gn] = room.makeAction("name"), [se, ge] = room.makeAction("emote"); sendPose = sp; sendName = sn; sendEmote = se; gp(got); gn(named); ge(emoted);
-        room.onPeerJoin(id => { try { sendName(playerName(), id); if (lastSent) sendPose(lastSent, id); } catch {} }); room.onPeerLeave(drop);
-      } catch (e) { console.warn("Town model: other players couldn't connect", e); } }, 2500);
+        room.onPeerJoin(id => { try { tell(id); if (lastSent) sendPose(lastSent, id); } catch {} }); room.onPeerLeave(drop);
+      } catch (e) { console.warn("Town model: other players couldn't connect", e); } }, wait); };
+    if (!off) join(2500);
     // what I am doing now, as seven small numbers
-    const mine = () => { const v = T.car?.in ? T.car.pose?.() : null; if (v) return [v.x, v.y, v.z, v.h, v.k, v.p, v.r];
-      return T.walk ? [F.pos.x, ground(F.pos.x, F.pos.z), F.pos.z, F.yaw + Math.PI, "walk", 0, 0] : [0, 0, 0, 0, "none", 0, 0]; };
+    const mine = () => { const v = T.car?.in && !off ? T.car.pose?.() : null; if (v) return [v.x, v.y, v.z, v.h, v.k, v.p, v.r];
+      return T.walk && !off ? [F.pos.x, ground(F.pos.x, F.pos.z), F.pos.z, F.yaw + Math.PI, "walk", 0, 0] : [0, 0, 0, 0, "none", 0, 0]; };
     P.frame = () => { const now = performance.now();
       if (sendPose && now - tick > 200) { tick = now; const a = mine().map(v => typeof v === "number" ? Math.round(v * 100) / 100 : v);
         const moved = !lastSent || a[4] !== lastSent[4] || Math.hypot(a[0] - lastSent[0], a[1] - lastSent[1], a[2] - lastSent[2]) > 0.04 || Math.abs(wrap(a[3] - lastSent[3])) > 0.02;
@@ -9236,7 +9312,7 @@ const handle = async (m, post) => {
         const sx = w / 2 + (dx * rx + dz * rz) / depth * f * (h / 2), sy = h / 2 - (dx * ux + dy * uy + dz * uz) / depth * f * (h / 2);
         if (sx < -40 || sx > w + 40 || sy < 0 || sy > h) { q.el.hidden = true; continue; }
         q.el.hidden = false; q.el.style.transform = `translate(${Math.round(sx)}px, ${Math.round(sy)}px) translate(-50%, -100%)`; } };
-    P.dispose = () => { emoteBtn.hidden = true; emoteBox.hidden = true; emoteBtn.onclick = null; dead = true; clearTimeout(start); for (const id of [...peers.keys()]) drop(id); try { room?.leave(); } catch {} room = null; sendPose = null; };
+    P.dispose = () => { document.body.classList.remove("bsme"); meBtn.hidden = true; meBox.hidden = true; meBtn.onclick = null; clearTimeout(joining); emoteBtn.hidden = true; emoteBox.hidden = true; emoteBtn.onclick = null; dead = true; for (const id of [...peers.keys()]) drop(id); try { room?.leave(); } catch {} room = null; sendPose = null; };
     return P;
   }
   // The numbers behind the cars and planes, which Ash can change in Settings > Admin (14 November 2026: "Allow me to edit all these
@@ -9452,7 +9528,7 @@ const handle = async (m, post) => {
         if (step) { F.pos.x = P.x + Math.cos(P.h) * 1.9; F.pos.z = P.z - Math.sin(P.h) * 1.9; F.yaw = P.h + Math.PI; F.pitch = -0.04; }  // out of the left door
         plane = null; showPlane(P); }
       veh = null; car = null; plane = null; showKeys(null); C.in = false; F.drive = null; F.boost = false; F.hText = ""; F.vert = 0; F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.keys.clear();
-      document.body.classList.remove("bsdrive", "bsplane"); boostBtn.hidden = true; at = 0; C.frame(); };
+      document.body.classList.remove("bsdrive", "bsplane"); boostBtn.hidden = true; handBtn.hidden = true; handBtn.classList.remove("on"); F.hand = false; at = 0; C.frame(); };
     const tick = dt0 => { const dt = Math.min(dt0, 0.1), k = F.keys, has = (...c) => c.some(x => k.has(x));
       // flying the camera, a jump to a place or starting again has moved the view: that is getting out
       if (!T.walk || T.tween || BS.town !== T || Math.abs(F.pos.x - last[0]) + Math.abs(F.pos.y - last[1]) + Math.abs(F.pos.z - last[2]) > 1e-3) return leave(false);
@@ -9464,7 +9540,7 @@ const handle = async (m, post) => {
       const fly = veh !== "car", thr = bsClamp((has("KeyW") || (!fly && has("ArrowUp")) ? 1 : 0) - (has("KeyS") || (!fly && has("ArrowDown")) ? 1 : 0) + F.stick.y, -1, 1), str = bsClamp((has("KeyD", "ArrowRight") ? 1 : 0) - (has("KeyA", "ArrowLeft") ? 1 : 0) + F.stick.x, -1, 1);
       const boost = has("ShiftLeft", "ShiftRight") || !!F.boost;
       let o, D, text;  // what the view follows, how far back, and what the chip says
-      if (veh === "car") { let v = car.v; const brake = has("Space");
+      if (veh === "car") { let v = car.v; const brake = has("Space") || !!F.hand;
         // the boost runs on a charge: about four seconds' worth, back in ten. Run right out, it waits until a fifth is back
         const boosting = boost && thr > 0.05 && !brake && charge > 0 && !spent;
         if (boosting) { charge = Math.max(0, charge - dt / R.boostSecs); if (!charge) spent = true; } else { charge = Math.min(1, charge + dt / R.boostBack); if (charge >= 0.2) spent = false; }
@@ -9567,7 +9643,7 @@ const handle = async (m, post) => {
         veh = "car"; camYaw = car.h + Math.PI; document.body.classList.add("bsdrive"); showRing(charge < 0.999); }
       C.in = true; off = [wrap(F.yaw - camYaw), bsClamp(F.pitch + 0.2, -1, 0.55)]; idle = 0; last = [F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch];
       F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.vert = 0; F.boost = false; F.keys.clear(); F.drive = tick;
-      btn.textContent = "Get out"; btn.hidden = false; boostBtn.hidden = veh === "plane" && !canBoost(plane);
+      btn.textContent = "Get out"; btn.hidden = false; handBtn.hidden = veh !== "car"; boostBtn.hidden = veh === "plane" && !canBoost(plane);
       snd.door(); snd.start(veh); showKeys(veh === "plane" && plane.heli ? "heli" : veh);
       // on a phone, a word about the sticks (on a desktop the list of keys has just come up, bottom left)
       if (touch) toast(veh === "plane" && plane.heli ? "Hold Up to lift off. Left stick: forward to go, sideways to turn. Down lands it." : veh === "plane" ? "Left stick: forward for power, sideways to turn. Climb lifts the nose once you are fast." : "Left stick to drive, right stick to look around. Hold Boost for the mega boost.", 5500);
@@ -9580,6 +9656,9 @@ const handle = async (m, post) => {
     const hold = on => e => { F.boost = on && !!veh; boostBtn.classList.toggle("on", F.boost); e.preventDefault(); };
     const press = { pointerdown: hold(true), pointerup: hold(false), pointercancel: hold(false), pointerleave: hold(false), contextmenu: e => e.preventDefault() };
     Object.entries(press).forEach(([k, f]) => boostBtn.addEventListener(k, f));
+    const handBtn = $("bsHandBtn"), pull = on => e => { F.hand = on && veh === "car"; handBtn.classList.toggle("on", !!F.hand); e.preventDefault(); };
+    const handPress = { pointerdown: pull(true), pointerup: pull(false), pointercancel: pull(false), pointerleave: pull(false), contextmenu: e => e.preventDefault() };
+    Object.entries(handPress).forEach(([k, f]) => handBtn.addEventListener(k, f));
     const hidden = () => snd.quiet(document.hidden); document.addEventListener("visibilitychange", hidden);
     C.pose = () => veh === "car" ? { k: car.bus ? "bus" : car.gold ? "gold" : "car", x: car.x, y: car.y, z: car.z, h: car.h, p: car.p, r: car.r }
       : veh ? { k: plane.heli ? "heli" : plane.gold ? "goldplane" : "plane", x: plane.x, y: plane.y, z: plane.z, h: plane.h, p: plane.p, r: plane.r } : null;
@@ -9589,7 +9668,7 @@ const handle = async (m, post) => {
     C.toGold = () => { const G = planes.find(P => P.gold); if (!G) return false; if (veh) leave(false);
       const sn = Math.sin(G.h), cs = Math.cos(G.h), dx = sn * 7 - cs * 5, dz = cs * 7 + sn * 5; T.tween = null;
       F.pos.x = G.x + dx; F.pos.z = G.z + dz; F.pos.y = ground(F.pos.x, F.pos.z) + (T.walk ? F.eye : 14); F.yaw = Math.atan2(dx, dz); F.pitch = T.walk ? -0.06 : -0.6; at = 0; return true; };
-    C.dispose = () => { if (veh) leave(false); btn.onclick = null; btn.hidden = boostBtn.hidden = true; Object.entries(press).forEach(([k, f]) => boostBtn.removeEventListener(k, f));
+    C.dispose = () => { if (veh) leave(false); btn.onclick = null; btn.hidden = boostBtn.hidden = handBtn.hidden = true; F.hand = false; Object.entries(press).forEach(([k, f]) => boostBtn.removeEventListener(k, f)); Object.entries(handPress).forEach(([k, f]) => handBtn.removeEventListener(k, f));
       document.removeEventListener("visibilitychange", hidden); document.body.classList.remove("bsdrive", "bsplane"); snd.dispose(); showKeys(null); try { for (const P of planes) P.parts.remove(); for (const G of owns) G.parts.remove(); ring.remove(); } catch {} };
     return C;
   }
