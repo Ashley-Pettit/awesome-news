@@ -810,3 +810,11 @@ or helipad. Just look for places that make sense", and "Move the bus to somewher
 
 Ash: "Copy the multiplayer to moorooka and Inverloch." `TOWN_TOGETHER` now lists all three towns, each its own room.
 Checked with two pages through the stand-in relay in Moorooka and in Inverloch: each sees the other's figure and name.
+
+## Logan's zebra crossings turned the right way (15 November 2026)
+
+Ash: "Fix the zebra crossings in Logan. They are often drawn 90 degrees off." The council precinct's five striped
+crossings were drawn as a few long bars running along the walk. Each is now a row of short bars across the walk,
+running with the traffic, one every 1.1 m from kerb to kerb. Fixed in the generator (`scripts/logan/precinct.py` in
+ai-forge) and applied to `town3d/logan/map.json` directly (the 21 old bars replaced by 54), since the full data
+build needs the fetched source files. Checked in a picture from above one crossing.
