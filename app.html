@@ -8004,7 +8004,7 @@ const handle = async (m, post) => {
   // latitude, longitude, metres back, tilt and bearing). A model with floods can also set floodOf (what its flooded area is a share
   // of: "Logan"), floodNote (the line under the list) and floodWarn (show the not-official notice first, and a banner while a flood is on).
   const TOWNS = {
-    inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=16", assets: TOWN3D, place: "inv", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
+    inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=17", assets: TOWN3D, place: "inv", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
     moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=23", assets: TOWN3D + "moorooka/", place: "moo", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
       walkStart: { x: -269.8, z: -991.4, yaw: -1.623 },  // Ash's pick for where Moorooka starts: the Beaudesert Road footpath, looking at the house he chose
       // its floods: widest over the Oxley Creek flats along the model's western edge, seen from the east. floodWarn: the not-official notice has to be accepted
@@ -9401,9 +9401,11 @@ const handle = async (m, post) => {
     return P;
   }
   // Traffic (Ash, 15 November 2026: "Animate some of the cars particularly near the player spawn"): about 16 everyday cars
-  // drive the streets around where you start, most within 300 m of it, at 30 to 50 km/h, keeping left. At each corner a car
-  // may turn into a street that meets it; at a dead end it turns round. One that wanders more than 800 m off is put back near
-  // the start. A car stops for you when you stand (or drive) in front of it. They are drawn by the app (the same as the cars
+  // drive the streets around where you start, most within 300 m of it, at 30 to 50 km/h, keeping left. They mostly carry on
+  // straight at a corner (now and then turning, never doubling back unless the street ends), slow down into bends and corners,
+  // follow the car ahead at a distance, wait for one crossing in front, and stop for you. Each sits on its four wheels the way
+  // the car you drive does (Ash, 15 November 2026: "Make the traffic ... a bit smarter ... Cars need to respect terrain a bit
+  // better"). One stuck for 10 s, or more than 800 m off, starts again near the start. They are drawn by the app (the same as the cars
   // to drive), from the streets the model has already loaded, so every town gets them; nothing is fetched until 4 s in.
   function townTraffic(T, m, F, ground, cfg) {
     const P = { frame() {}, dispose() {}, cars: [] }; if (!m.addParts) return P;
@@ -9416,13 +9418,16 @@ const handle = async (m, post) => {
       const R = Math.random() < 0.7 ? NEAR : FAR * 0.85;
       for (let t = 0; t < 40; t++) { const r = roads[Math.floor(Math.random() * roads.length)], i = Math.floor(Math.random() * (r.n - 1)), x = r.p[i * 2], z = r.p[i * 2 + 1];
         if (Math.hypot(x - home[0], z - home[1]) > R) continue;
-        Object.assign(C, { r, i, d: Math.random() < 0.5 ? 1 : -1, s: 0, v: 0 }); if (C.d < 0) C.i = i + 1; C.h = null; return true; }
+        Object.assign(C, { r, i, d: Math.random() < 0.5 ? 1 : -1, s: 0, v: 0, y: null, p: null, rl: null, still: 0 }); if (C.d < 0) C.i = i + 1; C.h = null; return true; }
       return false; };
     const seg = C => { const r = C.r, a = C.i, b = C.i + C.d; return [r.p[a * 2], r.p[a * 2 + 1], r.p[b * 2], r.p[b * 2 + 1]]; };
     const next = C => { // reached vertex C.i + C.d: carry on, or turn into a street that meets here
       const r = C.r, at = C.i + C.d, x = r.p[at * 2], z = r.p[at * 2 + 1], here = nodes.get(key(x, z)) || [], end = at === 0 || at === r.n - 1;
-      const ways = []; for (const [r2, j] of here) { if (r2 === r && j === at) continue; if (j < r2.n - 1) ways.push([r2, j, 1]); if (j > 0) ways.push([r2, j, -1]); }
-      if (ways.length && (end || Math.random() < 0.35)) { const [r2, j, d] = ways[Math.floor(Math.random() * ways.length)]; C.r = r2; C.i = j; C.d = d; return; }
+      // the ways out: anything but straight back the way it came, mostly straight on, now and then a turn
+      const hIn = Math.atan2(x - r.p[C.i * 2], z - r.p[C.i * 2 + 1]), ways = [];
+      for (const [r2, j] of here) { if (r2 === r && j === at) continue; for (const d of [1, -1]) { const k = j + d; if (k < 0 || k >= r2.n) continue;
+        const turn = Math.abs(wrap(Math.atan2(r2.p[k * 2] - x, r2.p[k * 2 + 1] - z) - hIn)); if (turn < 2.4) ways.push([r2, j, d, turn]); } }
+      if (ways.length && (end || Math.random() < 0.3)) { ways.sort((a, b) => a[3] - b[3]); const w = end && Math.random() < 0.6 ? ways[0] : ways[Math.floor(Math.random() * ways.length)]; C.r = w[0]; C.i = w[1]; C.d = w[2]; return; }
       if (!end) { C.i = at; return; }
       C.i = at; C.d = -C.d; };  // a dead end: turn round
     setTimeout(async () => { if (dead) return;
@@ -9439,20 +9444,33 @@ const handle = async (m, post) => {
     P.frame = () => { if (!P.cars.length) return; const now = performance.now(), dt = Math.min(0.1, (now - last) / 1000); last = now; if (!dt) return;
       // you: on foot, or in whatever you are driving
       const me = T.car?.in ? T.car.pose?.() : T.walk ? { x: F.pos.x, z: F.pos.z } : null;
-      for (const C of P.cars) {
+      P.cars.forEach((C, ci) => {
         let [ax, az, bx, bz] = seg(C), L = Math.hypot(bx - ax, bz - az) || 0.01;
-        const h0 = Math.atan2(bx - ax, bz - az), ux = Math.sin(h0), uz = Math.cos(h0);
-        // stop for you if you are in its way
-        let want = C.top; if (me) { const cx = ax + ux * C.s, cz = az + uz * C.s, dx = me.x - cx, dz = me.z - cz, ahead = dx * ux + dz * uz, side = Math.abs(dx * uz - dz * ux - C.r.lane);
+        const h0 = Math.atan2(bx - ax, bz - az), ux = Math.sin(h0), uz = Math.cos(h0), cx = C.x ?? ax, cz = C.z ?? az, fh = C.h ?? h0, fx = Math.sin(fh), fz = Math.cos(fh);
+        let want = C.top;
+        // you: stop if you are in its way
+        if (me) { const dx = me.x - cx, dz = me.z - cz, ahead = dx * fx + dz * fz, side = Math.abs(dx * fz - dz * fx);
           if (ahead > 0 && ahead < 11 && side < 2.4) want = 0; }
+        // another car ahead: follow it at a distance, or wait for one crossing (the one listed first goes first, so two never wait on each other)
+        for (let di = 0; di < P.cars.length; di++) { const D = P.cars[di]; if (D === C || D.x == null) continue;
+          const dx = D.x - cx, dz = D.z - cz, ahead = dx * fx + dz * fz, side = Math.abs(dx * fz - dz * fx); if (ahead <= 0 || ahead > 16 || side > 2.3) continue;
+          const same = Math.cos(wrap(D.h - fh)) > 0.5;
+          if (same) want = Math.min(want, ahead < 7 ? 0 : Math.max(0, D.v * (ahead - 6) / 8)); else if (di < ci && ahead < 9) want = 0; }
+        // slow down into a bend or a corner
+        const rem = L - C.s, at = C.i + C.d, junction = (nodes.get(key(bx, bz)) || []).length > 1 || at === 0 || at === C.r.n - 1;
+        if (Math.abs(wrap(h0 - fh)) > 0.3) want = Math.min(want, 6); else if (junction && rem < 16) want = Math.min(want, 5 + rem * 0.4);
         C.v += Math.max(-8 * dt, Math.min(3 * dt, want - C.v)); C.s += C.v * dt;
+        C.still = C.v < 0.2 ? (C.still || 0) + dt : 0; if (C.still > 10) { start(C); C.x = null; return; }  // stuck for 10 s: start again somewhere else
         for (let k = 0; k < 6 && C.s >= L; k++) { C.s -= L; next(C); [ax, az, bx, bz] = seg(C); L = Math.hypot(bx - ax, bz - az) || 0.01; }
-        const h = Math.atan2(bx - ax, bz - az); C.h = C.h == null ? h : C.h + wrap(h - C.h) * Math.min(1, dt * 6);
+        const h = Math.atan2(bx - ax, bz - az); C.h = C.h == null ? h : C.h + wrap(h - C.h) * Math.min(1, dt * 5);
         const t = Math.min(1, C.s / L), lx = Math.cos(C.h), lz = -Math.sin(C.h), x = ax + (bx - ax) * t + lx * C.r.lane, z = az + (bz - az) * t + lz * C.r.lane;
-        if (Math.hypot(x - home[0], z - home[1]) > FAR) { start(C); continue; }
-        const sx = Math.sin(C.h), sz = Math.cos(C.h), gf = ground(x + sx * 1.6, z + sz * 1.6), gb = ground(x - sx * 1.6, z - sz * 1.6), gl = ground(x + lx * 0.8, z + lz * 0.8), gr = ground(x - lx * 0.8, z - lz * 0.8);
-        const y = Math.max(ground(x, z), (gf + gb) / 2) + 0.02, pt = Math.atan2(gf - gb, 3.2), rl = Math.atan2(gl - gr, 1.6);
-        M.compose(V.set(x, y, z), Q.setFromEuler(E.set(-pt, C.h, -rl, "YXZ")), ONE); C.parts.setMatrix(0, M.elements.slice()); } };
+        if (Math.hypot(x - home[0], z - home[1]) > FAR) { start(C); C.x = null; return; }
+        C.x = x; C.z = z;
+        // on its four wheels, as the car you drive sits (the middle of the four, tipped to the slope), eased so it never jumps
+        const sx = Math.sin(C.h), sz = Math.cos(C.h), g = (a, b) => ground(x + sx * a - sz * b, z + sz * a + sx * b), yf = g(1.3, 0), yb = g(-1.3, 0), yr = g(0, 0.8), yl = g(0, -0.8);
+        const y = (yf + yb + yr + yl) / 4 + 0.05, pt = Math.atan2(yf - yb, 2.6), rl = Math.atan2(yl - yr, 1.6), e = C.y == null ? 1 : Math.min(1, dt * 10);
+        C.y = C.y == null ? y : C.y + (y - C.y) * e; C.p = C.p == null ? pt : C.p + (pt - C.p) * e; C.rl = C.rl == null ? rl : C.rl + (rl - C.rl) * e;
+        M.compose(V.set(x, C.y, z), Q.setFromEuler(E.set(-C.p, C.h, C.rl, "YXZ")), ONE); C.parts.setMatrix(0, M.elements.slice()); }); };
     P.dispose = () => { dead = true; for (const C of P.cars) try { C.parts.remove(); } catch {} P.cars = []; };
     return P;
   }
