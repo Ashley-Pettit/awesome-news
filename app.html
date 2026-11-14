@@ -1324,6 +1324,9 @@ body.bsdrive:not(.bsplane) .bs-fly-x.bs-car { bottom: calc(68px + env(safe-area-
 .bs-keys { position: absolute; z-index: 2; left: 50%; top: calc(108px + env(safe-area-inset-top)); transform: translateX(-50%); box-sizing: border-box; width: max-content; max-width: calc(100% - 32px); margin: 0; padding: 6px 12px; border-radius: 14px;
   background: var(--bs-scrim); color: var(--bs-ink); font: 500 0.78rem/1.35 var(--ui); text-align: center; pointer-events: none; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14); }
 .bs-keys[hidden] { display: none; }
+/* another player's name, over them (townPeers) */
+.bs-peer { position: absolute; left: 0; top: 0; z-index: 1; padding: 2px 8px; border-radius: 999px; background: rgba(20, 22, 34, 0.72); color: #fff; font: 600 0.72rem/1.4 var(--ui); white-space: nowrap; pointer-events: none; will-change: transform; }
+.bs-peer[hidden] { display: none; }
 .bs-keys-now { margin: 0; font-weight: 700; }
 .bs-keys-now:empty { display: none; }
 .bs-keys dl, .bs-keys-q { display: none; margin: 0; }
@@ -3902,6 +3905,10 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
         <div class="field"><label for="setName">Your name</label><input type="text" id="setName" placeholder="Optional" autocomplete="given-name" maxlength="30" value="${esc(S.name)}"></div>
         <div class="field"><label for="setRegion">Local news</label><select id="setRegion">${regions.map(r => `<option value="${r.id}"${r.id === S.region ? " selected" : ""}>${esc(r.label)}${counts["local-" + r.id] != null ? ` (${counts["local-" + r.id]})` : ""}</option>`).join("")}</select></div>
       </div><p class="hint">Your name is used in the greeting.</p></div>
+      <div class="group"><h2>Exploring with others</h2><div class="card">
+        <div class="field"><label for="setPlayer">Player name</label><input type="text" id="setPlayer" placeholder="${esc(playerName())}" autocomplete="off" maxlength="16" value="${esc((() => { try { return localStorage.getItem("an-player") || ""; } catch { return ""; } })())}"></div>
+        ${toggle("data-player-show", "1", (() => { try { return localStorage.getItem("an-player-off") !== "1"; } catch { return true; } })(), "Show me to other players", "Others exploring Logan in 3D see where you are and your player name")}
+      </div><p class="hint">In Logan's 3D map, people exploring at the same time see each other. Your player name is shown over you, so pick one you are happy for anyone to see.</p></div>
       <div class="group"><h2>Your suburb</h2><div class="card">${[["moorooka", "Moorooka"], ["inverloch", "Inverloch"], ["logan", "Logan"]].map(([id, label]) =>
         `<a class="field" style="color:inherit;text-decoration:none" href="${location.pathname.replace(/(moorooka|inverloch|logan)\/?(index\.html)?$/, "").replace(/[^/]*$/, "")}${id}/"><span class="lbl">${label}<span class="sub">Open the ${label} news and its 3D map</span></span><span class="chev" aria-hidden="true">\u203a</span></a>`).join("")}
       </div><p class="hint">Each suburb has its own news and its own 3D map to explore.</p></div>
@@ -5360,6 +5367,7 @@ const handle = async (m, post) => {
     if (t.closest("#unlockBack")) { unlock.pass = ""; unlock.step = "pass"; renderSettings(); $("adminPass")?.focus(); return; }
     const adm = t.closest("[data-admin]");
     if (adm) { A.full = !A.full; saveAdmin(); adm.setAttribute("aria-checked", String(A.full)); const sb = adm.querySelector(".sub"); if (sb) sb.textContent = A.full ? "On. Every story opens in full right here." : "Off. Stories show the publisher's preview."; toast(A.full ? "Full articles on" : "Full articles off"); applyVault(); for (const k in textCache) delete textCache[k]; store.set("brief.offlineAt", ""); saveOffline(); render(true); return; }
+    if (t.closest("[data-player-show]")) { try { if (localStorage.getItem("an-player-off") === "1") localStorage.removeItem("an-player-off"); else localStorage.setItem("an-player-off", "1"); } catch {} renderSettings(); return; }
     if (t.closest("[data-ride-reset]")) { try { localStorage.removeItem("an3d-rides"); } catch {} renderSettings(); toast("Cars and planes are back to their usual numbers."); return; }
     if (t.closest("#adminLock")) { A.unlocked = false; saveAdmin(); keepSecret(""); store.set("brief.ghToken", ""); vaultKey = null; applyVault(); renderSettings(); render(true); return; }
     if (t.closest("#weather") && bsClick(t)) return;
@@ -5428,6 +5436,7 @@ const handle = async (m, post) => {
     if (e.target.id === "setRegion") { S.region = e.target.value; saveSettings(); renderSettings(); loadWeather(); toast(state.mode === "claude" && !(state.status?.regions || []).some(r => r.id === S.region) ? `${regionLabel()} news arrives with the next update` : `Local news: ${regionLabel()}`); }
   });
   document.addEventListener("input", e => {
+    if (e.target.id === "setPlayer") { try { const v = e.target.value.replace(/[<>]/g, "").trim().slice(0, 16); if (v) localStorage.setItem("an-player", v); else localStorage.removeItem("an-player"); } catch {} toast(`Your player name is ${playerName()}.`); return; }
     if (e.target.id === "setName") { S.name = e.target.value.slice(0, 30); saveSettings(); renderHeader(); showVersion(); }
     if (e.target.id === "negCut") {
       S.negCut = Number(e.target.value) || 0; saveSettings();
@@ -8225,6 +8234,7 @@ const handle = async (m, post) => {
         try { T.admin = townAdmin(T, cfg, box, m, { ptrs }); } catch (e) { console.warn("Town model: admin mode couldn't start", e); }
         // driving: Enter, or the Get in button, when a parked car is close (townCar)
         try { T.car = townCar(T, m, F, ground, cfg.place); } catch (e) { console.warn("Town model: driving couldn't start", e); }
+        if (TOWN_TOGETHER.includes(cfg.place)) try { T.peers = townPeers(T, m, F, ground, cfg.place, box); } catch (e) { console.warn("Town model: other players couldn't start", e); }
         F.hot = { f: () => toMode(!T.walk),
           enter: () => T.car?.enter(), keys: () => !!T.car?.keys?.(), undo: () => !!T.admin?.undo?.(), gold: () => !!T.car?.toGold?.(),
           n: () => T.namesToggle?.(),
@@ -9124,6 +9134,73 @@ const handle = async (m, post) => {
       roam: [[5749, -13002], [6006, -13466], [5650, -13194], [7441, -11580], [5927, 564], [8554, -7453]] },
   };
   for (const t of Object.values(TOWN_RIDES)) if (t.more) { t.planes = [...t.planes, ...t.more.planes]; t.cars = [...t.cars, ...t.more.cars]; }
+  // Other players (Ash, 15 November 2026: "making this multiplayer so I can see other people walking around and their names",
+  // "Build for everyone ... a new settings btn where user can type their player name. Add to Logan", "Consider lag implications.
+  // There is no need for amazing speed between players yet an individual load time should not be excessive and should not be
+  // jittery"). Everyone with Explore open in the same town sees the others: a figure where each walks, or the car, bus, plane or
+  // helicopter they are in, with their player name over it.
+  // - No account and no server of ours: browsers talk straight to each other (WebRTC), finding one another through public Nostr
+  //   relays, with Trystero (town3d/vendor/trystero-nostr.js, MIT, 20 KB, bundled from trystero 0.21.8). One room a town.
+  // - Nothing is loaded or connected until the model has been open 2.5 s, so opening Explore takes no longer.
+  // - Each player says where they are 5 times a second while moving and once every 3 s when still (seven small numbers), and
+  //   their name when someone joins. What arrives is drawn a fifth of a second behind, gliding from the last place to the
+  //   newest, so others move smoothly however unevenly word of them comes. At most 12 others are drawn.
+  // - Someone flying the camera about (not walking, not in anything) is not shown. Turning "Show me to other players" off in
+  //   Settings stops this device sending or joining at all.
+  // - The player name is typed in Settings ("an-player"), not the news name; with none, "Player" and three digits.
+  const TOWN_TOGETHER = ["logan"];
+  const playerName = () => { let n = ""; try { n = (localStorage.getItem("an-player") || "").trim().slice(0, 16); } catch {}
+    if (!n) { let id = ""; try { id = localStorage.getItem("an-player-id") || ""; if (!id) { id = String(100 + Math.floor(Math.random() * 900)); localStorage.setItem("an-player-id", id); } } catch { id = "000"; } n = "Player " + id; } return n; };
+  function townPeers(T, m, F, ground, place, box) {
+    const P = { frame() {}, dispose() {}, count: 0 }; let off = false; try { off = localStorage.getItem("an-player-off") === "1"; } catch {}
+    if (off || !m.addParts || !m.getCamera) return P;
+    const THREE = BS.B.THREE, M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), ONE = new THREE.Vector3(1, 1, 1), NONE = new THREE.Matrix4().makeScale(0, 0, 0).elements;
+    const TOPS = ["#d1495b", "#2e86ab", "#3a9d5d", "#e08e2b", "#7b5ea7", "#1f9e9e", "#c2577a", "#5b7f2f"], wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
+    const SHAPES = { walk: c => townPlaneParts(c, "person"), car: c => townPlaneParts(c, true), gold: () => townPlaneParts("#e8b923", true), bus: () => townPlaneParts("#2f7fc4", "bus"),
+      plane: () => townPlaneParts().slice(0, 1), goldplane: () => townPlaneParts("#e2ad1c").slice(0, 1), heli: () => townPlaneParts("#c8322b", "heli").slice(0, 2) };
+    const peers = new Map(); let room = null, sendPose = null, sendName = null, dead = false, lastSent = null, lastAt = 0, tick = 0;
+    const label = id => { const el = document.createElement("div"); el.className = "bs-peer"; el.hidden = true; box.appendChild(el); return el; };
+    const drop = id => { const q = peers.get(id); if (!q) return; try { q.parts?.remove(); } catch {} q.el.remove(); peers.delete(id); P.count = peers.size; };
+    const got = (a, id) => { if (!Array.isArray(a) || a.length < 7 || !a.slice(0, 4).every(Number.isFinite)) return;
+      let q = peers.get(id); if (!q) { if (peers.size >= 12) return; q = { el: label(id), name: "", kind: "", parts: null, a: null, b: null, colour: TOPS[[...String(id)].reduce((n, ch) => n + ch.charCodeAt(0), 0) % TOPS.length] }; peers.set(id, q); P.count = peers.size; }
+      const now = performance.now(), s = { x: a[0], y: a[1], z: a[2], h: a[3], p: +a[5] || 0, r: +a[6] || 0, k: SHAPES[a[4]] ? a[4] : a[4] === "none" ? "none" : "walk", t: now };
+      q.a = q.b && now - q.b.t < 1500 ? (q.shown || q.b) : s; q.b = s; q.from = now; };
+    const named = (n, id) => { const q = peers.get(id), name = String(n || "").replace(/[\u0000-\u001f<>]/g, "").trim().slice(0, 16) || "Player"; if (q) { if (!q.name) toast(`${name} is here.`, 2500); q.name = name; q.el.textContent = name; } else { got([0, -1e5, 0, 0, "none", 0, 0], id); const p2 = peers.get(id); if (p2) { p2.name = name; p2.el.textContent = name; toast(`${name} is here.`, 2500); } } };
+    // nothing is fetched or connected until the model has had a moment to itself
+    const start = setTimeout(async () => { try { const lib = await import(new URL(TOWN3D + "vendor/trystero-nostr.js?v=1", document.baseURI).href); if (dead) return;
+        room = lib.joinRoom({ appId: "awesome-news-explore-1" }, "town-" + place);
+        const [sp, gp] = room.makeAction("pose"), [sn, gn] = room.makeAction("name"); sendPose = sp; sendName = sn; gp(got); gn(named);
+        room.onPeerJoin(id => { try { sendName(playerName(), id); if (lastSent) sendPose(lastSent, id); } catch {} }); room.onPeerLeave(drop);
+      } catch (e) { console.warn("Town model: other players couldn't connect", e); } }, 2500);
+    // what I am doing now, as seven small numbers
+    const mine = () => { const v = T.car?.in ? T.car.pose?.() : null; if (v) return [v.x, v.y, v.z, v.h, v.k, v.p, v.r];
+      return T.walk ? [F.pos.x, ground(F.pos.x, F.pos.z), F.pos.z, F.yaw + Math.PI, "walk", 0, 0] : [0, 0, 0, 0, "none", 0, 0]; };
+    P.frame = () => { const now = performance.now();
+      if (sendPose && now - tick > 200) { tick = now; const a = mine().map(v => typeof v === "number" ? Math.round(v * 100) / 100 : v);
+        const moved = !lastSent || a[4] !== lastSent[4] || Math.hypot(a[0] - lastSent[0], a[1] - lastSent[1], a[2] - lastSent[2]) > 0.04 || Math.abs(wrap(a[3] - lastSent[3])) > 0.02;
+        if (moved || now - lastAt > 3000) { lastSent = a; lastAt = now; try { sendPose(a); } catch {} } }
+      if (!peers.size) return;
+      const cam = m.getCamera(), w = box.clientWidth, h = box.clientHeight, f = 1 / Math.tan(((m.fov ? m.fov() : 50) * Math.PI) / 360);
+      const cp = Math.cos(cam.pitch), fx = -Math.sin(cam.yaw) * cp, fy = Math.sin(cam.pitch), fz = -Math.cos(cam.yaw) * cp, rx = Math.cos(cam.yaw), rz = -Math.sin(cam.yaw), ux = -fy * rz, uy = fz * rx - fx * rz, uz = fy * rx;
+      for (const [id, q] of peers) { if (!q.b) continue;
+        if (now - q.b.t > 12000) { drop(id); continue; }  // not heard from: gone
+        const kind = q.b.k;
+        if (kind !== q.kind) { try { q.parts?.remove(); } catch {} q.parts = null; q.kind = kind; if (SHAPES[kind]) q.parts = m.addParts(SHAPES[kind](q.colour).map(part => ({ ...part, matrix: NONE.slice() }))); q.a = q.b; }
+        if (!q.parts) { q.el.hidden = true; continue; }
+        // a fifth of a second behind, gliding from where they were shown to the newest word of them
+        const t = Math.min(1, (now - q.from) / 220), a = q.a || q.b, b = q.b, far = Math.hypot(b.x - a.x, b.z - a.z) > 60, k = far ? 1 : t;
+        const s = q.shown = { x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k, z: a.z + (b.z - a.z) * k, h: a.h + wrap(b.h - a.h) * k, p: a.p + (b.p - a.p) * k, r: a.r + (b.r - a.r) * k, t: now };
+        M.compose(V.set(s.x, s.y, s.z), Q.setFromEuler(E.set(-s.p, s.h, s.r, "YXZ")), ONE); q.parts.setMatrix(0, M.elements.slice());
+        if (kind === "heli") q.parts.setMatrix(1, M.clone().multiply(new THREE.Matrix4().makeTranslation(0, 2.45, 0.1)).multiply(new THREE.Matrix4().makeRotationY(now / 60)).elements);
+        // their name over them, where they are on the screen
+        const top = kind === "walk" ? 2.1 : kind === "bus" ? 3.7 : 2.9, dx = s.x - cam.x, dy = s.y + top - cam.y, dz = s.z - cam.z, depth = dx * fx + dy * fy + dz * fz;
+        if (depth < 1 || depth > 600 || !q.name) { q.el.hidden = true; continue; }
+        const sx = w / 2 + (dx * rx + dz * rz) / depth * f * (h / 2), sy = h / 2 - (dx * ux + dy * uy + dz * uz) / depth * f * (h / 2);
+        if (sx < -40 || sx > w + 40 || sy < 0 || sy > h) { q.el.hidden = true; continue; }
+        q.el.hidden = false; q.el.style.transform = `translate(${Math.round(sx)}px, ${Math.round(sy)}px) translate(-50%, -100%)`; } };
+    P.dispose = () => { dead = true; clearTimeout(start); for (const id of [...peers.keys()]) drop(id); try { room?.leave(); } catch {} room = null; sendPose = null; };
+    return P;
+  }
   // The numbers behind the cars and planes, which Ash can change in Settings > Admin (14 November 2026: "Allow me to edit all these
   // sorts of settings when in as an admin"). Each is [default, name, unit, least, most]. What he sets is kept on that device
   // ("an3d-rides", shared by every town) and is read when a model opens.
@@ -9191,6 +9268,12 @@ const handle = async (m, post) => {
           quad(p(a0, -1), p(a1, -1), p(a1, 1), p(a0, 1), TYRE); tri([x + w / 2, y, z], p(a0, 1), p(a1, 1), TYRE); tri([x - w / 2, y, z], p(a1, -1), p(a0, -1), TYRE); } };
       return { P, N, C, tri, quad, hull, box, wheel, part: extra => ({ positions: new Float32Array(P), normals: new Float32Array(N), colors: new Float32Array(C), color: [1, 1, 1], roughness: 0.55, doubleSide: true, ...extra }) }; };
     const b = mesh();
+    if (car === "person") {  // someone walking: 1.75 m tall, feet on y = 0, facing +Z, their top in the colour given
+      const TOP = lin(stripe), LEG = lin("#2b3345"), SKIN = lin("#d9a887"), HAIR = lin("#3a2a20");
+      for (const sx of [-1, 1]) { b.box(sx * 0.13 - 0.09, sx * 0.13 + 0.09, 0, 0.86, -0.1, 0.1, LEG); b.box(sx * 0.31 - 0.07, sx * 0.31 + 0.07, 0.82, 1.42, -0.08, 0.08, TOP); }
+      b.box(-0.24, 0.24, 0.84, 1.46, -0.13, 0.13, TOP); b.box(-0.07, 0.07, 1.46, 1.53, -0.06, 0.06, SKIN); b.box(-0.12, 0.12, 1.5, 1.74, -0.12, 0.12, SKIN); b.box(-0.125, 0.125, 1.66, 1.76, -0.125, 0.11, HAIR);
+      return [b.part({})];
+    }
     if (car === "heli") {  // a small helicopter: a glass nose, a tail boom, skids on y = 0. The rotor and its blur are apart, about the mast
       const COL = lin(stripe);
       const H = [[2.1, 0.22, 0.8, 1.2], [1.35, 0.72, 0.5, 1.8], [0.2, 0.82, 0.45, 2.02], [-1.0, 0.72, 0.6, 1.98], [-1.9, 0.26, 1.15, 1.72], [-5.3, 0.1, 1.4, 1.62]];
@@ -9458,6 +9541,8 @@ const handle = async (m, post) => {
     const press = { pointerdown: hold(true), pointerup: hold(false), pointercancel: hold(false), pointerleave: hold(false), contextmenu: e => e.preventDefault() };
     Object.entries(press).forEach(([k, f]) => boostBtn.addEventListener(k, f));
     const hidden = () => snd.quiet(document.hidden); document.addEventListener("visibilitychange", hidden);
+    C.pose = () => veh === "car" ? { k: car.bus ? "bus" : car.gold ? "gold" : "car", x: car.x, y: car.y, z: car.z, h: car.h, p: car.p, r: car.r }
+      : veh ? { k: plane.heli ? "heli" : plane.gold ? "goldplane" : "plane", x: plane.x, y: plane.y, z: plane.z, h: plane.h, p: plane.p, r: plane.r } : null;
     C.where = () => veh === "car" ? { kind: "car", gold: !!car.gold, bus: !!car.bus, x: car.x, z: car.z, heading: car.h, dir: car.dir, speed: car.v, charge } : veh ? { kind: "plane", heli: !!plane.heli, x: plane.x, y: plane.y, z: plane.z, heading: plane.h, pitch: plane.p, speed: plane.v, air: plane.air } : null;  // for checking
     C.planes = planes; C.gold = gold;
     // to the golden plane (a key of Ash's own, not shown anywhere)
@@ -9557,7 +9642,7 @@ const handle = async (m, post) => {
     m.setCamera(F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch);
     m.setMinutes(bsMins(BS.view.ms));
     T.streets?.update();
-    T.car?.frame();
+    T.car?.frame(); T.peers?.frame();
     // the clock's hands, the koala and the wombats: wherever the weather's own are now
     if (T.live?.length) { const M = T.mtx || (T.mtx = new BS.B.THREE.Matrix4());
       T.roots.forEach(r => r.updateWorldMatrix(true, true));
@@ -9572,7 +9657,7 @@ const handle = async (m, post) => {
     BS.town = null; T.dead = true; T.on = false; T.ungest?.(); T.unlay?.(); T.unflood?.();
     T.streets?.dispose(); T.streets = null; $("bsNamesBtn").hidden = true;
     T.admin?.dispose(); T.admin = null;
-    T.car?.dispose(); T.car = null;
+    T.car?.dispose(); T.car = null; T.peers?.dispose(); T.peers = null;
     T.unbar?.();
     if (BS.fly) { const F = BS.fly; F.walk = F.speed = F.floor = F.hot = F.drive = null; F.ceil = 0; F.lim = null; }  // Explore, if it carries on, is its old self
     try { T.model?.dispose(); } catch {}
