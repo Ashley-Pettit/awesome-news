@@ -793,3 +793,15 @@ load time should not be excessive and should not be jittery."
 - Checked with two pages in one browser: through a stand-in for the relay, each sees the other's figure and name, and
   the name follows them; and with the real bundle two pages found each other through the public relays from here.
   Not yet tried between two real devices on different networks.
+
+## Logan: the plane, helicopter and bus where they might be found (15 November 2026)
+
+Ash: "In Logan park the helicopter and plane in places where they might actually be found. Don't generate an airport
+or helipad. Just look for places that make sense", and "Move the bus to somewhere a bus would be aswell."
+
+- **Bus:** in the kerb lane at the bus stop on the street out the front of the council, beside its shelter.
+- **Helicopter:** on open grass in Civic Centre Park by Logan Central Police Station, as a police or rescue
+  helicopter would set down.
+- **Plane:** on the sports fields in Civic Centre Park behind the council. Logan's model has no airfield to put it
+  at, so this is the nearest long open ground a light plane could use, with room to take off.
+- Nothing was built for them. All three checked in pictures from above. Jump to has each.

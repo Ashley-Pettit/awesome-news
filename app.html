@@ -9128,9 +9128,9 @@ const handle = async (m, post) => {
       cars: [{ x: -228.5, z: -375.5, h: Math.PI, spare: true, name: "The red car", what: "On the lawn by The Hub, beside the plane" }, { x: -232.5, z: -375.5, h: Math.PI, gold: true, name: "The golden car", what: "On the lawn by The Hub. A fifth faster than the red one" }],
       more: { planes: [{ x: -1602.1, z: 422, h: 2.6, heli: true, name: "The helicopter", at: "behind 11 Norman Road", what: "On the grass behind 11 Norman Road" }], cars: [{ x: -214, z: -357, h: -1.571, bus: true, name: "The bus", what: "In A'Beckett Street, out the front of The Hub" }] },
       roam: [[-278, -562], [627, -1086], [-108, -190], [17, -179], [-1585, 1221], [575, 1066]] },
-    logan: { planes: [{ x: 5768.9, z: -13344.6, h: 2.016, name: "The plane", at: "on the street out the front of the council", what: "On the street out the front of Logan City Council. Walk up to it and get in" }],
+    logan: { planes: [{ x: 5732, z: -12989, h: 1.0, name: "The plane", at: "on the big lawn in Civic Centre Park", what: "On the big open lawn in Civic Centre Park, behind the council, with room to take off" }],
       cars: [{ x: 5816.2, z: -13302.9, h: 1.94, spare: true, name: "The red car", what: "On the lawn out the front of the council, by the plane" }, { x: 5789.8, z: -13198.7, h: 2.03, gold: true, name: "The golden car", what: "In the car park behind the council. A fifth faster than the red one" }],
-      more: { planes: [{ x: 5757.3, z: -13354.6, h: 2.016, heli: true, name: "The helicopter", at: "across the street from the council", what: "On the grass across the street from the council" }], cars: [{ x: 5783.5, z: -13323.9, h: 2.016, bus: true, name: "The bus", what: "In the council's car park" }] },
+      more: { planes: [{ x: 5842.3, z: -12977.7, h: 1.0, heli: true, name: "The helicopter", at: "in Civic Centre Park, by the police station", what: "On the grass in Civic Centre Park, by Logan Central Police Station" }], cars: [{ x: 5752.7, z: -13341.2, h: -1.126, bus: true, name: "The bus", what: "At the bus stop on the street out the front of the council" }] },
       roam: [[5749, -13002], [6006, -13466], [5650, -13194], [7441, -11580], [5927, 564], [8554, -7453]] },
   };
   for (const t of Object.values(TOWN_RIDES)) if (t.more) { t.planes = [...t.planes, ...t.more.planes]; t.cars = [...t.cars, ...t.more.cars]; }
