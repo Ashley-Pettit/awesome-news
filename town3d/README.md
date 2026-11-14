@@ -511,3 +511,34 @@ people etc...". Moorooka only for now (it is the model whose ground is drawn by 
   devices that draw it), not on the far ground picture. People only exist on the medium and sharp settings. Moving
   traffic, buildings, fences and what stands in backyards cannot be taken out yet. The road change of the round before
   (no ribbons) is now in the source too (`groundDrawsRoads`), and a car parked at the kerb sits on the ground.
+
+## Pilot: number 6's neighbours in number 6's detail (14 November 2026)
+
+Ash asked how long all of Moorooka would take in the detail of 6 Beaudesert Road and whether it could stay lag free,
+then: do it within 40 m of number 6.
+
+- **What is in it:** the five houses within 40 m of number 6's lot (1RP130916, 1RP65197, 2RP130916, 2RP65197,
+  1RP57597), built by the same detailed builder as number 6: stumps and battens under a high-set house, weatherboards,
+  windows with hoods, doors, front and back steps, a picket fence with a gate and letterbox where the lot fronts a
+  street, paling fences down the sides and across the rear, a path to the front steps, a clothes hoist, shrubs.
+- **How they were made:** by rule, with no imagery (ai-forge `scripts/moorooka/neighbours.py`, branch
+  `claude/moorooka-neighbours-pilot` at `1db0312`): the lot from the cadastre, the house's outline, heights and roof
+  colour from the survey. Wall and trim colours come by turn from a short list, and every house gets number 6's roof
+  form: both are guesses. Their ground stays as the plan draws it. A 42 m by 6 m building on a sixth lot (3RP59613) and
+  a 456 m2 one on a seventh are not houses and are left as the general model draws them.
+- **Drawn by distance** (`?v=21`): each property is in full within 110 m (light), 160 m (phone sharp) or 260 m
+  (sharpest) and a plain house of 21 to 29 triangles beyond.
+- **What it costs** (`frameCost()` in the app, software renderer, so triangles not frame rates): the five cost 15,233
+  triangles in full, 3,047 each on average (number 6 itself is 4,969). A frame near them:
+
+  | Setting and view | Before | After |
+  | --- | --- | --- |
+  | Light, phone, on foot | 477,162 | 483,696 (+1.4%) |
+  | Light, phone, 7 m up | 521,705 | 535,005 (+2.5%) |
+  | Phone sharp, phone, on foot | 782,690 | 800,044 (+2.2%) |
+  | Phone sharp, 1100 px wide, 75 m up | 453,317 | 475,690 (+4.9%) |
+
+  (The sharp settings draw near things twice, once for shadows. The last three rows were measured with six
+  properties, before the long building was dropped.) Scaled up: about 100 houses stand within 160 m of a point in the
+  residential streets, which would be about 300,000 triangles, so the whole suburb would need full detail kept to
+  about 60 m and a middle level where pickets and battens are a picture on a flat panel.
