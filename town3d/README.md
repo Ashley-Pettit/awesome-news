@@ -912,3 +912,24 @@ violence." `TOWN_EMOTES` in `app.html`: Wave, Dance, Jump, Cheer, Spin, Bow and 
   title, so the app opens straight into the 3D model.
 - **Golden car settings** (Settings > Admin > Cars and planes, for Ash): its own handbrake spin (usually 240 degrees a second,
   a normal car 155), handbrake drag (5 km/h a second), boost length (5 s) and boost refill (5 s, a normal car 10).
+
+## Joystick fix, Norman Rd helicopter, an animal, zoom to land, players' edits for 3 hours (15 November 2026)
+
+- **No text selection in Explore**: on an iPhone a held finger could select a button's words ("Get out"), bring up the Copy /
+  Look Up bar and take the touch off the stick, so the car stopped or the walk stalled. Everything in `.bs-fly` is now
+  `user-select: none` and `-webkit-touch-callout: none` (typing boxes excepted).
+- **Up and Down** are gone while on foot (touch screens).
+- **Exit explore** is gone from Settings; Esc (or the browser's back) still leaves, asking first.
+- **Flat pads count as ground**: 11 Norman Road's lot sits on a pad (`m.addPad`) about a metre above the model's ground. Its
+  outline and top go in `T.pads`, and the town's `ground()` uses the pad there, so the helicopter behind it (and you, and
+  anything else) stands on the lawn instead of sinking into it.
+- **The helicopter** says nothing once it is in the air (only "Hold Up to lift off" and the like on the ground).
+- **An Australian animal** (`townCritter`, Inverloch): a kangaroo, emu or wombat, a different one each visit, pottering about
+  beside the Norman Road helicopter (`townPlaneParts(_, "roo" | "emu" | "wombat")`).
+- **Flying into the ground lands you on foot**: zooming in (pinch or scroll) once you can get no closer, or holding Down (or C)
+  at the lowest flying height for 0.6 s, switches to Walk where you are looking.
+- **Players' edits show for 3 hours**: what a construction worker Sends is drawn for everyone for 3 hours (the app reads the
+  topic's last 3 hours on opening and every 5 minutes, at most 600 strokes), and the sender's own copy for 3 hours too. The log
+  (`chat/plans.json`, 60 days) and Ash's Suggestions are unchanged; Dismiss also hides one from Ash's own view.
+- Construction worker wording: "Help us build and shape this model! Your edits are sent to the town planner who can
+  permanently update this model." Explorers are told to pick Construction worker to get the pencil.

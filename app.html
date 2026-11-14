@@ -1340,6 +1340,11 @@ body.bsdrive:not(.bsplane) .bs-fly-x.bs-boost { bottom: calc(240px + env(safe-ar
 .bs-fly-x.bs-me-btn svg { width: 19px; height: 19px; }
 .bs-fly-x.bs-me-btn[aria-expanded="true"] { background: #fff; color: #1b1830; }
 body.bsme #bsFlyX, body.bsme #bsTimeBtn, body.bsme #bsFlyTimeBox { display: none !important; }
+body.bstown.bswalk:not(.bsdrive) .bs-ud { display: none !important; }
+/* No text selection or iPhone copy menu anywhere in Explore (Ash, 15 November 2026: a held finger on the stick selected "Get out",
+   the Copy / Look Up bar came up, and the selection took the touch off the stick so the car stopped). Typing boxes still select. */
+.bs-fly, .bs-fly * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+.bs-fly input, .bs-fly textarea { -webkit-user-select: text; user-select: text; }  /* on foot, no Up and Down (Ash, 15 November 2026) */
 .bs-me input[type="range"] { height: 28px; padding: 0; background: none; accent-color: #ffd36b; }
 .bs-me-time { display: flex; justify-content: space-between; align-items: baseline; }
 .bs-me-time output { font: 700 0.9rem var(--ui); }
@@ -8165,7 +8170,11 @@ const handle = async (m, post) => {
         const EYE = 3, touch = matchMedia("(pointer: coarse)").matches;  // walking: your eyes 3 m up to start, for a clear view over the cars and fences (Up and Down change it)
         F.eye = EYE;
         // the ground, or the water over it: the sea and the inlet (Inverloch), or a flood that's on the map (Logan)
-        const b = m.bounds(), ground = (x = F.pos.x, z = F.pos.z) => Math.max(m.groundAt(x, z), m.waterAt ? m.waterAt(x, z) : m.waterLevel());
+        // the ground: the model's, the water's, or a flat pad the app has laid (11 Norman Road's lot sits on one, a little above the
+        // model's ground, so the helicopter behind it, you and anything else there stand on the lawn rather than sink into it)
+        const b = m.bounds(), ground = (x = F.pos.x, z = F.pos.z) => { let g = Math.max(m.groundAt(x, z), m.waterAt ? m.waterAt(x, z) : m.waterLevel());
+          if (T.pads) for (const P of T.pads) { const dx = x - P.x, dz = z - P.z; if (Math.abs(dx * P.c - dz * P.s) <= P.hw && Math.abs(dx * P.s + dz * P.c) <= P.hd && P.top > g) g = P.top; }
+          return g; };
         const { ceil = 4000, fast = 30, far = 7000, out = 9000, stride = 0, pad = 0, stand = [1, 30] } = cfg;  // a town's limits, unless the model is bigger (Logan)
         // where you can go: inside the model (flying over Logan, far enough outside it to see the whole city); flying, above the ground and the water, and faster the higher you are
         const inner = [b[0] + 30, b[1] - 30, b[2] + 30, b[3] - 30], outer = pad ? [b[0] - pad, b[1] + pad, b[2] - pad, b[3] + pad] : inner;
@@ -8229,8 +8238,15 @@ const handle = async (m, post) => {
         const fovK = m.fov ? () => 2 * Math.tan(m.fov() * Math.PI / 360) : () => 1.1547;  // the model's own field of view where it gives one, so the ground stays under your finger
         const pan = (dx, dy) => { const k = fovK() * reach() / (box.clientHeight || 600), sy = Math.sin(F.yaw), cy = Math.cos(F.yaw), up = k / Math.max(0.35, Math.sin(-F.pitch));
           F.pos.x += -cy * dx * k - sy * dy * up; F.pos.z += sy * dx * k - cy * dy * up; keepIn(); };
+        // zooming on in once as close as flying goes puts you on foot where you are looking (Ash, 15 November 2026: "If I'm on fly
+        // and I zoom in right into the ground auto switch to walk")
+        let squeeze = 0, squeezeAt = 0;
         const zoomTurn = (scale, turn) => { const R = reach(), d = look3(), L = [F.pos.x + d[0] * R, F.pos.y + d[1] * R, F.pos.z + d[2] * R];  // about the ground in the middle of the view
-          F.yaw += turn; const R2 = bsClamp(R * scale, 20, out), e = look3(); F.pos.set(L[0] - e[0] * R2, L[1] - e[1] * R2, L[2] - e[2] * R2); keepIn(); };
+          const was = F.pos.clone();
+          F.yaw += turn; const R2 = bsClamp(R * scale, 20, out), e = look3(); F.pos.set(L[0] - e[0] * R2, L[1] - e[1] * R2, L[2] - e[2] * R2); keepIn();
+          // zooming in but hardly getting any closer (as close as flying goes, or down at the lowest height): a few of those and you land
+          if (!T.walk && !T.tween && scale < 0.995 && (F.pos.distanceTo(was) < 0.6 || F.pos.y <= ground() + 3.3)) { const now = performance.now(); if (now - squeezeAt > 1500) squeeze = 0; squeezeAt = now;
+            if (++squeeze >= 4) { squeeze = 0; toMode(true); } } };
         const ptrs = new Map(); let pinch = null;
         const gest = {
           pointerdown: e => { if (T.admin?.down(e)) return; if (T.walk) return; list.hidden = true; jump.setAttribute("aria-expanded", "false"); fl.hidden = true; fb.setAttribute("aria-expanded", "false"); closeAsk(); try { box.setPointerCapture(e.pointerId); } catch {}
@@ -8358,6 +8374,7 @@ const handle = async (m, post) => {
         if (TOWN_TOGETHER.includes(cfg.place)) try { T.peers = townPeers(T, m, F, ground, cfg.place, box); } catch (e) { console.warn("Town model: other players couldn't start", e); }
         try { T.me = townMe(T, m, F, ground); } catch (e) { console.warn("Town model: the construction worker couldn't start", e); }
         try { T.traffic = townTraffic(T, m, F, ground, cfg); } catch (e) { console.warn("Town model: the traffic couldn't start", e); }
+        try { T.critter = townCritter(T, m, ground, cfg.place); } catch (e) { console.warn("Town model: the animal couldn't start", e); }
         F.hot = { f: () => toMode(!T.walk),
           enter: () => T.car?.enter(), keys: () => !!T.car?.keys?.(), undo: () => !!T.admin?.undo?.(), emotes: () => !!T.peers?.menu?.(), emote: i => !!T.peers?.emote?.(i), gold: () => isAsh() && !!T.car?.toGold?.(),
           n: () => T.namesToggle?.(),
@@ -8651,6 +8668,7 @@ const handle = async (m, post) => {
     if (home && W.invHouse) { const [hx, hz, nx, nz] = home, ry = Math.atan2(nx, nz), half = 16.5, zBack = -17, zFront = 15.4, zc = (zBack + zFront) / 2;
       const [x, z] = m.fromLatLon(...townLL(hx, hz));
       const top = m.addPad({ x: x + Math.sin(ry) * zc, z: z + Math.cos(ry) * zc, halfWidth: half + 0.4, halfDepth: (zFront - zBack) / 2 + 0.4, heading: ry, color: [0.105, 0.254, 0.061], lift: 0.25 });
+      if (Number.isFinite(top)) (T.pads ||= []).push({ x: x + Math.sin(ry) * zc, z: z + Math.cos(ry) * zc, c: Math.cos(ry), s: Math.sin(ry), hw: half + 0.4, hd: (zFront - zBack) / 2 + 0.4, top });
       const place = new THREE.Matrix4().makeTranslation(x - hx, top - G0, z - hz);
       lot(W.invHouse, half, zBack, zFront, place, skip);
       moving.forEach(r => whole(r, place));
@@ -9083,11 +9101,12 @@ const handle = async (m, post) => {
     const sentKey = "an3d-sent-" + cfg.place, KINDS = ["cars", "trees", "people"], all = e => e.paint.length + e.gone.cars.length + e.gone.trees.length + e.gone.people.length;
     try { mine = tidy(JSON.parse(localStorage.getItem(key))); } catch {}
     try { const j = JSON.parse(localStorage.getItem(sentKey)); sent = tidy(j); sentAt = +j?.at || 0; } catch {}
-    const askedKey = "an3d-asked-" + cfg.place;  // what a construction worker sent the town planner stays drawn on their device for two weeks
-    try { const j = JSON.parse(localStorage.getItem(askedKey)); askedAt = +j?.at || 0; if (Date.now() - askedAt < 14 * 86400e3) asked = tidy(j); } catch {}
+    const askedKey = "an3d-asked-" + cfg.place;  // what a construction worker sent the town planner stays drawn on their device for 3 hours, as for everyone else
+    try { const j = JSON.parse(localStorage.getItem(askedKey)); askedAt = +j?.at || 0; if (Date.now() - askedAt < 3 * 3600e3) asked = tidy(j); } catch {}
     const save = () => { try { localStorage.setItem(key, JSON.stringify(mine)); if (all(sent)) localStorage.setItem(sentKey, JSON.stringify({ ...sent, at: sentAt })); else localStorage.removeItem(sentKey);
       if (all(asked)) localStorage.setItem(askedKey, JSON.stringify({ ...asked, at: askedAt })); else localStorage.removeItem(askedKey); } catch {} };
-    const layers = () => [pub, sent, asked, mine, ...(look ? [look] : [])];
+    let fresh = blank();  // what players have sent in the last 3 hours: shown to everyone until then (or until Ash dismisses it, on his device)
+    const layers = () => [pub, sent, fresh, asked, mine, ...(look ? [look] : [])];
     const apply = () => { const L = layers(); m.setGroundEdits([...L.flatMap(e => e.paint), ...(draft ? [draft] : [])]);
       m.setRemoved({ cars: L.flatMap(e => e.gone.cars), trees: L.flatMap(e => e.gone.trees), people: L.flatMap(e => e.gone.people) }); };
     apply();
@@ -9123,7 +9142,7 @@ const handle = async (m, post) => {
       saveBtn.textContent = n ? `${w} (${n})` : w; saveBtn.classList.toggle("has", !!n); copyBtn.hidden = !boss; plansBtn.hidden = !boss; if (!boss) plansBox.hidden = true;
       saveBtn.setAttribute("aria-label", boss ? "Save for everyone" : "Send to the town planner");
       note.textContent = A.tool ? TOOLS[A.tool].say + (A.tool === "delete" || T.walk ? "" : " Two fingers move the map.")
-        : !boss ? (n ? "Your changes are on this device. Send gives them to the town planner, who decides what goes in." : all(asked) ? "Sent to the town planner. Thanks! They decide what goes in." : "Pick a tool to change the ground. The town planner looks at what you send.")
+        : !boss ? (n ? "Your changes are on this device. Send shows them to everyone for 3 hours and gives them to the town planner." : all(asked) ? "Sent! Everyone sees it for 3 hours, and the town planner can make it permanent." : "Pick a tool to change the ground. Help us build and shape this model!")
         : n ? "Your edits are on this device only. Save puts them in everyone's app." : all(sent) ? "Saved. Your edits will be in everyone's app in about 5 minutes." : "Pick a tool. Edits stay on this device until you save them."; };
     const show = () => { for (const b of bar.querySelectorAll("[data-tool]")) b.setAttribute("aria-pressed", String(b.dataset.tool === A.tool));
       const paint = !!A.tool && A.tool !== "delete"; $("bsAdminW").hidden = line.hidden = !paint;
@@ -9197,7 +9216,7 @@ const handle = async (m, post) => {
       saving = false; saveBtn.disabled = false; if (T.dead) return;
       if (did < lots.length) return say(did ? "Only some of that got through. Tap Send again to send it all." : "Couldn't reach the town planner. Check your connection and tap Send again.", 9000);
       asked.paint.push(...mine.paint); for (const kind of KINDS) asked.gone[kind].push(...mine.gone[kind]); askedAt = Date.now(); mine = blank(); ops.length = 0; save(); apply(); count();
-      toast("Sent to the town planner. Thanks!", 5000); };
+      toast("Sent! Everyone sees it for 3 hours, and the town planner can make it permanent.", 6000); loadFresh(); };
     // Suggestions (Ash): what construction workers have sent for this town, newest first. Show takes you there and draws it
     // over the model (on this device only); Add to mine puts it with your own edits, to change or Save as usual; Dismiss hides it.
     const plans = new Map(), town0 = cfg.assets.replace(/\/$/, "").split("/").pop(), doneKey = "an3d-plans-done";
@@ -9207,11 +9226,19 @@ const handle = async (m, post) => {
       const id = String(b.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 24), i = +b.i || 0; if (!id) return;
       let P = plans.get(id); if (!P) plans.set(id, P = { id, by: String(b.by || "").replace(/[\u0000-\u001f<>]/g, "").trim().slice(0, 16) || "Someone", time: +ev.time || 0, got: new Set(), e: blank() });
       if (P.got.has(i)) return; P.got.add(i); const e = tidy(b); P.e.paint.push(...e.paint); for (const kind of KINDS) P.e.gone[kind].push(...e.gone[kind]); };
+    // a player's edits show for everyone for 3 hours (Ash, 15 November 2026: "If a player makes an edit keep that change for just
+    // 3 hours, but keep in the admin log to decide if to make a permanent change"); ntfy's own last 3 hours, looked at on opening and every 5 minutes
+    const showFresh = () => { const cut = Date.now() / 1000 - 3 * 3600, e = blank();
+      for (const P of plans.values()) if (P.time > cut && !doneSet.has(P.id) && e.paint.length < 600) { e.paint.push(...P.e.paint); for (const kind of KINDS) e.gone[kind].push(...P.e.gone[kind]); }
+      fresh = e; apply(); };
+    const loadFresh = async () => { try { const r = await fetch(TOWN_PLANS + "/json?poll=1&since=3h"); if (r.ok) (await r.text()).split("\n").forEach(l => { if (!l.trim()) return; try { const ev = JSON.parse(l); if (ev.event === "message") planAdd(ev); } catch {} }); } catch {}
+      if (!T.dead) showFresh(); };
+    const freshT = [setTimeout(loadFresh, 5000), setInterval(loadFresh, 5 * 60000)];
     let plansAt = 0;
     const loadPlans = async () => { if (Date.now() - plansAt < 20000) return; plansAt = Date.now();
       try { const r = await fetch(TOWN_PLANS_FILE + "?t=" + Math.floor(Date.now() / 120000), { cache: "no-store" }); if (r.ok) ((await r.json()).m || []).forEach(planAdd); } catch {}
       try { const r = await fetch(TOWN_PLANS + "/json?poll=1&since=all"); if (r.ok) (await r.text()).split("\n").forEach(l => { if (!l.trim()) return; try { const ev = JSON.parse(l); if (ev.event === "message") planAdd(ev); } catch {} }); } catch {}
-      if (!T.dead) drawPlans(); };
+      if (!T.dead) { drawPlans(); showFresh(); } };
     const waiting = () => [...plans.values()].filter(P => !doneSet.has(P.id) && all(P.e)).sort((a, b) => b.time - a.time);
     const ago = t => { const s = Date.now() / 1000 - t; return s < 3600 ? `${Math.max(1, Math.round(s / 60))} min ago` : s < 86400 ? `${Math.round(s / 3600)} h ago` : `${Math.round(s / 86400)} d ago`; };
     const drawPlans = () => { const list = waiting(); plansBtn.textContent = list.length ? `Suggestions (${list.length})` : "Suggestions"; plansBtn.classList.toggle("has", !!list.length);
@@ -9223,7 +9250,7 @@ const handle = async (m, post) => {
         const acts = document.createElement("div"); acts.append(
           bt(look === P.e ? "Hide" : "Show", () => { look = look === P.e ? null : P.e; apply(); if (look) goTo(P.e); drawPlans(); }),
           bt("Add to mine", () => { mine.paint.push(...P.e.paint); for (const kind of KINDS) mine.gone[kind].push(...P.e.gone[kind]); if (look === P.e) look = null; doneSet.add(P.id); keepDone(); save(); apply(); count(); drawPlans(); say("Added to your edits. Change anything, then Save to put it in everyone's app.", 6000); }),
-          bt("Dismiss", () => { if (look === P.e) look = null; doneSet.add(P.id); keepDone(); apply(); drawPlans(); }));
+          bt("Dismiss", () => { if (look === P.e) look = null; doneSet.add(P.id); keepDone(); showFresh(); drawPlans(); }));
         row.append(who, acts); return row; })); };
     const goTo = e => { const p = e.paint[0]?.p || e.gone.cars[0] || e.gone.trees[0] || e.gone.people[0], F = BS.fly; if (!p || !F) return; T.tween = null;
       if (T.walk) { F.pos.x = p[0]; F.pos.z = p[1] + 9; F.yaw = 0; F.pitch = -0.4; } else { F.pos.x = p[0]; F.pos.z = p[1] + 45; F.pos.y = m.groundAt(p[0], p[1]) + 45; F.yaw = 0; F.pitch = -0.75; } };
@@ -9271,7 +9298,7 @@ const handle = async (m, post) => {
         clearTimeout(clear.t); unsure(); mine = blank(); ops.length = 0; save(); apply(); count(); say("All your edits on this device are cleared.", 3000); } });
     A.refresh = () => { if (!can()) { bar.hidden = true; A.tool = null; done(); btn.setAttribute("aria-pressed", "false"); document.body.classList.remove("bsadmin", "bsadmin-tool"); look = null; apply(); } btn.hidden = !can(); show(); };
     A.refresh();
-    A.dispose = () => { plansBtn.remove(); plansBox.remove(); on.forEach(([el, f]) => el.removeEventListener("click", f)); ink.remove(); bar.hidden = true; btn.hidden = true; btn.setAttribute("aria-pressed", "false"); document.body.classList.remove("bsadmin", "bsadmin-tool"); clearTimeout(say.t); clearTimeout(clear.t); clear.dataset.sure = ""; clear.classList.add("bs-admin-ic"); clear.innerHTML = bin; };
+    A.dispose = () => { clearTimeout(freshT[0]); clearInterval(freshT[1]); plansBtn.remove(); plansBox.remove(); on.forEach(([el, f]) => el.removeEventListener("click", f)); ink.remove(); bar.hidden = true; btn.hidden = true; btn.setAttribute("aria-pressed", "false"); document.body.classList.remove("bsadmin", "bsadmin-tool"); clearTimeout(say.t); clearTimeout(clear.t); clear.dataset.sure = ""; clear.classList.add("bs-admin-ic"); clear.innerHTML = bin; };
     return A;
   }
   // Driving and flying (Ash, 14 November 2026: "if i press enter when walking i get into the car", then "needs sounds, shift for
@@ -9429,6 +9456,28 @@ const handle = async (m, post) => {
     P.dispose = () => { dead = true; for (const C of P.cars) try { C.parts.remove(); } catch {} P.cars = []; };
     return P;
   }
+  // An Australian animal beside the helicopter behind 11 Norman Road (Ash, 15 November 2026: "Make a random Australian animal
+  // near it"): a kangaroo, an emu or a wombat, a different one each visit. It potters about within a few metres of where it
+  // started (a kangaroo in hops, an emu striding, a wombat waddling), stopping now and then.
+  function townCritter(T, m, ground, place) {
+    const P = { frame() {}, dispose() {} }, heli = (TOWN_RIDES[place]?.planes || []).find(q => q.heli);
+    if (!m.addParts || place !== "inv" || !heli) return P;
+    const THREE = BS.B.THREE, M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), ONE = new THREE.Vector3(1, 1, 1);
+    const kind = ["roo", "emu", "wombat"][Math.floor(Math.random() * 3)], speed = { roo: 2.6, emu: 1.3, wombat: 0.5 }[kind];
+    const s = Math.sin(heli.h), c = Math.cos(heli.h), hx = heli.x - c * 8 + s * 2, hz = heli.z + s * 8 + c * 2;  // off the helicopter's left side
+    const A = { x: hx, z: hz, h: Math.random() * 6.28, go: 0, wait: 1 + Math.random() * 2, tx: hx, tz: hz, t: 0 };
+    const parts = m.addParts(townPlaneParts("#000000", kind).map(q => ({ ...q, matrix: M.identity().elements.slice() })));
+    let last = performance.now();
+    P.frame = () => { const now = performance.now(), dt = Math.min(0.1, (now - last) / 1000); last = now; A.t += dt;
+      if (A.wait > 0) { A.wait -= dt; if (A.wait <= 0) { const a = Math.random() * 6.28, r = 1 + Math.random() * 4; A.tx = hx + Math.cos(a) * r; A.tz = hz + Math.sin(a) * r; } }
+      else { const dx = A.tx - A.x, dz = A.tz - A.z, d = Math.hypot(dx, dz), want = Math.atan2(dx, dz), turn = Math.atan2(Math.sin(want - A.h), Math.cos(want - A.h));
+        A.h += turn * Math.min(1, dt * 4); if (d < 0.3) A.wait = 1.5 + Math.random() * 4; else if (Math.abs(turn) < 0.6) { const st = Math.min(d, speed * dt); A.x += Math.sin(A.h) * st; A.z += Math.cos(A.h) * st; } }
+      const moving = A.wait <= 0, y = ground(A.x, A.z);
+      const up = kind === "roo" && moving ? 0.42 * Math.abs(Math.sin(A.t * 5.2)) : 0, roll = kind === "wombat" && moving ? 0.07 * Math.sin(A.t * 9) : 0, pitch = kind === "emu" && !moving ? 0.12 * Math.max(0, Math.sin(A.t * 1.3)) : 0;
+      M.compose(V.set(A.x, y + up, A.z), Q.setFromEuler(E.set(pitch, A.h, roll, "YXZ")), ONE); parts.setMatrix(0, M.elements.slice()); };
+    P.dispose = () => { try { parts.remove(); } catch {} };
+    return P;
+  }
   function townPeers(T, m, F, ground, place, box) {
     const P = { frame() {}, dispose() {}, count: 0 }; let off = false; try { off = localStorage.getItem("an-player-off") === "1"; } catch {}
     if (!m.addParts || !m.getCamera) return P;
@@ -9477,9 +9526,9 @@ const handle = async (m, post) => {
           lastSent = null; T.admin?.refresh?.(); meDraw();
           toast(v === "builder" ? (isAsh() ? "Construction worker. The pencil (top right) edits the ground and Saves for everyone." : "You're a construction worker. Tap the pencil (top right) to change the ground, then Send it to the town planner.") : "You're exploring.", 5000); };
         rl.append(bn); }
-      as.append(el("span", "bs-me-lbl", "Play as"), rl, el("p", "", townRole() !== "builder" ? "Walk, drive and fly anywhere in town."
+      as.append(el("span", "bs-me-lbl", "Play as"), rl, el("p", "", townRole() !== "builder" ? "Walk, drive and fly anywhere in town. Pick Construction worker to get the pencil (top right) and help shape the model."
         : isAsh() ? "You see yourself from behind, and the pencil edits the ground. As the town planner, Save puts it in everyone's app, and Suggestions has what others sent."
-        : "You see yourself from behind and can change the ground with the pencil. The town planner decides what goes in."));
+        : "Help us build and shape this model! Your edits are sent to the town planner who can permanently update this model."));
       // whether other players see you
       const sw = el("button", "bs-me-show"); sw.type = "button"; sw.setAttribute("role", "switch"); sw.setAttribute("aria-checked", String(!off)); sw.append(el("span", "", "Other players can see me"), el("i"));
       sw.onclick = () => { off = !off; try { if (off) localStorage.setItem("an-player-off", "1"); else localStorage.removeItem("an-player-off"); } catch {} if (!off && !room && !joining) join(0); lastSent = null; meDraw(); meBox.querySelector(".bs-me-show")?.focus(); toast(off ? "Other players can't see you now." : "Other players can see you.", 2500); };
@@ -9503,8 +9552,7 @@ const handle = async (m, post) => {
         if (!onEx) { const a = el("a", "bs-me-go", "Open the 3D model's page"); a.href = exploreLink().url; app.append(a); }
         app.append(el("p", "", "It goes on your home screen and opens straight into the 3D model.")); }
       const hi = el("div", "bs-me-h"), ho = el("span", "", F.hText || ""); ho.id = "bsMeH"; hi.append(el("span", "", "Height above the ground"), ho);
-      const ex = el("button", "bs-me-exit", $("bsFlyX").textContent); ex.type = "button"; ex.onclick = () => { meClose(); $("bsFlyX").click(); };
-      meBox.append(head, you, as, sw, tm, app, hi, ex); };
+      meBox.append(head, you, as, sw, tm, app, hi); };  // no Exit explore (Ash, 15 November 2026: "Remove exit explore"); Esc, or the browser's back, still leaves
     // closes with its \u00d7, the gear again, or a tap anywhere else
     const meOut = e => { if (!meBox.hidden && !meBox.contains(e.target) && !meBtn.contains(e.target)) meClose(); }; document.addEventListener("pointerdown", meOut, true);
     document.body.classList.add("bsme"); meBtn.hidden = false; meBtn.onclick = () => { meBox.hidden = !meBox.hidden; meBtn.setAttribute("aria-expanded", String(!meBox.hidden)); if (!meBox.hidden) meDraw(); meBtn.blur(); };
@@ -9628,6 +9676,21 @@ const handle = async (m, post) => {
           quad(p(a0, -1), p(a1, -1), p(a1, 1), p(a0, 1), TYRE); tri([x + w / 2, y, z], p(a0, 1), p(a1, 1), TYRE); tri([x - w / 2, y, z], p(a1, -1), p(a0, -1), TYRE); } };
       return { P, N, C, tri, quad, hull, box, wheel, part: extra => ({ positions: new Float32Array(P), normals: new Float32Array(N), colors: new Float32Array(C), color: [1, 1, 1], roughness: 0.55, doubleSide: true, ...extra }) }; };
     const b = mesh();
+    if (car === "roo" || car === "emu" || car === "wombat") {  // an Australian animal, feet on y = 0, facing +Z
+      if (car === "roo") { const F = lin("#a3693d"), L = lin("#dcb88c"), D = lin("#3b2a1e");
+        for (const sx of [-1, 1]) { b.box(sx * 0.12 - 0.05, sx * 0.12 + 0.05, 0, 0.07, -0.08, 0.36, F); b.box(sx * 0.13 - 0.03, sx * 0.13 + 0.01, 1.24, 1.42, 0.02, 0.07, F); b.box(sx * 0.11 - 0.03, sx * 0.11 + 0.03, 0.66, 0.84, 0.14, 0.26, F); }
+        b.box(-0.2, 0.2, 0.07, 0.5, -0.28, 0.16, F); b.box(-0.17, 0.17, 0.46, 1.06, -0.15, 0.14, F); b.box(-0.11, 0.11, 0.5, 0.96, 0.14, 0.16, L);
+        b.box(-0.1, 0.1, 1.04, 1.26, -0.03, 0.18, F); b.box(-0.06, 0.06, 1.06, 1.17, 0.18, 0.32, F); b.box(-0.03, 0.03, 1.12, 1.16, 0.32, 0.335, D);
+        b.box(-0.065, 0.065, 0.03, 0.15, -1.0, -0.26, F); }
+      else if (car === "emu") { const B = lin("#5d4c3c"), G = lin("#77706a"), N = lin("#4f6079"), K = lin("#2a2522");
+        for (const sx of [-1, 1]) b.box(sx * 0.1 - 0.03, sx * 0.1 + 0.03, 0, 0.92, -0.04, 0.04, G);
+        b.box(-0.26, 0.26, 0.86, 1.28, -0.42, 0.3, B); b.box(-0.2, 0.2, 1.0, 1.24, -0.55, -0.4, B);
+        b.box(-0.05, 0.05, 1.18, 1.62, 0.22, 0.33, N); b.box(-0.06, 0.06, 1.58, 1.71, 0.24, 0.42, N); b.box(-0.025, 0.025, 1.6, 1.66, 0.42, 0.5, K); }
+      else { const B = lin("#6f5b49"), D = lin("#2c241e");
+        b.box(-0.3, 0.3, 0.1, 0.5, -0.45, 0.42, B); b.box(-0.2, 0.2, 0.14, 0.42, 0.42, 0.68, B); b.box(-0.09, 0.09, 0.2, 0.32, 0.68, 0.72, D);
+        for (const sx of [-1, 1]) { b.box(sx * 0.13 - 0.04, sx * 0.13 + 0.03, 0.42, 0.5, 0.48, 0.54, B); for (const z of [-0.3, 0.3]) b.box(sx * 0.2 - 0.06, sx * 0.2 + 0.06, 0, 0.12, z - 0.07, z + 0.07, B); } }
+      return [b.part({ roughness: 0.85 })];
+    }
     if (car === "person" || car === "builder") {  // someone walking: 1.75 m tall, feet on y = 0, facing +Z, their top in the colour given
       // (a construction worker: a hi-vis orange top with silver bands and a yellow hard hat, whatever colour is given)
       const hv = car === "builder", TOP = lin(hv ? "#ff7a12" : stripe), LEG = lin("#2b3345"), SKIN = lin("#d9a887"), HAIR = lin("#3a2a20");
@@ -9842,7 +9905,7 @@ const handle = async (m, post) => {
             if (P.y <= floor) { P.y = floor; if (!roof && climb <= 0.05) { P.air = false; if (P.vy < -4) snd.thud(Math.min(1.4, -P.vy / 8)); P.v *= 0.3; } P.vy = Math.max(0, P.vy); } }
           P.ang = (P.ang || 0) + P.spin * 30 * dt; showPlane(P);
           const alt = Math.max(0, P.y - ground(P.x, P.z));
-          hint(!P.air ? (!up ? "The rotor is spinning up" : touch ? "Hold Up to lift off" : "Hold \u2193 (or Space) to lift off") : touch ? "Flying. Stick forward to go, Down to land" : "Flying. W goes forward, \u2191 (or C) comes down to land");
+          hint(!P.air ? (!up ? "The rotor is spinning up" : touch ? "Hold Up to lift off" : "Hold \u2193 (or Space) to lift off") : "");  // in the air it is plain what to do (Ash, 15 November 2026)
           snd.set(0.3 + 0.6 * P.spin, 0.45 + 0.4 * Math.abs(climb), Math.abs(P.v), false, 0);
           o = P; D = 14 + Math.min(8, Math.abs(P.v) / 6); text = Math.round(Math.abs(P.v) * 3.6) + " km/h" + (P.air ? " \u00b7 " + Math.round(alt) + " m" : "");
         } else {
@@ -10019,7 +10082,10 @@ const handle = async (m, post) => {
     m.setCamera(F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch);
     m.setMinutes(bsMins(BS.view.ms));
     T.streets?.update();
-    T.car?.frame(); T.peers?.frame(); T.me?.frame(); T.traffic?.frame();
+    T.car?.frame(); T.peers?.frame(); T.me?.frame(); T.traffic?.frame(); T.critter?.frame();
+    // flying: held down at the lowest you can fly (Down, or C) for a moment, and you are on foot there
+    if (!T.walk && !T.tween && !F.drive && F.floor && F.hot?.f) { const low = F.pos.y <= F.floor() + 0.1, down = F.vert < -0.3 || F.keys.has("KeyC"), now = performance.now();
+      if (!(low && down)) T.downAt = 0; else if (!T.downAt) T.downAt = now; else if (now - T.downAt > 600) { T.downAt = 0; F.hot.f(); } }
     // Moorooka's and Inverloch's models have no setLabelObstacles, so their place names are kept clear of the top buttons (and of
     // the sticks on a touch screen) here: a name that strays under them fades out, a few times a second
     if (!m.setLabelObstacles) { const now = performance.now(); if (now - (T.lblAt || 0) > 150) { T.lblAt = now;
@@ -10042,7 +10108,7 @@ const handle = async (m, post) => {
     BS.town = null; T.dead = true; T.on = false; T.ungest?.(); T.unlay?.(); T.unflood?.();
     T.streets?.dispose(); T.streets = null; $("bsNamesBtn").hidden = true;
     T.admin?.dispose(); T.admin = null;
-    T.car?.dispose(); T.car = null; T.peers?.dispose(); T.peers = null; T.me?.dispose(); T.me = null; T.traffic?.dispose(); T.traffic = null;
+    T.car?.dispose(); T.car = null; T.peers?.dispose(); T.peers = null; T.me?.dispose(); T.me = null; T.traffic?.dispose(); T.traffic = null; T.critter?.dispose(); T.critter = null;
     T.unbar?.();
     if (BS.fly) { const F = BS.fly; F.walk = F.speed = F.floor = F.hot = F.drive = null; F.ceil = 0; F.lim = null; }  // Explore, if it carries on, is its old self
     try { T.model?.dispose(); } catch {}
