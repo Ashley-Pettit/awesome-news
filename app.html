@@ -3907,8 +3907,8 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
       </div><p class="hint">Your name is used in the greeting.</p></div>
       <div class="group"><h2>Exploring with others</h2><div class="card">
         <div class="field"><label for="setPlayer">Player name</label><input type="text" id="setPlayer" placeholder="${esc(playerName())}" autocomplete="off" maxlength="16" value="${esc((() => { try { return localStorage.getItem("an-player") || ""; } catch { return ""; } })())}"></div>
-        ${toggle("data-player-show", "1", (() => { try { return localStorage.getItem("an-player-off") !== "1"; } catch { return true; } })(), "Show me to other players", "Others exploring Logan in 3D see where you are and your player name")}
-      </div><p class="hint">In Logan's 3D map, people exploring at the same time see each other. Your player name is shown over you, so pick one you are happy for anyone to see.</p></div>
+        ${toggle("data-player-show", "1", (() => { try { return localStorage.getItem("an-player-off") !== "1"; } catch { return true; } })(), "Show me to other players", "Others exploring the same suburb in 3D see where you are and your player name")}
+      </div><p class="hint">In each suburb's 3D map, people exploring at the same time see each other. Your player name is shown over you, so pick one you are happy for anyone to see.</p></div>
       <div class="group"><h2>Your suburb</h2><div class="card">${[["moorooka", "Moorooka"], ["inverloch", "Inverloch"], ["logan", "Logan"]].map(([id, label]) =>
         `<a class="field" style="color:inherit;text-decoration:none" href="${location.pathname.replace(/(moorooka|inverloch|logan)\/?(index\.html)?$/, "").replace(/[^/]*$/, "")}${id}/"><span class="lbl">${label}<span class="sub">Open the ${label} news and its 3D map</span></span><span class="chev" aria-hidden="true">\u203a</span></a>`).join("")}
       </div><p class="hint">Each suburb has its own news and its own 3D map to explore.</p></div>
@@ -9148,7 +9148,7 @@ const handle = async (m, post) => {
   // - Someone flying the camera about (not walking, not in anything) is not shown. Turning "Show me to other players" off in
   //   Settings stops this device sending or joining at all.
   // - The player name is typed in Settings ("an-player"), not the news name; with none, "Player" and three digits.
-  const TOWN_TOGETHER = ["logan"];
+  const TOWN_TOGETHER = ["logan", "moo", "inv"];  // every town (Ash, 15 November 2026: "Copy the multiplayer to moorooka and Inverloch")
   const playerName = () => { let n = ""; try { n = (localStorage.getItem("an-player") || "").trim().slice(0, 16); } catch {}
     if (!n) { let id = ""; try { id = localStorage.getItem("an-player-id") || ""; if (!id) { id = String(100 + Math.floor(Math.random() * 900)); localStorage.setItem("an-player-id", id); } } catch { id = "000"; } n = "Player " + id; } return n; };
   function townPeers(T, m, F, ground, place, box) {

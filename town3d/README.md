@@ -805,3 +805,8 @@ or helipad. Just look for places that make sense", and "Move the bus to somewher
 - **Plane:** on the sports fields in Civic Centre Park behind the council. Logan's model has no airfield to put it
   at, so this is the nearest long open ground a light plane could use, with room to take off.
 - Nothing was built for them. All three checked in pictures from above. Jump to has each.
+
+## Other players in every town (15 November 2026)
+
+Ash: "Copy the multiplayer to moorooka and Inverloch." `TOWN_TOGETHER` now lists all three towns, each its own room.
+Checked with two pages through the stand-in relay in Moorooka and in Inverloch: each sees the other's figure and name.
