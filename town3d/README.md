@@ -998,3 +998,12 @@ kept 0.9 m inside the outline (with two rows along the slanting north edge), so 
 nothing bulges past them; the front of the slab stops at the foot of the stairs. The path from the white gate to the stairs is
 painted in the same concrete, and the model's lighter path ribbon over it is gone (`?v=26`). A small model tree that stood on
 the drive in front of the stairs is taken out (`edits.json`). The first round's drive strokes were swapped out, not added to.
+
+## Fly to Walk taken out again, fewer cars, clues for dropped fingers (15 November 2026)
+
+- The automatic switch from Fly to Walk (zooming into the ground, or holding Down at the lowest height) is gone, and zoom is
+  back to its old limits (Ash, 15 November 2026: "try removing the thing that goes from fly to walk for now").
+- Traffic: 5 cars in Moorooka (its model has cars of its own on Beaudesert Road) and 8 elsewhere, never started within 40 m
+  of another, to cut lag and overlap.
+- For Ash, the "phone took your finger off" message now also gives the slowest frame in the last 3 seconds, how many other
+  fingers were down, and what had just happened (for example the sharper model being swapped in).
