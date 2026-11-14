@@ -884,3 +884,12 @@ violence." `TOWN_EMOTES` in `app.html`: Wave, Dance, Jump, Cheer, Spin, Bow and 
   may turn into a street that meets it, and turns round at a dead end; one that wanders past 800 m is put back near the start.
   They stop for you when you stand or drive in front. Not drivable, and they can pass through each other and parked cars.
 - **Handbrake button** is above the Look stick on touch screens while driving a car (Boost moves up a row).
+
+## Moorooka's rides moved, golden ones for Ash only (15 November 2026)
+
+- Moorooka's rides now stand where they would really be, with nothing made up: the plane on the big lawn in **Alexander
+  Park**, the golden plane on the open grass in the park beside **Ipswich Road at Aubigny Street, Annerley**, the helicopter on
+  the field **off School Road** near Nathan Terrace, the bus at the **bus stop on Beaudesert Road** just up from number 6 (at
+  the kerb, heading south), and the golden car **backed into the driveway at 6 Beaudesert Road**.
+- The golden car and golden plane are left out of Jump to, and Ctrl+F9 does nothing, unless the name in Settings is Ash or
+  Ashley. They are still there to find and drive for everyone.

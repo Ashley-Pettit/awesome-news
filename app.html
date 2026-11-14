@@ -8176,10 +8176,11 @@ const handle = async (m, post) => {
         if (cfg.place === "moo") try { mine = mine.concat(townShops(T, m)); } catch (e) { console.warn("Town model: Moorooka's shops couldn't be added", e); }
         // the planes (townCar), each with somewhere to stand beside it
         const rides = m.addParts ? TOWN_RIDES[cfg.place] : null;
-        if (rides) for (const P of rides.planes) mine.push({ name: P.name, group: "Things to drive and fly", what: P.what,
+        // golden ones only for Ash (Ash, 15 November 2026: "Only show the teleport to the golden objects if user name is ash or Ashley")
+        if (rides) for (const P of rides.planes) if (!P.gold || isAsh()) mine.push({ name: P.name, group: "Things to drive and fly", what: P.what,
           walk: (() => { const s = Math.sin(P.h), c = Math.cos(P.h), dx = s * 7 - c * 5, dz = c * 7 + s * 5;  // ahead of its nose and off to one side, clear of the wing
             return { x: P.x + dx, z: P.z + dz, yaw: Math.atan2(dx, dz), pitch: -0.06 }; })(), target: [P.x, P.z] });
-        if (rides) for (const G of rides.cars) { if (G.spare && m.nearestCar) continue; /* a red car of the app's own only where the model has no cars to hand over */ const dx = Math.sin(G.h) * (G.bus ? 13 : 5.5), dz = Math.cos(G.h) * (G.bus ? 13 : 5.5);  // in front of its nose (nearer to it than to a car parked beside it)
+        if (rides) for (const G of rides.cars) { if ((G.spare && m.nearestCar) || (G.gold && !isAsh())) continue; /* a red car of the app's own only where the model has no cars to hand over */ const dx = Math.sin(G.h) * (G.bus ? 13 : 5.5), dz = Math.cos(G.h) * (G.bus ? 13 : 5.5);  // in front of its nose (nearer to it than to a car parked beside it)
           mine.push({ name: G.name, group: "Things to drive and fly", what: G.what, walk: { x: G.x + dx, z: G.z + dz, yaw: Math.atan2(dx, dz), pitch: -0.1 }, target: [G.x, G.z] }); }
         // Places to jump to: each as somewhere to stand (walking) and a view from above (flying). Where the model knows a
         // spot on the kerb of the nearest street (Moorooka's does), you stand there; otherwise a few steps back from the place.
@@ -8353,7 +8354,7 @@ const handle = async (m, post) => {
         try { T.me = townMe(T, m, F, ground); } catch (e) { console.warn("Town model: the construction worker couldn't start", e); }
         try { T.traffic = townTraffic(T, m, F, ground, cfg); } catch (e) { console.warn("Town model: the traffic couldn't start", e); }
         F.hot = { f: () => toMode(!T.walk),
-          enter: () => T.car?.enter(), keys: () => !!T.car?.keys?.(), undo: () => !!T.admin?.undo?.(), emotes: () => !!T.peers?.menu?.(), emote: i => !!T.peers?.emote?.(i), gold: () => !!T.car?.toGold?.(),
+          enter: () => T.car?.enter(), keys: () => !!T.car?.keys?.(), undo: () => !!T.admin?.undo?.(), emotes: () => !!T.peers?.menu?.(), emote: i => !!T.peers?.emote?.(i), gold: () => isAsh() && !!T.car?.toGold?.(),
           n: () => T.namesToggle?.(),
           j: () => openList(list.hidden),
           esc: () => { if (!ask.hidden) { closeAsk(); return true; } if (!list.hidden) { openList(false); return true; } if (!fl.hidden) { fl.hidden = true; fb.setAttribute("aria-expanded", "false"); return true; } return false; },
@@ -9273,8 +9274,8 @@ const handle = async (m, post) => {
   //   past that (towards 210 km/h) for as long as its charge lasts: about four seconds, back in ten. A ring on the ground round
   //   the car shows how much charge is left, while the boost is on and until it is full again. It follows the ground, stops with
   //   a bump at buildings, deep water and the edge of the model, and stays where you leave it.
-  // - There are two planes (MOO_PLANES): one on the grass of Stimpson Park, across Beaudesert Road from number 6, and one out the
-  //   front of Moorooka Central at the shops, facing up the road, which is clear to take off along. W and S are the throttle, A and
+  // - There are two planes (MOO_PLANES): one on the big lawn in Alexander Park and the golden one in the park beside Ipswich Road,
+  //   Annerley (they were in Stimpson Park and out the front of Moorooka Central until 15 November 2026). W and S are the throttle, A and
   //   D (or the left and right arrows) bank and turn it, the down arrow lifts the nose and the up arrow lowers it (as a plane's
   //   stick does; Space and C, and Climb and Dive on a phone, do the same), Shift is the boost. It leaves the ground at about
   //   95 km/h with the nose up, sinks when it gets too slow (which is how it comes down), lands whenever it meets the ground, and
@@ -9285,19 +9286,22 @@ const handle = async (m, post) => {
   // - The view follows from behind; the right stick or a drag looks round, and the view settles back once you move on.
   // - Sound is made on the spot (townSound): an engine that rises through the gears, wind, tyres under the handbrake, a thud for a
   //   bump or a landing, a door. It starts with the key or tap that gets you in (a browser needs that before it plays anything).
+  // Where they stand in Moorooka (Ash, 15 November 2026: "move the starting vehicles to locations that make sense without inventing
+  // things that don't exist like a new airport. Put the golden car in my driveway at 6 Beaudesert Rd"): planes and the helicopter
+  // on big open parks the model already has, the bus at the real stop on Beaudesert Road, the golden car backed into the drive.
   const MOO_PLANES = [
-    { x: -308, z: -992, h: 2.71, name: "The plane in Stimpson Park", at: "in Stimpson Park", what: "On the grass, across the road from 6 Beaudesert Road. Walk up to it and get in" },
-    { x: -158.9, z: -320, h: 3.595, gold: true, name: "The golden plane at the Moorooka shops", at: "at the shops", what: "Out the front of Moorooka Central, across Beaudesert Road from the post office. A fifth faster and quicker to turn, and the only plane with a boost" },
+    { x: -253.9, z: 462.3, h: 1.571, name: "The plane in Alexander Park", at: "in Alexander Park", what: "On the big lawn in Alexander Park, pointing down the length of it. Walk up to it and get in" },
+    { x: -14.4, z: -1551.6, h: Math.PI, gold: true, name: "The golden plane", at: "in the park by Ipswich Road", what: "On the open grass in the park beside Ipswich Road at Aubigny Street, Annerley. A fifth faster and quicker to turn, and the only plane with a boost" },
   ];
-  const MOO_GOLD_CAR = { x: -299.8, z: -988.2, h: 2.71, gold: true, name: "The golden car", what: "In Stimpson Park, beside the plane. A fifth faster than the others" };
+  const MOO_GOLD_CAR = { x: -250.8, z: -987.5, h: -1.718, gold: true, name: "The golden car", what: "In the driveway at 6 Beaudesert Road, backed in. A fifth faster than the others" };
   // What there is to drive and fly in each town (Ash, 14 November 2026: "Merge the car and the plane into inverloch and logan. Add
   // 1 plane near the players spawn point and another random plane. The 2nd plane should have a golden stripe and extra fast and
   // mobile"). Moorooka's are above, and its parked cars can be driven too. Inverloch and Logan have no cars of their own to hand
   // over, so each gets a red car and the golden car, drawn by the app, beside a plane near where you start. `roam` is open ground
   // (parks, ovals, a point) for the golden plane: it stands at one of them, a different one each visit, and is not in Jump to.
   const TOWN_RIDES = {
-    moo: { planes: [...MOO_PLANES, { x: -320.7, z: -997.9, h: 2.71, heli: true, name: "The helicopter", at: "in Stimpson Park", what: "In Stimpson Park, beside the plane. Walk up to it and get in" }],
-      cars: [MOO_GOLD_CAR, { x: -291.5, z: -984.4, h: 2.71, bus: true, name: "The bus", what: "By the kerb at Stimpson Park, past the golden car. Slow, long and wide" }] },
+    moo: { planes: [...MOO_PLANES, { x: -464, z: -1533, h: 2.71, heli: true, name: "The helicopter", at: "on the field off School Road", what: "On the open grass off School Road, near Nathan Terrace. Walk up to it and get in" }],
+      cars: [MOO_GOLD_CAR, { x: -284.4, z: -959.4, h: -0.179, bus: true, name: "The bus", what: "At the bus stop on Beaudesert Road, just up from 6 Beaudesert Road. Slow, long and wide" }] },
     inv: { planes: [{ x: -210, z: -377, h: 1.571, name: "The plane", at: "on the lawn by The Hub", what: "On the lawn by The Hub, off A'Beckett Street. Walk up to it and get in" }],
       cars: [{ x: -228.5, z: -375.5, h: Math.PI, spare: true, name: "The red car", what: "On the lawn by The Hub, beside the plane" }, { x: -232.5, z: -375.5, h: Math.PI, gold: true, name: "The golden car", what: "On the lawn by The Hub. A fifth faster than the red one" }],
       more: { planes: [{ x: -1602.1, z: 422, h: 2.6, heli: true, name: "The helicopter", at: "behind 11 Norman Road", what: "On the grass behind 11 Norman Road" }], cars: [{ x: -214, z: -357, h: -1.571, bus: true, name: "The bus", what: "In A'Beckett Street, out the front of The Hub" }] },
