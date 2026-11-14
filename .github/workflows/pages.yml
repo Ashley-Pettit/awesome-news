@@ -163,7 +163,7 @@ jobs:
           git checkout FETCH_HEAD -- app.html build.py
           git checkout FETCH_HEAD -- beta sw.js icons manifest.webmanifest local 2>/dev/null || true
           git checkout FETCH_HEAD -- town3d 2>/dev/null || true
-          python build.py _site
+          AN_COMMIT=$(git rev-parse --short=7 FETCH_HEAD) python build.py _site  # stamp the commit these files came from, not the one this run started on
 
       # A link-preview page for every story (s/<id>), for sharing.
       - name: Share pages
