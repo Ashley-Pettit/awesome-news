@@ -742,7 +742,7 @@ random ones respect the terrain."
     Logan still has no `solidAt`: things pass through its buildings.
 - The app's own red car is no longer drawn in those two towns (the golden car and the bus stay).
 - **Inverloch's streets:** cars now stand at the kerb along every street, 28 to 98 m apart, on either side, facing
-  the way that side runs, about 500 more than the surveyed ones in the town centre. Moving cars went from 54 to 82.
+  the way that side runs, about 1,000 than the surveyed ones in the town centre. Moving cars went from 54 to 82.
 - **Leaning with the ground:** a car's height is now the mean of the ground under its four wheels, and it tips nose
   to tail and side to side with the slope. Inverloch: standing and moving cars. Logan: every car and bus it draws.
   Moorooka's model was not changed in this.
@@ -833,3 +833,22 @@ violence." `TOWN_EMOTES` in `app.html`: Wave, Dance, Jump, Cheer, Spin, Bow and 
 - Checked on a local build: the button and its list, the sign beside the name on the other player's screen, and the
   figure with both arms up (Cheer), one arm up (Wave) and arms out in front (Heart) in pictures. Dance, Jump, Spin
   and Bow were not caught in a picture.
+
+## Settings in Explore, quicker opening and the shared GitHub key (15 November 2026)
+
+- **Settings button** (right edge, above Emote; towns with other players only). It opens a small panel with: your player name,
+  the colour of your top (sent to others with the name as `[name, colourIndex]`; older copies that send a plain string still
+  work), a switch to hide from other players (you then send the kind `none` and still see everyone else), your height above
+  the ground, and Exit explore. While Settings is on screen the Exit explore button and the height chip top left are hidden
+  (`body.bsme`); the chip comes back as the speed readout while you drive. Esc still exits. Typing in the name box does not
+  move you.
+- **Handbrake button** (touch screens only): above the Look stick while you drive a car or bus. Hold it for the same slide as
+  Space. Boost moves up a row to make room.
+- **Loading screen**: after 5 seconds its small line changes to "Good things take time".
+- **Quicker opening**: when the page opens straight into a town, three.js, the model script and the model's first data files
+  (`pre:` in `TOWNS`) are asked for at once with preload hints, instead of one after the other. Files a model reads as data
+  (`height.png`, and everything in Logan, which loads from a worker) are hinted as `fetch`; pictures as `image`. The loading
+  screen also lifts a little sooner once the picture is steady. Not done: holding back far-away objects until you get near.
+- **One GitHub key for every edition**: `brief.ghToken` is now kept once per device (`an-shared:brief.ghToken`) instead of
+  once per edition, so the key saved in one suburb's app works in the others. A key saved before this is still found.
+  Locking admin in one edition clears the key for all of them. Everything else in `store` is still per edition.
