@@ -852,3 +852,35 @@ violence." `TOWN_EMOTES` in `app.html`: Wave, Dance, Jump, Cheer, Spin, Bow and 
 - **One GitHub key for every edition**: `brief.ghToken` is now kept once per device (`an-shared:brief.ghToken`) instead of
   once per edition, so the key saved in one suburb's app works in the others. A key saved before this is still found.
   Locking admin in one edition clears the key for all of them. Everything else in `store` is still per edition.
+
+## Construction workers, traffic, Share and the top bar (15 November 2026)
+
+- **Top bar** (towns with other players, `body.bsme`): a gear top left opens Settings, Walk and Fly sit beside it, Jump to is
+  top right and the tools pill under it. The height (speed while driving) shows under the gear only while driving; on foot it
+  is in Settings. Settings has a header with a close button, player name, top colour (8 across), Play as, a switch for whether
+  others see you, the height, and Exit explore. It closes with the ×, the gear, Esc or a tap anywhere else.
+- **Leaving asks first**: Exit explore (and Esc) opens "Leave Explore?" with Leave and Stay (`bsExitAsk`, in the town's ask
+  box). Esc again, or Stay, closes it. Esc first closes the share menu, Settings or an open list.
+- **Share**: the tap copies the explore link (`…/<town>/explore/`) straight away, and a menu under the button offers the
+  phone's share sheet (where there is one), a text, an email, WhatsApp and Facebook.
+- **Construction worker** (Settings > Play as; `localStorage["an-player-role"] = "builder"`, every town): you are drawn in
+  hi-vis and a hard hat (`townPlaneParts(_, "builder")`) and seen from about 5 m behind (`townMe`), and the pencil appears.
+  Other players see the hard hat too (pose kind `builder`; older copies show a plain walker).
+  - Someone who is not Ash gets Path, Grass, Road and Delete, but **Send** instead of Save and no Copy. Send posts the edits
+    to the public ntfy.sh topic `awesome-news-town-plans-r8k3` (`{k:"plan", id, i, n, town, by, v, paint, gone}`, about
+    3,300 characters a message, long strokes cut into pieces). They stay drawn on the sender's device for two weeks
+    (`an3d-asked-<place>`) or until published. Nothing they send changes the model.
+  - The hourly chat job (`.github/workflows/chat.yml`) runs `tools/plans.py`, which keeps them for 60 days in
+    `chat/plans.json` on the `chat` branch (ntfy only holds 12 hours).
+  - **Ash** (name Ash or Ashley) gets a toast when a town opens with suggestions waiting, and a **Suggestions (n)** button
+    in the pencil bar: each one shows who sent it, when and how many changes, with Show (takes you there and draws it, on
+    this device only), Add to mine (into your own edits, to change and Save as usual) and Dismiss
+    (`an3d-plans-done`, this device).
+  - Anyone can post to a public topic, so treat suggestions as untrusted: names are cleaned and shown as text, edits pass
+    the same `tidy()` checks as published ones, and nothing goes live unless Ash saves it.
+- **Traffic** (`townTraffic`, every town): 16 everyday sedans (`townPlaneParts(colour, "sedan")`) drive the streets
+  (class 4 and below, from `townStreetData`) within 800 m of where you start (`T.spawn`), most within 300 m, at 30 to 50 km/h,
+  keeping left by a quarter of the street's width (Moorooka and Inverloch know widths; Logan uses 1.9 m). At each corner a car
+  may turn into a street that meets it, and turns round at a dead end; one that wanders past 800 m is put back near the start.
+  They stop for you when you stand or drive in front. Not drivable, and they can pass through each other and parked cars.
+- **Handbrake button** is above the Look stick on touch screens while driving a car (Boost moves up a row).

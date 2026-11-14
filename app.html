@@ -1333,30 +1333,55 @@ body.bsdrive:not(.bsplane) .bs-fly-x.bs-boost { bottom: calc(240px + env(safe-ar
 .bs-peer { position: absolute; left: 0; top: 0; z-index: 1; padding: 2px 8px; border-radius: 999px; background: rgba(20, 22, 34, 0.72); color: #fff; font: 600 0.72rem/1.4 var(--ui); white-space: nowrap; pointer-events: none; will-change: transform; }
 .bs-peer[hidden] { display: none; }
 /* my player: a button on the right edge, above Emote, and the small panel it opens */
-.bs-fly-x.bs-me-btn { position: absolute; left: auto; right: 16px; top: calc(46% - 48px); bottom: auto; }
-.bs-me { pointer-events: auto; position: absolute; z-index: 4; right: 16px; top: 46%; width: min(250px, calc(100% - 32px)); box-sizing: border-box; padding: 12px; border-radius: 16px; background: var(--bs-scrim); color: var(--bs-ink); font: 500 0.8rem/1.35 var(--ui); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14); }
-.bs-me[hidden] { display: none; }
-.bs-me label { display: grid; gap: 4px; font-weight: 650; }
-.bs-me input { width: 100%; box-sizing: border-box; height: 38px; padding: 0 10px; border: 0; border-radius: 10px; background: #fff; color: #1b1830; font: 600 16px var(--ui); }
-.bs-me-tops { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0; }
-.bs-me-tops button { width: 26px; height: 26px; padding: 0; border: 2px solid transparent; border-radius: 50%; cursor: pointer; }
-.bs-me-tops button[aria-pressed="true"] { border-color: #fff; box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.45); }
-.bs-me-show { width: 100%; min-height: 38px; border: 0; border-radius: 10px; background: rgba(255, 255, 255, 0.16); color: inherit; font: 650 0.8rem var(--ui); cursor: pointer; }
-.bs-me-show[aria-checked="true"] { background: #fff; color: #1b1830; }
-/* with Settings on screen, Exit explore and the height live inside it (the chip still shows the speed while driving) */
+/* Settings, in the towns with other players (body.bsme): a gear top left opens the panel under it. Walk and Fly sit beside the
+   gear; Exit explore lives in the panel, and the height (or speed while driving) sits under the gear. */
+.bs-fly-x.bs-me-btn { position: absolute; top: calc(14px + env(safe-area-inset-top)); left: 16px; right: auto; bottom: auto; width: 38px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+.bs-fly-x.bs-me-btn[hidden] { display: none; }
+.bs-fly-x.bs-me-btn svg { width: 19px; height: 19px; }
+.bs-fly-x.bs-me-btn[aria-expanded="true"] { background: #fff; color: #1b1830; }
+body.bsme .bs-town-mode { left: 62px; transform: none; }
 body.bsme #bsFlyX { display: none; }
 body.bsme:not(.bsdrive) .bs-height { display: none; }
-body.bsme .bs-height { left: 16px; top: calc(16px + env(safe-area-inset-top)); }
-.bs-me-h { display: flex; justify-content: space-between; margin: 10px 0 0; font-weight: 650; }
-.bs-me-exit { width: 100%; min-height: 38px; margin-top: 10px; border: 0; border-radius: 10px; background: rgba(255, 255, 255, 0.16); color: inherit; font: 650 0.8rem var(--ui); cursor: pointer; }
-.bs-me p { margin: 8px 0 0; opacity: 0.75; font-size: 0.72rem; }
+body.bsme .bs-height, body.bstown.bsme .bs-height { left: 16px; top: calc(62px + env(safe-area-inset-top)); }
+.bs-me { pointer-events: auto; position: absolute; z-index: 4; left: 16px; top: calc(108px + env(safe-area-inset-top)); width: min(300px, calc(100% - 32px)); max-height: calc(100% - 128px - env(safe-area-inset-top)); overflow: auto; box-sizing: border-box;
+  padding: 14px; border-radius: 18px; background: rgba(22, 24, 34, 0.86); color: #fff; font: 500 0.8rem/1.4 var(--ui); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.12); display: grid; gap: 14px; }
+@media (min-width: 1000px) { .bs-me { top: calc(62px + env(safe-area-inset-top)); } }
+.bs-me[hidden] { display: none; }
+.bs-me-head { display: flex; align-items: center; justify-content: space-between; }
+.bs-me-head h2 { margin: 0; font: 750 1rem/1.2 var(--ui); }
+.bs-me-x { width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.12); color: inherit; font: 600 1.1rem/1 var(--ui); cursor: pointer; }
+.bs-me-sec { display: grid; gap: 8px; }
+.bs-me-lbl { font: 650 0.74rem/1.2 var(--ui); color: rgba(255, 255, 255, 0.7); }
+.bs-me input { width: 100%; box-sizing: border-box; height: 40px; padding: 0 12px; border: 0; border-radius: 10px; background: #fff; color: #1b1830; font: 600 16px var(--ui); }
+.bs-me-tops { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }
+.bs-me-tops button { aspect-ratio: 1; width: 100%; padding: 0; border: 2px solid transparent; border-radius: 50%; cursor: pointer; }
+.bs-me-tops button[aria-pressed="true"] { border-color: #fff; box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.5); }
+.bs-me-role { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 3px; border-radius: 12px; background: rgba(255, 255, 255, 0.1); }
+.bs-me-role button { min-height: 38px; padding: 4px 6px; border: 0; border-radius: 9px; background: none; color: inherit; font: 650 0.78rem/1.15 var(--ui); cursor: pointer; }
+.bs-me-role button[aria-pressed="true"] { background: #fff; color: #1b1830; }
+.bs-me-show { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 40px; padding: 0; border: 0; background: none; color: inherit; font: 650 0.84rem var(--ui); text-align: left; cursor: pointer; }
+.bs-me-show i { flex: none; position: relative; width: 44px; height: 26px; border-radius: 13px; background: rgba(255, 255, 255, 0.22); transition: background 0.15s; }
+.bs-me-show i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform 0.15s; }
+.bs-me-show[aria-checked="true"] i { background: #3a9d5d; }
+.bs-me-show[aria-checked="true"] i::after { transform: translateX(18px); }
+@media (prefers-reduced-motion: reduce) { .bs-me-show i, .bs-me-show i::after { transition: none; } }
+.bs-me-h { display: flex; justify-content: space-between; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.14); font-weight: 650; }
+.bs-me-exit { width: 100%; min-height: 42px; border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 12px; background: none; color: #fff; font: 700 0.86rem var(--ui); cursor: pointer; }
+.bs-me-exit:hover { background: rgba(255, 255, 255, 0.1); }
+.bs-me p { margin: 0; color: rgba(255, 255, 255, 0.68); font-size: 0.72rem; }
 .bs-me :focus-visible { outline: 2px solid #ffd36b; outline-offset: 2px; }
-@media (max-height: 560px) { .bs-fly-x.bs-me-btn { top: calc(22% - 44px); } .bs-me { top: 22%; } }
 /* things to do to other players: a button on the right edge, and what it opens */
 .bs-fly-x.bs-emote { position: absolute; left: auto; right: 16px; top: 46%; bottom: auto; }
 .bs-emotes { pointer-events: auto; position: absolute; z-index: 3; right: 16px; top: calc(46% + 48px); display: grid; grid-template-columns: 1fr 1fr; gap: 8px 6px; }
 .bs-emotes[hidden] { display: none; }
 .bs-emotes button { position: relative; min-height: 40px; padding: 0 14px; border: 0; border-radius: 999px; background: var(--bs-scrim); color: var(--bs-ink); font: 600 0.85rem/1 var(--ui); text-align: left; cursor: pointer; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14); }
+/* Share: the link is copied on the tap, then these offer other ways to send it */
+.bs-share { pointer-events: auto; position: absolute; z-index: 4; width: min(240px, calc(100% - 32px)); box-sizing: border-box; padding: 10px; border-radius: 18px; background: rgba(22, 24, 34, 0.86); color: #fff; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.12); display: grid; gap: 6px; font: 500 0.78rem/1.35 var(--ui); }
+.bs-share[hidden] { display: none; }
+.bs-share p { margin: 2px 4px 4px; font-weight: 700; font-size: 0.86rem; }
+.bs-share a, .bs-share button { display: block; min-height: 38px; box-sizing: border-box; padding: 10px 12px; border: 0; border-radius: 10px; background: rgba(255, 255, 255, 0.16); color: inherit; font: 650 0.8rem/1.2 var(--ui); text-align: left; text-decoration: none; cursor: pointer; }
+.bs-share :focus-visible { outline: 2px solid #ffd36b; outline-offset: 2px; }
 .bs-emotes button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 @media (max-height: 560px) { .bs-fly-x.bs-emote { top: 22%; } .bs-emotes { top: calc(22% + 44px); grid-template-columns: repeat(4, auto); } }
 .bs-keys-now { margin: 0; font-weight: 700; }
@@ -1401,6 +1426,14 @@ body.bsdrive .bs-fly-tip { display: none !important; }
 .bs-admin-w output { min-width: 46px; text-align: center; font: 700 0.8rem var(--ui); color: var(--bs-ink); font-variant-numeric: tabular-nums; }
 .bs-admin-note { margin: 0; max-width: 34em; padding: 6px 12px; border-radius: 14px; background: var(--bs-scrim); color: var(--bs-ink); font: 600 0.78rem/1.35 var(--ui); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
 .bs-admin-note:empty { display: none; }
+.bs-admin #bsAdminPlans.has { background: #ffd36b; color: #1b1830; }
+.bs-admin-plans { max-width: min(34em, 100%); max-height: 40vh; overflow: auto; box-sizing: border-box; padding: 8px; border-radius: 14px; background: var(--bs-scrim); color: var(--bs-ink); font: 500 0.78rem/1.35 var(--ui); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); display: grid; gap: 8px; }
+.bs-admin-plans[hidden] { display: none; }
+.bs-admin-plans p { margin: 0; }
+.bs-plan { padding: 6px 4px; border-top: 1px solid rgba(255, 255, 255, 0.14); }
+.bs-plan:first-child { border-top: 0; }
+.bs-plan > div { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.bs-admin .bs-plan button { height: 30px; background: rgba(255, 255, 255, 0.16); }
 .bs-admin-ink { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
 .bs-admin-ink polyline { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 2 7; filter: drop-shadow(0 0 1.5px rgba(0, 0, 0, 0.9)); }
 body.bstown.bsadmin-tool #bsTown { pointer-events: auto; touch-action: none; cursor: crosshair; }
@@ -1915,7 +1948,7 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <div class="bs-town-mode" id="bsTownMode" role="group" aria-label="Walk or fly" data-key="F" hidden><button type="button" data-town-mode="walk" aria-pressed="true">Walk</button><button type="button" data-town-mode="fly" aria-pressed="false">Fly</button></div>
     <div class="bs-town-list" id="bsTownList" role="menu" aria-label="Places to jump to" hidden></div>
     <div class="bs-town-list bs-town-floods" id="bsTownFloods" role="menu" aria-label="Floods to show on the map" hidden></div>
-    <div class="bs-slides" role="group" aria-label="Share, street names, edit, tide, time and flood"><button class="bs-fly-x bs-ic" type="button" id="bsShareBtn" aria-label="Share a link to this 3D model" title="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button><button class="bs-fly-x bs-ic" type="button" id="bsNamesBtn" data-key="N" aria-pressed="false" aria-label="Street names" title="Show street names (N)" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M9 21h6"/><path d="M5 5h11l3 2.5L16 10H5z"/><path d="M19 12H8l-3 2.5L8 17h11z"/></svg></button><button class="bs-fly-x bs-ic" type="button" id="bsEditBtn" aria-pressed="false" aria-controls="bsAdmin" aria-label="Edit the map" title="Edit the map" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg></button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false" aria-label="Time of day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span id="bsTimeBtnT">Time</span></button><button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button></div>
+    <div class="bs-slides" role="group" aria-label="Share, street names, edit, tide, time and flood"><button class="bs-fly-x bs-ic" type="button" id="bsShareBtn" aria-label="Share a link to this 3D model" title="Share" aria-expanded="false" aria-controls="bsShareBox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button><button class="bs-fly-x bs-ic" type="button" id="bsNamesBtn" data-key="N" aria-pressed="false" aria-label="Street names" title="Show street names (N)" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M9 21h6"/><path d="M5 5h11l3 2.5L16 10H5z"/><path d="M19 12H8l-3 2.5L8 17h11z"/></svg></button><button class="bs-fly-x bs-ic" type="button" id="bsEditBtn" aria-pressed="false" aria-controls="bsAdmin" aria-label="Edit the map" title="Edit the map" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg></button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false" aria-label="Time of day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span id="bsTimeBtnT">Time</span></button><button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button></div>
     <div class="bs-admin" id="bsAdmin" role="toolbar" aria-label="Edit the map" hidden>
       <div class="bs-admin-row" role="group" aria-label="Tool"><button type="button" data-tool="path" aria-pressed="false"><i style="background:#cfcabd"></i>Path</button><button type="button" data-tool="grass" aria-pressed="false"><i style="background:#6fa64b"></i>Grass</button><button type="button" data-tool="road" aria-pressed="false"><i style="background:#4a4d52"></i>Road</button><button type="button" data-tool="delete" aria-pressed="false">Delete</button></div>
       <div class="bs-admin-row"><span class="bs-admin-w" id="bsAdminW" role="group" aria-label="Width" hidden><button type="button" data-w="-1" aria-label="Narrower">&minus;</button><output id="bsAdminWOut"></output><button type="button" data-w="1" aria-label="Wider">+</button></span><button type="button" id="bsAdminLine" aria-pressed="true" hidden>Straight</button><button type="button" class="bs-admin-ic" id="bsAdminUndo" aria-label="Undo" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5 4 9l4 4"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button><button type="button" id="bsAdminSave" aria-label="Save my edits for everyone">Save</button><button type="button" id="bsAdminCopy" aria-label="Copy edits">Copy</button><button type="button" class="bs-admin-ic" id="bsAdminClear" aria-label="Clear all my edits" title="Clear all my edits"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 7V4h4v3M6 7l1 13h10l1-13"/></svg></button></div>
@@ -1933,10 +1966,11 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <div class="bs-town-ask" id="bsTownAsk" role="alertdialog" aria-labelledby="bsTownAskText" hidden><p id="bsTownAskText"></p><div><button type="button" data-ask="yes">Yes</button><button type="button" data-ask="no">No</button></div></div>
     <div class="bs-fly-time bs-town-tide bs-town-rise" id="bsTownRise" hidden><span>Water</span><input type="range" id="bsTownRiseIn" min="0" max="1" step="0.01" value="1" aria-label="Flood water level"><output id="bsTownRiseOut" for="bsTownRiseIn"></output></div>
     <button class="bs-fly-x bs-fly-jump" type="button" id="bsFlyJump" data-key="J" hidden>Jump to Norman Rd</button>
-    <button class="bs-fly-x bs-me-btn" type="button" id="bsMeBtn" aria-expanded="false" aria-controls="bsMe" hidden>Settings</button>
+    <button class="bs-fly-x bs-me-btn" type="button" id="bsMeBtn" aria-expanded="false" aria-controls="bsMe" aria-label="Settings" title="Settings" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     <div class="bs-me" id="bsMe" hidden></div>
     <button class="bs-fly-x bs-emote" type="button" id="bsEmoteBtn" data-key="E" aria-expanded="false" aria-controls="bsEmotes" hidden>Emote</button>
     <div class="bs-emotes" id="bsEmotes" hidden></div>
+    <div class="bs-share" id="bsShareBox" role="group" aria-label="More ways to share" hidden></div>
     <button class="bs-fly-x bs-car" type="button" id="bsCarBtn" data-key="Enter" hidden>Get in the car</button>
     <button class="bs-fly-x bs-boost" type="button" id="bsBoostBtn" data-key="Shift" hidden>Boost</button>
     <button class="bs-fly-x bs-hand" type="button" id="bsHandBtn" hidden>Handbrake</button>
@@ -3543,7 +3577,13 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
         if (e.key === "l") { listenToggle("story"); return; }
       } else if (!openSheet && e.key === "l") { listenToggle("dock"); return; }
     }
-    if (e.key === "Escape" && BS.fly?.hot?.esc?.()) { e.stopPropagation(); return; }  // Explore: Esc closes an open list before it closes Explore
+    // Explore: Esc closes an open list, the share menu or Settings first; otherwise Explore's own key handler asks before leaving
+    if (e.key === "Escape" && BS.fly) { const sh = $("bsShareBox"), me = $("bsMe");
+      if (sh && !sh.hidden) { sh.hidden = true; $("bsShareBtn").setAttribute("aria-expanded", "false"); e.stopPropagation(); }
+      else if (me && !me.hidden) { me.hidden = true; $("bsMeBtn").setAttribute("aria-expanded", "false"); e.stopPropagation(); }
+      else if (BS.fly.hot?.esc?.()) e.stopPropagation();
+      else if (!$("bsTownAsk").hidden && $("bsTownAsk").dataset.exit) { bsExitAsk(); e.stopPropagation(); }
+      return; }
     if (e.key === "Escape" && !$("tvs").hidden) { closeTV(); return; }
     if (e.key === "Escape" && openSheet) hideSheet(openSheet);
     if (e.key === "Enter" && e.target.matches?.("a.link[data-open]:not([href])")) e.target.click();
@@ -7701,7 +7741,7 @@ const handle = async (m, post) => {
     const typing = e => /^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName || "");
     F.on = {
       keydown: e => { if (typing(e)) return;
-        if (e.code === "Escape" && document.pointerLockElement !== canvas) { bsFlyOff(); return; }
+        if (e.code === "Escape" && document.pointerLockElement !== canvas) { if (document.body.classList.contains("wxlisten")) bsFlyOff(); else bsExitAsk(); return; }
         if (e.ctrlKey && e.code === "F9" && F.hot?.gold?.()) { e.preventDefault(); return; }
         if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.code === "KeyZ" && F.hot?.undo?.()) { e.preventDefault(); return; }  // admin mode, with its bar open: undo the last edit
         F.keys.add(e.code); if (/^(Space|Arrow)/.test(e.code)) e.preventDefault();
@@ -7737,7 +7777,7 @@ const handle = async (m, post) => {
     addEventListener("keydown", F.on.keydown); addEventListener("keyup", F.on.keyup); addEventListener("blur", F.on.blur);
     document.addEventListener("mousemove", F.on.mousemove);
     ["pointerdown", "pointermove", "pointerup", "pointercancel"].forEach(k => canvas.addEventListener(k, F.on[k]));
-    $("bsFlyX").onclick = () => { if (document.body.classList.contains("wxlisten")) backToNews(); else bsFlyOff(); };
+    $("bsFlyX").onclick = () => { if (document.body.classList.contains("wxlisten")) backToNews(); else bsExitAsk(); };
     $("bsFly").focus({ preventScroll: true });
   }
   function bsFlyOff() {
@@ -7753,11 +7793,20 @@ const handle = async (m, post) => {
     for (const j of [...(F.joys || []), ...(F.uds || [])]) { j.end(); Object.entries(j.h).forEach(([k, f]) => j.el.removeEventListener(k, f)); }
     if (F.noGesture) ["gesturestart", "gesturechange"].forEach(k => document.removeEventListener(k, F.noGesture));
     clearTimeout(F.tipT); BS.fly = null;
-    document.body.classList.remove("bsfly"); $("bsFly").hidden = true;
+    document.body.classList.remove("bsfly"); $("bsFly").hidden = true; $("bsShareBox").hidden = true; $("bsShareBtn").setAttribute("aria-expanded", "false");
     if (L.exploreHold) { L.exploreHold = false; wxListenOff(); if (L.on && L.paused) resumeListen(); }  // the news waited while you explored
     if (BS.exploreOnly) { BS.exploreOnly = false; if (!$("weather").hidden) hideSheet("weather"); }  // came from "Virtually explore Inverloch" (or Moorooka, or Logan): straight back home
     $("bsFlyBtn")?.focus({ preventScroll: true });
   }
+  // Leaving Explore asks first (Ash, 15 November 2026: "confirm on exit"): Leave, or Stay. Esc opens it, and Esc again (or Stay)
+  // closes it; Enter on the focused Leave button leaves.
+  function bsExitAsk() { const ask = $("bsTownAsk"); if (!ask || !BS.fly) return bsFlyOff();
+    const yes = ask.querySelector('[data-ask="yes"]'), no = ask.querySelector('[data-ask="no"]');
+    const close = () => { ask.hidden = true; ask.onclick = null; delete ask.dataset.exit; yes.textContent = "Yes"; no.textContent = "No"; };
+    if (!ask.hidden && ask.dataset.exit) { close(); return; }
+    $("bsTownAskText").textContent = "Leave Explore?"; yes.textContent = "Leave"; no.textContent = "Stay"; ask.dataset.exit = "1"; ask.hidden = false;
+    ask.onclick = e => { const b = e.target.closest("[data-ask]"); if (!b) return; close(); if (b.dataset.ask === "yes") bsFlyOff(); };
+    yes.focus({ preventScroll: true }); }
   function bsFlyTick(dt) {
     const F = BS.fly, k = F.keys, has = (...c) => c.some(x => k.has(x));
     if (F.drive) return F.drive(dt);  // driving a car in a town model (townCar): the car moves, and the view follows it
@@ -8282,6 +8331,7 @@ const handle = async (m, post) => {
         // The others open flying, over that spot; Walk (or F) from there takes you down onto it at 3 m
         const first = cfg.walkStart ? { walk: { ...cfg.walkStart, pitch: 0.02 }, fly: above(cfg.walkStart.x, cfg.walkStart.z, cfg.walkStart.yaw) }
           : cfg.start ? places.find(p => p.id === cfg.start) || places[0] : places[0] && (mine.length || !inv) ? places[0] : null;
+        T.spawn = first?.walk ? [first.walk.x, first.walk.z] : first?.target ? [first.target[0], first.target[1]] : [cfg.air[0], cfg.air[2]];  // where the traffic keeps to
         if (first) go(first, !!(cfg.onFoot && first.walk)); else { setMode(false); F.pos.set(cfg.air[0], cfg.air[1], cfg.air[2]); F.yaw = cfg.air[3]; F.pitch = cfg.air[4]; }
         F.start = { pos: F.pos.clone(), yaw: F.yaw, pitch: F.pitch }; const startWalk = T.walk;
         T.atStart = () => first?.walk && F.pos.distanceTo(F.start.pos) < 3;  // still where Explore opened
@@ -8300,6 +8350,8 @@ const handle = async (m, post) => {
         // driving: Enter, or the Get in button, when a parked car is close (townCar)
         try { T.car = townCar(T, m, F, ground, cfg.place); } catch (e) { console.warn("Town model: driving couldn't start", e); }
         if (TOWN_TOGETHER.includes(cfg.place)) try { T.peers = townPeers(T, m, F, ground, cfg.place, box); } catch (e) { console.warn("Town model: other players couldn't start", e); }
+        try { T.me = townMe(T, m, F, ground); } catch (e) { console.warn("Town model: the construction worker couldn't start", e); }
+        try { T.traffic = townTraffic(T, m, F, ground, cfg); } catch (e) { console.warn("Town model: the traffic couldn't start", e); }
         F.hot = { f: () => toMode(!T.walk),
           enter: () => T.car?.enter(), keys: () => !!T.car?.keys?.(), undo: () => !!T.admin?.undo?.(), emotes: () => !!T.peers?.menu?.(), emote: i => !!T.peers?.emote?.(i), gold: () => !!T.car?.toGold?.(),
           n: () => T.namesToggle?.(),
@@ -9018,24 +9070,31 @@ const handle = async (m, post) => {
       for (const s of Array.isArray(o.paint) ? o.paint : []) if (s && [1, 2, 3].includes(s.k) && s.w > 0 && s.w <= 40 && Array.isArray(s.p) && s.p.length >= 2 && s.p.length % 2 === 0 && s.p.every(Number.isFinite)) b.paint.push({ k: s.k, w: +s.w, p: s.p.map(r2) });
       for (const [kind, n] of [["cars", 2], ["trees", 2], ["people", 3]]) for (const g of Array.isArray(o.gone?.[kind]) ? o.gone[kind] : []) if (Array.isArray(g) && g.length === n && g.every(Number.isFinite)) b.gone[kind].push(g.map(r2));
       return b; };
-    let mine = blank(), pub = blank(), sent = blank(), sentAt = 0, draft = null;  // mine: waiting on this device. sent: saved, on its way to everyone
+    let mine = blank(), pub = blank(), sent = blank(), sentAt = 0, draft = null, asked = blank(), askedAt = 0, look = null;  // asked: sent to the town planner. look: a suggestion Ash is looking at  // mine: waiting on this device. sent: saved, on its way to everyone
     const sentKey = "an3d-sent-" + cfg.place, KINDS = ["cars", "trees", "people"], all = e => e.paint.length + e.gone.cars.length + e.gone.trees.length + e.gone.people.length;
     try { mine = tidy(JSON.parse(localStorage.getItem(key))); } catch {}
     try { const j = JSON.parse(localStorage.getItem(sentKey)); sent = tidy(j); sentAt = +j?.at || 0; } catch {}
-    const save = () => { try { localStorage.setItem(key, JSON.stringify(mine)); if (all(sent)) localStorage.setItem(sentKey, JSON.stringify({ ...sent, at: sentAt })); else localStorage.removeItem(sentKey); } catch {} };
-    const apply = () => { m.setGroundEdits([...pub.paint, ...sent.paint, ...mine.paint, ...(draft ? [draft] : [])]);
-      m.setRemoved({ cars: [...pub.gone.cars, ...sent.gone.cars, ...mine.gone.cars], trees: [...pub.gone.trees, ...sent.gone.trees, ...mine.gone.trees], people: [...pub.gone.people, ...sent.gone.people, ...mine.gone.people] }); };
+    const askedKey = "an3d-asked-" + cfg.place;  // what a construction worker sent the town planner stays drawn on their device for two weeks
+    try { const j = JSON.parse(localStorage.getItem(askedKey)); askedAt = +j?.at || 0; if (Date.now() - askedAt < 14 * 86400e3) asked = tidy(j); } catch {}
+    const save = () => { try { localStorage.setItem(key, JSON.stringify(mine)); if (all(sent)) localStorage.setItem(sentKey, JSON.stringify({ ...sent, at: sentAt })); else localStorage.removeItem(sentKey);
+      if (all(asked)) localStorage.setItem(askedKey, JSON.stringify({ ...asked, at: askedAt })); else localStorage.removeItem(askedKey); } catch {} };
+    const layers = () => [pub, sent, asked, mine, ...(look ? [look] : [])];
+    const apply = () => { const L = layers(); m.setGroundEdits([...L.flatMap(e => e.paint), ...(draft ? [draft] : [])]);
+      m.setRemoved({ cars: L.flatMap(e => e.gone.cars), trees: L.flatMap(e => e.gone.trees), people: L.flatMap(e => e.gone.people) }); };
     apply();
     // what has been published for everyone; anything of mine that is in it now comes off my own list
     fetch(cfg.assets + "edits.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(j => { if (!j || T.dead) return; pub = tidy(j);
       const same = (a, b) => { const has = new Set(b.map(x => JSON.stringify(x))); return a.filter(x => !has.has(JSON.stringify(x))); };
-      for (const e of [mine, sent]) { e.paint = same(e.paint, pub.paint); for (const kind of KINDS) e.gone[kind] = same(e.gone[kind], pub.gone[kind]); }
+      for (const e of [mine, sent, asked]) { e.paint = same(e.paint, pub.paint); for (const kind of KINDS) e.gone[kind] = same(e.gone[kind], pub.gone[kind]); }
       // saved a while ago and still not published: that save did not get through, so they are waiting again
       if (all(sent) && Date.now() - sentAt > 20 * 60000) { mine.paint = [...sent.paint, ...mine.paint]; for (const kind of KINDS) mine.gone[kind] = [...sent.gone[kind], ...mine.gone[kind]]; sent = blank(); }
       save(); apply(); count(); }).catch(() => {});
     let count = () => {};
-    if (!isAsh()) return A;
+    const admin = () => isAsh(), can = () => admin() || townRole() === "builder";
 
+    const copyBtn = $("bsAdminCopy"), plansBtn = document.createElement("button"), plansBox = document.createElement("div");
+    plansBtn.type = "button"; plansBtn.id = "bsAdminPlans"; plansBtn.textContent = "Suggestions"; plansBtn.setAttribute("aria-expanded", "false"); plansBtn.hidden = true;
+    plansBox.className = "bs-admin-plans"; plansBox.hidden = true; copyBtn.parentElement.appendChild(plansBtn); $("bsAdmin").appendChild(plansBox);
     const fly = $("bsFly"), bar = $("bsAdmin"), btn = $("bsEditBtn"), note = $("bsAdminNote"), wOut = $("bsAdminWOut"), line = $("bsAdminLine"), clear = $("bsAdminClear"), saveBtn = $("bsAdminSave");
     $("bsAdminUndo").dataset.key = /Mac|iPhone|iPad/.test(navigator.platform || "") ? "\u2318Z" : "Ctrl Z";  // shown on the button on a desktop
     const TOOLS = { path: { k: 3, w: 1.3, min: 0.6, max: 5, step: 0.1, straight: true, col: "#e8e3d6", say: "Drag to lay a footpath." },
@@ -9049,9 +9108,12 @@ const handle = async (m, post) => {
     const ops = [];  // what was done since the toolbar opened, newest last, for Undo
     const say = (text, ms) => { note.textContent = text; clearTimeout(say.t); if (ms) say.t = setTimeout(count, ms); };
     // the line under the tools says what the tool in hand does; Save carries how many edits are waiting on this device
-    count = () => { const n = all(mine);
-      saveBtn.textContent = n ? `Save (${n})` : "Save"; saveBtn.classList.toggle("has", !!n);
-      note.textContent = A.tool ? TOOLS[A.tool].say + (A.tool === "delete" || T.walk ? "" : " Two fingers move the map.") : n ? "Your edits are on this device only. Save puts them in everyone's app." : all(sent) ? "Saved. Your edits will be in everyone's app in about 5 minutes." : "Pick a tool. Edits stay on this device until you save them."; };
+    count = () => { const n = all(mine), boss = admin(), w = boss ? "Save" : "Send";
+      saveBtn.textContent = n ? `${w} (${n})` : w; saveBtn.classList.toggle("has", !!n); copyBtn.hidden = !boss; plansBtn.hidden = !boss; if (!boss) plansBox.hidden = true;
+      saveBtn.setAttribute("aria-label", boss ? "Save for everyone" : "Send to the town planner");
+      note.textContent = A.tool ? TOOLS[A.tool].say + (A.tool === "delete" || T.walk ? "" : " Two fingers move the map.")
+        : !boss ? (n ? "Your changes are on this device. Send gives them to the town planner, who decides what goes in." : all(asked) ? "Sent to the town planner. Thanks! They decide what goes in." : "Pick a tool to change the ground. The town planner looks at what you send.")
+        : n ? "Your edits are on this device only. Save puts them in everyone's app." : all(sent) ? "Saved. Your edits will be in everyone's app in about 5 minutes." : "Pick a tool. Edits stay on this device until you save them."; };
     const show = () => { for (const b of bar.querySelectorAll("[data-tool]")) b.setAttribute("aria-pressed", String(b.dataset.tool === A.tool));
       const paint = !!A.tool && A.tool !== "delete"; $("bsAdminW").hidden = line.hidden = !paint;
       if (paint) { wOut.textContent = width().toFixed(1) + " m"; line.textContent = straight() ? "Straight" : "Freehand"; line.setAttribute("aria-pressed", String(straight())); }
@@ -9110,7 +9172,53 @@ const handle = async (m, post) => {
     A.undo = () => { if (bar.hidden) return false; done(); undo(); return true; };  // Ctrl+Z, while the bar is open
     // Save: send what is waiting to everyone. In lots small enough for GitHub to take (65,535 characters a request), one after another.
     let saving = false;
-    const send = async () => { if (saving) return; if (!all(mine)) return say("Nothing to save yet.", 2500);
+    // Send (a construction worker who is not Ash): to the town planner, through a public ntfy.sh topic (no account), whole strokes
+    // in messages of up to about 3,300 characters (a long stroke in pieces), all with the same id. The hourly chat job keeps them.
+    const suggest = async () => { if (saving) return; if (!all(mine)) return say("Nothing to send yet. Pick a tool and draw on the ground.", 3000);
+      const town = cfg.assets.replace(/\/$/, "").split("/").pop(), id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7), items = [];
+      for (const st of mine.paint) { if (JSON.stringify(st).length < 3000) items.push(["p", st]); else for (let i = 0; i < st.p.length - 2; i += 240) items.push(["p", { k: st.k, w: st.w, p: st.p.slice(i, i + 242) }]); }
+      for (const kind of KINDS) for (const g of mine.gone[kind]) items.push(["g", kind, g]);
+      const lots = [blank()]; let size = 0;
+      for (const it of items) { const n = JSON.stringify(it[it.length - 1]).length + 2; if (size && size + n > 3300) { lots.push(blank()); size = 0; } const L = lots[lots.length - 1]; if (it[0] === "p") L.paint.push(it[1]); else L.gone[it[1]].push(it[2]); size += n; }
+      saving = true; saveBtn.disabled = true; say("Sending\u2026"); let did = 0;
+      try { for (let i = 0; i < lots.length; i++) { if (i) await new Promise(r => setTimeout(r, 400));
+          const r = await fetch(TOWN_PLANS, { method: "POST", body: JSON.stringify({ k: "plan", id, i, n: lots.length, town, by: playerName(), v: 1, paint: lots[i].paint, gone: lots[i].gone }) }); if (!r.ok) break; did++; } } catch {}
+      saving = false; saveBtn.disabled = false; if (T.dead) return;
+      if (did < lots.length) return say(did ? "Only some of that got through. Tap Send again to send it all." : "Couldn't reach the town planner. Check your connection and tap Send again.", 9000);
+      asked.paint.push(...mine.paint); for (const kind of KINDS) asked.gone[kind].push(...mine.gone[kind]); askedAt = Date.now(); mine = blank(); ops.length = 0; save(); apply(); count();
+      toast("Sent to the town planner. Thanks!", 5000); };
+    // Suggestions (Ash): what construction workers have sent for this town, newest first. Show takes you there and draws it
+    // over the model (on this device only); Add to mine puts it with your own edits, to change or Save as usual; Dismiss hides it.
+    const plans = new Map(), town0 = cfg.assets.replace(/\/$/, "").split("/").pop(), doneKey = "an3d-plans-done";
+    let done0 = []; try { done0 = JSON.parse(localStorage.getItem(doneKey) || "[]") || []; } catch {}
+    const doneSet = new Set(done0), keepDone = () => { try { localStorage.setItem(doneKey, JSON.stringify([...doneSet].slice(-300))); } catch {} };
+    const planAdd = ev => { let b; try { b = JSON.parse(ev.message); } catch { return; } if (!b || b.k !== "plan" || b.town !== town0) return;
+      const id = String(b.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 24), i = +b.i || 0; if (!id) return;
+      let P = plans.get(id); if (!P) plans.set(id, P = { id, by: String(b.by || "").replace(/[\u0000-\u001f<>]/g, "").trim().slice(0, 16) || "Someone", time: +ev.time || 0, got: new Set(), e: blank() });
+      if (P.got.has(i)) return; P.got.add(i); const e = tidy(b); P.e.paint.push(...e.paint); for (const kind of KINDS) P.e.gone[kind].push(...e.gone[kind]); };
+    let plansAt = 0;
+    const loadPlans = async () => { if (Date.now() - plansAt < 20000) return; plansAt = Date.now();
+      try { const r = await fetch(TOWN_PLANS_FILE + "?t=" + Math.floor(Date.now() / 120000), { cache: "no-store" }); if (r.ok) ((await r.json()).m || []).forEach(planAdd); } catch {}
+      try { const r = await fetch(TOWN_PLANS + "/json?poll=1&since=all"); if (r.ok) (await r.text()).split("\n").forEach(l => { if (!l.trim()) return; try { const ev = JSON.parse(l); if (ev.event === "message") planAdd(ev); } catch {} }); } catch {}
+      if (!T.dead) drawPlans(); };
+    const waiting = () => [...plans.values()].filter(P => !doneSet.has(P.id) && all(P.e)).sort((a, b) => b.time - a.time);
+    const ago = t => { const s = Date.now() / 1000 - t; return s < 3600 ? `${Math.max(1, Math.round(s / 60))} min ago` : s < 86400 ? `${Math.round(s / 3600)} h ago` : `${Math.round(s / 86400)} d ago`; };
+    const drawPlans = () => { const list = waiting(); plansBtn.textContent = list.length ? `Suggestions (${list.length})` : "Suggestions"; plansBtn.classList.toggle("has", !!list.length);
+      if (plansBox.hidden) return;
+      if (!list.length) { const p = document.createElement("p"); p.textContent = "No suggestions from construction workers yet."; plansBox.replaceChildren(p); return; }
+      plansBox.replaceChildren(...list.map(P => { const row = document.createElement("div"); row.className = "bs-plan"; const who = document.createElement("p"); const b = document.createElement("b"); b.textContent = P.by;
+        who.append(b, ` \u00b7 ${ago(P.time)} \u00b7 ${all(P.e)} change${all(P.e) === 1 ? "" : "s"}`);
+        const bt = (label, f) => { const x = document.createElement("button"); x.type = "button"; x.textContent = label; x.onclick = ev => { ev.stopPropagation(); f(); }; return x; };
+        const acts = document.createElement("div"); acts.append(
+          bt(look === P.e ? "Hide" : "Show", () => { look = look === P.e ? null : P.e; apply(); if (look) goTo(P.e); drawPlans(); }),
+          bt("Add to mine", () => { mine.paint.push(...P.e.paint); for (const kind of KINDS) mine.gone[kind].push(...P.e.gone[kind]); if (look === P.e) look = null; doneSet.add(P.id); keepDone(); save(); apply(); count(); drawPlans(); say("Added to your edits. Change anything, then Save to put it in everyone's app.", 6000); }),
+          bt("Dismiss", () => { if (look === P.e) look = null; doneSet.add(P.id); keepDone(); apply(); drawPlans(); }));
+        row.append(who, acts); return row; })); };
+    const goTo = e => { const p = e.paint[0]?.p || e.gone.cars[0] || e.gone.trees[0] || e.gone.people[0], F = BS.fly; if (!p || !F) return; T.tween = null;
+      if (T.walk) { F.pos.x = p[0]; F.pos.z = p[1] + 9; F.yaw = 0; F.pitch = -0.4; } else { F.pos.x = p[0]; F.pos.z = p[1] + 45; F.pos.y = m.groundAt(p[0], p[1]) + 45; F.yaw = 0; F.pitch = -0.75; } };
+    plansBtn.onclick = e => { e.stopPropagation(); plansBox.hidden = !plansBox.hidden; plansBtn.setAttribute("aria-expanded", String(!plansBox.hidden)); drawPlans(); loadPlans(); plansBtn.blur(); };
+    if (admin()) setTimeout(() => loadPlans().then(() => { const n = waiting().length; if (n && !T.dead) toast(`${n} suggestion${n === 1 ? "" : "s"} from construction workers. Tap the pencil, then Suggestions.`, 6000); }), 6000);
+    const send = async () => { if (!admin()) return suggest(); if (saving) return; if (!all(mine)) return say("Nothing to save yet.", 2500);
       const tok = store.get("brief.ghToken", "");
       if (!tok) return say("To save for everyone, first save the GitHub key in Admin (in Settings), then tap Save again. Or Copy, and paste to Claude.", 9000);
       const town = cfg.assets.replace(/\/$/, "").split("/").pop(), gone = { cars: [...mine.gone.cars], trees: [...mine.gone.trees], people: [...mine.gone.people] }, lots = [[]];
@@ -9150,8 +9258,9 @@ const handle = async (m, post) => {
         if (clear.dataset.sure !== "1") { if (!mine.paint.length && !mine.gone.cars.length && !mine.gone.trees.length && !mine.gone.people.length) return say("Nothing to clear.", 2000);
           clear.dataset.sure = "1"; clear.classList.remove("bs-admin-ic"); clear.textContent = "Clear all?"; clearTimeout(clear.t); clear.t = setTimeout(unsure, 4000); return; }
         clearTimeout(clear.t); unsure(); mine = blank(); ops.length = 0; save(); apply(); count(); say("All your edits on this device are cleared.", 3000); } });
-    btn.hidden = false; show();
-    A.dispose = () => { on.forEach(([el, f]) => el.removeEventListener("click", f)); ink.remove(); bar.hidden = true; btn.hidden = true; btn.setAttribute("aria-pressed", "false"); document.body.classList.remove("bsadmin", "bsadmin-tool"); clearTimeout(say.t); clearTimeout(clear.t); clear.dataset.sure = ""; clear.classList.add("bs-admin-ic"); clear.innerHTML = bin; };
+    A.refresh = () => { if (!can()) { bar.hidden = true; A.tool = null; done(); btn.setAttribute("aria-pressed", "false"); document.body.classList.remove("bsadmin", "bsadmin-tool"); look = null; apply(); } btn.hidden = !can(); show(); };
+    A.refresh();
+    A.dispose = () => { plansBtn.remove(); plansBox.remove(); on.forEach(([el, f]) => el.removeEventListener("click", f)); ink.remove(); bar.hidden = true; btn.hidden = true; btn.setAttribute("aria-pressed", "false"); document.body.classList.remove("bsadmin", "bsadmin-tool"); clearTimeout(say.t); clearTimeout(clear.t); clear.dataset.sure = ""; clear.classList.add("bs-admin-ic"); clear.innerHTML = bin; };
     return A;
   }
   // Driving and flying (Ash, 14 November 2026: "if i press enter when walking i get into the car", then "needs sounds, shift for
@@ -9219,14 +9328,99 @@ const handle = async (m, post) => {
   const TOWN_EMOTES = [["wave", "Wave", "\ud83d\udc4b", "wave", 2.6], ["dance", "Dance", "\ud83d\udd7a", "dance", 4.5], ["jump", "Jump", "\u2b06\ufe0f", "jump", 2], ["cheer", "Cheer", "\ud83d\ude4c", "cheer", 2.8],
     ["spin", "Spin", "\ud83c\udf00", "spin", 2], ["bow", "Bow", "\ud83d\ude47", "bow", 2.2], ["heart", "Heart", "\u2764\ufe0f", "send a heart", 3]];
   const TOWN_TOGETHER = ["logan", "moo", "inv"];  // every town (Ash, 15 November 2026: "Copy the multiplayer to moorooka and Inverloch")
+  // What you play as (Ash, 15 November 2026: "I want other player to be able to select construction worker in settings, if
+  // selected go to a 3rd person view and enable the ability to edit the ground ... if they are not admin they cannot save over the
+  // world but instead they submit the edits to the town planner"). Kept on this device for every town: "explorer" or "builder".
+  const townRole = () => { try { return localStorage.getItem("an-player-role") === "builder" ? "builder" : "explorer"; } catch { return "explorer"; } };
+  const TOWN_PLANS = "https://ntfy.sh/awesome-news-town-plans-r8k3", TOWN_PLANS_FILE = "https://raw.githubusercontent.com/Ashley-Pettit/awesome-news/chat/chat/plans.json";
   const playerName = () => { let n = ""; try { n = (localStorage.getItem("an-player") || "").trim().slice(0, 16); } catch {}
     if (!n) { let id = ""; try { id = localStorage.getItem("an-player-id") || ""; if (!id) { id = String(100 + Math.floor(Math.random() * 900)); localStorage.setItem("an-player-id", id); } } catch { id = "000"; } n = "Player " + id; } return n; };
+  // Yourself, seen from behind, while you walk as a construction worker: your figure (hi-vis and a hard hat) stands where you
+  // are, arms swinging as you go, and the view sits about 5 m behind and just over head height, looking the same way (pulled
+  // in closer when a building is behind you). Driving, flying the camera or exploring puts the view back in your eyes.
+  function townMe(T, m, F, ground) {
+    const P = { frame() {}, dispose() {}, third: () => false }; if (!m.addParts) return P;
+    const THREE = BS.B.THREE, M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), ONE = new THREE.Vector3(1, 1, 1), NONE = new THREE.Matrix4().makeScale(0, 0, 0).elements, R = new THREE.Matrix4();
+    const SH = [new THREE.Matrix4().makeTranslation(-0.31, 1.42, 0), new THREE.Matrix4().makeTranslation(0.31, 1.42, 0)];
+    let parts = null, shown = false, last = null, swing = 0, amp = 0, dist = 4.2;
+    P.third = () => townRole() === "builder" && T.walk && !T.tween && !F.drive && !T.car?.in;
+    P.frame = () => {
+      if (!P.third()) { if (shown) { for (let i = 0; i < 3; i++) parts.setMatrix(i, NONE.slice()); shown = false; } last = null; return; }
+      if (!parts) parts = m.addParts(townPlaneParts("#ff7a12", "builder").map(q => ({ ...q, matrix: NONE.slice() })));
+      const now = performance.now(), x = F.pos.x, z = F.pos.z, y = ground(x, z), dt = last ? Math.min(0.1, (now - last[2]) / 1000) : 0, v = dt ? Math.hypot(x - last[0], z - last[1]) / dt : 0; last = [x, z, now];
+      swing += v * dt * 2.4; amp += (Math.min(0.65, v * 0.22) - amp) * Math.min(1, dt * 8);
+      M.compose(V.set(x, y, z), Q.setFromEuler(E.set(0, F.yaw + Math.PI, 0, "YXZ")), ONE); parts.setMatrix(0, M.elements.slice());
+      const a = Math.sin(swing) * amp; parts.setMatrix(1, M.clone().multiply(SH[0]).multiply(R.makeRotationX(a)).elements); parts.setMatrix(2, M.clone().multiply(SH[1]).multiply(R.makeRotationX(-a)).elements); shown = true;
+      const fx = -Math.sin(F.yaw), fz = -Math.cos(F.yaw); let d = 4.8;
+      if (m.solidAt) for (; d > 1.2; d -= 0.4) if (!m.solidAt(x - fx * d, z - fz * d)) break;
+      dist += (d - dist) * Math.min(1, dt * 6 || 1);
+      // a little over head height (higher if Up has raised your eyes), so you show in the middle of the screen, clear of the buttons
+      const cx = x - fx * dist, cz = z - fz * dist; m.setCamera(cx, Math.max(y + Math.max(2.4, (F.pos.y - y) * 0.8), ground(cx, cz) + 1.3), cz, F.yaw, F.pitch - 0.1); };
+    P.dispose = () => { try { parts?.remove(); } catch {} parts = null; };
+    return P;
+  }
+  // Traffic (Ash, 15 November 2026: "Animate some of the cars particularly near the player spawn"): about 16 everyday cars
+  // drive the streets around where you start, most within 300 m of it, at 30 to 50 km/h, keeping left. At each corner a car
+  // may turn into a street that meets it; at a dead end it turns round. One that wanders more than 800 m off is put back near
+  // the start. A car stops for you when you stand (or drive) in front of it. They are drawn by the app (the same as the cars
+  // to drive), from the streets the model has already loaded, so every town gets them; nothing is fetched until 4 s in.
+  function townTraffic(T, m, F, ground, cfg) {
+    const P = { frame() {}, dispose() {}, cars: [] }; if (!m.addParts) return P;
+    const THREE = BS.B.THREE, M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), ONE = new THREE.Vector3(1, 1, 1), wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
+    const COLS = ["#f2f2ee", "#b8bcc2", "#1d1f24", "#2d5ea8", "#a8262c", "#5c6670", "#e4e1d6", "#3f6b4a", "#8c8f94", "#1f3a66"];
+    const home = T.spawn || [F.pos.x, F.pos.z], N = 16, NEAR = 300, FAR = 800;
+    let roads = null, nodes = null, dead = false, last = 0;
+    const key = (x, z) => Math.round(x / 2) + "," + Math.round(z / 2);
+    const start = C => { // a random point on a street, mostly near the start
+      const R = Math.random() < 0.7 ? NEAR : FAR * 0.85;
+      for (let t = 0; t < 40; t++) { const r = roads[Math.floor(Math.random() * roads.length)], i = Math.floor(Math.random() * (r.n - 1)), x = r.p[i * 2], z = r.p[i * 2 + 1];
+        if (Math.hypot(x - home[0], z - home[1]) > R) continue;
+        Object.assign(C, { r, i, d: Math.random() < 0.5 ? 1 : -1, s: 0, v: 0 }); if (C.d < 0) C.i = i + 1; C.h = null; return true; }
+      return false; };
+    const seg = C => { const r = C.r, a = C.i, b = C.i + C.d; return [r.p[a * 2], r.p[a * 2 + 1], r.p[b * 2], r.p[b * 2 + 1]]; };
+    const next = C => { // reached vertex C.i + C.d: carry on, or turn into a street that meets here
+      const r = C.r, at = C.i + C.d, x = r.p[at * 2], z = r.p[at * 2 + 1], here = nodes.get(key(x, z)) || [], end = at === 0 || at === r.n - 1;
+      const ways = []; for (const [r2, j] of here) { if (r2 === r && j === at) continue; if (j < r2.n - 1) ways.push([r2, j, 1]); if (j > 0) ways.push([r2, j, -1]); }
+      if (ways.length && (end || Math.random() < 0.35)) { const [r2, j, d] = ways[Math.floor(Math.random() * ways.length)]; C.r = r2; C.i = j; C.d = d; return; }
+      if (!end) { C.i = at; return; }
+      C.i = at; C.d = -C.d; };  // a dead end: turn round
+    setTimeout(async () => { if (dead) return;
+      let d; try { d = await townStreetData(cfg); } catch { return; } if (dead) return;
+      if (d.town) d.roads.forEach((r, i) => { r.wd = (d.town.roads[i]?.[3] || 0) / 10; });  // Moorooka and Inverloch know each street's width
+      const pick = lim => d.roads.filter(r => r.cls <= lim && r.pts.length >= 4);
+      let list = pick(4); if (list.length < 50) list = pick(5);
+      roads = []; for (const r of list) { const p = r.pts; let near = false; for (let k = 0; k < p.length; k += 2) if (Math.hypot(p[k] - home[0], p[k + 1] - home[1]) < FAR) { near = true; break; } if (near) roads.push({ p, n: p.length / 2, lane: r.wd > 3 ? bsClamp(r.wd / 4, 1.5, 3.2) : 1.9 }); }
+      if (roads.length < 3) return;
+      nodes = new Map(); for (const r of roads) for (let j = 0; j < r.n; j++) { const k = key(r.p[j * 2], r.p[j * 2 + 1]); let a = nodes.get(k); if (!a) nodes.set(k, a = []); a.push([r, j]); }
+      for (let i = 0; i < N; i++) { const C = { col: COLS[i % COLS.length], top: 8 + Math.random() * 6 }; if (!start(C)) continue;
+        C.parts = m.addParts(townPlaneParts(C.col, "sedan").map(q => ({ ...q, matrix: M.identity().elements.slice() }))); P.cars.push(C); }
+      last = performance.now(); }, 4000);
+    P.frame = () => { if (!P.cars.length) return; const now = performance.now(), dt = Math.min(0.1, (now - last) / 1000); last = now; if (!dt) return;
+      // you: on foot, or in whatever you are driving
+      const me = T.car?.in ? T.car.pose?.() : T.walk ? { x: F.pos.x, z: F.pos.z } : null;
+      for (const C of P.cars) {
+        let [ax, az, bx, bz] = seg(C), L = Math.hypot(bx - ax, bz - az) || 0.01;
+        const h0 = Math.atan2(bx - ax, bz - az), ux = Math.sin(h0), uz = Math.cos(h0);
+        // stop for you if you are in its way
+        let want = C.top; if (me) { const cx = ax + ux * C.s, cz = az + uz * C.s, dx = me.x - cx, dz = me.z - cz, ahead = dx * ux + dz * uz, side = Math.abs(dx * uz - dz * ux - C.r.lane);
+          if (ahead > 0 && ahead < 11 && side < 2.4) want = 0; }
+        C.v += Math.max(-8 * dt, Math.min(3 * dt, want - C.v)); C.s += C.v * dt;
+        for (let k = 0; k < 6 && C.s >= L; k++) { C.s -= L; next(C); [ax, az, bx, bz] = seg(C); L = Math.hypot(bx - ax, bz - az) || 0.01; }
+        const h = Math.atan2(bx - ax, bz - az); C.h = C.h == null ? h : C.h + wrap(h - C.h) * Math.min(1, dt * 6);
+        const t = Math.min(1, C.s / L), lx = Math.cos(C.h), lz = -Math.sin(C.h), x = ax + (bx - ax) * t + lx * C.r.lane, z = az + (bz - az) * t + lz * C.r.lane;
+        if (Math.hypot(x - home[0], z - home[1]) > FAR) { start(C); continue; }
+        const sx = Math.sin(C.h), sz = Math.cos(C.h), gf = ground(x + sx * 1.6, z + sz * 1.6), gb = ground(x - sx * 1.6, z - sz * 1.6), gl = ground(x + lx * 0.8, z + lz * 0.8), gr = ground(x - lx * 0.8, z - lz * 0.8);
+        const y = Math.max(ground(x, z), (gf + gb) / 2) + 0.02, pt = Math.atan2(gf - gb, 3.2), rl = Math.atan2(gl - gr, 1.6);
+        M.compose(V.set(x, y, z), Q.setFromEuler(E.set(-pt, C.h, -rl, "YXZ")), ONE); C.parts.setMatrix(0, M.elements.slice()); } };
+    P.dispose = () => { dead = true; for (const C of P.cars) try { C.parts.remove(); } catch {} P.cars = []; };
+    return P;
+  }
   function townPeers(T, m, F, ground, place, box) {
     const P = { frame() {}, dispose() {}, count: 0 }; let off = false; try { off = localStorage.getItem("an-player-off") === "1"; } catch {}
     if (!m.addParts || !m.getCamera) return P;
     const THREE = BS.B.THREE, M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), ONE = new THREE.Vector3(1, 1, 1), NONE = new THREE.Matrix4().makeScale(0, 0, 0).elements;
     const TOPS = ["#d1495b", "#2e86ab", "#3a9d5d", "#e08e2b", "#7b5ea7", "#1f9e9e", "#c2577a", "#5b7f2f"], wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
-    const SHAPES = { walk: c => townPlaneParts(c, "person"), car: c => townPlaneParts(c, true), gold: () => townPlaneParts("#e8b923", true), bus: () => townPlaneParts("#2f7fc4", "bus"),
+    const SHAPES = { walk: c => townPlaneParts(c, "person"), builder: c => townPlaneParts(c, "builder"), car: c => townPlaneParts(c, true), gold: () => townPlaneParts("#e8b923", true), bus: () => townPlaneParts("#2f7fc4", "bus"),
       plane: () => townPlaneParts().slice(0, 1), goldplane: () => townPlaneParts("#e2ad1c").slice(0, 1), heli: () => townPlaneParts("#c8322b", "heli").slice(0, 2) };
     const peers = new Map(); let sendEmote = null, emoteAt = 0; const SH = [new THREE.Matrix4().makeTranslation(-0.31, 1.42, 0), new THREE.Matrix4().makeTranslation(0.31, 1.42, 0)], R1 = new THREE.Matrix4(), R2 = new THREE.Matrix4();
     const emoteBtn = $("bsEmoteBtn"), emoteBox = $("bsEmotes");
@@ -9250,19 +9444,34 @@ const handle = async (m, post) => {
     // to everyone at once. Hidden, this device says nothing of where it is (and does not join at all if it opens that way).
     const meBtn = $("bsMeBtn"), meBox = $("bsMe"), myColour = () => { let c = NaN; try { c = parseInt(localStorage.getItem("an-player-colour"), 10); } catch {} return c >= 0 && c < TOPS.length ? c : -1; };
     const tell = id => { try { sendName?.([playerName(), myColour()], id); } catch {} };
+    const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+    const meClose = () => { meBox.hidden = true; meBtn.setAttribute("aria-expanded", "false"); };
     const meDraw = () => { meBox.replaceChildren();
-      const lab = document.createElement("label"); lab.textContent = "Player name"; const inp = document.createElement("input"); inp.type = "text"; inp.maxLength = 16; inp.autocomplete = "off"; inp.placeholder = playerName(); try { inp.value = localStorage.getItem("an-player") || ""; } catch {}
+      const head = el("div", "bs-me-head"), x = el("button", "bs-me-x", "\u00d7"); x.type = "button"; x.setAttribute("aria-label", "Close settings"); x.onclick = () => { meClose(); meBtn.focus(); }; head.append(el("h2", "", "Settings"), x);
+      // your player: the name over you and the colour of your top
+      const you = el("div", "bs-me-sec"), lab = el("label", "bs-me-lbl", "Player name"), inp = el("input"); inp.id = "bsMeName"; lab.htmlFor = "bsMeName"; inp.type = "text"; inp.maxLength = 16; inp.autocomplete = "off"; inp.placeholder = playerName(); try { inp.value = localStorage.getItem("an-player") || ""; } catch {}
       inp.onkeydown = e => { e.stopPropagation(); if (e.key === "Enter") inp.blur(); }; inp.onkeyup = e => e.stopPropagation();
       inp.onchange = () => { try { const v = inp.value.replace(/[<>]/g, "").trim().slice(0, 16); if (v) localStorage.setItem("an-player", v); else localStorage.removeItem("an-player"); } catch {} tell(); toast(`Your player name is ${playerName()}.`, 2200); };
-      lab.append(inp); const row = document.createElement("div"); row.className = "bs-me-tops"; row.setAttribute("role", "group"); row.setAttribute("aria-label", "The colour of your top");
-      TOPS.forEach((col, i) => { const bn = document.createElement("button"); bn.type = "button"; bn.style.background = col; bn.setAttribute("aria-label", `Top colour ${i + 1}`); bn.setAttribute("aria-pressed", String(myColour() === i));
-        bn.onclick = () => { try { localStorage.setItem("an-player-colour", String(i)); } catch {} tell(); meDraw(); }; row.append(bn); });
-      const sw = document.createElement("button"); sw.type = "button"; sw.className = "bs-me-show"; sw.setAttribute("role", "switch"); sw.setAttribute("aria-checked", String(!off)); sw.textContent = off ? "Hidden from other players" : "Other players can see me";
-      sw.onclick = () => { off = !off; try { if (off) localStorage.setItem("an-player-off", "1"); else localStorage.removeItem("an-player-off"); } catch {} if (!off && !room && !joining) join(0); lastSent = null; meDraw(); toast(off ? "Other players can't see you now." : "Other players can see you.", 2500); };
-      const tip = document.createElement("p"); tip.textContent = "Your name shows over you. Pick one you are happy for anyone to see.";
-      const hi = document.createElement("div"); hi.className = "bs-me-h"; const hl = document.createElement("span"); hl.textContent = "Height above the ground"; const ho = document.createElement("span"); ho.id = "bsMeH"; hi.append(hl, ho);
-      const ex = document.createElement("button"); ex.type = "button"; ex.className = "bs-me-exit"; ex.textContent = $("bsFlyX").textContent; ex.onclick = () => { meBox.hidden = true; $("bsFlyX").click(); };
-      meBox.append(lab, row, sw, tip, hi, ex); };
+      const row = el("div", "bs-me-tops"); row.setAttribute("role", "group"); row.setAttribute("aria-label", "Top colour");
+      TOPS.forEach((col, i) => { const bn = el("button"); bn.type = "button"; bn.style.background = col; bn.setAttribute("aria-label", `Top colour ${i + 1}`); bn.setAttribute("aria-pressed", String(myColour() === i));
+        bn.onclick = () => { try { localStorage.setItem("an-player-colour", String(i)); } catch {} tell(); meDraw(); meBox.querySelector(`.bs-me-tops button:nth-child(${i + 1})`)?.focus(); }; row.append(bn); });
+      you.append(lab, inp, el("span", "bs-me-lbl", "Top colour"), row, el("p", "", "Your name shows over you. Pick one you are happy for anyone to see."));
+      // play as an explorer or a construction worker (who sees themselves from behind and can suggest changes to the ground)
+      const as = el("div", "bs-me-sec"), rl = el("div", "bs-me-role"); rl.setAttribute("role", "group"); rl.setAttribute("aria-label", "Play as");
+      for (const [v, label] of [["explorer", "Explorer"], ["builder", "Construction worker"]]) { const bn = el("button", "", label); bn.type = "button"; bn.setAttribute("aria-pressed", String(townRole() === v));
+        bn.onclick = () => { if (townRole() === v) return; try { if (v === "builder") localStorage.setItem("an-player-role", "builder"); else localStorage.removeItem("an-player-role"); } catch {}
+          lastSent = null; T.admin?.refresh?.(); meDraw();
+          toast(v === "builder" ? (isAsh() ? "Construction worker. The pencil (top right) edits the ground." : "You're a construction worker. Tap the pencil (top right) to change the ground, then Send it to the town planner.") : "You're exploring.", 5000); };
+        rl.append(bn); }
+      as.append(el("span", "bs-me-lbl", "Play as"), rl, el("p", "", townRole() === "builder" ? "You see yourself from behind and can change the ground with the pencil. The town planner decides what goes in." : "Walk, drive and fly anywhere in town."));
+      // whether other players see you
+      const sw = el("button", "bs-me-show"); sw.type = "button"; sw.setAttribute("role", "switch"); sw.setAttribute("aria-checked", String(!off)); sw.append(el("span", "", "Other players can see me"), el("i"));
+      sw.onclick = () => { off = !off; try { if (off) localStorage.setItem("an-player-off", "1"); else localStorage.removeItem("an-player-off"); } catch {} if (!off && !room && !joining) join(0); lastSent = null; meDraw(); meBox.querySelector(".bs-me-show")?.focus(); toast(off ? "Other players can't see you now." : "Other players can see you.", 2500); };
+      const hi = el("div", "bs-me-h"), ho = el("span", "", F.hText || ""); ho.id = "bsMeH"; hi.append(el("span", "", "Height above the ground"), ho);
+      const ex = el("button", "bs-me-exit", $("bsFlyX").textContent); ex.type = "button"; ex.onclick = () => { meClose(); $("bsFlyX").click(); };
+      meBox.append(head, you, as, sw, hi, ex); };
+    // closes with its \u00d7, the gear again, or a tap anywhere else
+    const meOut = e => { if (!meBox.hidden && !meBox.contains(e.target) && !meBtn.contains(e.target)) meClose(); }; document.addEventListener("pointerdown", meOut, true);
     document.body.classList.add("bsme"); meBtn.hidden = false; meBtn.onclick = () => { meBox.hidden = !meBox.hidden; meBtn.setAttribute("aria-expanded", String(!meBox.hidden)); if (!meBox.hidden) meDraw(); meBtn.blur(); };
     // nothing is fetched or connected until the model has had a moment to itself
     let joining = null;
@@ -9274,7 +9483,7 @@ const handle = async (m, post) => {
     if (!off) join(2500);
     // what I am doing now, as seven small numbers
     const mine = () => { const v = T.car?.in && !off ? T.car.pose?.() : null; if (v) return [v.x, v.y, v.z, v.h, v.k, v.p, v.r];
-      return T.walk && !off ? [F.pos.x, ground(F.pos.x, F.pos.z), F.pos.z, F.yaw + Math.PI, "walk", 0, 0] : [0, 0, 0, 0, "none", 0, 0]; };
+      return T.walk && !off ? [F.pos.x, ground(F.pos.x, F.pos.z), F.pos.z, F.yaw + Math.PI, townRole() === "builder" ? "builder" : "walk", 0, 0] : [0, 0, 0, 0, "none", 0, 0]; };
     P.frame = () => { const now = performance.now();
       if (sendPose && now - tick > 200) { tick = now; const a = mine().map(v => typeof v === "number" ? Math.round(v * 100) / 100 : v);
         const moved = !lastSent || a[4] !== lastSent[4] || Math.hypot(a[0] - lastSent[0], a[1] - lastSent[1], a[2] - lastSent[2]) > 0.04 || Math.abs(wrap(a[3] - lastSent[3])) > 0.02;
@@ -9293,7 +9502,7 @@ const handle = async (m, post) => {
         const s = q.shown = { x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k, z: a.z + (b.z - a.z) * k, h: a.h + wrap(b.h - a.h) * k, p: a.p + (b.p - a.p) * k, r: a.r + (b.r - a.r) * k, t: now };
         // what they are doing: up and down, a turn, a lean, and each arm's swing out to the side and to the front
         let up = 0, turn = 0, lean = 0, armR = 0, armL = 0, fwdR = 0, fwdL = 0, sign = "";
-        if (q.emote && kind === "walk") { const et = (now - q.emote.t0) / 1000, [name, , sg, , secs] = q.emote.e, ease = Math.min(1, et * 5, (secs - et) * 5);
+        if (q.emote && (kind === "walk" || kind === "builder")) { const et = (now - q.emote.t0) / 1000, [name, , sg, , secs] = q.emote.e, ease = Math.min(1, et * 5, (secs - et) * 5);
           if (et > secs) q.emote = null; else { sign = sg;
             if (name === "wave") armR = (2.5 + 0.35 * Math.sin(et * 11)) * ease;
             else if (name === "dance") { up = 0.1 * Math.abs(Math.sin(et * 7)); turn = 0.55 * Math.sin(et * 3.5) * ease; armR = (1.6 + 0.8 * Math.sin(et * 7)) * ease; armL = (1.6 - 0.8 * Math.sin(et * 7)) * ease; }
@@ -9303,16 +9512,16 @@ const handle = async (m, post) => {
             else if (name === "bow") lean = 0.75 * Math.sin(Math.PI * et / secs);
             else if (name === "heart") { fwdR = fwdL = 1.3 * ease; armR = armL = 0.25 * ease; } } }
         M.compose(V.set(s.x, s.y + up, s.z), Q.setFromEuler(E.set(lean - s.p, s.h + turn, s.r, "YXZ")), ONE); q.parts.setMatrix(0, M.elements.slice());
-        if (kind === "walk") { q.parts.setMatrix(1, M.clone().multiply(SH[0]).multiply(R1.makeRotationZ(-armR)).multiply(R2.makeRotationX(-fwdR)).elements); q.parts.setMatrix(2, M.clone().multiply(SH[1]).multiply(R1.makeRotationZ(armL)).multiply(R2.makeRotationX(-fwdL)).elements); }
+        if (kind === "walk" || kind === "builder") { q.parts.setMatrix(1, M.clone().multiply(SH[0]).multiply(R1.makeRotationZ(-armR)).multiply(R2.makeRotationX(-fwdR)).elements); q.parts.setMatrix(2, M.clone().multiply(SH[1]).multiply(R1.makeRotationZ(armL)).multiply(R2.makeRotationX(-fwdL)).elements); }
         const shown = sign ? `${q.name} ${sign}` : q.name; if (q.el.textContent !== shown) q.el.textContent = shown;
         if (kind === "heli") q.parts.setMatrix(1, M.clone().multiply(new THREE.Matrix4().makeTranslation(0, 2.45, 0.1)).multiply(new THREE.Matrix4().makeRotationY(now / 60)).elements);
         // their name over them, where they are on the screen
-        const top = kind === "walk" ? 2.1 : kind === "bus" ? 3.7 : 2.9, dx = s.x - cam.x, dy = s.y + top - cam.y, dz = s.z - cam.z, depth = dx * fx + dy * fy + dz * fz;
+        const top = kind === "walk" ? 2.1 : kind === "builder" ? 2.25 : kind === "bus" ? 3.7 : 2.9, dx = s.x - cam.x, dy = s.y + top - cam.y, dz = s.z - cam.z, depth = dx * fx + dy * fy + dz * fz;
         if (depth < 1 || depth > 600 || !q.name) { q.el.hidden = true; continue; }
         const sx = w / 2 + (dx * rx + dz * rz) / depth * f * (h / 2), sy = h / 2 - (dx * ux + dy * uy + dz * uz) / depth * f * (h / 2);
         if (sx < -40 || sx > w + 40 || sy < 0 || sy > h) { q.el.hidden = true; continue; }
         q.el.hidden = false; q.el.style.transform = `translate(${Math.round(sx)}px, ${Math.round(sy)}px) translate(-50%, -100%)`; } };
-    P.dispose = () => { document.body.classList.remove("bsme"); meBtn.hidden = true; meBox.hidden = true; meBtn.onclick = null; clearTimeout(joining); emoteBtn.hidden = true; emoteBox.hidden = true; emoteBtn.onclick = null; dead = true; for (const id of [...peers.keys()]) drop(id); try { room?.leave(); } catch {} room = null; sendPose = null; };
+    P.dispose = () => { document.removeEventListener("pointerdown", meOut, true); document.body.classList.remove("bsme"); meBtn.hidden = true; meBox.hidden = true; meBtn.onclick = null; clearTimeout(joining); emoteBtn.hidden = true; emoteBox.hidden = true; emoteBtn.onclick = null; dead = true; for (const id of [...peers.keys()]) drop(id); try { room?.leave(); } catch {} room = null; sendPose = null; };
     return P;
   }
   // The numbers behind the cars and planes, which Ash can change in Settings > Admin (14 November 2026: "Allow me to edit all these
@@ -9382,8 +9591,11 @@ const handle = async (m, post) => {
           quad(p(a0, -1), p(a1, -1), p(a1, 1), p(a0, 1), TYRE); tri([x + w / 2, y, z], p(a0, 1), p(a1, 1), TYRE); tri([x - w / 2, y, z], p(a1, -1), p(a0, -1), TYRE); } };
       return { P, N, C, tri, quad, hull, box, wheel, part: extra => ({ positions: new Float32Array(P), normals: new Float32Array(N), colors: new Float32Array(C), color: [1, 1, 1], roughness: 0.55, doubleSide: true, ...extra }) }; };
     const b = mesh();
-    if (car === "person") {  // someone walking: 1.75 m tall, feet on y = 0, facing +Z, their top in the colour given
-      const TOP = lin(stripe), LEG = lin("#2b3345"), SKIN = lin("#d9a887"), HAIR = lin("#3a2a20");
+    if (car === "person" || car === "builder") {  // someone walking: 1.75 m tall, feet on y = 0, facing +Z, their top in the colour given
+      // (a construction worker: a hi-vis orange top with silver bands and a yellow hard hat, whatever colour is given)
+      const hv = car === "builder", TOP = lin(hv ? "#ff7a12" : stripe), LEG = lin("#2b3345"), SKIN = lin("#d9a887"), HAIR = lin("#3a2a20");
+      if (hv) { const BAND = lin("#d8dde2"), HAT = lin("#f5c518"); b.box(-0.245, 0.245, 1.0, 1.05, -0.135, 0.135, BAND); b.box(-0.245, 0.245, 1.18, 1.23, -0.135, 0.135, BAND);
+        b.box(-0.15, 0.15, 1.74, 1.86, -0.15, 0.15, HAT); b.box(-0.17, 0.17, 1.72, 1.75, -0.17, 0.22, HAT); }
       for (const sx of [-1, 1]) b.box(sx * 0.13 - 0.09, sx * 0.13 + 0.09, 0, 0.86, -0.1, 0.1, LEG);
       b.box(-0.24, 0.24, 0.84, 1.46, -0.13, 0.13, TOP); b.box(-0.07, 0.07, 1.46, 1.53, -0.06, 0.06, SKIN); b.box(-0.12, 0.12, 1.5, 1.74, -0.12, 0.12, SKIN); b.box(-0.125, 0.125, 1.66, 1.76, -0.125, 0.11, HAIR);
       // each arm is a part of its own, hanging from its shoulder at its own origin (the body's part is first, then right, then left)
@@ -9412,6 +9624,13 @@ const handle = async (m, post) => {
       b.quad([1.15, 1.6, -5.512], [-1.15, 1.6, -5.512], [-1.15, 2.5, -5.512], [1.15, 2.5, -5.512], GLASS);
       b.quad([-1.264, 0.5, 3.0], [-1.264, 0.5, 4.3], [-1.264, 2.6, 4.3], [-1.264, 2.6, 3.0], DARK);  // the door
       return [b.part({ roughness: 0.45 })];
+    }
+    if (car === "sedan") {  // an everyday car for the traffic: a plain sedan in the colour given. Nose to +Z, wheels on y = 0
+      const BODY = lin(stripe);
+      b.hull([2.2, 0.82, 0.3, 0.7], [1.25, 0.88, 0.28, 0.86], BODY); b.hull([1.25, 0.88, 0.28, 0.86], [-1.7, 0.88, 0.28, 0.9], BODY); b.hull([-1.7, 0.88, 0.28, 0.9], [-2.2, 0.84, 0.32, 0.84], BODY);
+      b.hull([1.05, 0.8, 0.86, 0.9], [0.35, 0.74, 0.9, 1.4], GLASS, GLASS); b.hull([0.35, 0.74, 0.9, 1.4], [-0.95, 0.74, 0.9, 1.4], GLASS, BODY); b.hull([-0.95, 0.74, 0.9, 1.4], [-1.65, 0.8, 0.9, 0.95], GLASS, GLASS);
+      for (const sx of [-1, 1]) { b.box(sx * 0.6 - 0.14, sx * 0.6 + 0.14, 0.52, 0.6, 2.18, 2.22, lin("#fff6d8")); b.box(sx * 0.6 - 0.14, sx * 0.6 + 0.14, 0.6, 0.7, -2.22, -2.18, lin("#b3202a")); for (const z of [1.35, -1.35]) b.wheel(sx * 0.86, 0.33, z, 0.33, 0.24); }
+      return [b.part({ roughness: 0.4 })];
     }
     if (car) {  // the golden car: low and wide, a black stripe down the middle and a wing on the back. Nose to +Z, wheels on y = 0
       const GOLD = lin(stripe), BLACK = lin("#18181a");
@@ -9761,7 +9980,7 @@ const handle = async (m, post) => {
     m.setCamera(F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch);
     m.setMinutes(bsMins(BS.view.ms));
     T.streets?.update();
-    T.car?.frame(); T.peers?.frame();
+    T.car?.frame(); T.peers?.frame(); T.me?.frame(); T.traffic?.frame();
     // the clock's hands, the koala and the wombats: wherever the weather's own are now
     if (T.live?.length) { const M = T.mtx || (T.mtx = new BS.B.THREE.Matrix4());
       T.roots.forEach(r => r.updateWorldMatrix(true, true));
@@ -9776,7 +9995,7 @@ const handle = async (m, post) => {
     BS.town = null; T.dead = true; T.on = false; T.ungest?.(); T.unlay?.(); T.unflood?.();
     T.streets?.dispose(); T.streets = null; $("bsNamesBtn").hidden = true;
     T.admin?.dispose(); T.admin = null;
-    T.car?.dispose(); T.car = null; T.peers?.dispose(); T.peers = null;
+    T.car?.dispose(); T.car = null; T.peers?.dispose(); T.peers = null; T.me?.dispose(); T.me = null; T.traffic?.dispose(); T.traffic = null;
     T.unbar?.();
     if (BS.fly) { const F = BS.fly; F.walk = F.speed = F.floor = F.hot = F.drive = null; F.ceil = 0; F.lim = null; }  // Explore, if it carries on, is its old self
     try { T.model?.dispose(); } catch {}
@@ -9793,9 +10012,25 @@ const handle = async (m, post) => {
     const root = /\/awesome-news\//.test(location.pathname) ? location.origin + location.pathname.replace(/(\/awesome-news\/).*$/, "$1") : "https://ashley-pettit.github.io/awesome-news/";
     const dir = { inv: "inverloch/", moo: "moorooka/", logan: "logan/" }[k] || "", name = { inv: "Inverloch", moo: "Moorooka", logan: "Logan" }[k];
     return { url: dir ? `${root}${dir}explore/` : `${root}#explore`, name }; }  // explore/: its own link preview (a picture of the model)
-  async function exploreShare() { const { url, name } = exploreLink(), title = name ? `3D model of ${name}` : "Explore in 3D";
-    if (navigator.share) { try { await navigator.share({ title, text: name ? `Explore ${name} in 3D` : title, url }); return; } catch (e) { if (e?.name === "AbortError") return; } }
-    try { await navigator.clipboard.writeText(url); toast("Link copied"); } catch { toast(url, 8000); } }
+  // Share (Ash, 15 November 2026: "When I click share, immediately copy the url including explore. Then also allow the person to
+  // do the other things if they want to"): the tap copies the link, and a small menu under the button offers the phone's own
+  // share sheet, a text, an email, WhatsApp and Facebook. Tap Share again (or anything else) to close it.
+  async function exploreShare() { const { url, name } = exploreLink(), title = name ? `3D model of ${name}` : "Explore in 3D", text = name ? `Explore ${name} in 3D` : title;
+    const box = $("bsShareBox"), btn = $("bsShareBtn"); if (!box) return;
+    if (!box.hidden) { box.hidden = true; btn.setAttribute("aria-expanded", "false"); return; }
+    let copied = false; try { await navigator.clipboard.writeText(url); copied = true; } catch {
+      try { const ta = document.createElement("textarea"); ta.value = url; ta.setAttribute("readonly", ""); ta.style.cssText = "position:fixed;left:-9999px;top:0"; document.body.appendChild(ta); ta.select(); copied = document.execCommand("copy"); ta.remove(); } catch {} }
+    const e = encodeURIComponent, msg = `${text}: ${url}`, links = [["Text message", `sms:?&body=${e(msg)}`], ["Email", `mailto:?subject=${e(title)}&body=${e(msg)}`], ["WhatsApp", `https://wa.me/?text=${e(msg)}`], ["Facebook", `https://www.facebook.com/sharer/sharer.php?u=${e(url)}`]];
+    const head = document.createElement("p"); head.textContent = copied ? "Link copied. Or send it with:" : url;
+    const kids = [head];
+    if (navigator.share) { const b = document.createElement("button"); b.type = "button"; b.textContent = "More options…"; b.onclick = async () => { try { await navigator.share({ title, text, url }); } catch {} box.hidden = true; btn.setAttribute("aria-expanded", "false"); }; kids.push(b); }
+    for (const [label, href] of links) { const a = document.createElement("a"); a.href = href; a.textContent = label; a.target = /^https/.test(href) ? "_blank" : "_self"; a.rel = "noopener"; a.onclick = () => { setTimeout(() => { box.hidden = true; btn.setAttribute("aria-expanded", "false"); }, 0); }; kids.push(a); }
+    box.replaceChildren(...kids);
+    const r = btn.getBoundingClientRect(), o = $("bsFly").getBoundingClientRect();
+    box.style.top = (r.bottom - o.top + 8) + "px"; box.style.left = Math.max(16, Math.min(r.left - o.left, o.width - 256)) + "px";
+    box.hidden = false; btn.setAttribute("aria-expanded", "true");
+    const close = ev => { if (box.contains(ev.target) || btn.contains(ev.target)) return; box.hidden = true; btn.setAttribute("aria-expanded", "false"); document.removeEventListener("pointerdown", close, true); };
+    setTimeout(() => document.addEventListener("pointerdown", close, true), 0); }
   function exploreWhich() { const rod = /^rod(ney)?$/i.test((S.name || "").trim()); return S.region === "moo" && !rod ? "moo" : S.region === "logan" && !rod ? "logan" : "inv"; }
   function exploreTown() { townModelOpen(true, exploreWhich()); }
   function exploreInverloch() { townModelOpen(true, "inv"); }

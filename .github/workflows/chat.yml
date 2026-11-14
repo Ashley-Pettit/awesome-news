@@ -1,7 +1,8 @@
 name: Neighbourhood chat
 
 # Moorooka's Neighbourhood chat and Jobs: every hour, keep what's been posted (ntfy only holds it for 12 hours) in
-# chat/moo.json on the `chat` branch, as a single commit so removed posts don't linger in history.
+# chat/moo.json on the `chat` branch, as a single commit so removed posts don't linger in history. The town models'
+# suggestions from construction workers (tools/plans.py) are kept beside it in chat/plans.json.
 on:
   schedule:
     - cron: "11 * * * *"
@@ -33,9 +34,12 @@ jobs:
           python3 tools/chat.py /tmp/chat/chat/moo.json
           if [ -n "$HIDE" ]; then python3 tools/chat.py /tmp/chat/chat/moo.json hide "$HIDE"; fi
           if [ -n "$UNHIDE" ]; then python3 tools/chat.py /tmp/chat/chat/moo.json unhide "$UNHIDE"; fi
+          # suggestions from construction workers in the town models (tools/plans.py); a hiccup here never stops the chat
+          git show origin/chat:chat/plans.json > /tmp/chat/chat/plans.json 2>/dev/null || true
+          python3 tools/plans.py /tmp/chat/chat/plans.json || true
       - name: Save to the chat branch
         run: |
           cd /tmp/chat
           git init -q -b chat && git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add chat/moo.json && git commit -qm "Neighbourhood chat [skip ci]"
+          git add chat/moo.json && { [ -f chat/plans.json ] && git add chat/plans.json || true; } && git commit -qm "Neighbourhood chat [skip ci]"
           git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" chat:chat
