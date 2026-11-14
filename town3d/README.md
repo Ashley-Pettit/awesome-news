@@ -716,13 +716,8 @@ changes for Moorooka ... If its a building that does not exist yet make that cle
   long. It drives like a car at seven tenths the speed and push, with a long wheelbase, a wide outline against
   buildings and the view from further back. The buses the Moorooka model runs along its streets are not these: they
   cannot be got into yet.
-- **Plan** (the Plan button in the top row, or P; Moorooka only; `townPlan`, `MOO_PLAN`): shows or hides one imagined
-  building, 7 storeys of apartments over shops on an open car yard on Ipswich Road (the Magic Mile), and takes you to
-  the footpath down the road from it if you are far away. The Nathan, Salisbury, Moorooka Neighbourhood Plan sets
-  heights by precinct (up to 7 storeys in the Magic Mile's core, as reported), not buildings, so the site and the
-  design are Claude's pick: not a real proposal, and whether that lot is inside the core has not been checked against
-  the plan's maps. It says "NOT BUILT: imagined 7 storeys" on all four sides, in the toast and in a corner note.
-  P was used and not F5, which reloads the page.
+- The Plan view that was here (one imagined building on the Magic Mile) was taken out on 15 November 2026: Ash, "Remove the
+  plan feature. Delete related code. Not wanted."
 
 ## Logan: the plane on the street, the golden car in the back car park (15 November 2026)
 
@@ -751,3 +746,14 @@ random ones respect the terrain."
 - **Leaning with the ground:** a car's height is now the mean of the ground under its four wheels, and it tips nose
   to tail and side to side with the slope. Inverloch: standing and moving cars. Logan: every car and bus it draws.
   Moorooka's model was not changed in this.
+
+## Inverloch's helicopter is behind 11 Norman Road (15 November 2026)
+
+Ash: "Move the helicopter to behind 11 Norman Rd." It stands on the grass behind the house, on the side away from
+the street, checked in a picture from above. Jump to has it.
+
+## Settings: three links to the suburbs (15 November 2026)
+
+Ash: "In settings the player should be able to set their environment as one of the three suburbs. Don't overengineer
+this - just a hyperlink to the suburb." Settings has a "Your suburb" group with a link each to Moorooka, Inverloch
+and Logan (the edition's own page, which holds its news and its 3D map).

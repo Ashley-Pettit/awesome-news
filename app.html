@@ -1880,7 +1880,7 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <div class="bs-town-mode" id="bsTownMode" role="group" aria-label="Walk or fly" data-key="F" hidden><button type="button" data-town-mode="walk" aria-pressed="true">Walk</button><button type="button" data-town-mode="fly" aria-pressed="false">Fly</button></div>
     <div class="bs-town-list" id="bsTownList" role="menu" aria-label="Places to jump to" hidden></div>
     <div class="bs-town-list bs-town-floods" id="bsTownFloods" role="menu" aria-label="Floods to show on the map" hidden></div>
-    <div class="bs-slides" role="group" aria-label="Share, street names, edit, tide, time and flood"><button class="bs-fly-x bs-ic" type="button" id="bsShareBtn" aria-label="Share a link to this 3D model" title="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button><button class="bs-fly-x bs-ic" type="button" id="bsNamesBtn" data-key="N" aria-pressed="false" aria-label="Street names" title="Show street names (N)" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M9 21h6"/><path d="M5 5h11l3 2.5L16 10H5z"/><path d="M19 12H8l-3 2.5L8 17h11z"/></svg></button><button class="bs-fly-x" type="button" id="bsPlanBtn" data-key="P" aria-pressed="false" title="Show what the neighbourhood plan could allow (P)" hidden>Plan</button><button class="bs-fly-x bs-ic" type="button" id="bsEditBtn" aria-pressed="false" aria-controls="bsAdmin" aria-label="Edit the map" title="Edit the map" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg></button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false" aria-label="Time of day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span id="bsTimeBtnT">Time</span></button><button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button></div>
+    <div class="bs-slides" role="group" aria-label="Share, street names, edit, tide, time and flood"><button class="bs-fly-x bs-ic" type="button" id="bsShareBtn" aria-label="Share a link to this 3D model" title="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button><button class="bs-fly-x bs-ic" type="button" id="bsNamesBtn" data-key="N" aria-pressed="false" aria-label="Street names" title="Show street names (N)" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M9 21h6"/><path d="M5 5h11l3 2.5L16 10H5z"/><path d="M19 12H8l-3 2.5L8 17h11z"/></svg></button><button class="bs-fly-x bs-ic" type="button" id="bsEditBtn" aria-pressed="false" aria-controls="bsAdmin" aria-label="Edit the map" title="Edit the map" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg></button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false" aria-label="Time of day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span id="bsTimeBtnT">Time</span></button><button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button></div>
     <div class="bs-admin" id="bsAdmin" role="toolbar" aria-label="Edit the map" hidden>
       <div class="bs-admin-row" role="group" aria-label="Tool"><button type="button" data-tool="path" aria-pressed="false"><i style="background:#cfcabd"></i>Path</button><button type="button" data-tool="grass" aria-pressed="false"><i style="background:#6fa64b"></i>Grass</button><button type="button" data-tool="road" aria-pressed="false"><i style="background:#4a4d52"></i>Road</button><button type="button" data-tool="delete" aria-pressed="false">Delete</button></div>
       <div class="bs-admin-row"><span class="bs-admin-w" id="bsAdminW" role="group" aria-label="Width" hidden><button type="button" data-w="-1" aria-label="Narrower">&minus;</button><output id="bsAdminWOut"></output><button type="button" data-w="1" aria-label="Wider">+</button></span><button type="button" id="bsAdminLine" aria-pressed="true" hidden>Straight</button><button type="button" class="bs-admin-ic" id="bsAdminUndo" aria-label="Undo" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5 4 9l4 4"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button><button type="button" id="bsAdminSave" aria-label="Save my edits for everyone">Save</button><button type="button" id="bsAdminCopy" aria-label="Copy edits">Copy</button><button type="button" class="bs-admin-ic" id="bsAdminClear" aria-label="Clear all my edits" title="Clear all my edits"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 7V4h4v3M6 7l1 13h10l1-13"/></svg></button></div>
@@ -3902,6 +3902,9 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
         <div class="field"><label for="setName">Your name</label><input type="text" id="setName" placeholder="Optional" autocomplete="given-name" maxlength="30" value="${esc(S.name)}"></div>
         <div class="field"><label for="setRegion">Local news</label><select id="setRegion">${regions.map(r => `<option value="${r.id}"${r.id === S.region ? " selected" : ""}>${esc(r.label)}${counts["local-" + r.id] != null ? ` (${counts["local-" + r.id]})` : ""}</option>`).join("")}</select></div>
       </div><p class="hint">Your name is used in the greeting.</p></div>
+      <div class="group"><h2>Your suburb</h2><div class="card">${[["moorooka", "Moorooka"], ["inverloch", "Inverloch"], ["logan", "Logan"]].map(([id, label]) =>
+        `<a class="field" style="color:inherit;text-decoration:none" href="${location.pathname.replace(/(moorooka|inverloch|logan)\/?(index\.html)?$/, "").replace(/[^/]*$/, "")}${id}/"><span class="lbl">${label}<span class="sub">Open the ${label} news and its 3D map</span></span><span class="chev" aria-hidden="true">\u203a</span></a>`).join("")}
+      </div><p class="hint">Each suburb has its own news and its own 3D map to explore.</p></div>
       ${fullHTML()}
 `,
       filters: `<div class="group"><h2>Sources</h2><details class="card srcdet"${state.srcOpen ? " open" : ""}>
@@ -7637,8 +7640,7 @@ const handle = async (m, post) => {
           if (free && F.hot?.enter?.()) { e.preventDefault(); return; } }
         if (e.code === "KeyF" && F.hot?.f) { F.hot.f(); return; }  // walk or fly (the town models)
         if (e.code === "KeyJ") { if (F.hot?.j) F.hot.j(); else if (!$("bsFlyJump").hidden) $("bsFlyJump").click(); return; }  // jump to a place
-        if (e.code === "KeyN" && F.hot?.n) { F.hot.n(); return; }
-        if (e.code === "KeyP" && F.hot?.p) { F.hot.p(); return; }  // as it is, or with what the neighbourhood plan could allow (Moorooka)  // street names on or off (the town models)
+        if (e.code === "KeyN" && F.hot?.n) { F.hot.n(); return; }  // street names on or off (the town models)
         if (e.code === "KeyR") { if (F.hot?.r) F.hot.r(); else { F.pos.copy(F.start.pos); F.yaw = F.start.yaw; F.pitch = F.start.pitch; } }
       },
       keyup: e => F.keys.delete(e.code),
@@ -8223,9 +8225,8 @@ const handle = async (m, post) => {
         try { T.admin = townAdmin(T, cfg, box, m, { ptrs }); } catch (e) { console.warn("Town model: admin mode couldn't start", e); }
         // driving: Enter, or the Get in button, when a parked car is close (townCar)
         try { T.car = townCar(T, m, F, ground, cfg.place); } catch (e) { console.warn("Town model: driving couldn't start", e); }
-        if (cfg.place === "moo") try { T.plan = townPlan(T, m, F, ground); } catch (e) { console.warn("Town model: the plan view couldn't start", e); }
         F.hot = { f: () => toMode(!T.walk),
-          enter: () => T.car?.enter(), p: () => T.plan?.toggle(), keys: () => !!T.car?.keys?.(), undo: () => !!T.admin?.undo?.(), gold: () => !!T.car?.toGold?.(),
+          enter: () => T.car?.enter(), keys: () => !!T.car?.keys?.(), undo: () => !!T.admin?.undo?.(), gold: () => !!T.car?.toGold?.(),
           n: () => T.namesToggle?.(),
           j: () => openList(list.hidden),
           esc: () => { if (!ask.hidden) { closeAsk(); return true; } if (!list.hidden) { openList(false); return true; } if (!fl.hidden) { fl.hidden = true; fb.setAttribute("aria-expanded", "false"); return true; } return false; },
@@ -9115,7 +9116,7 @@ const handle = async (m, post) => {
       cars: [MOO_GOLD_CAR, { x: -291.5, z: -984.4, h: 2.71, bus: true, name: "The bus", what: "By the kerb at Stimpson Park, past the golden car. Slow, long and wide" }] },
     inv: { planes: [{ x: -210, z: -377, h: 1.571, name: "The plane", at: "on the lawn by The Hub", what: "On the lawn by The Hub, off A'Beckett Street. Walk up to it and get in" }],
       cars: [{ x: -228.5, z: -375.5, h: Math.PI, spare: true, name: "The red car", what: "On the lawn by The Hub, beside the plane" }, { x: -232.5, z: -375.5, h: Math.PI, gold: true, name: "The golden car", what: "On the lawn by The Hub. A fifth faster than the red one" }],
-      more: { planes: [{ x: -199, z: -378, h: 1.571, heli: true, name: "The helicopter", at: "on the lawn by The Hub", what: "On the lawn by The Hub, beside the plane" }], cars: [{ x: -214, z: -357, h: -1.571, bus: true, name: "The bus", what: "In A'Beckett Street, out the front of The Hub" }] },
+      more: { planes: [{ x: -1602.1, z: 422, h: 2.6, heli: true, name: "The helicopter", at: "behind 11 Norman Road", what: "On the grass behind 11 Norman Road" }], cars: [{ x: -214, z: -357, h: -1.571, bus: true, name: "The bus", what: "In A'Beckett Street, out the front of The Hub" }] },
       roam: [[-278, -562], [627, -1086], [-108, -190], [17, -179], [-1585, 1221], [575, 1066]] },
     logan: { planes: [{ x: 5768.9, z: -13344.6, h: 2.016, name: "The plane", at: "on the street out the front of the council", what: "On the street out the front of Logan City Council. Walk up to it and get in" }],
       cars: [{ x: 5816.2, z: -13302.9, h: 1.94, spare: true, name: "The red car", what: "On the lawn out the front of the council, by the plane" }, { x: 5789.8, z: -13198.7, h: 2.03, gold: true, name: "The golden car", what: "In the car park behind the council. A fifth faster than the red one" }],
@@ -9123,46 +9124,6 @@ const handle = async (m, post) => {
       roam: [[5749, -13002], [6006, -13466], [5650, -13194], [7441, -11580], [5927, 564], [8554, -7453]] },
   };
   for (const t of Object.values(TOWN_RIDES)) if (t.more) { t.planes = [...t.planes, ...t.more.planes]; t.cars = [...t.cars, ...t.more.cars]; }
-  // The model as it is, or with what the council's neighbourhood plan could allow (Ash, 14 November 2026: "a btn that changes the
-  // model between standard vs the councils proposed changes for Moorooka ... If its a building that does not exist yet make that
-  // clear. Do this for now just for one building as a test", then "Pick a spot on the magic mile to imagine one of the apartments
-  // that is proposed"). The Nathan, Salisbury, Moorooka Neighbourhood Plan (in the City Plan since 27 June 2025) sets heights by
-  // precinct, not buildings: up to 7 storeys of mixed use and homes in the Magic Mile's core. So this is one imagined building of
-  // that height on an open car yard on Ipswich Road, picked by Claude: it is not a real proposal, and it says so on its own walls,
-  // in the toast and in the corner note. The Plan button (P) shows and hides it, and takes you there if you are far away.
-  const MOO_PLAN = { x: -989.3, z: -79.3, h: 2.63, w: 14, len: 22, floors: 7 };
-  function townPlan(T, m, F, ground) {
-    const P = { on: false, toggle() {}, dispose() {} }, btn = $("bsPlanBtn"), note = $("bsTownNote"); if (!m.addParts) return P;
-    const THREE = BS.B.THREE, { mesh, lin } = townPlaneParts(undefined, "kit"), G = MOO_PLAN, hw = G.w / 2, hl = G.len / 2, POD = 4.6, FL = 3.2, top = POD + (G.floors - 1) * FL;
-    const WALL = lin("#dfe6ee"), SLAB = lin("#ffffff"), GLASS = lin("#27425c"), SHOP = lin("#3a4450"), ROOF = lin("#9aa3ad");
-    const b = mesh(); b.box(-hw, hw, -1.5, POD, -hl, hl, SHOP); b.box(-hw + 0.6, hw - 0.6, POD, top, -hl + 0.6, hl - 0.6, WALL);
-    for (let f = 0; f < G.floors - 1; f++) { const y = POD + f * FL; b.box(-hw - 0.5, hw + 0.5, y - 0.1, y + 0.12, -hl - 0.5, hl + 0.5, SLAB);  // a balcony slab right round each floor
-      for (const sx of [-1, 1]) { b.quad([sx * (hw - 0.58), y + 0.9, -hl + 1.2], [sx * (hw - 0.58), y + 0.9, hl - 1.2], [sx * (hw - 0.58), y + 2.6, hl - 1.2], [sx * (hw - 0.58), y + 2.6, -hl + 1.2], GLASS);
-        b.box(sx * (hw + 0.5) - 0.04, sx * (hw + 0.5) + 0.04, y + 0.12, y + 1.1, -hl - 0.5, hl + 0.5, GLASS); }
-      for (const sz of [-1, 1]) b.quad([-hw + 1.4, y + 0.9, sz * (hl - 0.58)], [hw - 1.4, y + 0.9, sz * (hl - 0.58)], [hw - 1.4, y + 2.6, sz * (hl - 0.58)], [-hw + 1.4, y + 2.6, sz * (hl - 0.58)], GLASS); }
-    for (const sx of [-1, 1]) b.quad([sx * (hw + 0.01), 0.5, -hl + 1], [sx * (hw + 0.01), 0.5, hl - 1], [sx * (hw + 0.01), 3.6, hl - 1], [sx * (hw + 0.01), 3.6, -hl + 1], GLASS);  // shopfronts
-    b.box(-hw - 0.5, hw + 0.5, top - 0.1, top + 0.5, -hl - 0.5, hl + 0.5, SLAB); b.box(-2.5, 2.5, top + 0.5, top + 2.6, -3, 3, ROOF);
-    // its name, written on all four sides at the top and over the shopfronts
-    const cv = document.createElement("canvas"); cv.width = 1024; cv.height = 128; const g = cv.getContext("2d"); g.fillStyle = "#5b2a86"; g.fillRect(0, 0, 1024, 128); g.fillStyle = "#fff"; g.font = "700 62px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("NOT BUILT: imagined 7 storeys", 512, 68);
-    const SP = [], SN = [], SU = [], sign = (a, c, y0, y1) => { const nx = c[2] - a[2], nz = a[0] - c[0], l = Math.hypot(nx, nz) || 1;  // a to c along the wall, seen from outside
-      for (const [q, u, v] of [[[a[0], y0, a[2]], 0, 0], [[c[0], y0, c[2]], 1, 0], [[c[0], y1, c[2]], 1, 1], [[a[0], y0, a[2]], 0, 0], [[c[0], y1, c[2]], 1, 1], [[a[0], y1, a[2]], 0, 1]]) { SP.push(...q); SN.push(nx / l, 0, nz / l); SU.push(u, v); } };
-    for (const [y0, y1] of [[top - 2.4, top - 0.3], [3.7, 4.5]]) { const ex = hw + 0.56, ez = hl + 0.56, L = 8.4, S = 6.4;
-      sign([ex, 0, L], [ex, 0, -L], y0, y1); sign([-ex, 0, -L], [-ex, 0, L], y0, y1); sign([-S, 0, ez], [S, 0, ez], y0, y1); sign([S, 0, -ez], [-S, 0, -ez], y0, y1); }
-    const base = Math.min(...[[-hw, -hl], [hw, -hl], [hw, hl], [-hw, hl], [0, 0]].map(([a, c]) => m.groundAt(G.x + Math.sin(G.h) * c - Math.cos(G.h) * a, G.z + Math.cos(G.h) * c + Math.sin(G.h) * a)));
-    const at = new THREE.Matrix4().makeTranslation(G.x, base, G.z).multiply(new THREE.Matrix4().makeRotationY(G.h)).elements, none = new THREE.Matrix4().makeScale(0, 0, 0).elements;
-    const parts = m.addParts([b.part({ roughness: 0.6, matrix: none.slice() }), { positions: new Float32Array(SP), normals: new Float32Array(SN), uvs: new Float32Array(SU), map: cv, color: [1, 1, 1], unlit: true, doubleSide: true, matrix: none.slice() }]);
-    const show = () => { for (const i of [0, 1]) parts.setMatrix(i, (P.on ? at : none).slice()); btn.setAttribute("aria-pressed", String(P.on)); btn.title = P.on ? "Back to Moorooka as it is (P)" : "Show what the neighbourhood plan could allow (P)";
-      note.textContent = P.on ? "Showing an imagined building. It is not built and not a real proposal." : ""; note.hidden = !P.on; };
-    P.toggle = () => { P.on = !P.on; show();
-      if (!P.on) return toast("Back to Moorooka as it is.");
-      toast("Imagined, not built: 7 storeys of apartments over shops on the Magic Mile, the most the council's neighbourhood plan allows there. It is not a real proposal for this site.", 9000);
-      if (Math.hypot(F.pos.x - G.x, F.pos.z - G.z) > 300 && !T.car?.in) {  // far away: go and stand across the yard from it
-        const sx = -36.7, sz = 36.6; T.tween = null;  // on the Ipswich Road verge, 50 m down the road from it
-        F.pos.x = G.x + sx; F.pos.z = G.z + sz; F.pos.y = ground(F.pos.x, F.pos.z) + (T.walk ? F.eye : 40); F.yaw = Math.atan2(sx, sz); F.pitch = T.walk ? 0.2 : -0.3; } };
-    btn.hidden = false; btn.onclick = () => { P.toggle(); btn.blur(); }; show();
-    P.dispose = () => { btn.hidden = true; btn.onclick = null; btn.setAttribute("aria-pressed", "false"); note.hidden = true; note.textContent = ""; try { parts.remove(); } catch {} };
-    return P;
-  }
   // The numbers behind the cars and planes, which Ash can change in Settings > Admin (14 November 2026: "Allow me to edit all these
   // sorts of settings when in as an admin"). Each is [default, name, unit, least, most]. What he sets is kept on that device
   // ("an3d-rides", shared by every town) and is read when a model opens.
@@ -9230,7 +9191,6 @@ const handle = async (m, post) => {
           quad(p(a0, -1), p(a1, -1), p(a1, 1), p(a0, 1), TYRE); tri([x + w / 2, y, z], p(a0, 1), p(a1, 1), TYRE); tri([x - w / 2, y, z], p(a1, -1), p(a0, -1), TYRE); } };
       return { P, N, C, tri, quad, hull, box, wheel, part: extra => ({ positions: new Float32Array(P), normals: new Float32Array(N), colors: new Float32Array(C), color: [1, 1, 1], roughness: 0.55, doubleSide: true, ...extra }) }; };
     const b = mesh();
-    if (car === "kit") return { mesh, lin };
     if (car === "heli") {  // a small helicopter: a glass nose, a tail boom, skids on y = 0. The rotor and its blur are apart, about the mast
       const COL = lin(stripe);
       const H = [[2.1, 0.22, 0.8, 1.2], [1.35, 0.72, 0.5, 1.8], [0.2, 0.82, 0.45, 2.02], [-1.0, 0.72, 0.6, 1.98], [-1.9, 0.26, 1.15, 1.72], [-5.3, 0.1, 1.4, 1.62]];
@@ -9612,7 +9572,7 @@ const handle = async (m, post) => {
     BS.town = null; T.dead = true; T.on = false; T.ungest?.(); T.unlay?.(); T.unflood?.();
     T.streets?.dispose(); T.streets = null; $("bsNamesBtn").hidden = true;
     T.admin?.dispose(); T.admin = null;
-    T.car?.dispose(); T.car = null; T.plan?.dispose(); T.plan = null;
+    T.car?.dispose(); T.car = null;
     T.unbar?.();
     if (BS.fly) { const F = BS.fly; F.walk = F.speed = F.floor = F.hot = F.drive = null; F.ceil = 0; F.lim = null; }  // Explore, if it carries on, is its old self
     try { T.model?.dispose(); } catch {}
