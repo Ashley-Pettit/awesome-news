@@ -701,3 +701,25 @@ handbrake's spin and how much it slows, the plane's top speed, boost top speed, 
 much better the golden ones are, whether the standard plane has a boost, and engine volume. Each has a least and a
 most. They are kept on that device (`an3d-rides`, shared by every town) and read when a model opens (`rideSettings`
 in `townCar`). "Put them all back" clears them. They are not sent to anyone else.
+
+## A helicopter, a bus, and one imagined building from the neighbourhood plan (15 November 2026)
+
+Ash: "Add a helicopter, able to get into and drive buses. Pick a spot on the magic mile to imagine one of the
+apartments that is proposed", and earlier "a btn that changes the model between standard vs the councils proposed
+changes for Moorooka ... If its a building that does not exist yet make that clear ... just for one building".
+
+- **Helicopter** (`heli: true` in a town's planes; `townPlaneParts(colour, "heli")`): one in each town, by the plane.
+  Its rotor spins up, then the down arrow (or Space, or Up on a phone) lifts it straight off; the up arrow (or C)
+  brings it down, and it sets down on open ground. W and S fly forward (to 180 km/h) and back, A and D turn it on the
+  spot. No boost. You can only get out once it has landed.
+- **Bus** (`bus: true` in a town's cars; `townPlaneParts(colour, "bus")`): one in each town, drawn by the app, 11 m
+  long. It drives like a car at seven tenths the speed and push, with a long wheelbase, a wide outline against
+  buildings and the view from further back. The buses the Moorooka model runs along its streets are not these: they
+  cannot be got into yet.
+- **Plan** (the Plan button in the top row, or P; Moorooka only; `townPlan`, `MOO_PLAN`): shows or hides one imagined
+  building, 7 storeys of apartments over shops on an open car yard on Ipswich Road (the Magic Mile), and takes you to
+  the footpath down the road from it if you are far away. The Nathan, Salisbury, Moorooka Neighbourhood Plan sets
+  heights by precinct (up to 7 storeys in the Magic Mile's core, as reported), not buildings, so the site and the
+  design are Claude's pick: not a real proposal, and whether that lot is inside the core has not been checked against
+  the plan's maps. It says "NOT BUILT: imagined 7 storeys" on all four sides, in the toast and in a corner note.
+  P was used and not F5, which reloads the page.
