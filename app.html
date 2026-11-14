@@ -71,6 +71,9 @@ button, input, select { font: inherit; color: inherit; }
 /* No accidental zooming on phones: double-taps don't zoom, and text boxes are big enough that iPhones
    don't zoom in when you tap into them. Pinch zoom still works. */
 html, body { touch-action: manipulation; }
+#verBadge { position: fixed; right: calc(6px + env(safe-area-inset-right)); bottom: calc(4px + env(safe-area-inset-bottom)); z-index: 2147483000; pointer-events: none; padding: 1px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.82); color: #1f5fd1; font: 700 10px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.02em; }
+#verBadge[hidden] { display: none; }
+@media (prefers-color-scheme: dark) { #verBadge { background: rgba(14, 13, 22, 0.78); color: #7fb0ff; } }
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }  /* iPhone: don't enlarge the text when turned sideways (it stays wrong when turned back) */
 /* No rubber-band bounce: on iPhone it dragged the whole page down and lifted the bottom bar off the bottom (pull to refresh still works) */
 html, body { overscroll-behavior-y: none; }
@@ -10999,6 +11002,11 @@ const handle = async (m, post) => {
     setTimeout(() => { try { bsPlace(); } catch {} }, 400);
   }
   function showVersion() {
+    // Ash: the commit id, small and blue in the bottom right corner of every screen, Explore included (Ash, 15 November 2026:
+    // "If in as ash show the v number in blue small bottom right"). It lets taps through to whatever is under it.
+    { const ash = /^ash(ley)?$/i.test((S.name || "").trim()), commit = document.querySelector('meta[name="an-commit"]')?.content || "";
+      let b = $("verBadge"); if (ash && !b) { b = document.createElement("div"); b.id = "verBadge"; b.setAttribute("aria-hidden", "true"); document.body.appendChild(b); }
+      if (b) { b.hidden = !ash; b.textContent = commit || "dev"; } }
     const el = $("appVer"); if (!el) return;
     const me = /^(rod|rodney|ash|ashley)$/i.test((S.name || "").trim());
     el.hidden = !me; if (!me) return;
