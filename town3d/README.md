@@ -933,3 +933,13 @@ violence." `TOWN_EMOTES` in `app.html`: Wave, Dance, Jump, Cheer, Spin, Bow and 
   (`chat/plans.json`, 60 days) and Ash's Suggestions are unchanged; Dismiss also hides one from Ash's own view.
 - Construction worker wording: "Help us build and shape this model! Your edits are sent to the town planner who can
   permanently update this model." Explorers are told to pick Construction worker to get the pencil.
+
+## Smarter traffic, people off Inverloch's roads (15 November 2026)
+
+- **Traffic** now mostly carries straight on at a corner (never doubling back unless the street ends), slows into bends and
+  corners, follows the car ahead at a distance, waits for one crossing in front (the earlier-listed car goes first, so two never
+  wait on each other), and starts again elsewhere if stuck for 10 s. Each car sits on its four wheels like the car you drive
+  (`lie()`'s method: the middle of four samples, tipped to the slope, eased), so they no longer sink into the road or float on
+  a hill crest or dip.
+- **Inverloch's people** (`ai-forge` `inverloch3d/life.ts`, model `inverloch-model.js?v=17`): spots in the street are skipped
+  (`roads.clear`, 1.5 m clear of the carriageway; shoppers 2.3 to 3.3 m out from a main street's edge and clear of side streets).
