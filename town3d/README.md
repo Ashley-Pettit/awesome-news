@@ -691,3 +691,13 @@ standard plane", and of Logan's corner note "remove the bottom right disclaimer"
   golden plane keeps its boost.
 - Logan's standing note in the bottom right corner is gone (its flood list is not public, and carries its own notice).
 - Jump to stands you in front of a car's nose, so the car you asked for is the nearest.
+
+## Cars and planes: numbers Ash can change in Admin (14 November 2026)
+
+Ash: "Allow me to edit all these sorts of settings when in as an admin. Add this into the admin of the news app."
+Settings > Admin > Cars and planes (shown when the name in Settings is Ash or Ashley) lists `RIDE_DEF` from
+`app.html`: car top speed, acceleration and boost top speed, how long the boost lasts and takes to refill, the
+handbrake's spin and how much it slows, the plane's top speed, boost top speed, acceleration and take-off speed, how
+much better the golden ones are, whether the standard plane has a boost, and engine volume. Each has a least and a
+most. They are kept on that device (`an3d-rides`, shared by every town) and read when a model opens (`rideSettings`
+in `townCar`). "Put them all back" clears them. They are not sent to anyone else.
