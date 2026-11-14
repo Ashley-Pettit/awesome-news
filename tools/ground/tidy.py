@@ -22,6 +22,16 @@ In order:
    from the kerb) is filled with a straight path from the end of one to the start of the next, over grass on street
    land only (never over a road, a property or a building); a lone bit under 10 m in the grass with no footpath within
    30 m either way, touching neither the road nor a property, goes.
+   Then block by block (a side of a street between one side street and the next), counting only stretches of 8 m or
+   more as footpath (shorter pieces are crossovers): a footpath carries on across a break, and on to the side street's
+   kerb at each end (so the paths either side of a side street line up to cross it), where that is 40 m or less and
+   the footpath already runs along a third or more of the side, or 12 m or less where it runs along less. Past that
+   nothing is laid: the plan gives no reason to think there is a footpath. An end still left in the grass, not at a
+   crossover, gets a short link across the verge to the kerb. Concrete with a road just beyond it (a median, an
+   island) is never taken for a footpath.
+   Path is only ever laid where the line is not paved already (no concrete within 0.7 m of it): a crossover, or a path
+   the scan could not measure, is left exactly as it is, so nothing that exists gets wider and a second run adds
+   next to nothing.
 5. Straight edges: each kind's signed distance is worked out at 0.2 m and smoothed over 0.28 m before it is stored, so a
    straight edge that was drawn as pixel steps comes out straight, not as a sawtooth or a wobble (the model draws the
    edge where two kinds' distances are equal, read between the pixels).
@@ -266,7 +276,8 @@ def join_paths(K, inlot, roof, X0, Z0):
                         while e < len(offs) and kk[e] == CONC and not bl[e]:
                             e += 1
                         wid = (e - o) * MPP
-                        if 0.8 <= wid <= 2.6 and (o == 0 or kk[o - 1] in (LAWN, OTHER)):
+                        beyond = kk[e:e + 10]   # a road just past it (within 2 m): a median or an island, not a footpath
+                        if 0.8 <= wid <= 2.6 and (o == 0 or kk[o - 1] in (LAWN, OTHER)) and not (beyond == ASPH).any():
                             band_o[a] = offs[o] + wid / 2; band_w[a] = wid; band_l[a] = lab[rowc[a, o], colc[a, o]]
                         break
                     if kk[o] == ASPH and o > 2:
@@ -275,6 +286,12 @@ def join_paths(K, inlot, roof, X0, Z0):
             have = ~np.isnan(band_o)
             if have.sum() < 2:
                 continue
+
+            def paved(i0, oo):
+                """For each sample from i0: is the line at offset oo already paved (within 0.7 m)? A crossover, or a path
+                too wide or too narrow for the scan above. Those stretches are left exactly as they are."""
+                io = (np.asarray(oo) / MPP).astype(int)
+                return np.array([(k[i0 + j_, max(0, o_ - 3):o_ + 4] == CONC).any() for j_, o_ in enumerate(io)])
             # runs of footpath along this side
             idx = np.flatnonzero(have)
             breaks = np.flatnonzero(np.diff(idx) > 1)
@@ -298,12 +315,84 @@ def join_paths(K, inlot, roof, X0, Z0):
                 # only across grass or garden on street land: not over a road, a property or a building
                 if (K[pr, pc] == ASPH).any() or inlot[pr, pc].any() or roof[pr, pc].any():
                     continue
+                pv = paved(a1, oo); laid = 0
                 for m_ in range(len(pts) - 1):
+                    if pv[m_] and pv[m_ + 1]:
+                        continue
                     p0, p1 = pts[m_], pts[m_ + 1]
                     dvec = (p1 - p0) / max(np.hypot(*(p1 - p0)), 1e-9); nn = np.array([-dvec[1], dvec[0]]) * ww / 2
                     poly = [p0 + nn, p1 + nn, p1 - nn, p0 - nn]
-                    dr.polygon([((x - X0) / MX, (z - Z0) / MZ) for x, z in poly], fill=1)
-                st['paths joined'] += 1; st['path m added'] += gap
+                    dr.polygon([((x - X0) / MX, (z - Z0) / MZ) for x, z in poly], fill=1); laid += 1
+                if laid:
+                    st['paths joined'] += 1; st['path m added'] += laid * STEP
+            # ---- block by block: a side of a street between one side street's mouth and the next
+            def lay(i0, i1, oo, ww):
+                """A path from sample i0 to i1 at offsets oo, laid only on street land (not a road, a property or a building)
+                and only where the line is not paved already."""
+                pts = c[i0:i1 + 1] + nrm[i0:i1 + 1] * side * (w / 2 + 0.3 + oo[:, None])
+                pc = ((pts[:, 0] - X0) / MX).astype(int); pr = ((pts[:, 1] - Z0) / MZ).astype(int)
+                good = (pc >= 0) & (pc < W) & (pr >= 0) & (pr < H)
+                pcc, prc = np.clip(pc, 0, W - 1), np.clip(pr, 0, H - 1)
+                good &= (K[prc, pcc] != ASPH) & ~inlot[prc, pcc] & ~roof[prc, pcc]
+                got = 0.0; pv = paved(i0, oo)
+                for m_ in range(len(pts) - 1):
+                    if not (good[m_] and good[m_ + 1]) or (pv[m_] and pv[m_ + 1]):
+                        continue
+                    p0, p1 = pts[m_], pts[m_ + 1]
+                    dvec = (p1 - p0) / max(np.hypot(*(p1 - p0)), 1e-9); nn = np.array([-dvec[1], dvec[0]]) * ww / 2
+                    dr.polygon([((x - X0) / MX, (z - Z0) / MZ) for x, z in (p0 + nn, p1 + nn, p1 - nn, p0 - nn)], fill=1)
+                    got += STEP
+                return got
+
+            def link(a):
+                """A short link from the footpath at sample a straight across the verge to the kerb."""
+                o1 = band_o[a]
+                kk = k[a, :max(1, int(o1 / MPP))]
+                if (kk == ASPH).any() or (kk == 255).any():
+                    return False
+                p0 = c[a] + nrm[a] * side * (w / 2 - 0.1); p1 = c[a] + nrm[a] * side * (w / 2 + 0.3 + o1)
+                nn = u[a] * PATH_W / 2
+                dr.polygon([((x - X0) / MX, (z - Z0) / MZ) for x, z in (p0 + nn, p1 + nn, p1 - nn, p0 - nn)], fill=1)
+                return True
+
+            mouth = (k[:, :11] == ASPH).mean(1) >= 0.7        # the first 2.2 m past the kerb is road: a side street
+            flips = np.flatnonzero(np.diff(np.r_[1, mouth.astype(int), 1]))
+            for b0, b1 in zip(flips[::2], flips[1::2] - 1):
+                n_ = b1 - b0 + 1
+                if n_ * STEP < 15 or not ok[b0:b1 + 1, 0].all():
+                    continue
+                mine = [(max(a0, b0), min(a1, b1)) for a0, a1 in runs if a1 >= b0 and a0 <= b1]
+                long_ = [r_ for r_ in mine if (r_[1] - r_[0]) * STEP >= 8]   # footpath; shorter pieces are crossovers
+                if not long_:
+                    continue
+                isp = np.zeros(n_, bool)
+                for a0, a1 in long_:
+                    isp[a0 - b0:a1 - b0 + 1] = True
+                to = float(np.median(band_o[b0:b1 + 1][isp])); ww = max(PATH_W, float(np.median(band_w[b0:b1 + 1][isp])))
+                at_end = lambda a0, a1, tail: float(np.clip(np.median(band_o[max(a0, a1 - 10):a1 + 1] if tail else band_o[a0:min(a1, a0 + 10) + 1]), to - 1.0, to + 1.0))
+                # how far a footpath carries on over nothing: 40 m where it already runs along a third or more of the side,
+                # 12 m where it runs along less. Past that the plan gives no reason to think there is one.
+                reach = 40 if isp.mean() >= 1 / 3 else 12
+                done = isp.copy(); laid = 0.0
+                for (a0, a1), (c0, c1) in zip(long_[:-1], long_[1:]):       # a break between two stretches
+                    if (c0 - a1) * STEP <= reach:
+                        laid += lay(a1, c0, np.linspace(at_end(a0, a1, True), at_end(c0, c1, False), c0 - a1 + 1), ww); done[a1 - b0:c0 - b0 + 1] = True
+                (f0, f1), (l0, l1) = long_[0], long_[-1]                    # and on to the side street's kerb at each end
+                if 0 < (f0 - b0) * STEP <= reach:
+                    laid += lay(b0, f0, np.full(f0 - b0 + 1, at_end(f0, f1, False)), ww); done[:f0 - b0] = True
+                if 0 < (b1 - l1) * STEP <= reach:
+                    laid += lay(l1, b1, np.full(b1 - l1 + 1, at_end(l0, l1, True)), ww); done[l1 - b0:] = True
+                st['path m added'] += laid
+                if laid:
+                    st['sides carried on'] = st.get('sides carried on', 0) + 1
+                # an end still left in the grass (not at a crossover or other paving) gets a short link to the kerb
+                for a0, a1 in long_:
+                    for end, step_ in ((a0, -1), (a1, 1)):
+                        nxt = end + step_ * 2
+                        if nxt < b0 or nxt > b1 or done[nxt - b0] or have[nxt] or paved(nxt, [band_o[end]])[0]:
+                            continue
+                        if link(end):
+                            st['kerb links'] = st.get('kerb links', 0) + 1
             # a lone short stretch with no footpath near it either way goes
             for i_, (a0, a1) in enumerate(runs):
                 ln = (a1 - a0) * STEP

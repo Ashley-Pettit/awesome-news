@@ -452,3 +452,33 @@ data changes. Triangles a frame, same three views, before and after:
 | Sharp on a phone, in the model's own viewer (start point) | 3,376,000 | 818,000 |
 
 The work the page's own script does each frame for this is about 0.3 thousandths of a second.
+
+## Moorooka: shop rows from photos, one road surface, footpaths to the corner (14 November 2026)
+
+Ash: "Improve, fix roads, footpaths, add more businesses. No satitile photos for roads or footpaths. You can use real
+photos to model businesses if you can".
+
+- **Shop rows** (`MOO_FRONTS` and `townShops` in `app.html`, replacing `MOO_SHOPS`): each building's front is modelled as
+  a row, from street-level photos (Google Street View, looked at for each row: who is there, in what order, what the
+  front is like). Names are plain lettering in each business's colours, no logos. Kinds of front:
+  - `strip`: glass shopfronts with a door each under an awning, the name on the awning's edge. Each shop steps down
+    with the footpath (Beaudesert Road falls 0.8 m along 145-147), with a plinth so nothing shows under it.
+  - `verandah`: the post office row at 131 (Butcher, Post Office, Domino's): a corrugated verandah on posts, a gable
+    over the post office door with the red sign across it, and the red and yellow post boxes by the door.
+  - `centre`: Moorooka Central (Commonwealth Bank, H&R Block, Aussie, Jao Jorm Thai): glass fronts, a canopy and one
+    dark sign band.
+  - `pub`: the Red Lion: name and TAB sign on the wall, and the low white wall of banners by the footpath.
+  - `sign`: one sign on the wall (Rising Sun International Church, Starbucks, Vizzeto Woodfire, the community centre).
+  New names this round: Butcher, H&R Block, Aussie, Jao Jorm Thai, a barber (two), Moorooka Mall (Ethiopian Village),
+  A La Mode Hair & Beauty, Afro Restaurant, Rannchhod Arcade (Arhibu), an optometrist, Baba Burger, Zeitoon, the TAB.
+  143 Beaudesert Road is an RSPCA op shop in the photos (it was listed as Salvos). Shopfronts whose name could not be
+  read are left plain. Tenants change: check a row against a current photo before adding to it.
+  The model's heights are metres AHD (checked: ground 41 to 47 m along the strip), which is how `eave` sets a wall's
+  height.
+- **One road surface** (`moorooka-model.js`, `?v=19`): the model no longer lays flat ribbons for any street, only for
+  bridges. The ground plan already draws every road, and a ribbon over it showed as a second, darker road with a ragged
+  edge, worst where streets meet. Line markings and kerbs used to sit 0.11 to 0.34 m up to clear the ribbons; they
+  now sit on the ground (0.02 to 0.1 m). In ai-forge the matching change is in `c_` (the streets builder): draw a
+  ribbon only for a bridge, no end caps, and the two lift tables (the road's, all 0.05, and the kerbs', all 0.02;
+  `Vh` and `rv` in the `?v=19` bundle). It was patched onto the bundle built for the drawn-by-distance change above.
+- **Footpaths to the corner** (`surface/*.webp`, by `tools/ground/tidy.py`): see its README.

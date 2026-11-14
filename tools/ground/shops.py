@@ -6,7 +6,8 @@ The businesses and their street addresses come from a web search (the list below
 the Queensland address register (PlanningCadastre/LandParcelPropertyFramework layer 0, queried by street and locality),
 the building on that lot from the survey (town.json), and the wall of it that faces the named street from town.json's
 streets: the stretch of that wall in front of the lot (strip shops share one building, and the surveyed outline takes in
-the awning). The result is pasted into MOO_SHOPS in app.html.
+the awning). The result went into app.html (MOO_SHOPS at first; since the second round MOO_FRONTS, which holds a whole
+front per building: the same wall, taken end to end, with the shops along it read off street-level photos).
 """
 import json, math, base64, sys
 import numpy as np
