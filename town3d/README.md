@@ -427,6 +427,32 @@ straight lines not wavey", with no satellite images and minimal changes.
   bridge or class 3 and under, and end caps only for class 3 and under.
 - **The ground plan** (`surface/*.webp`): tidied by `tools/ground/tidy.py` (see its README).
 
+## Moorooka: drawn by distance (the lag fix)
+
+Ash, 14 November 2026: "Optimise around lag". Measured first: at the start point the model drew about 670,000
+triangles a frame on the app's light setting and 3.4 million on a phone's sharp one, most of it spread over the whole
+suburb whatever the camera could see. Every parked car was drawn in full (round wheels, mirrors, door handles:
+984,000 triangles), every tree, every kerb (one piece, so never skipped), every fence, and on the sharp setting all
+of it again for shadows. The model (script `?v=18`) now draws by distance:
+
+| What | Near the view | Further off |
+| --- | --- | --- |
+| Parked and moving cars | in full, within 90 to 220 m | a 26 triangle body out to 800 to 1,600 m, then nothing |
+| Trees | in full, within 200 to 480 m | a plain 8 triangle crown |
+| Buildings | with windows and solar panels, within 260 to 700 m | walls and roofs only |
+| Kerbs, fences (sharp settings) | within about 400 m | not drawn |
+| Shadows | cast by what is near | none from the far versions |
+
+(The smaller distance is the light setting, the larger the sharpest.) Nothing about the layout, the ground or the
+data changes. Triangles a frame, same three views, before and after:
+
+| Setting | Before | After |
+| --- | --- | --- |
+| Light, in the app (start point, a street on foot, from 420 m up) | 669,000 / 650,000 / 785,000 | 241,000 / 240,000 / 276,000 |
+| Sharp on a phone, in the model's own viewer (start point) | 3,376,000 | 818,000 |
+
+The work the page's own script does each frame for this is about 0.3 thousandths of a second.
+
 ## Moorooka: shop rows from photos, one road surface, footpaths to the corner (14 November 2026)
 
 Ash: "Improve, fix roads, footpaths, add more businesses. No satitile photos for roads or footpaths. You can use real
@@ -449,9 +475,10 @@ photos to model businesses if you can".
   read are left plain. Tenants change: check a row against a current photo before adding to it.
   The model's heights are metres AHD (checked: ground 41 to 47 m along the strip), which is how `eave` sets a wall's
   height.
-- **One road surface** (`moorooka-model.js`, `?v=18`): the model no longer lays flat ribbons for any street, only for
+- **One road surface** (`moorooka-model.js`, `?v=19`): the model no longer lays flat ribbons for any street, only for
   bridges. The ground plan already draws every road, and a ribbon over it showed as a second, darker road with a ragged
   edge, worst where streets meet. Line markings and kerbs used to sit 0.11 to 0.34 m up to clear the ribbons; they
   now sit on the ground (0.02 to 0.1 m). In ai-forge the matching change is in `c_` (the streets builder): draw a
-  ribbon only for a bridge, no end caps, and the two lift tables (`Hh` all 0.05, `iv` all 0.02).
+  ribbon only for a bridge, no end caps, and the two lift tables (the road's, all 0.05, and the kerbs', all 0.02;
+  `Vh` and `rv` in the `?v=19` bundle). It was patched onto the bundle built for the drawn-by-distance change above.
 - **Footpaths to the corner** (`surface/*.webp`, by `tools/ground/tidy.py`): see its README.
