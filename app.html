@@ -7869,7 +7869,7 @@ const handle = async (m, post) => {
   // latitude, longitude, metres back, tilt and bearing). A model with floods can also set floodOf (what its flooded area is a share
   // of: "Logan"), floodNote (the line under the list) and floodWarn (show the not-official notice first, and a banner while a flood is on).
   const TOWNS = {
-    inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=14", assets: TOWN3D, place: "inv", up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
+    inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=15", assets: TOWN3D, place: "inv", up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
     moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=22", assets: TOWN3D + "moorooka/", place: "moo", up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
       walkStart: { x: -269.8, z: -991.4, yaw: -1.623 },  // Ash's pick for where Moorooka starts: the Beaudesert Road footpath, looking at the house he chose
       // its floods: widest over the Oxley Creek flats along the model's western edge, seen from the east. floodWarn: the not-official notice has to be accepted
@@ -7877,7 +7877,7 @@ const handle = async (m, post) => {
       floodLook: [-27.5375, 153.0115, 1100, 40, 100], floodOf: "this map", noFloodSlider: true,  // Ash: no water level slider ("At the peak") in Moorooka: a flood just rises to its peak
       floodWarn: { council: "Brisbane City Council", short: "BCC", how: "our own computer simulation of rain running over the ground and the creeks rising (and, in big river floods, Oxley Creek backing up), on a 5 m model of the terrain", map: "Brisbane City Council's Flood Awareness Map and FloodWise Property Report" },
       floodNote: "A guide only: our own simulation, from the terrain, the buildings and the Bureau's design rainfall for Moorooka. It includes water running over the ground to the creeks. No council flood mapping is used. For property, insurance or planning decisions, use Brisbane City Council's Flood Awareness Map and FloodWise Property Report." },
-    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=30", assets: TOWN3D + "logan/", place: "logan", up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
+    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=31", assets: TOWN3D + "logan/", place: "logan", up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
       start: "council", onFoot: true, noFloodSlider: true, flyTo: { id: "brownsplains", label: "Fly to Browns Plains" }, wait: 90000, ceil: 110000, fast: 600, far: 150000, out: 130000, stride: 0.02, pad: 80000, stand: [0.45, 400], floodLook: [-27.69, 153.17, 12000, 55, -35],
       // the same not-official notice and banner as Moorooka's (Ash, 12 November 2026)
       floodWarn: { council: "Logan City Council", short: "LCC", how: "the 2017 flood as mapped, and the others worked out from river gauge heights and rainfall over a terrain model", map: "Logan City Council's flood maps" } },  // shown small in the bottom right corner the whole time the model is open
@@ -8054,7 +8054,7 @@ const handle = async (m, post) => {
         if (rides) for (const P of rides.planes) mine.push({ name: P.name, group: "Things to drive and fly", what: P.what,
           walk: (() => { const s = Math.sin(P.h), c = Math.cos(P.h), dx = s * 7 - c * 5, dz = c * 7 + s * 5;  // ahead of its nose and off to one side, clear of the wing
             return { x: P.x + dx, z: P.z + dz, yaw: Math.atan2(dx, dz), pitch: -0.06 }; })(), target: [P.x, P.z] });
-        if (rides) for (const G of rides.cars) { const dx = Math.sin(G.h) * (G.bus ? 13 : 5.5), dz = Math.cos(G.h) * (G.bus ? 13 : 5.5);  // in front of its nose (nearer to it than to a car parked beside it)
+        if (rides) for (const G of rides.cars) { if (G.spare && m.nearestCar) continue; /* a red car of the app's own only where the model has no cars to hand over */ const dx = Math.sin(G.h) * (G.bus ? 13 : 5.5), dz = Math.cos(G.h) * (G.bus ? 13 : 5.5);  // in front of its nose (nearer to it than to a car parked beside it)
           mine.push({ name: G.name, group: "Things to drive and fly", what: G.what, walk: { x: G.x + dx, z: G.z + dz, yaw: Math.atan2(dx, dz), pitch: -0.1 }, target: [G.x, G.z] }); }
         // Places to jump to: each as somewhere to stand (walking) and a view from above (flying). Where the model knows a
         // spot on the kerb of the nearest street (Moorooka's does), you stand there; otherwise a few steps back from the place.
@@ -9114,11 +9114,11 @@ const handle = async (m, post) => {
     moo: { planes: [...MOO_PLANES, { x: -320.7, z: -997.9, h: 2.71, heli: true, name: "The helicopter", at: "in Stimpson Park", what: "In Stimpson Park, beside the plane. Walk up to it and get in" }],
       cars: [MOO_GOLD_CAR, { x: -291.5, z: -984.4, h: 2.71, bus: true, name: "The bus", what: "By the kerb at Stimpson Park, past the golden car. Slow, long and wide" }] },
     inv: { planes: [{ x: -210, z: -377, h: 1.571, name: "The plane", at: "on the lawn by The Hub", what: "On the lawn by The Hub, off A'Beckett Street. Walk up to it and get in" }],
-      cars: [{ x: -228.5, z: -375.5, h: Math.PI, name: "The red car", what: "On the lawn by The Hub, beside the plane" }, { x: -232.5, z: -375.5, h: Math.PI, gold: true, name: "The golden car", what: "On the lawn by The Hub. A fifth faster than the red one" }],
+      cars: [{ x: -228.5, z: -375.5, h: Math.PI, spare: true, name: "The red car", what: "On the lawn by The Hub, beside the plane" }, { x: -232.5, z: -375.5, h: Math.PI, gold: true, name: "The golden car", what: "On the lawn by The Hub. A fifth faster than the red one" }],
       more: { planes: [{ x: -199, z: -378, h: 1.571, heli: true, name: "The helicopter", at: "on the lawn by The Hub", what: "On the lawn by The Hub, beside the plane" }], cars: [{ x: -214, z: -357, h: -1.571, bus: true, name: "The bus", what: "In A'Beckett Street, out the front of The Hub" }] },
       roam: [[-278, -562], [627, -1086], [-108, -190], [17, -179], [-1585, 1221], [575, 1066]] },
     logan: { planes: [{ x: 5768.9, z: -13344.6, h: 2.016, name: "The plane", at: "on the street out the front of the council", what: "On the street out the front of Logan City Council. Walk up to it and get in" }],
-      cars: [{ x: 5816.2, z: -13302.9, h: 1.94, name: "The red car", what: "On the lawn out the front of the council, by the plane" }, { x: 5789.8, z: -13198.7, h: 2.03, gold: true, name: "The golden car", what: "In the car park behind the council. A fifth faster than the red one" }],
+      cars: [{ x: 5816.2, z: -13302.9, h: 1.94, spare: true, name: "The red car", what: "On the lawn out the front of the council, by the plane" }, { x: 5789.8, z: -13198.7, h: 2.03, gold: true, name: "The golden car", what: "In the car park behind the council. A fifth faster than the red one" }],
       more: { planes: [{ x: 5757.3, z: -13354.6, h: 2.016, heli: true, name: "The helicopter", at: "across the street from the council", what: "On the grass across the street from the council" }], cars: [{ x: 5783.5, z: -13323.9, h: 2.016, bus: true, name: "The bus", what: "In the council's car park" }] },
       roam: [[5749, -13002], [6006, -13466], [5650, -13194], [7441, -11580], [5927, 564], [8554, -7453]] },
   };
@@ -9321,7 +9321,7 @@ const handle = async (m, post) => {
       P.parts = m.addParts((P.heli ? townPlaneParts("#c8322b", "heli") : townPlaneParts(P.gold ? "#e2ad1c" : undefined)).map(q => ({ ...q, matrix: M.identity().elements.slice() }))); showPlane(P); return P; });
     // ---- the golden car, the app's own mesh too: twice the top speed and the acceleration of a parked car
     const showOwn = G => { M.compose(V.set(G.x, G.y, G.z), Q.setFromEuler(E.set(-G.p, G.h, G.r, "YXZ")), ONE); G.parts.setMatrix(0, M.elements.slice()); };
-    const owns = RIDES.cars.map(home => { const G = { x: home.x, z: home.z, h: home.h, y: 0, p: 0, r: 0, gold: !!home.gold, bus: !!home.bus };
+    const owns = RIDES.cars.filter(home => !home.spare || !m.nearestCar).map(home => { const G = { x: home.x, z: home.z, h: home.h, y: 0, p: 0, r: 0, gold: !!home.gold, bus: !!home.bus };
       const [y, p, r] = G.bus ? lie(G, 3.6, 1.1) : lie(G, 1.3, 0.8); G.y = y; G.p = p; G.r = r;
       G.parts = m.addParts((G.bus ? townPlaneParts("#2f7fc4", "bus") : townPlaneParts(G.gold ? "#e8b923" : "#c8322b", true)).map(q => ({ ...q, matrix: M.identity().elements.slice() }))); showOwn(G); return G; });
     const gold = owns.find(G => G.gold) || owns[0];
@@ -9479,7 +9479,7 @@ const handle = async (m, post) => {
       if (!c) { const far = parked(F.pos.x, F.pos.z, 5000) || (owns.length ? { distance: nearOwn()[1] } : null), [P, d] = nearPlane(), home = P && Math.hypot(P.x - P.home.x, P.z - P.home.z) < 30;
         toast(`Nothing close enough to get into. ${far ? `The nearest car is ${Math.round(far.distance)} m away` : ""}${far && P ? ", and t" : P ? "T" : "."}${P ? `he nearest plane is ${Math.round(d)} m away${home && P.home.at ? ", " + P.home.at : ""}.` : ""}`, 4500); return true; }
       if (c.plane) { plane = c.plane; veh = "plane"; plane.v = 0; plane.spin = 0; plane.turn = 0; camYaw = plane.h + Math.PI; document.body.classList.add("bsdrive", "bsplane"); boostBtn.style.setProperty("--charge", "100%"); }
-      else { car = c.own ? { own: c.own, gold: c.own.gold, bus: c.own.bus, x: c.own.x, z: c.own.z, h: c.own.h, dir: c.own.h, y: c.own.y, p: c.own.p, r: c.own.r, v: 0, steer: 0 } : { id: c.id, x: c.x, z: c.z, h: c.heading, dir: c.heading, y: ground(c.x, c.z) + 0.05, p: 0, r: 0, v: 0, steer: 0 };
+      else { car = c.own ? { own: c.own, gold: c.own.gold, bus: c.own.bus, x: c.own.x, z: c.own.z, h: c.own.h, dir: c.own.h, y: c.own.y, p: c.own.p, r: c.own.r, v: 0, steer: 0 } : { id: c.id, bus: !!c.bus, x: c.x, z: c.z, h: c.heading, dir: c.heading, y: ground(c.x, c.z) + 0.05, p: 0, r: 0, v: 0, steer: 0 };
         if (!car.own && !m.driveCar(c.id[0], c.id[1], car.x, car.y, car.z, car.h, 0, 0)) { car = null; toast("That car won't start. Try another one."); return true; }
         veh = "car"; camYaw = car.h + Math.PI; document.body.classList.add("bsdrive"); showRing(charge < 0.999); }
       C.in = true; off = [wrap(F.yaw - camYaw), bsClamp(F.pitch + 0.2, -1, 0.55)]; idle = 0; last = [F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch];
@@ -9491,7 +9491,7 @@ const handle = async (m, post) => {
       return true; };
     // the Get in button: there while something is in reach of where you are walking (looked for a few times a second)
     C.frame = () => { if (veh) return; const now = performance.now(); if (now - at < 300) return; at = now;
-      const near = T.walk && !T.tween ? reach() : null, say = near?.plane ? (near.plane.heli ? "Get in the helicopter" : "Get in the plane") : near?.own?.bus ? "Get in the bus" : near?.gold ? "Get in the golden car" : "Get in the car";
+      const near = T.walk && !T.tween ? reach() : null, say = near?.plane ? (near.plane.heli ? "Get in the helicopter" : "Get in the plane") : near?.own?.bus || near?.bus ? "Get in the bus" : near?.gold ? "Get in the golden car" : "Get in the car";
       if (btn.hidden !== !near) btn.hidden = !near; if (near && btn.textContent !== say) btn.textContent = say; };
     btn.onclick = () => { C.enter(); btn.blur(); };
     const hold = on => e => { F.boost = on && !!veh; boostBtn.classList.toggle("on", F.boost); e.preventDefault(); };

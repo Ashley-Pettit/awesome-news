@@ -731,3 +731,23 @@ The plane now stands in the near lane of the street out the front of the council
 car park behind it, the helicopter on the grass across the street and the bus in an aisle of the front car park. All
 four checked in pictures from above. (A picture from above at height h covers about 0.7 h metres across: earlier
 placements had assumed more.)
+
+## Any car can be driven in Inverloch and Logan; cars at Inverloch's kerbs; cars lean with the ground (15 November 2026)
+
+Ash: "Make it so I can drive any car in Inverloch or Logan. Reuse the same config that is used in moorooka. Inverloch
+needs some random cars on streets. The cars aren't following terrain very well. Make sure all cars including the
+random ones respect the terrain."
+
+- **Both models now hand their cars over** the way Moorooka's does (`nearestCar`, `driveCar`), so the app's one
+  `townCar` drives them with the same numbers and keys: walk up to any car, Enter. Up to twelve can be driven off.
+  - Inverloch (ai-forge `claude/drive-any-car`, `inverloch-model.js?v=15`): every standing car, and every car driving
+    the streets (it stops driving itself). It also answers `solidAt`, so cars and planes now stop at buildings.
+  - Logan (ai-forge `claude/logan-drive`, `logan-model.js?v=31`): every car and bus drawn near you, at the kerbs
+    across the city, in the council precinct and in the Browns Plains block. A bus drives as the app's bus does.
+    Logan still has no `solidAt`: things pass through its buildings.
+- The app's own red car is no longer drawn in those two towns (the golden car and the bus stay).
+- **Inverloch's streets:** cars now stand at the kerb along every street, 28 to 98 m apart, on either side, facing
+  the way that side runs, about 500 more than the surveyed ones in the town centre. Moving cars went from 54 to 82.
+- **Leaning with the ground:** a car's height is now the mean of the ground under its four wheels, and it tips nose
+  to tail and side to side with the slope. Inverloch: standing and moving cars. Logan: every car and bus it draws.
+  Moorooka's model was not changed in this.
