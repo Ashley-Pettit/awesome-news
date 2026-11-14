@@ -992,3 +992,12 @@ past the house along the south fence (another car parks there), with a strip of 
   the 1.2 m palings down that side (the app lays a galvanised chainwire fence there instead; the backyard's palings stay).
 - The slab and the striped lawn it replaces show where the plan's ground is drawn (every quality setting, except a
   device reporting under 4 GB or asking to save data), the same as every other driveway in Moorooka.
+
+## Fly to Walk taken out again, fewer cars, clues for dropped fingers (15 November 2026)
+
+- The automatic switch from Fly to Walk (zooming into the ground, or holding Down at the lowest height) is gone, and zoom is
+  back to its old limits (Ash, 15 November 2026: "try removing the thing that goes from fly to walk for now").
+- Traffic: 5 cars in Moorooka (its model has cars of its own on Beaudesert Road) and 8 elsewhere, never started within 40 m
+  of another, to cut lag and overlap.
+- For Ash, the "phone took your finger off" message now also gives the slowest frame in the last 3 seconds, how many other
+  fingers were down, and what had just happened (for example the sharper model being swapped in).
