@@ -1319,6 +1319,7 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
 .bs-town-list button small { display: block; margin-top: 2px; font: 500 0.74rem/1.3 var(--ui); color: rgba(255, 255, 255, 0.78); }
 .bs-town-list button[aria-checked="true"] { background: rgba(255, 255, 255, 0.14); }
 .bs-town-list p { margin: 4px 12px 6px; font: 500 0.72rem/1.4 var(--ui); color: rgba(255, 255, 255, 0.78); }
+.bs-town-list p.bs-town-group { margin: 10px 12px 2px; font: 700 0.72rem/1.4 var(--ui); color: rgba(255, 255, 255, 0.9); }
 .bs-town-rise output { min-width: 88px; }
 /* Moorooka's flood simulation: a notice that must be accepted before it shows, and a banner for as long as it does */
 .bs-flood-warn { pointer-events: auto; position: absolute; inset: 0; z-index: 6; display: grid; place-items: center; padding: 16px; background: rgba(8, 10, 22, 0.72); }
@@ -7785,7 +7786,7 @@ const handle = async (m, post) => {
   // of: "Logan"), floodNote (the line under the list) and floodWarn (show the not-official notice first, and a banner while a flood is on).
   const TOWNS = {
     inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=14", assets: TOWN3D, place: "inv", up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
-    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=16", assets: TOWN3D + "moorooka/", place: "moo", up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
+    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=17", assets: TOWN3D + "moorooka/", place: "moo", up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
       walkStart: { x: -269.8, z: -991.4, yaw: -1.623 },  // Ash's pick for where Moorooka starts: the Beaudesert Road footpath, looking at the house he chose
       // its floods: widest over the Oxley Creek flats along the model's western edge, seen from the east. floodWarn: the not-official notice has to be accepted
       // before the list opens, and a banner says the same while a flood is showing (Ash asked for both).
@@ -7964,16 +7965,19 @@ const handle = async (m, post) => {
 
         // the town centre round the Rotary clock and number 11 Norman Road, stood in the model where they really are
         let mine = []; if (inv) try { mine = townModelGuests(T, m); } catch (e) { console.warn("Town model: the town centre and Norman Road couldn't be added", e); }
+        if (cfg.place === "moo") try { mine = mine.concat(townShops(T, m)); } catch (e) { console.warn("Town model: Moorooka's shops couldn't be added", e); }
         // Places to jump to: each as somewhere to stand (walking) and a view from above (flying). Where the model knows a
         // spot on the kerb of the nearest street (Moorooka's does), you stand there; otherwise a few steps back from the place.
         // (Logan's list starts with the whole city, which is only ever seen from the air, like the water.)
-        const places = [...mine.map(g => ({ name: g.name, walk: g.walk, fly: above(g.target[0], g.target[1], g.walk.yaw) })),
+        const places = [...mine.filter(g => !g.group).map(g => ({ name: g.name, walk: g.walk, fly: above(g.target[0], g.target[1], g.walk.yaw) })),
           ...(m.overview ? [{ name: "The whole city", water: true, fly: () => m.overview() }] : []),
           ...m.spots().map(s => { let dx = s.x - s.tx, dz = s.z - s.tz; const d = Math.hypot(dx, dz) || 1, r = Math.min(stand[1], d * stand[0]); dx /= d; dz /= d;
             // a place the model marks with a pin (Logan: 704 Waterford Tamborine Road) is always shown from the air, where its pin
             // and red boundary can be seen (on foot you could land behind a tree: Ash, 13 November 2026, "I can't tell where 704 is")
             if (s.marker) return { id: s.id, name: s.name, water: true, fly: s };
-            return { id: s.id, name: s.name, water: s.kind === "water", fly: s, walk: s.stand ? { x: s.stand.x, z: s.stand.z, yaw: s.stand.yaw, pitch: s.stand.pitch ?? 0.02 } : { x: s.tx + dx * r, z: s.tz + dz * r, yaw: Math.atan2(dx, dz), pitch: 0.02 } }; })];
+            return { id: s.id, name: s.name, water: s.kind === "water", fly: s, walk: s.stand ? { x: s.stand.x, z: s.stand.z, yaw: s.stand.yaw, pitch: s.stand.pitch ?? 0.02 } : { x: s.tx + dx * r, z: s.tz + dz * r, yaw: Math.atan2(dx, dz), pitch: 0.02 } }; }),
+          // then the town's shops and places, under their own heading (Moorooka)
+          ...mine.filter(g => g.group).map(g => ({ name: g.name, group: g.group, what: g.what, walk: g.walk, fly: above(g.target[0], g.target[1], g.walk.yaw) }))];
 
         // ---- Walk or Fly ----
         const tideBox = $("bsTownTide"), tideIn = $("bsTownTideIn"), tideOut = $("bsTownTideOut"), tidal = m.tide.max > m.tide.min, tideBtn = $("bsTideBtn");
@@ -8040,7 +8044,8 @@ const handle = async (m, post) => {
           T.tween = { a, b: { x: v.x, y: v.y, z: v.z, yaw: v.yaw, pitch: v.pitch }, t0: performance.now(), ms: bsClamp(1400 + d * 0.32, 1600, 6500), arc: Math.min(d * 0.28, 2600) };
           tip.classList.add("dim"); };
         list.innerHTML = (goTo ? `<button type="button" role="menuitem" class="bs-town-flyto" data-town-fly><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 13.5 21 4l-6.5 17-3-7.5z"/></svg>${esc(cfg.flyTo.label)}<small>Drawn in detail: houses, pools, yards and the park</small></button>` : "")
-          + places.map((p, i) => p === goTo ? "" : `<button type="button" role="menuitem" data-town-go="${i}">${esc(p.name[0].toUpperCase() + p.name.slice(1))}</button>`).join("");
+          + places.map((p, i) => p === goTo ? "" : (p.group && p.group !== places[i - 1]?.group ? `<p class="bs-town-group" role="presentation">${esc(p.group)}</p>` : "")
+            + `<button type="button" role="menuitem" data-town-go="${i}"${p.what ? ` aria-label="${esc(p.name + ", " + p.what)}"` : ""}>${esc(p.name[0].toUpperCase() + p.name.slice(1))}${p.what ? `<small>${esc(p.what)}</small>` : ""}</button>`).join("");
         const openList = on => { list.hidden = !on; jump.setAttribute("aria-expanded", String(on)); if (on) { fl.hidden = true; fb.setAttribute("aria-expanded", "false"); list.querySelector("button")?.focus({ preventScroll: true }); } };
         jump.hidden = !places.length; jump.textContent = "Jump to…"; jump.setAttribute("aria-haspopup", "menu"); openList(false);
         jump.onclick = () => openList(list.hidden);
@@ -8164,6 +8169,96 @@ const handle = async (m, post) => {
   const townOnPlaza = (x, z) => { const [a, b] = townPlazaAB(x, z); return (a > -5.8 && a < 5.1 && b > -4.2 && b < 3.4) || (a > -5.8 && a < 1.5 && b >= 3.4 && b < 14) || (a >= 1.5 && a < 5.8 && b > 10.1 && b < 14); };
   const townInPiece = (P, x, z) => P.every((a, i) => { const b = P[(i + 1) % P.length]; return (b[0] - a[0]) * (z - a[1]) - (b[1] - a[1]) * (x - a[0]) >= 0; });
   const townInBlock = (x, z) => TOWN_BLOCK.some(P => townInPiece(P, x, z));
+  // ---- Moorooka's shops and places (Ash, 14 November 2026: "Add known businesses to moorooka. Do a google search for
+  // businesses and add the popular ones. For example make the post office look like a post office"). Popular places found by
+  // a web search, each on its own building: its address point and lot from the Queensland address register, the building on
+  // that lot from the survey, and the wall of it that faces the street (worked out ahead: tools/ground/shops.py). Each gets a
+  // sign on that wall (above the awning line on the Beaudesert Road strip, where the model hangs awnings) and a place in Jump
+  // to, "Shops and places". The post office is red, with a red post box and a yellow one at the kerb out front. Names only,
+  // no logos. a and b are the ends of the wall (m), n which way it faces, kerb and across how far the near and far kerbs are;
+  // listed: the model already has it in Jump to.
+  const MOO_SHOPS = [
+    { name: "Moorooka Post Office", what: "Post office", addr: "131 Beaudesert Road", a: [-207.1, -310.4], b: [-210.5, -335.6], n: [0.991, -0.1337], kerb: 20.29, across: 30.29, post: true , listed: true},
+    { name: "Commonwealth Bank", what: "Bank, in Moorooka Central", addr: "132-146 Beaudesert Road", a: [-153.1, -331.1], b: [-140.23, -312.09], n: [-0.8282, 0.5605], kerb: 18.62, across: 28.92, look: ["#ffcc00", "#1a1a1a"] },
+    { name: "Salvos Stores", what: "Op shop", addr: "143 Beaudesert Road", a: [-158.73, -260.33], b: [-164.2, -269.0], n: [0.8457, -0.5337], kerb: 3.98, across: 14.58, look: ["#d81e2c", "#ffffff"] },
+    { name: "Ethiopian Village", what: "Ethiopian restaurant", addr: "147 Beaudesert Road", a: [-147.3, -244.56], b: [-152.74, -253.21], n: [0.8462, -0.5329], kerb: 2.69, across: 13.29, look: ["#1f6b3a", "#f6d34a"] },
+    { name: "Arhibu Restaurant", what: "Eritrean and Ethiopian restaurant", addr: "197-201 Beaudesert Road", a: [-103.55, -175.2], b: [-108.0, -182.3], n: [0.8474, -0.5309], kerb: 2.38, across: 13.38, look: ["#7a2620", "#f3e3c3"] },
+    { name: "Zeitoon", what: "Persian and Afghan restaurant", addr: "204 Beaudesert Road", a: [-73.8, -173.8], b: [-60.9, -151.3], n: [-0.8675, 0.4974], kerb: 1.22, across: 13.42, look: ["#3f5b2a", "#efe6cf"] },
+    { name: "The Red Lion Hotel", what: "Pub", addr: "215 Beaudesert Road", a: [-94.9, -116.9], b: [-92.7, -136.9], n: [0.994, 0.1093], kerb: 11.08, across: 22.08, look: ["#5c1a1a", "#f0d58c"] },
+    { name: "Rising Sun International Church", what: "Church (once Moorooka Church of Christ)", addr: "108 Beaudesert Road", a: [-180.7, -464.8], b: [-180.0, -457.0], n: [-0.996, 0.0894], kerb: 15.13, across: 25.93, look: ["#f4efe4", "#2c3d63"] },
+    { name: "Starbucks", what: "Coffee, drive-through", addr: "1115 Ipswich Road", a: [-1068.9, -40.9], b: [-1057.6, -46.7], n: [0.4566, 0.8897], kerb: 14.7, across: 24.3, look: ["#0f5c3e", "#ffffff"] },
+    { name: "Vizzeto Woodfire", what: "Woodfired pizza", addr: "398 Tarragindi Road", a: [664.5, 85.7], b: [658.4, 137.6], n: [-0.9932, -0.1167], kerb: 8.96, across: 18.36, look: ["#1d1d1d", "#e8a33c"] },
+    { name: "Moorooka Community Centre", what: "Community hall", addr: "40 Gainsborough Street", a: [-481.6, 94.0], b: [-493.9, 91.5], n: [0.1992, -0.98], kerb: 10.67, across: 21.27, look: ["#22466e", "#ffffff"] , listed: true},
+  ];
+  function townShops(T, m) {
+    const THREE = BS.B.THREE, out = [], parts = [];
+    const take = (g, look) => parts.push({ positions: g.attributes.position.array, normals: g.attributes.normal.array, uvs: g.attributes.uv?.array, indices: g.index?.array, matrix: new THREE.Matrix4().elements, ...look });
+    // a canvas with the name on it, sized to the sign (w by h metres)
+    const board = (w, h, bg, fg, lines, post) => { const H = 256, W = Math.max(256, Math.round(H * w / h)), c = document.createElement("canvas"); c.width = W; c.height = H;
+      const g = c.getContext("2d"); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+      g.fillStyle = fg; g.textAlign = "center"; g.textBaseline = "middle";
+      let x0 = 0;
+      if (post) {  // an envelope, in white: what a post office sign shows, without anyone's logo
+        const s = H * 0.5, ex = H * 0.62 - s / 2, ey = H / 2 - s * 0.36; x0 = H * 0.55;
+        g.lineWidth = H * 0.05; g.strokeStyle = fg; g.lineJoin = "round"; g.strokeRect(ex, ey, s, s * 0.72);
+        g.beginPath(); g.moveTo(ex, ey); g.lineTo(ex + s / 2, ey + s * 0.4); g.lineTo(ex + s, ey); g.stroke(); }
+      const room = W - x0 - H * 0.3;
+      let size = H * (lines.length > 1 ? 0.36 : 0.5);
+      g.font = `800 ${size}px system-ui, -apple-system, "Segoe UI", sans-serif`;
+      while (g.measureText(lines[0]).width > room && size > 20) { size *= 0.94; g.font = `800 ${size}px system-ui, -apple-system, "Segoe UI", sans-serif`; }
+      if (lines.length > 1) { g.fillText(lines[0], x0 + (W - x0) / 2, H * 0.38); g.font = `600 ${size * 0.55}px system-ui, -apple-system, "Segoe UI", sans-serif`; g.fillText(lines[1], x0 + (W - x0) / 2, H * 0.74); }
+      else g.fillText(lines[0], x0 + (W - x0) / 2, H / 2);
+      return c; };
+    const rgb = hex => { const v = parseInt(hex.slice(1), 16); return [((v >> 16) & 255) / 255, ((v >> 8) & 255) / 255, (v & 255) / 255].map(c => Math.pow(c, 2.2)); };
+    // a box w (along the wall) by h by d, its front face at distance `out` from the wall, centred at (cx, y, cz)
+    const box = (S, along, y, h, w, d, out, look, front) => { const g = new THREE.BoxGeometry(w, h, d);
+      const yaw = Math.atan2(S.n[0], S.n[1]), cx = S.mx + S.ux * along + S.n[0] * (out - d / 2), cz = S.mz + S.uz * along + S.n[1] * (out - d / 2);
+      g.applyMatrix4(new THREE.Matrix4().makeRotationY(yaw).setPosition(cx, y + h / 2, cz));
+      if (!front) { take(g.toNonIndexed(), look); return; }
+      // the face looking out from the wall (BoxGeometry's +z face, after turning) carries the picture; the rest is plain
+      const all = g.toNonIndexed(), P = all.attributes.position.array, N = all.attributes.normal.array, U = all.attributes.uv.array;
+      const fp = [], fn = [], fu = [], rp = [], rn = [];
+      for (let v = 0; v < P.length / 3; v += 3) { const nx = N[v * 3], nz = N[v * 3 + 2], faceOut = nx * S.n[0] + nz * S.n[1] > 0.9;
+        for (let k = 0; k < 3; k++) { const i = v + k; (faceOut ? fp : rp).push(P[i * 3], P[i * 3 + 1], P[i * 3 + 2]); (faceOut ? fn : rn).push(N[i * 3], N[i * 3 + 1], N[i * 3 + 2]); if (faceOut) fu.push(U[i * 2], U[i * 2 + 1]); } }
+      parts.push({ positions: new Float32Array(fp), normals: new Float32Array(fn), uvs: new Float32Array(fu), matrix: new THREE.Matrix4().elements, color: [1, 1, 1], map: front, roughness: 0.55 });
+      parts.push({ positions: new Float32Array(rp), normals: new Float32Array(rn), matrix: new THREE.Matrix4().elements, ...look }); };
+    for (const s of MOO_SHOPS) {
+      const S = { ...s, mx: (s.a[0] + s.b[0]) / 2, mz: (s.a[1] + s.b[1]) / 2 }, len = Math.hypot(s.b[0] - s.a[0], s.b[1] - s.a[1]);
+      S.ux = (s.b[0] - s.a[0]) / len; S.uz = (s.b[1] - s.a[1]) / len;
+      const base = Math.max(m.groundAt(s.a[0], s.a[1]), m.groundAt(s.b[0], s.b[1]), m.groundAt(S.mx, S.mz)) + 0.1;
+      // on the Beaudesert Road shopping strip (latitude 27.5300 to 27.5346 south) the model hangs an awning, to 3.3 m up, on
+      // every shopfront facing the road: the sign goes above it
+      // every shopfront facing the road within 16 m of its centre line: the sign goes high enough to be read over it from
+      // across the street
+      const onStrip = s.addr.endsWith("Beaudesert Road") && S.mz > -511 && S.mz < -1 && (s.kerb + s.across) / 2 < 16;
+      const y0 = base + (onStrip ? 3.7 : 2.55), h = onStrip ? 0.8 : 0.85;
+      const [bg, fg] = s.post ? ["#d71920", "#ffffff"] : s.look;
+      const w = Math.min(len - 0.6, s.post ? 7.5 : Math.max(3.2, Math.min(9, s.name.length * 0.42)));
+      if (w < 1.5) continue;
+      const pic = board(w, h, bg, fg, [s.post ? "POST OFFICE" : s.name], s.post);
+      box(S, 0, y0, h, w, 0.12, 0.14, { color: rgb(bg), roughness: 0.6 }, pic);
+      if (s.post) {
+        // a red band along the whole front, under the sign, and the boxes on the footpath by the kerb
+        box(S, 0, y0 - 0.42, 0.34, Math.max(w, len - 0.4), 0.08, 0.1, { color: rgb("#d71920"), roughness: 0.6 });
+        const at = Math.max(1.2, s.kerb - 1.0);
+        for (const [dx, col, hh] of [[-0.35, "#d71920", 1.25], [0.35, "#f2c200", 1.2]]) {
+          const x = S.mx + S.n[0] * at + S.ux * (3 + dx), z = S.mz + S.n[1] * at + S.uz * (3 + dx), g0 = m.groundAt(x, z);
+          const g = new THREE.BoxGeometry(0.5, hh, 0.42); g.applyMatrix4(new THREE.Matrix4().makeRotationY(Math.atan2(S.n[0], S.n[1])).setPosition(x, g0 + hh / 2, z));
+          take(g.toNonIndexed(), { color: rgb(col), roughness: 0.45 });
+          // the slot: a dark strip across the front, near the top
+          const sl = new THREE.BoxGeometry(0.3, 0.05, 0.02); sl.applyMatrix4(new THREE.Matrix4().makeRotationY(Math.atan2(S.n[0], S.n[1])).setPosition(x + S.n[0] * 0.22, g0 + hh - 0.25, z + S.n[1] * 0.22));
+          take(sl.toNonIndexed(), { color: [0.02, 0.02, 0.02], roughness: 0.9 });
+        }
+      }
+      // in Jump to: across the street (or on the near footpath, when the shop stands well back), looking at the sign
+      const D = s.across + 1.6 <= 22 ? s.across + 1.6 : Math.max(6, s.kerb - 1.5);
+      const sx = S.mx + S.n[0] * D, sz = S.mz + S.n[1] * D;
+      if (s.listed) continue;  // the model already has it in Jump to (the post shop, the community centre)
+      out.push({ name: s.name, group: "Shops and places", what: `${s.what}, ${s.addr}`, walk: { x: sx, z: sz, yaw: Math.atan2(S.n[0], S.n[1]), pitch: Math.atan2(y0 + h / 2 - base - 1.7, D) * 0.8 }, target: [S.mx, S.mz] });
+    }
+    if (parts.length) m.addParts(parts);
+    return out;
+  }
   // The town centre, the Rotary clock and number 11 Norman Road are copied out of the weather's Inverloch (which is left as it
   // is) and stood in the whole-town model where they really are: their shapes, colours and pictures. The clock's hands, its lit
   // faces, the flags, the koala, the wombats and the windows' glow at night keep following the weather's own, frame by frame.

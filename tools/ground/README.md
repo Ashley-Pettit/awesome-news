@@ -23,3 +23,19 @@ are the one thing read off the aerial photograph (`scripts/moorooka/find_pools.p
    square 1,1 too (the designed square: frames only, its blocks are not touched).
 3. `python3 suburb_cars.py <town.json from before step 1> town.json <work>`: parked cars to suit.
 4. `python3 suburb_yards.py town.json <work> surface/ pools.json yards.bin`: what stands in the backyards.
+
+## Moorooka tidied (14 November 2026)
+
+Ash: "Fix up footpaths so that they don't end randomly. Make sure the footpaths use straight lines not wavey ... There
+are random bits of footpath on concrete that don't make sense or where grass should be ... Where roads connect try to
+connect them properly ... without using satellite images", and "check again for random patches of footpaths, concrete
+or grass in spots that don't make sense ... making minimal changes".
+
+- `python3 tidy.py surface/ town.json parcels.geojson <work> --write` (about 1.5 minutes a square; `--only R,C` for
+  some): specks and slivers, stray patches by what surrounds them, footpath gaps under 30 m joined and lone stubs taken
+  out, then every block stored again with each kind's distance smoothed over 0.28 m. The rules are at the top of the
+  file. Across the suburb it changed about 16,000 m2 (0.15%) and joined about 2,000 footpath gaps.
+- The wobble Ash saw close up was the plan's 0.2 m pixel steps along slanting edges (the model draws an edge where two
+  kinds' stored distances meet). The stronger smoothing makes those edges straight.
+- `python3 shops.py town.json parcels.geojson shops.json`: where each business's sign goes (see `MOO_SHOPS` in
+  `app.html`).

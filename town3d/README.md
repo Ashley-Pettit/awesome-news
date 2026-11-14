@@ -406,3 +406,23 @@ Ash, 14 November 2026: "Optimise top btn layout". The tools (Share, Street names
 built like Walk and Fly, so the top reads as a few groups: Exit explore, Walk or Fly, Jump to, then the height and the
 tools. On a phone or tablet that is two rows. From 1000 px wide it is one row: Exit explore and the height on the left,
 Walk or Fly in the middle, the tools and Jump to on the right (the CSS after `.bs-town-flood` in `app.html`).
+
+## Moorooka: shops and places, straight footpaths, no stray lanes (14 November 2026)
+
+Ash: "Add known businesses to moorooka. Do a google search for businesses and add the popular ones. For example make
+the post office look like a post office. Fix up footpaths so that they don't end randomly. Make sure the footpaths use
+straight lines not wavey", with no satellite images and minimal changes.
+
+- **Shops and places** (`MOO_SHOPS` and `townShops` in `app.html`, placed by `tools/ground/shops.py`): eleven popular
+  places from a web search, each on its own building's street wall (address point and lot from the Queensland address
+  register). A sign on the wall (above the awning line on the Beaudesert Road strip, so it reads from across the street),
+  and a "Shops and places" group in Jump to that stands you across the street looking at it. The post office has a red
+  band and a red "POST OFFICE" sign with an envelope, and a red and a yellow post box at the kerb. Names only, no logos.
+  The post office and the community centre were already in Jump to (the model's own places), so they only get the sign.
+- **No stray lanes over the ground** (`moorooka-model.js`, `?v=17`): the model no longer lays its flat ribbons for
+  lanes, tracks, footways and cycleways (classes 4 to 7) or their round end caps. The ground plan already draws them, and
+  the ribbons sat on the terrain only at points a few metres apart, so they came and went through it as ragged pale and
+  dark patches in car parks and on verges. Streets (classes 0 to 3), bridges, kerbs and line markings are as before. The
+  matching source change in ai-forge is in `c_` (the streets builder in `scene`/`roads`): draw a ribbon only for a
+  bridge or class 3 and under, and end caps only for class 3 and under.
+- **The ground plan** (`surface/*.webp`): tidied by `tools/ground/tidy.py` (see its README).
