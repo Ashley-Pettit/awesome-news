@@ -723,3 +723,11 @@ changes for Moorooka ... If its a building that does not exist yet make that cle
   design are Claude's pick: not a real proposal, and whether that lot is inside the core has not been checked against
   the plan's maps. It says "NOT BUILT: imagined 7 storeys" on all four sides, in the toast and in a corner note.
   P was used and not F5, which reloads the page.
+
+## Logan: the plane on the street, the golden car in the back car park (15 November 2026)
+
+Ash: "Move the golden car to the back Logan carpark. Move the plane onto the street outside Logan city council."
+The plane now stands in the near lane of the street out the front of the council, the golden car in an aisle of the
+car park behind it, the helicopter on the grass across the street and the bus in an aisle of the front car park. All
+four checked in pictures from above. (A picture from above at height h covers about 0.7 h metres across: earlier
+placements had assumed more.)
