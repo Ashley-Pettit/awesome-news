@@ -670,3 +670,24 @@ of the second plane "a golden stripe and extra fast and mobile". All in `townCar
 - **Engines** are about two fifths quieter, wind a fifth.
 - **The boost ring** is 48 fine slanted ticks between two hairlines, red-orange where it is nearly out through gold
   to pale where it is full, and it beats while the boost is on.
+
+## Planes and cars in Inverloch and Logan; the golden ones a fifth better; no boost on the standard plane (14 November 2026)
+
+Ash: "Merge the car and the plane into inverloch and logan. Add 1 plane near the players spawn point and another
+random plane", then "dial down the golden car and plane. Only 20% better than a standard one. Remove boost from the
+standard plane", and of Logan's corner note "remove the bottom right disclaimer".
+
+- `TOWN_RIDES` in `app.html` says what each town has. `townCar` now runs in any model with `addParts`; where a model
+  has no `solidAt` nothing is solid (planes and cars pass through buildings in Inverloch and Logan), and where it has
+  no parked cars to hand over, the app draws a red car and the golden car itself (`townPlaneParts(colour, true)`).
+- **Inverloch:** a plane, a red car and the golden car on the lawn by The Hub, off A'Beckett Street. **Logan:** the
+  same on the lawn out the front of the council, where you start. All are in Jump to. Get in shows when walking.
+- **The golden plane** in those two stands on open ground from the town's `roam` list (parks, ovals, a point), a
+  different one each visit, skipping any under water. It is not in Jump to.
+- **Logan's model** gained `addParts` (ai-forge branch `claude/logan-drive`, on top of `claude/logan-no-704-pin`);
+  `logan-model.js` is rebuilt from it (`?v=30`), the data files unchanged.
+- **Golden car and plane:** now a fifth better than the standard ones (`GOLD = 1.2`): top speed, push, turn and boost.
+- **The standard plane has no boost:** Shift does nothing in it, and its Boost button and key row are not shown. The
+  golden plane keeps its boost.
+- Logan's standing note in the bottom right corner is gone (its flood list is not public, and carries its own notice).
+- Jump to stands you in front of a car's nose, so the car you asked for is the nearest.
