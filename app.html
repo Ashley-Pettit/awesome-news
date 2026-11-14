@@ -1314,9 +1314,9 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
 body.bsdrive:not(.bsplane) .bs-ud { display: none; }  /* in the plane, Up and Down lift and lower the nose */
 body.bsdrive:not(.bsplane) .bs-fly-x.bs-car { bottom: calc(68px + env(safe-area-inset-bottom)); }
 /* Boost: held down while you drive or fly (Shift on a keyboard). Over the right stick on a phone, by Get out on a desktop */
-.bs-fly-x.bs-boost { top: auto; left: auto; right: 34px; bottom: calc(192px + env(safe-area-inset-bottom)); background: #ffd166; color: #1b1830; z-index: 2; touch-action: none; user-select: none; -webkit-user-select: none; }
+.bs-fly-x.bs-boost { top: auto; left: auto; right: 34px; bottom: calc(192px + env(safe-area-inset-bottom)); background: linear-gradient(90deg, #ffd166 var(--charge, 100%), #8d8676 var(--charge, 100%)); color: #1b1830; z-index: 2; touch-action: none; user-select: none; -webkit-user-select: none; }
 .bs-fly-x.bs-boost[hidden] { display: none; }
-.bs-fly-x.bs-boost.on { background: #ff9f1c; }
+.bs-fly-x.bs-boost.on { background: linear-gradient(90deg, #ff9f1c var(--charge, 100%), #8d8676 var(--charge, 100%)); }
 @media (hover: hover) and (pointer: fine) { .bs-fly-x.bs-boost { right: auto; left: calc(50% + 70px); bottom: calc(68px + env(safe-area-inset-bottom)); } body.bsplane .bs-fly-x.bs-boost { bottom: calc(166px + env(safe-area-inset-bottom)); left: calc(50% + 100px); } }
 /* On a desktop, the key that does the same as a button sits at its bottom right corner as a small keycap (Ash, 14 November 2026:
    "place the hotkeys on desktop at the bottom right of things desktop only. Like n for street names") */
@@ -9015,8 +9015,10 @@ const handle = async (m, post) => {
   // - Walking within 8 m of a parked car, or 11 m of the plane, shows a Get in button; Enter (or the button) puts you in the nearer.
   //   Enter again (or Get out) and you step out of the door. Flying the camera, jumping to a place or starting again gets you out too.
   // - The car: W or the up arrow (or the left stick forward) goes, S or down brakes and then reverses, A and D or left and right
-  //   steer, Space is the handbrake, Shift (or the Boost button) is the mega boost: to about 210 km/h. It follows the ground, stops
-  //   with a bump at buildings, deep water and the edge of the model, and stays where you leave it.
+  //   steer, Space is the handbrake. Its top speed is 100 km/h. Shift (or the Boost button) is the mega boost, which takes it on
+  //   past that (towards 210 km/h) for as long as its charge lasts: about four seconds, back in ten. A ring on the ground round
+  //   the car shows how much charge is left, while the boost is on and until it is full again. It follows the ground, stops with
+  //   a bump at buildings, deep water and the edge of the model, and stays where you leave it.
   // - The plane stands on the grass of Stimpson Park, across Beaudesert Road from number 6 (MOO_PLANE). W and S are the throttle,
   //   A and D bank and turn it, Space (or Up) lifts the nose and C (or Down) lowers it, Shift is the boost. It leaves the ground
   //   at about 95 km/h with the nose up, sinks when it gets too slow (which is how it comes down), lands whenever it meets the
@@ -9105,8 +9107,8 @@ const handle = async (m, post) => {
     const C = { in: false, enter() {}, frame() {}, dispose() {} };
     if (!m.driveCar) return C;
     const THREE = BS.B.THREE, btn = $("bsCarBtn"), boostBtn = $("bsBoostBtn"), chip = $("bsHeight"), wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
-    const VMAX = 19.5, VREV = 5.5, VBOOST = 58, LIFT = 26, CRUISE = 62, JET = 150, touch = matchMedia("(pointer: coarse)").matches, snd = townSound();
-    let veh = null, car = null, last = null, off = null, camYaw = 0, idle = 0, at = 0;
+    const VMAX = 100 / 3.6, VREV = 5.5, VBOOST = 58, LIFT = 26, CRUISE = 62, JET = 150, touch = matchMedia("(pointer: coarse)").matches, snd = townSound();
+    let veh = null, car = null, last = null, off = null, camYaw = 0, idle = 0, at = 0, charge = 1, spent = false;
     // whether something fits there: points along and across it (metres from its middle) clear of buildings, and out of deep water
     const CAR = [[2.1, 0.8], [2.1, -0.8], [-2.1, 0.8], [-2.1, -0.8], [0, 0]], PLANE = [[2.7, 0], [0, 0], [-4.2, 0], [0.2, 5.2], [0.2, -5.2]];
     const fits = (pts, x, z, h) => { const s = Math.sin(h), c = Math.cos(h);
@@ -9123,13 +9125,28 @@ const handle = async (m, post) => {
     const hub = new THREE.Matrix4().makeTranslation(0, 1.31, 2.74);
     { const [y, p, r] = lie(plane, 2, 1.2); plane.y = y; plane.p = p; plane.r = r; }
     const parts = m.addParts(townPlaneParts().map(q => ({ ...q, matrix: M.identity().elements.slice() })));
-    const showPlane = () => { M.compose(V.set(plane.x, plane.y, plane.z), Q.setFromEuler(E.set(-plane.p, plane.h, plane.r, "YXZ")), ONE); parts.setMatrix(0, M.elements);
+    const showPlane = () => { M.compose(V.set(plane.x, plane.y, plane.z), Q.setFromEuler(E.set(-plane.p, plane.h, plane.r, "YXZ")), ONE); parts.setMatrix(0, M.elements.slice());  // (a copy each time: what is set is kept, to be set again if the model is swapped for a sharper one)
       const fast = veh === "plane" && plane.spin > 0.2; M2.copy(M).multiply(hub);
       parts.setMatrix(1, fast ? M2.clone().scale(V.set(0, 0, 0)).elements : M2.clone().multiply(new THREE.Matrix4().makeRotationZ(plane.ang || 0)).elements);  // the blades, or the blur they make
-      parts.setMatrix(2, fast ? M2.elements : M2.clone().scale(V.set(0, 0, 0)).elements); };
+      parts.setMatrix(2, fast ? M2.elements.slice() : M2.clone().scale(V.set(0, 0, 0)).elements); };
     showPlane();
+    // ---- the boost's charge: a ring of 24 pieces on the ground round the car, lit as far round as there is charge left. It shows
+    // while the boost is on and until it is full again. (The Boost button fills and empties with it too.)
+    const RING = 24, ring = m.addParts((() => { const lin = hex => { const v = parseInt(hex.slice(1), 16); return [((v >> 16) & 255) / 255, ((v >> 8) & 255) / 255, (v & 255) / 255].map(c => Math.pow(c, 2.2)); };
+      const arc = (a0, a1, r0, r1, col, opacity) => { const P = [], N = [], K = [], n = Math.max(1, Math.round((a1 - a0) / 0.14));
+        for (let i = 0; i < n; i++) { const a = a0 + (a1 - a0) * i / n, b = a0 + (a1 - a0) * (i + 1) / n, q = (t, r) => [Math.sin(t) * r, 0.22, Math.cos(t) * r];
+          for (const v of [q(a, r0), q(b, r0), q(b, r1), q(a, r0), q(b, r1), q(a, r1)]) { P.push(...v); N.push(0, 1, 0); K.push(...col); } }
+        return { positions: new Float32Array(P), normals: new Float32Array(N), colors: new Float32Array(K), color: [1, 1, 1], unlit: true, opacity, doubleSide: true, matrix: new THREE.Matrix4().makeScale(0, 0, 0).elements }; };
+      const step = Math.PI * 2 / RING, out = [arc(0, Math.PI * 2, 3.02, 3.34, lin("#ffffff"), 0.2)];
+      for (let i = 0; i < RING; i++) out.push(arc(i * step + 0.03, (i + 1) * step - 0.03, 2.98, 3.38, lin(i < RING / 4 ? "#ff7a1a" : "#ffd166"), 0.95));  // the last quarter is orange: nearly out
+      return out; })());
+    const NONE = new THREE.Matrix4().makeScale(0, 0, 0).elements, lit = new Array(RING + 1).fill(false);
+    const showRing = on => { const full = on && car ? Math.ceil(charge * RING - 1e-6) : 0;
+      if (on && car) M.compose(V.set(car.x, car.y, car.z), Q.setFromEuler(E.set(-car.p, car.h, car.r, "YXZ")), ONE);
+      for (let i = 0; i <= RING; i++) { const show = !!on && !!car && (i === 0 || i <= full); if (show || lit[i]) { ring.setMatrix(i, show ? M.elements.slice() : NONE); lit[i] = show; } }
+      const pc = Math.round(charge * 100) + "%"; if (boostBtn.style.getPropertyValue("--charge") !== pc) boostBtn.style.setProperty("--charge", pc); };
     const leave = step => { if (!veh) return; const was = veh; snd.door(); snd.stop();
-      if (was === "car") { car.v = 0; sit(0); if (step) { F.pos.x = car.x - Math.cos(car.h) * 1.8; F.pos.z = car.z + Math.sin(car.h) * 1.8; F.yaw = car.h + Math.PI; F.pitch = -0.04; } }  // out of the driver's door, on the right, facing the way the car does
+      if (was === "car") { car.v = 0; sit(0); showRing(false); if (step) { F.pos.x = car.x - Math.cos(car.h) * 1.8; F.pos.z = car.z + Math.sin(car.h) * 1.8; F.yaw = car.h + Math.PI; F.pitch = -0.04; } }  // out of the driver's door, on the right, facing the way the car does
       else { if (plane.air) { Object.assign(plane, MOO_PLANE); plane.air = false; }  // left in the air (you flew off as the camera, or jumped somewhere): it is back in the park
         plane.v = 0; plane.spin = 0; const [y, p, r] = lie(plane, 2, 1.2); plane.y = y; plane.p = p; plane.r = r;
         if (step) { F.pos.x = plane.x + Math.cos(plane.h) * 1.9; F.pos.z = plane.z - Math.sin(plane.h) * 1.9; F.yaw = plane.h + Math.PI; F.pitch = -0.04; }  // out of the left door
@@ -9147,11 +9164,14 @@ const handle = async (m, post) => {
       const boost = has("ShiftLeft", "ShiftRight") || !!F.boost;
       let o, D, text;  // what the view follows, how far back, and what the chip says
       if (veh === "car") { let v = car.v; const brake = has("Space");
+        // the boost runs on a charge: about four seconds' worth, back in ten. Run right out, it waits until a fifth is back
+        const boosting = boost && thr > 0.05 && !brake && charge > 0 && !spent;
+        if (boosting) { charge = Math.max(0, charge - dt / 4); if (!charge) spent = true; } else { charge = Math.min(1, charge + dt / 10); if (charge >= 0.2) spent = false; }
         if (brake) v -= Math.sign(v) * Math.min(Math.abs(v), 14 * dt);
-        else if (thr > 0.05) v += (v < -0.2 ? 10 : boost ? 17 * (1 - Math.max(0, v) / VBOOST) : 4.2 * (1 - Math.max(0, v) / VMAX)) * thr * dt;
+        else if (thr > 0.05) v += (v < -0.2 ? 10 : boosting ? 20.4 * (1 - Math.max(0, v) / VBOOST) : 5.04 * (1 - Math.max(0, v) / VMAX)) * thr * dt;
         else if (thr < -0.05) v += (v > 0.2 ? -11 : -3 * (1 + Math.min(0, v) / VREV)) * -thr * dt;
         else v -= Math.sign(v) * Math.min(Math.abs(v), (0.6 + Math.abs(v) * 0.08) * dt);
-        if (v > VMAX && !(boost && thr > 0.05)) v = Math.max(VMAX, v - 9 * dt);  // off the boost, it eases back to its own top speed
+        if (v > VMAX && !boosting) v = Math.max(VMAX, v - 9 * dt);  // off the boost, it eases back to its own top speed
         v = bsClamp(v, -VREV, VBOOST);
         car.steer += (str * 0.55 / (1 + (Math.abs(v) / 8) ** 2 * 1.2) - car.steer) * Math.min(1, dt * 7);  // less lock the faster it goes
         car.v = v; let bump = 0;
@@ -9162,7 +9182,8 @@ const handle = async (m, post) => {
         if (bump > 1.5) snd.thud(Math.min(1.6, 0.4 + bump / 14));
         sit(dt);
         const a = Math.abs(car.v), G = [0, 7, 14, 21, 30, 44, 60], g = Math.max(0, G.findIndex(q => a < q) - 1), top = G[g + 1] ?? 60;  // the engine rises through each gear and drops into the next
-        snd.set(0.18 + 0.82 * bsClamp((a - G[g]) / (top - G[g]), 0, 1), Math.abs(thr) > 0.05 && !brake ? 0.35 + 0.65 * Math.abs(thr) : 0.08, a, boost && thr > 0.05, brake && a > 3 ? 1 : 0);
+        snd.set(0.18 + 0.82 * bsClamp((a - G[g]) / (top - G[g]), 0, 1), Math.abs(thr) > 0.05 && !brake ? 0.35 + 0.65 * Math.abs(thr) : 0.08, a, boosting, brake && a > 3 ? 1 : 0);
+        showRing(boosting || charge < 0.999);
         o = car; D = 7.5 + Math.min(5, a / 9); text = Math.round(a * 3.6) + " km/h";
       } else { const P = plane, climb = bsClamp((has("Space") ? 1 : 0) - (has("KeyC") ? 1 : 0) + F.vert, -1, 1), top = boost ? JET : CRUISE;
         if (thr > 0.05) P.v += (boost ? 34 : 9) * thr * Math.max(0, 1 - P.v / top) * dt; else if (thr < -0.05) P.v += thr * (P.air ? 9 : 16) * dt; else P.v -= (P.air ? P.v * 0.02 : 1.2) * dt;
@@ -9203,10 +9224,10 @@ const handle = async (m, post) => {
       const c = reach();
       if (!c) { const far = m.nearestCar(F.pos.x, F.pos.z, 5000), d = Math.round(Math.hypot(plane.x - F.pos.x, plane.z - F.pos.z));
         toast(`Nothing close enough to get into. ${far ? `The nearest car is ${Math.round(far.distance)} m away, and t` : "T"}he plane is ${d} m away, in Stimpson Park.`, 4500); return true; }
-      if (c.plane) { veh = "plane"; plane.v = 0; plane.spin = 0; plane.turn = 0; camYaw = plane.h + Math.PI; document.body.classList.add("bsdrive", "bsplane"); }
+      if (c.plane) { veh = "plane"; plane.v = 0; plane.spin = 0; plane.turn = 0; camYaw = plane.h + Math.PI; document.body.classList.add("bsdrive", "bsplane"); boostBtn.style.setProperty("--charge", "100%"); }
       else { car = { id: c.id, x: c.x, z: c.z, h: c.heading, y: ground(c.x, c.z) + 0.05, p: 0, r: 0, v: 0, steer: 0 };
         if (!m.driveCar(c.id[0], c.id[1], car.x, car.y, car.z, car.h, 0, 0)) { car = null; toast("That car won't start. Try another one."); return true; }
-        veh = "car"; camYaw = car.h + Math.PI; document.body.classList.add("bsdrive"); }
+        veh = "car"; camYaw = car.h + Math.PI; document.body.classList.add("bsdrive"); showRing(charge < 0.999); }
       C.in = true; off = [wrap(F.yaw - camYaw), bsClamp(F.pitch + 0.2, -1, 0.55)]; idle = 0; last = [F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch];
       F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.vert = 0; F.boost = false; F.keys.clear(); F.drive = tick;
       btn.textContent = "Get out"; btn.hidden = false; boostBtn.hidden = false;
@@ -9223,10 +9244,10 @@ const handle = async (m, post) => {
     const press = { pointerdown: hold(true), pointerup: hold(false), pointercancel: hold(false), pointerleave: hold(false), contextmenu: e => e.preventDefault() };
     Object.entries(press).forEach(([k, f]) => boostBtn.addEventListener(k, f));
     const hidden = () => snd.quiet(document.hidden); document.addEventListener("visibilitychange", hidden);
-    C.where = () => veh === "car" ? { kind: "car", x: car.x, z: car.z, heading: car.h, speed: car.v } : veh ? { kind: "plane", x: plane.x, y: plane.y, z: plane.z, heading: plane.h, speed: plane.v, air: plane.air } : null;  // for checking
+    C.where = () => veh === "car" ? { kind: "car", x: car.x, z: car.z, heading: car.h, speed: car.v, charge } : veh ? { kind: "plane", x: plane.x, y: plane.y, z: plane.z, heading: plane.h, speed: plane.v, air: plane.air } : null;  // for checking
     C.plane = plane;
     C.dispose = () => { if (veh) leave(false); btn.onclick = null; btn.hidden = boostBtn.hidden = true; Object.entries(press).forEach(([k, f]) => boostBtn.removeEventListener(k, f));
-      document.removeEventListener("visibilitychange", hidden); document.body.classList.remove("bsdrive", "bsplane"); snd.dispose(); try { parts.remove(); } catch {} };
+      document.removeEventListener("visibilitychange", hidden); document.body.classList.remove("bsdrive", "bsplane"); snd.dispose(); try { parts.remove(); ring.remove(); } catch {} };
     return C;
   }
   function townStreetNames(T, cfg, box, m) {
