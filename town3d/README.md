@@ -650,3 +650,23 @@ Ash: "Crnt z to undo. A save that I can do as an admin so i can update without n
 - Checked on a local build with the request to GitHub caught, not sent: Ctrl+Z and Cmd+Z, Save with and without a
   key, a refused key, no connection, 1,501 edits in 3 lots, sent edits dropped once published and put back after 25
   minutes unpublished. The workflow itself has not run yet: its first run is Ash's first Save.
+
+## A golden car and plane, a plane that backs up, a handbrake for sliding, quieter engines, a finer boost ring (14 November 2026)
+
+Ash: "The plane needs reverse when on the ground. Sometimes ive been stuck before and unable to fly again. Also add a
+golden car. Similar 2x stats. Make the handbrake unrealistic where it only slightly slows the car but drastically
+increases turning for burnouts. The engine sounds are slightly too loud. The boost wheel on car could look nicer", and
+of the second plane "a golden stripe and extra fast and mobile". All in `townCar`, `townPlaneParts` and `townSound`.
+
+- **The plane backs up:** on the ground S brakes it and then reverses it, to 22 km/h, steering as it goes. A plane
+  nosed into a wall or the edge of the model can get out and fly again.
+- **The golden plane** is the one at the shops (`gold: true` in `MOO_PLANES`): a gold stripe, twice the push, twice as
+  quick to roll and pitch, turns 1.6 times as tightly, and tops out 1.6 times higher (about 360 km/h, 860 on boost).
+- **The golden car** (`MOO_GOLD_CAR`, drawn by the app: `townPlaneParts(colour, true)`) stands in Stimpson Park beside
+  the first plane, and is in Jump to. Twice the top speed (200 km/h) and acceleration; its boost reaches about 310.
+- **The handbrake** (Space) now takes off only 8 km/h a second. While it is held the car swings round at about 155
+  degrees a second and keeps travelling the way it was going, coming round to where it points slowly; let go and it
+  grips again. Tyres squeal for as long as it is sideways.
+- **Engines** are about two fifths quieter, wind a fifth.
+- **The boost ring** is 48 fine slanted ticks between two hairlines, red-orange where it is nearly out through gold
+  to pale where it is full, and it beats while the boost is on.
