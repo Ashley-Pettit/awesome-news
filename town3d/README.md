@@ -893,3 +893,7 @@ violence." `TOWN_EMOTES` in `app.html`: Wave, Dance, Jump, Cheer, Spin, Bow and 
   the kerb, heading south), and the golden car **backed into the driveway at 6 Beaudesert Road**.
 - The golden car and golden plane are left out of Jump to, and Ctrl+F9 does nothing, unless the name in Settings is Ash or
   Ashley. They are still there to find and drive for everyone.
+- **Place names stay clear of the buttons** (15 November 2026): Moorooka's and Inverloch's models have no
+  `setLabelObstacles`, so `townModelFrame` fades out any name whose top is in the top 112 px (or, on a touch screen, over the
+  sticks) about 6 times a second, using opacity so the model's own show and hide is left alone. Logan's clearance is now taken
+  again whenever the view changes size (it was taken while the view was still 0 px).

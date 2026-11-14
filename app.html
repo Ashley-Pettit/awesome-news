@@ -8363,8 +8363,11 @@ const handle = async (m, post) => {
         { const note = $("bsTownNote"); note.textContent = cfg.note || ""; note.hidden = !cfg.note; }  // Logan's standing note
         F.heightAt = () => F.pos.y - ground(); $("bsHeight").hidden = false;  // the height shown top left
         // a model that names places (Logan's) keeps them out from under the buttons along the top and, on a phone, the sliders and sticks
-        if (m.setLabelObstacles) { const lay = () => { const w = box.clientWidth, h = box.clientHeight; m.setLabelObstacles([[0, 0, w, 104], ...(touch ? [[0, h - 300, w, h]] : [])]); };
-          lay(); addEventListener("resize", lay); T.unlay = () => removeEventListener("resize", lay); }
+        // place names keep clear of the buttons along the top (and the sticks along the bottom on a touch screen). The sizes are
+        // taken again whenever the view changes size: taken while it was still hidden they were 0, which let a name such as
+        // "6 Beaudesert Road" slide under Walk and Fly on a phone
+        if (m.setLabelObstacles) { const lay = () => { const w = box.clientWidth || innerWidth, h = box.clientHeight || innerHeight; m.setLabelObstacles([[0, 0, w, 108], ...(touch ? [[0, h - 300, w, h]] : [])]); };
+          lay(); let ro = null; try { ro = new ResizeObserver(lay); ro.observe(box); } catch {} addEventListener("resize", lay); T.unlay = () => { removeEventListener("resize", lay); ro?.disconnect(); }; }
       });
     }).catch(e => fail(e?.message && !/^no (model|script)$/.test(e.message) ? e.message
       : state.mode === "claude" ? "The town model only loads in the website version of the app." : "The town model couldn't load. Check your connection and try again."));
@@ -9985,6 +9988,14 @@ const handle = async (m, post) => {
     m.setMinutes(bsMins(BS.view.ms));
     T.streets?.update();
     T.car?.frame(); T.peers?.frame(); T.me?.frame(); T.traffic?.frame();
+    // Moorooka's and Inverloch's models have no setLabelObstacles, so their place names are kept clear of the top buttons (and of
+    // the sticks on a touch screen) here: a name that strays under them fades out, a few times a second
+    if (!m.setLabelObstacles) { const now = performance.now(); if (now - (T.lblAt || 0) > 150) { T.lblAt = now;
+      const lay = T.lblLayer?.isConnected ? T.lblLayer : (T.lblLayer = document.querySelector("#bsFly .inv-embed-labels, .inv-embed-labels"));
+      if (lay) { const H = lay.clientHeight || innerHeight, touch = T.lblTouch ??= matchMedia("(pointer: coarse)").matches;
+        for (const el of lay.children) { const v = el.style.visibility === "visible", q = v && /translate3d\((-?[\d.]+)px,\s*(-?[\d.]+)px/.exec(el.style.transform);
+          const y0 = q ? +q[2] : 0, hide = !!q && (y0 < 112 || (touch && y0 + el.offsetHeight > H - 300));
+          if (el._hid !== hide) { el._hid = hide; el.style.opacity = hide ? "0" : ""; el.style.pointerEvents = hide ? "none" : ""; } } } } }
     // the clock's hands, the koala and the wombats: wherever the weather's own are now
     if (T.live?.length) { const M = T.mtx || (T.mtx = new BS.B.THREE.Matrix4());
       T.roots.forEach(r => r.updateWorldMatrix(true, true));
