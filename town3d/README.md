@@ -943,3 +943,36 @@ violence." `TOWN_EMOTES` in `app.html`: Wave, Dance, Jump, Cheer, Spin, Bow and 
   a hill crest or dip.
 - **Inverloch's people** (`ai-forge` `inverloch3d/life.ts`, model `inverloch-model.js?v=17`): spots in the street are skipped
   (`roads.clear`, 1.5 m clear of the carriageway; shoppers 2.3 to 3.3 m out from a main street's edge and clear of side streets).
+
+## 6 Beaudesert Road's street, from Ash's photos (15 November 2026)
+
+Ash sent ten photos of the street around number 6 (where Moorooka's Explore starts) and asked to "improve the model near
+6 Beaudesert rd for moorooka explore: consider impacts on Load time and lag".
+
+- **What changed** (`townNo6` and `MOO_NO6` in `app.html`):
+  - number 6's front as it really is: a pale blue-grey pipe fence with chainwire on a low white plinth, white rendered
+    piers, the white gate (a little further north than before, and the path from it moved to match) with a black garden
+    arch behind it, a pale grey sliding gate across the driveway, the letterbox pier with a black plate and a gold "6",
+    and a solar light on the pier by number 10. Banana plants by the front steps and an air conditioner on the front wall.
+    The same fence along the corner lot's Beaudesert Road side;
+  - number 10: a weathered white besser block wall with its letterbox, a green gate at the south end, a brick ground
+    floor with two cream roller doors under the house, and a green water tank down the side;
+  - crepe myrtles on the verge in place of the model's two big generic trees there, and timber bollards along Stimpson
+    Park across the road.
+- **In the model's data** (`moorooka-model.js`, `?v=24`, patched onto the bundle: ai-forge `scripts/moorooka/neighbours.py`
+  not changed yet): number 6 white with pale blue trim, number 10 white, the corner lot cream with maroon trim; the made-up
+  picket fences at numbers 6 and 10 and the palings along the corner lot's Beaudesert Road side taken off (the app lays
+  the real ones).
+- **In `edits.json`** (so Admin can see and undo them like any other map edit): the two generic verge trees taken out, the
+  concrete crossovers at number 6's sliding gate and number 10's green gate, and number 6's mowing strip along its fence.
+  A stroke has round ends, so each crossover is strips side by side with a stroke across each end, which squares it off.
+- **Lag:** everything solid is one piece (vertex colours, and one 1024 x 512 picture for number 10's wall, the number
+  plates and number 10's ground floor) and the chainwire is another: two draw calls and 2,880 triangles. Taking off the
+  picket fences saved 1,196 triangles in the detailed houses, so a frame at the start point went from 606,913 to 608,785
+  triangles (+0.3%). Both pieces are moved out of sight when the view is more than 420 m away or 320 m up.
+- **Load:** nothing new to download (the pieces are built from about thirty numbers in `MOO_NO6`, 17 ms on a slow test
+  machine, with ground heights looked up once a point and the brick and block patterns repeated rather than drawn brick
+  by brick). The `?v=24` means each device fetches the model script once more.
+- **Guesses:** where the photos could not settle it: the exact position of the white gate (from photo 9's proportions),
+  number 10's green gate being its own (its two cars are parked inside the wall), the doors' positions under number 10,
+  and that the corner lot's fence matches number 6's all along Beaudesert Road.
