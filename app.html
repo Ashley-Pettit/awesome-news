@@ -8016,7 +8016,7 @@ const handle = async (m, post) => {
   // of: "Logan"), floodNote (the line under the list) and floodWarn (show the not-official notice first, and a banner while a flood is on).
   const TOWNS = {
     inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=17", assets: TOWN3D, place: "inv", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
-    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=24", assets: TOWN3D + "moorooka/", place: "moo", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
+    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=25", assets: TOWN3D + "moorooka/", place: "moo", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
       walkStart: { x: -269.8, z: -991.4, yaw: -1.623 },  // Ash's pick for where Moorooka starts: the Beaudesert Road footpath, looking at the house he chose
       // its floods: widest over the Oxley Creek flats along the model's western edge, seen from the east. floodWarn: the not-official notice has to be accepted
       // before the list opens, and a banner says the same while a flood is showing (Ash asked for both).
@@ -8599,7 +8599,8 @@ const handle = async (m, post) => {
   // - number 6's front: a pale blue-grey pipe fence with chainwire on a low white plinth, white rendered piers, a white gate
   //   with a black garden arch behind it, a pale grey sliding gate across the driveway, the letterbox pier with its black plate
   //   and gold "6", and a solar light on the pier by number 10; banana plants by the front steps and an air conditioner on the
-  //   front wall. The same fence runs along the corner lot's Beaudesert Road side.
+  //   front wall. The same fence runs along the corner lot's Beaudesert Road side, and a plain chainwire one down the drive.
+  //   The drive itself (one wide slab from the gate to the house and on past it by the fence) is painted in edits.json.
   // - number 10: a weathered white besser block wall with its letterbox, a green gate at the south end, a brick ground floor
   //   with two cream roller doors under the house, and a green water tank down the side.
   // - crepe myrtles on the verge where the model had two big generic trees, and the timber bollards along Stimpson Park
@@ -8613,7 +8614,8 @@ const handle = async (m, post) => {
   // slow test machine).
   const MOO_NO6 = {
     six: [[-262.77, -986.34], [-256.82, -1003.76]],                       // number 6's front boundary, south to north
-    corner: [-251.06, -1020.47],                                            // the corner lot's north-west corner: its Beaudesert Road side runs on from number 6's
+    corner: [-251.06, -1020.47],
+    sideFence: [-240.77, -983.02],                                          // number 6's south side: chainwire from the front to here, then palings (the model's)                                            // the corner lot's north-west corner: its Beaudesert Road side runs on from number 6's
     ten: [[-262.52, -986.29], [-268.35, -969.53]],                        // number 10's front boundary, north to south
     tenHouse: { a: [-250.3, -983.4], b: [-252.8, -972.2], depth: 15.14, eave: 24.1 },  // number 10's front wall in the survey, north to south (eaves m AHD)
     sixHouse: { a: [-244.0, -987.3], b: [-242.4, -997.5], depth: 12.96, eave: 23.3 },  // number 6's, south to north
@@ -8689,15 +8691,16 @@ const handle = async (m, post) => {
       const six = line(S.six[0], S.six[1]), cor = line(S.six[1], S.corner);
       const BLUE = "#a9bcc6", PIER = "#f0efe9", CAP = "#e3e1da";
       const pier = (Ln, a, w = 0.42, h = 1.45, dw = 0.42) => { const F = Ln.at(a); box(F, -w / 2, w / 2, -0.15, h, -dw / 2, dw / 2, PIER); box(F, -w / 2 - 0.04, w / 2 + 0.04, h, h + 0.06, -dw / 2 - 0.04, dw / 2 + 0.04, CAP); return F; };
-      const fence = (Ln, a0, a1, posts = true) => { const n = Math.max(1, Math.ceil((a1 - a0) / 2.5));
+      // pipe posts, a top rail and chainwire between; on a low white plinth unless plinth is false
+      const fence = (Ln, a0, a1, { col = BLUE, plinth = true, h = 1.12 } = {}) => { const n = Math.max(1, Math.ceil((a1 - a0) / 2.5)), y0 = plinth ? 0.15 : 0.04;
         for (let i = 0; i < n; i++) { const b0 = a0 + (a1 - a0) * i / n, b1 = a0 + (a1 - a0) * (i + 1) / n;
-          box(Ln.F, b0, b1, -0.15, 0.15, -0.07, 0.07, "#e8e6df", { ends: false });  // the low white plinth
-          box(Ln.F, b0, b1, 1.07, 1.12, -0.025, 0.025, BLUE, { ends: false });     // the top rail
-          if (posts) bar(Ln.F, b0, 0.12, 1.15, 0.028, BLUE);
-          const q = [Ln.F(b0, 0.15, 0), Ln.F(b1, 0.15, 0), Ln.F(b1, 1.07, 0), Ln.F(b0, 1.07, 0)], T6 = 0.065;
-          for (const [A, B, C] of [[0, 1, 2], [0, 2, 3]]) { const tri3 = [q[A], q[B], q[C]], ts = [[b0, 0.15], [b1, 0.15], [b1, 1.07], [b0, 1.07]];
+          if (plinth) box(Ln.F, b0, b1, -0.15, 0.15, -0.07, 0.07, "#e8e6df", { ends: false });
+          box(Ln.F, b0, b1, h - 0.05, h, -0.025, 0.025, col, { ends: false });     // the top rail
+          bar(Ln.F, b0, y0 - 0.1, h + 0.03, 0.028, col);
+          const q = [Ln.F(b0, y0, 0), Ln.F(b1, y0, 0), Ln.F(b1, h - 0.05, 0), Ln.F(b0, h - 0.05, 0)], T6 = 0.065;
+          for (const [A, B, C] of [[0, 1, 2], [0, 2, 3]]) { const tri3 = [q[A], q[B], q[C]], ts = [[b0, y0], [b1, y0], [b1, h - 0.05], [b0, h - 0.05]];
             for (const [k, v] of [[A, tri3[0]], [B, tri3[1]], [C, tri3[2]]]) { wire.P.push(...v); wire.N.push(Ln.n[0], 0, Ln.n[1]); wire.U.push(ts[k][0] / T6, ts[k][1] / T6); } } }
-        if (posts) bar(Ln.F, a1, 0.12, 1.15, 0.028, BLUE); };
+        bar(Ln.F, a1, y0 - 0.1, h + 0.03, 0.028, col); };
       const gate = (F, a0, a1, h, hex, step, mid) => { box(F, a0, a1, 0.05, 0.13, -0.03, 0.03, hex); box(F, a0, a1, h - 0.07, h, -0.025, 0.025, hex);
         if (mid) box(F, a0, a1, mid, mid + 0.05, -0.02, 0.02, hex, { ends: false });
         box(F, a0, a0 + 0.05, 0.05, h, -0.03, 0.03, hex); box(F, a1 - 0.05, a1, 0.05, h, -0.03, 0.03, hex);
@@ -8718,6 +8721,8 @@ const handle = async (m, post) => {
         for (const y of [0.5, 1.0, 1.5]) for (const a of [-0.12, 1.12]) tube(F(a, y, -0.95), F(a, y, -1.35), 0.01, 0.01, 4, ["#232323"]); }
       pier(six, six.L);                                                   // number 6's corner with the corner lot
       fence(cor, 0.21, cor.L - 0.21); pier(cor, cor.L);
+      // down the drive (Ash's photo from the gate, 15 November 2026): a plain galvanised chainwire fence, as far as the backyard's palings
+      { const side = line(S.six[0], S.sideFence); fence(side, 0.25, side.L, { col: "#a3a7a5", plinth: false, h: 1.2 }); }
 
       // ---- number 10: its wall, letterbox, green gate, and the cream pier where number 12 starts
       const ten = line(S.ten[0], S.ten[1]), WU = (a, y) => uvOf(bsClamp((a - WALL.a0) * WPM, 0, CW), bsClamp(96 - y * WPM, 0, 96));

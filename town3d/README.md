@@ -976,3 +976,19 @@ Ash sent ten photos of the street around number 6 (where Moorooka's Explore star
 - **Guesses:** where the photos could not settle it: the exact position of the white gate (from photo 9's proportions),
   number 10's green gate being its own (its two cars are parked inside the wall), the doors' positions under number 10,
   and that the corner lot's fence matches number 6's all along Beaudesert Road.
+
+## Number 6's driveway past the gate (15 November 2026)
+
+Ash, with a photo from just inside the sliding gate: "Fix the driveway past the gate". The photo shows one wide exposed
+aggregate slab from the gate to the house, widening across the front of the house (a car parks there) and carrying on
+past the house along the south fence (another car parks there), with a strip of long grass by a plain chainwire fence.
+
+- **Painted, not built:** number 6's lot now has its ground drawn by the plan, as the neighbours' lots do (`ground:!1` in
+  the model's data, `?v=25`), so the slab is painted in `edits.json` like the crossover outside the gate and shows with
+  the same concrete. No new geometry, no draw calls, nothing more to download, and cars stand on it at ground height.
+  The strokes: the plan's old path from where the gate used to be and the strip by the fence painted back to lawn, then
+  a 1 m stroke along each edge of the slab (square edges) and 1.8 m strokes filling the middle.
+- **Taken out of the model's data:** the two tyre strips that were the driveway, the three shrubs that stood on it, and
+  the 1.2 m palings down that side (the app lays a galvanised chainwire fence there instead; the backyard's palings stay).
+- The slab and the striped lawn it replaces show where the plan's ground is drawn (every quality setting, except a
+  device reporting under 4 GB or asking to save data), the same as every other driveway in Moorooka.
