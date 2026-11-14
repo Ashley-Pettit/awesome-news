@@ -1339,8 +1339,12 @@ body.bsdrive:not(.bsplane) .bs-fly-x.bs-boost { bottom: calc(240px + env(safe-ar
 .bs-fly-x.bs-me-btn[hidden] { display: none; }
 .bs-fly-x.bs-me-btn svg { width: 19px; height: 19px; }
 .bs-fly-x.bs-me-btn[aria-expanded="true"] { background: #fff; color: #1b1830; }
-body.bsme .bs-town-mode { left: 62px; transform: none; }
-body.bsme #bsFlyX { display: none; }
+body.bsme #bsFlyX, body.bsme #bsTimeBtn, body.bsme #bsFlyTimeBox { display: none !important; }
+.bs-me input[type="range"] { height: 28px; padding: 0; background: none; accent-color: #ffd36b; }
+.bs-me-time { display: flex; justify-content: space-between; align-items: baseline; }
+.bs-me-time output { font: 700 0.9rem var(--ui); }
+.bs-me ol { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; color: rgba(255, 255, 255, 0.86); font-size: 0.78rem; }
+.bs-me-go { display: block; min-height: 40px; box-sizing: border-box; padding: 10px 12px; border: 0; border-radius: 12px; background: #fff; color: #1b1830; font: 700 0.84rem/1.2 var(--ui); text-align: center; text-decoration: none; cursor: pointer; }
 body.bsme:not(.bsdrive) .bs-height { display: none; }
 body.bsme .bs-height, body.bstown.bsme .bs-height { left: 16px; top: calc(62px + env(safe-area-inset-top)); }
 .bs-me { pointer-events: auto; position: absolute; z-index: 4; left: 16px; top: calc(108px + env(safe-area-inset-top)); width: min(300px, calc(100% - 32px)); max-height: calc(100% - 128px - env(safe-area-inset-top)); overflow: auto; box-sizing: border-box;
@@ -2192,6 +2196,7 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
   // A link straight into Explore. #explore opens the 3D model for your area (Coastline News: …/inverloch/#explore, Moorooka
   // News: …/moorooka/#explore, The Logan Wire: …/logan/#explore). #explore-logan, #explore-moorooka and #explore-inverloch
   // name the model, from any of the apps. Holds which model: "inv", "moo" or "logan", or "" for none.
+  if (document.querySelector('meta[name="an-explore"]')) addEventListener("beforeinstallprompt", e => { e.preventDefault(); window.anInstall = e; });  // Settings > Make it an app
   let pendingExplore = document.querySelector('meta[name="an-explore"]')?.content  // a suburb's 3D model page (/<suburb>/explore/)
     || (rawHash === "explore" ? exploreWhich() : rawHash === "explore-logan" ? "logan" : rawHash === "explore-moorooka" ? "moo" : rawHash === "explore-inverloch" ? "inv" : "");
   const exploreName = k => k === "moo" ? "Moorooka" : k === "logan" ? "Logan" : "Inverloch";
@@ -9094,7 +9099,9 @@ const handle = async (m, post) => {
       if (all(sent) && Date.now() - sentAt > 20 * 60000) { mine.paint = [...sent.paint, ...mine.paint]; for (const kind of KINDS) mine.gone[kind] = [...sent.gone[kind], ...mine.gone[kind]]; sent = blank(); }
       save(); apply(); count(); }).catch(() => {});
     let count = () => {};
-    const admin = () => isAsh(), can = () => admin() || townRole() === "builder";
+    // the pencil is a construction worker's (Ash, 15 November 2026: "Remove the pen from admin and just leave it for the construction
+    // worker"): Ash playing as one saves for everyone; anyone else playing as one sends to the town planner
+    const admin = () => isAsh(), can = () => townRole() === "builder";
 
     const copyBtn = $("bsAdminCopy"), plansBtn = document.createElement("button"), plansBox = document.createElement("div");
     plansBtn.type = "button"; plansBtn.id = "bsAdminPlans"; plansBtn.textContent = "Suggestions"; plansBtn.setAttribute("aria-expanded", "false"); plansBtn.hidden = true;
@@ -9221,7 +9228,7 @@ const handle = async (m, post) => {
     const goTo = e => { const p = e.paint[0]?.p || e.gone.cars[0] || e.gone.trees[0] || e.gone.people[0], F = BS.fly; if (!p || !F) return; T.tween = null;
       if (T.walk) { F.pos.x = p[0]; F.pos.z = p[1] + 9; F.yaw = 0; F.pitch = -0.4; } else { F.pos.x = p[0]; F.pos.z = p[1] + 45; F.pos.y = m.groundAt(p[0], p[1]) + 45; F.yaw = 0; F.pitch = -0.75; } };
     plansBtn.onclick = e => { e.stopPropagation(); plansBox.hidden = !plansBox.hidden; plansBtn.setAttribute("aria-expanded", String(!plansBox.hidden)); drawPlans(); loadPlans(); plansBtn.blur(); };
-    if (admin()) setTimeout(() => loadPlans().then(() => { const n = waiting().length; if (n && !T.dead) toast(`${n} suggestion${n === 1 ? "" : "s"} from construction workers. Tap the pencil, then Suggestions.`, 6000); }), 6000);
+    if (admin()) setTimeout(() => loadPlans().then(() => { const n = waiting().length; if (n && !T.dead) toast(`${n} suggestion${n === 1 ? "" : "s"} from construction workers. ${can() ? "Tap the pencil, then Suggestions." : "Play as Construction worker (Settings), then the pencil > Suggestions."}`, 7000); }), 6000);
     const send = async () => { if (!admin()) return suggest(); if (saving) return; if (!all(mine)) return say("Nothing to save yet.", 2500);
       const tok = store.get("brief.ghToken", "");
       if (!tok) return say("To save for everyone, first save the GitHub key in Admin (in Settings), then tap Save again. Or Copy, and paste to Claude.", 9000);
@@ -9468,15 +9475,36 @@ const handle = async (m, post) => {
       for (const [v, label] of [["explorer", "Explorer"], ["builder", "Construction worker"]]) { const bn = el("button", "", label); bn.type = "button"; bn.setAttribute("aria-pressed", String(townRole() === v));
         bn.onclick = () => { if (townRole() === v) return; try { if (v === "builder") localStorage.setItem("an-player-role", "builder"); else localStorage.removeItem("an-player-role"); } catch {}
           lastSent = null; T.admin?.refresh?.(); meDraw();
-          toast(v === "builder" ? (isAsh() ? "Construction worker. The pencil (top right) edits the ground." : "You're a construction worker. Tap the pencil (top right) to change the ground, then Send it to the town planner.") : "You're exploring.", 5000); };
+          toast(v === "builder" ? (isAsh() ? "Construction worker. The pencil (top right) edits the ground and Saves for everyone." : "You're a construction worker. Tap the pencil (top right) to change the ground, then Send it to the town planner.") : "You're exploring.", 5000); };
         rl.append(bn); }
-      as.append(el("span", "bs-me-lbl", "Play as"), rl, el("p", "", townRole() === "builder" ? "You see yourself from behind and can change the ground with the pencil. The town planner decides what goes in." : "Walk, drive and fly anywhere in town."));
+      as.append(el("span", "bs-me-lbl", "Play as"), rl, el("p", "", townRole() !== "builder" ? "Walk, drive and fly anywhere in town."
+        : isAsh() ? "You see yourself from behind, and the pencil edits the ground. As the town planner, Save puts it in everyone's app, and Suggestions has what others sent."
+        : "You see yourself from behind and can change the ground with the pencil. The town planner decides what goes in."));
       // whether other players see you
       const sw = el("button", "bs-me-show"); sw.type = "button"; sw.setAttribute("role", "switch"); sw.setAttribute("aria-checked", String(!off)); sw.append(el("span", "", "Other players can see me"), el("i"));
       sw.onclick = () => { off = !off; try { if (off) localStorage.setItem("an-player-off", "1"); else localStorage.removeItem("an-player-off"); } catch {} if (!off && !room && !joining) join(0); lastSent = null; meDraw(); meBox.querySelector(".bs-me-show")?.focus(); toast(off ? "Other players can't see you now." : "Other players can see you.", 2500); };
+      // the time of day (it was a button on the top bar)
+      const tm = el("div", "bs-me-sec"), th = el("div", "bs-me-time"), tl = el("label", "bs-me-lbl", "Time of day"), tout = el("output", "", $("bsFlyTimeOut")?.textContent || ""), tr = el("input");
+      tr.type = "range"; tr.id = "bsMeTime"; tl.htmlFor = "bsMeTime"; tr.min = "0"; tr.max = "1439"; tr.step = "5"; tr.value = $("bsFlyTime")?.value || "720";
+      tr.oninput = () => { const ti = $("bsFlyTime"); if (!ti) return; ti.value = tr.value; ti.dispatchEvent(new Event("input")); tout.textContent = $("bsFlyTimeOut").textContent; };
+      th.append(tl, tout); tm.append(th, tr);
+      // make the 3D model an app on the phone's home screen, from its own page (/<suburb>/explore/), which has its own manifest
+      const app = el("div", "bs-me-sec"); app.append(el("span", "bs-me-lbl", "Make it an app"));
+      const alone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true, onEx = /\/explore\/?$/.test(location.pathname);
+      const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1), android = /Android/.test(navigator.userAgent);
+      if (alone) app.append(el("p", "", "You're using it as an app already."));
+      else if (onEx && window.anInstall) { const b = el("button", "bs-me-go", "Install the app"); b.type = "button"; b.onclick = async () => { try { await window.anInstall.prompt(); } catch {} window.anInstall = null; meDraw(); }; app.append(b, el("p", "", "It goes on your home screen and opens straight into the 3D model.")); }
+      else { const ol = el("ol"), step = t => ol.append(el("li", "", t));
+        if (!onEx) step(`Open the 3D model's own page (below)${ios ? " in Safari" : android ? " in Chrome" : ""}.`);
+        if (ios) { step("Tap Share (the square with an arrow)."); step("Tap Add to Home Screen, then Add."); }
+        else if (android) { step("Tap the \u22ee menu, top right."); step("Tap Add to Home screen (or Install app)."); }
+        else { step("Click the install icon at the right of the address bar (Chrome or Edge)."); step("Or on your phone, open the page and add it to your home screen."); }
+        app.append(ol);
+        if (!onEx) { const a = el("a", "bs-me-go", "Open the 3D model's page"); a.href = exploreLink().url; app.append(a); }
+        app.append(el("p", "", "It goes on your home screen and opens straight into the 3D model.")); }
       const hi = el("div", "bs-me-h"), ho = el("span", "", F.hText || ""); ho.id = "bsMeH"; hi.append(el("span", "", "Height above the ground"), ho);
       const ex = el("button", "bs-me-exit", $("bsFlyX").textContent); ex.type = "button"; ex.onclick = () => { meClose(); $("bsFlyX").click(); };
-      meBox.append(head, you, as, sw, hi, ex); };
+      meBox.append(head, you, as, sw, tm, app, hi, ex); };
     // closes with its \u00d7, the gear again, or a tap anywhere else
     const meOut = e => { if (!meBox.hidden && !meBox.contains(e.target) && !meBtn.contains(e.target)) meClose(); }; document.addEventListener("pointerdown", meOut, true);
     document.body.classList.add("bsme"); meBtn.hidden = false; meBtn.onclick = () => { meBox.hidden = !meBox.hidden; meBtn.setAttribute("aria-expanded", String(!meBox.hidden)); if (!meBox.hidden) meDraw(); meBtn.blur(); };
@@ -9537,7 +9565,9 @@ const handle = async (m, post) => {
   const RIDE_DEF = { carTop: [100, "Car top speed", "km/h", 20, 500], carAccel: [5, "Car acceleration", "m/s\u00b2", 1, 40], carBoostTop: [210, "Car top speed on boost", "km/h", 40, 900],
     boostSecs: [4, "Boost lasts", "seconds", 1, 60], boostBack: [10, "Boost refills in", "seconds", 1, 120], slideTurn: [155, "Handbrake spin", "degrees a second", 20, 720], slideSlow: [8, "Handbrake slows the car by", "km/h a second", 0, 100],
     planeTop: [223, "Plane top speed", "km/h", 120, 1500], planeBoostTop: [540, "Plane top speed on boost", "km/h", 150, 3000], planeAccel: [9, "Plane acceleration", "m/s\u00b2", 2, 80], planeLift: [94, "Plane take-off speed", "km/h", 30, 300],
-    gold: [20, "Golden car and plane are better by", "%", 0, 400], planeBoost: [0, "Standard plane has a boost", "0 for no, 1 for yes", 0, 1], volume: [100, "Engine volume", "%", 0, 300] };
+    gold: [20, "Golden car and plane are better by", "%", 0, 400],
+    goldSlideTurn: [240, "Golden car handbrake spin", "degrees a second", 20, 1440], goldSlideSlow: [5, "Golden car handbrake slows it by", "km/h a second", 0, 100],
+    goldBoostSecs: [5, "Golden car boost lasts", "seconds", 1, 60], goldBoostBack: [5, "Golden car boost refills in", "seconds", 0.5, 120], planeBoost: [0, "Standard plane has a boost", "0 for no, 1 for yes", 0, 1], volume: [100, "Engine volume", "%", 0, 300] };
   function rideSettings() { let o = {}; try { o = JSON.parse(localStorage.getItem("an3d-rides") || "{}") || {}; } catch {}
     const r = {}; for (const k in RIDE_DEF) { const [d, , , lo, hi] = RIDE_DEF[k], v = o[k] == null || o[k] === "" ? NaN : +o[k]; r[k] = Number.isFinite(v) ? bsClamp(v, lo, hi) : d; } return r; }
   function townSound() {
@@ -9769,12 +9799,14 @@ const handle = async (m, post) => {
       if (veh === "car") { let v = car.v; const brake = has("Space") || !!F.hand;
         // the boost runs on a charge: about four seconds' worth, back in ten. Run right out, it waits until a fifth is back
         const boosting = boost && thr > 0.05 && !brake && charge > 0 && !spent;
-        if (boosting) { charge = Math.max(0, charge - dt / R.boostSecs); if (!charge) spent = true; } else { charge = Math.min(1, charge + dt / R.boostBack); if (charge >= 0.2) spent = false; }
+        // (the golden car has its own boost, handbrake spin and handbrake drag: Settings > Admin > Cars and planes)
+        const gc = car.gold, bSecs = gc ? R.goldBoostSecs : R.boostSecs, bBack = gc ? R.goldBoostBack : R.boostBack, sTurn = gc ? R.goldSlideTurn : R.slideTurn, sSlow = gc ? R.goldSlideSlow : R.slideSlow;
+        if (boosting) { charge = Math.max(0, charge - dt / bSecs); if (!charge) spent = true; } else { charge = Math.min(1, charge + dt / bBack); if (charge >= 0.2) spent = false; }
         const K = car.gold ? GOLD : car.bus ? 0.7 : 1, vmax = VMAX * K, vboost = VBOOST * K, SHAPE = car.bus ? BUS : CAR;  // (a bus: seven tenths of a car's speed and push, and a long way between its axles)  // the golden car: a fifth more top speed, push and boost
         // the handbrake is not much of a brake (Ash, 14 November 2026: "unrealistic where it only slightly slows the car but
         // drastically increases turning for burnouts"): it swings the car round fast while it carries on the way it was going
         const slide = brake && Math.abs(v) > 3;
-        if (brake) v -= Math.sign(v) * Math.min(Math.abs(v), R.slideSlow / 3.6 * dt);
+        if (brake) v -= Math.sign(v) * Math.min(Math.abs(v), sSlow / 3.6 * dt);
         if (thr > 0.05) v += (v < -0.2 ? 10 : boosting ? R.carAccel * 4 * K * (1 - Math.max(0, v) / vboost) : R.carAccel * K * (1 - Math.max(0, v) / vmax)) * thr * dt * (brake ? 0.5 : 1);
         else if (thr < -0.05) v += (v > 0.2 ? -11 : -3 * (1 + Math.min(0, v) / VREV)) * -thr * dt;
         else if (!brake) v -= Math.sign(v) * Math.min(Math.abs(v), (0.6 + Math.abs(v) * 0.08) * dt);
@@ -9783,7 +9815,7 @@ const handle = async (m, post) => {
         car.steer += (str * 0.55 / (1 + (Math.abs(v) / (8 * K)) ** 2 * 1.2) - car.steer) * Math.min(1, dt * 7);  // less lock the faster it goes
         car.v = v; let bump = 0;
         for (let n = Math.max(1, Math.ceil(Math.abs(v) * dt / 1.2)), i = 0, st = dt / n; i < n; i++) {  // in steps of a metre or so, so it cannot skip through a wall
-          const h = car.h - (slide ? str * R.slideTurn * Math.PI / 180 * Math.sign(car.v) : (car.v / (car.bus ? 6.4 : 2.6)) * Math.tan(car.steer)) * st;
+          const h = car.h - (slide ? str * sTurn * Math.PI / 180 * Math.sign(car.v) : (car.v / (car.bus ? 6.4 : 2.6)) * Math.tan(car.steer)) * st;
           const d = car.dir + wrap(h - car.dir) * Math.min(1, st * (slide ? 1.5 : 10));  // the way it travels comes round to the way it points: slowly while it slides
           const x = car.x + Math.sin(d) * car.v * st, z = car.z + Math.cos(d) * car.v * st;
           if (inside(x, z) && (fits(SHAPE, x, z, h) || !fits(SHAPE, car.x, car.z, car.h))) { car.x = x; car.z = z; car.h = h; car.dir = d; }  // (a car parked inside a building's outline can still drive out)

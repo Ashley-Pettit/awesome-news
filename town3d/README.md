@@ -897,3 +897,18 @@ violence." `TOWN_EMOTES` in `app.html`: Wave, Dance, Jump, Cheer, Spin, Bow and 
   `setLabelObstacles`, so `townModelFrame` fades out any name whose top is in the top 112 px (or, on a touch screen, over the
   sticks) about 6 times a second, using opacity so the model's own show and hide is left alone. Logan's clearance is now taken
   again whenever the view changes size (it was taken while the view was still 0 px).
+
+## Pencil for construction workers only, time and "Make it an app" in Settings, golden car settings (15 November 2026)
+
+- The pencil (map editing) shows only while you play as **Construction worker**, Ash included. Ash as a construction worker
+  edits and **Saves for everyone** and sees Suggestions; as an Explorer he has no pencil (the suggestions toast tells him to
+  switch). Anyone else as a construction worker can only Send to the town planner. None of the admin wording shows to them.
+- **Walk and Fly** are back in the middle of the top bar (gear left, Jump to right).
+- **Time of day** moved from the tools pill into Settings (a slider that drives the old `#bsFlyTime`, which stays hidden).
+- **Make it an app** in Settings: steps for iPhone (Safari: Share, Add to Home Screen), Android (Chrome: menu, Add to Home
+  screen or Install app) or desktop, with a button to the 3D model's own page when you are not on it, or an Install button
+  where Chrome offers one (`beforeinstallprompt`, caught on the explore pages only). Each `/<suburb>/explore/` page now has its
+  own `manifest.webmanifest` ("<Suburb> 3D", 192 and 512 px icons made from `local/<slug>/explore-icon.png`) and home-screen
+  title, so the app opens straight into the 3D model.
+- **Golden car settings** (Settings > Admin > Cars and planes, for Ash): its own handbrake spin (usually 240 degrees a second,
+  a normal car 155), handbrake drag (5 km/h a second), boost length (5 s) and boost refill (5 s, a normal car 10).
