@@ -426,3 +426,29 @@ straight lines not wavey", with no satellite images and minimal changes.
   matching source change in ai-forge is in `c_` (the streets builder in `scene`/`roads`): draw a ribbon only for a
   bridge or class 3 and under, and end caps only for class 3 and under.
 - **The ground plan** (`surface/*.webp`): tidied by `tools/ground/tidy.py` (see its README).
+
+## Moorooka: drawn by distance (the lag fix)
+
+Ash, 14 November 2026: "Optimise around lag". Measured first: at the start point the model drew about 670,000
+triangles a frame on the app's light setting and 3.4 million on a phone's sharp one, most of it spread over the whole
+suburb whatever the camera could see. Every parked car was drawn in full (round wheels, mirrors, door handles:
+984,000 triangles), every tree, every kerb (one piece, so never skipped), every fence, and on the sharp setting all
+of it again for shadows. The model (script `?v=18`) now draws by distance:
+
+| What | Near the view | Further off |
+| --- | --- | --- |
+| Parked and moving cars | in full, within 90 to 220 m | a 26 triangle body out to 800 to 1,600 m, then nothing |
+| Trees | in full, within 200 to 480 m | a plain 8 triangle crown |
+| Buildings | with windows and solar panels, within 260 to 700 m | walls and roofs only |
+| Kerbs, fences (sharp settings) | within about 400 m | not drawn |
+| Shadows | cast by what is near | none from the far versions |
+
+(The smaller distance is the light setting, the larger the sharpest.) Nothing about the layout, the ground or the
+data changes. Triangles a frame, same three views, before and after:
+
+| Setting | Before | After |
+| --- | --- | --- |
+| Light, in the app (start point, a street on foot, from 420 m up) | 669,000 / 650,000 / 785,000 | 241,000 / 240,000 / 276,000 |
+| Sharp on a phone, in the model's own viewer (start point) | 3,376,000 | 818,000 |
+
+The work the page's own script does each frame for this is about 0.3 thousandths of a second.
