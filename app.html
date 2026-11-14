@@ -8227,7 +8227,7 @@ const handle = async (m, post) => {
         const setMode = (walk, to) => { T.walk = walk; document.body.classList.toggle("bswalk", walk); F.walk = walk ? () => ground() + F.eye : null; tideBtn.hidden = walk || !tidal; tideBox.hidden = tideBtn.hidden || tideBtn.getAttribute("aria-expanded") !== "true"; F.lim = walk ? inner : outer;
           modeBox.querySelectorAll("button").forEach(bn => bn.setAttribute("aria-pressed", String((bn.dataset.townMode === "walk") === walk)));
           if (document.pointerLockElement) document.exitPointerLock?.();
-          F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.vert = 0; F.keys.clear();
+          F.vert = 0; F.keys.clear();  // (the sticks are left alone: a thumb still on one carries on, and lifting it centres it)
           // one set of controls for every town model (Inverloch, Moorooka, Logan)
           if (touch) tip.textContent = walk ? "Left stick to walk, right stick to look around." : "Fly with the sticks, or drag the view: pinch to zoom, two fingers to turn. Up and Down are between the sticks.";
           else bsTip(walk ? "Drag to look around\nW A S D or the arrows to walk\nShift to run\nSpace higher · C lower\nF to fly · J to jump to a place\nN street names on or off\nR to start again · Esc to exit\n? to hide this list"
@@ -8252,13 +8252,16 @@ const handle = async (m, post) => {
           F.pos.x += -cy * dx * k - sy * dy * up; F.pos.z += sy * dx * k - cy * dy * up; keepIn(); };
         // zooming on in once as close as flying goes puts you on foot where you are looking (Ash, 15 November 2026: "If I'm on fly
         // and I zoom in right into the ground auto switch to walk")
-        let squeeze = 0, squeezeAt = 0;
+        let squeeze = 1, squeezeAt = 0;
         const zoomTurn = (scale, turn) => { const R = reach(), d = look3(), L = [F.pos.x + d[0] * R, F.pos.y + d[1] * R, F.pos.z + d[2] * R];  // about the ground in the middle of the view
           const was = F.pos.clone();
           F.yaw += turn; const R2 = bsClamp(R * scale, 20, out), e = look3(); F.pos.set(L[0] - e[0] * R2, L[1] - e[1] * R2, L[2] - e[2] * R2); keepIn();
           // zooming in but hardly getting any closer (as close as flying goes, or down at the lowest height): a few of those and you land
-          if (!T.walk && !T.tween && scale < 0.995 && (F.pos.distanceTo(was) < 0.6 || F.pos.y <= ground() + 3.3)) { const now = performance.now(); if (now - squeezeAt > 1500) squeeze = 0; squeezeAt = now;
-            if (++squeeze >= 4) { squeeze = 0; toMode(true); } } };
+          // (only a deliberate pinch or scroll in, looking down at the ground, that has stopped getting closer: half as far again
+          // squeezed in without moving. A pinch that only turns, or one while flying low and level, never lands you.)
+          const stuck = F.pos.distanceTo(was) < 0.3 && look3()[1] < -0.35;
+          if (!T.walk && !T.tween && scale < 1 && stuck) { const now = performance.now(); if (now - squeezeAt > 700) squeeze = 1; squeezeAt = now;
+            squeeze *= scale; if (squeeze < 0.5) { squeeze = 1; toMode(true); } } else if (scale >= 1 || !stuck) squeeze = 1; };
         const ptrs = new Map(); let pinch = null;
         const gest = {
           pointerdown: e => { if (T.admin?.down(e)) return; if (T.walk) return; list.hidden = true; jump.setAttribute("aria-expanded", "false"); fl.hidden = true; fb.setAttribute("aria-expanded", "false"); closeAsk(); try { box.setPointerCapture(e.pointerId); } catch {}
@@ -10321,7 +10324,7 @@ const handle = async (m, post) => {
     T.car?.frame(); T.peers?.frame(); T.me?.frame(); T.traffic?.frame(); T.critter?.frame(); T.no6?.frame();
     // flying: held down at the lowest you can fly (Down, or C) for a moment, and you are on foot there
     if (!T.walk && !T.tween && !F.drive && F.floor && F.hot?.f) { const low = F.pos.y <= F.floor() + 0.1, down = F.vert < -0.3 || F.keys.has("KeyC"), now = performance.now();
-      if (!(low && down)) T.downAt = 0; else if (!T.downAt) T.downAt = now; else if (now - T.downAt > 600) { T.downAt = 0; F.hot.f(); } }
+      if (!(low && down)) T.downAt = 0; else if (!T.downAt) T.downAt = now; else if (now - T.downAt > 1200) { T.downAt = 0; F.hot.f(); } }
     // Moorooka's and Inverloch's models have no setLabelObstacles, so their place names are kept clear of the top buttons (and of
     // the sticks on a touch screen) here: a name that strays under them fades out, a few times a second
     if (!m.setLabelObstacles) { const now = performance.now(); if (now - (T.lblAt || 0) > 150) { T.lblAt = now;
