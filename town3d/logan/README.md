@@ -52,6 +52,14 @@ Wembley Road is in detail:
 - **What moves:** three people walk to and fro on the paths to the entrance and beside the car park, and one car
   drives round the front car park. While you are within about 500 m of the council the map redraws every frame
   for them; further off it rests, as before.
+- **From Ash's Street View photographs** (November 2026), placed with an aerial view: by the road south of the
+  west roundabout, the steel mesh enclosure with the fire brigade's red booster cabinets and yellow bollards, and
+  three bays off the road (one for disabled drivers); planters and bollard lights at the west wing's corner;
+  yellow pedestrian crossing signs before the striped crossings; chevron boards on the roundabouts. The shade roof
+  once drawn over the south-west car park's bays is gone: it isn't there.
+- **Democracy**, Barry Fitzpatrick's sculpture of old ballot boxes on the lawn beside Democracy Way (named after
+  it): a ball of many colours, about 3.5 m across, that glows red at night. "Democracy (the ballot box ball)" in
+  Jump to. Its spot and size are from the aerial view; how its boxes are laid and coloured is drawn to look right.
 - The railway and its wiring, and the named schools, parks and streets.
 
 A block of **Browns Plains** is in the same detail: about 100 m from Ammons Street down Sutton and Coyle courts to
