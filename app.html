@@ -8005,7 +8005,7 @@ const handle = async (m, post) => {
   // of: "Logan"), floodNote (the line under the list) and floodWarn (show the not-official notice first, and a banner while a flood is on).
   const TOWNS = {
     inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=17", assets: TOWN3D, place: "inv", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
-    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=23", assets: TOWN3D + "moorooka/", place: "moo", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
+    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=24", assets: TOWN3D + "moorooka/", place: "moo", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
       walkStart: { x: -269.8, z: -991.4, yaw: -1.623 },  // Ash's pick for where Moorooka starts: the Beaudesert Road footpath, looking at the house he chose
       // its floods: widest over the Oxley Creek flats along the model's western edge, seen from the east. floodWarn: the not-official notice has to be accepted
       // before the list opens, and a banner says the same while a flood is showing (Ash asked for both).
@@ -8188,6 +8188,7 @@ const handle = async (m, post) => {
         // the town centre round the Rotary clock and number 11 Norman Road, stood in the model where they really are
         let mine = []; if (inv) try { mine = townModelGuests(T, m); } catch (e) { console.warn("Town model: the town centre and Norman Road couldn't be added", e); }
         if (cfg.place === "moo") try { mine = mine.concat(townShops(T, m)); } catch (e) { console.warn("Town model: Moorooka's shops couldn't be added", e); }
+        if (cfg.place === "moo" && m.addParts) T.no6 = townNo6(T, m);  // 6 Beaudesert Road's street, from Ash's photos (it catches its own errors)
         // the planes (townCar), each with somewhere to stand beside it
         const rides = m.addParts ? TOWN_RIDES[cfg.place] : null;
         // golden ones only for Ash (Ash, 15 November 2026: "Only show the teleport to the golden objects if user name is ash or Ashley")
@@ -8580,6 +8581,212 @@ const handle = async (m, post) => {
     parts.push({ positions: new Float32Array(P), normals: new Float32Array(Nn), colors: new Float32Array(Cc), matrix: I, color: [1, 1, 1], roughness: 0.7, doubleSide: true });
     m.addParts(parts);
     return out;
+  }
+  // ---- 6 Beaudesert Road's street, from Ash's photos (Ash, 15 November 2026: "improve the model near 6 Beaudesert rd for
+  // moorooka explore: consider impacts on Load time and lag"). Moorooka's Explore starts here. What the photos show, laid where
+  // it really is (the cadastre and the survey, in model metres: x east, z south):
+  // - number 6's front: a pale blue-grey pipe fence with chainwire on a low white plinth, white rendered piers, a white gate
+  //   with a black garden arch behind it, a pale grey sliding gate across the driveway, the letterbox pier with its black plate
+  //   and gold "6", and a solar light on the pier by number 10; banana plants by the front steps and an air conditioner on the
+  //   front wall. The same fence runs along the corner lot's Beaudesert Road side.
+  // - number 10: a weathered white besser block wall with its letterbox, a green gate at the south end, a brick ground floor
+  //   with two cream roller doors under the house, and a green water tank down the side.
+  // - crepe myrtles on the verge where the model had two big generic trees, and the timber bollards along Stimpson Park
+  //   across the road.
+  // Also for this, elsewhere: the houses' colours and the model's made-up picket fences taken off are in the model's data
+  // (moorooka-model.js ?v=24); the two generic trees taken out, the two driveway crossovers and number 6's mowing strip are
+  // in edits.json, so Admin can see and undo them like any other map edit.
+  // Lag: everything solid is one piece (vertex colours, and one 1024 x 512 picture for the wall, the number plates and number
+  // 10's ground floor) and the chainwire another, so two draw calls and about 2,900 triangles; both are moved out of sight
+  // when the view is more than 420 m away or 320 m up. Load: nothing to download; built from the numbers here (17 ms on a
+  // slow test machine).
+  const MOO_NO6 = {
+    six: [[-262.77, -986.34], [-256.82, -1003.76]],                       // number 6's front boundary, south to north
+    corner: [-251.06, -1020.47],                                            // the corner lot's north-west corner: its Beaudesert Road side runs on from number 6's
+    ten: [[-262.52, -986.29], [-268.35, -969.53]],                        // number 10's front boundary, north to south
+    tenHouse: { a: [-250.3, -983.4], b: [-252.8, -972.2], depth: 15.14, eave: 24.1 },  // number 10's front wall in the survey, north to south (eaves m AHD)
+    sixHouse: { a: [-244.0, -987.3], b: [-242.4, -997.5], depth: 12.96, eave: 23.3 },  // number 6's, south to north
+    myrtles: [[-267.75, -997.0, 6.2, 3], [-269.5, -981.75, 5.6, 7]],        // where the model's two verge trees stood: x, z, height, seed
+    tank: [-248.4, -983.75, 0.8, 2.0],                                      // number 10's water tank: x, z, radius, height
+    park: { x: -294.8, z: -995, k: -0.18, back: 3.9, from: -998, to: -925, gap: [-967, -954] },  // Stimpson Park's kerb: x = park.x + k (z - park.z); the bollards stand back from it, with a gap at the bus stop
+    centre: [-262, -990],
+  };
+  function townNo6(T, m) {
+    const THREE = BS.B.THREE, S = MOO_NO6, I = new THREE.Matrix4().elements, gAt = m.groundAt, g = (x, z) => gAt(x, z);
+    const P = [], Nn = [], Cc = [], Uv = [], wire = { P: [], N: [], U: [] };  // the solid piece (with uvs into the picture), and the chainwire
+    const lin = hex => { const v = parseInt(hex.slice(1), 16); return [(v >> 16) & 255, (v >> 8) & 255, v & 255].map(c => Math.pow(c / 255, 2.2)); };
+    const shade = (hex, k) => "#" + [1, 3, 5].map(i => Math.max(0, Math.min(255, Math.round(parseInt(hex.slice(i, i + 2), 16) * k))).toString(16).padStart(2, "0")).join("");
+    const CW = 1024, CH = 512, uvOf = (x, y) => [x / CW, 1 - y / CH], WHITE = uvOf(980, 176);  // plain faces take the picture's white corner
+    const tri = (A, B, C, col, ua = WHITE, ub = WHITE, uc = WHITE) => {
+      const ux = B[0] - A[0], uy = B[1] - A[1], uz = B[2] - A[2], vx = C[0] - A[0], vy = C[1] - A[1], vz = C[2] - A[2];
+      let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; const l = Math.hypot(nx, ny, nz) || 1; nx /= l; ny /= l; nz /= l;
+      for (const [q, t] of [[A, ua], [B, ub], [C, uc]]) { P.push(q[0], q[1], q[2]); Nn.push(nx, ny, nz); Cc.push(col[0], col[1], col[2]); Uv.push(t[0], t[1]); } };
+    const quad = (A, B, C, E, col, uv) => uv ? (tri(A, B, C, col, uv[0], uv[1], uv[2]), tri(A, C, E, col, uv[0], uv[2], uv[3])) : (tri(A, B, C, col), tri(A, C, E, col));
+    // a line along the ground: a metres along it, y up from the ground (or from a set level), w out towards the street
+    const line = (o, b) => { const L = Math.hypot(b[0] - o[0], b[1] - o[1]), u = [(b[0] - o[0]) / L, (b[1] - o[1]) / L], n = u[1] < 0 ? [u[1], -u[0]] : [-u[1], u[0]];  // n: west, to the street
+      const xz = (a, w) => [o[0] + u[0] * a + n[0] * w, o[1] + u[1] * a + n[1] * w];
+      const memo = new Map(), base = a => { const k = Math.round(a * 1000); let v = memo.get(k); if (v === undefined) memo.set(k, v = g(...xz(a, 0))); return v; };  // the ground under the line, looked up once a point
+      const F = (a, y, w) => { const [x, z] = xz(a, w); return [x, base(a) + y, z]; };
+      const at = (a, lvl) => { const y0 = lvl ?? base(a); return (aa, y, w) => { const [x, z] = xz(a + aa, w); return [x, y0 + y, z]; }; };  // level, from the ground at a
+      return { L, u, n, xz, F, at }; };
+    // a box in a frame: a0..a1 along, y0..y1 up, w0..w1 out; uv(a, y) maps the faces to and away from the street onto the picture
+    const box = (F, a0, a1, y0, y1, w0, w1, hex, o = {}) => { const c = lin(hex), d = lin(shade(hex, 0.84)), t = o.uv, U = t ? (a, y) => t(a, y) : null;
+      quad(F(a0, y0, w1), F(a1, y0, w1), F(a1, y1, w1), F(a0, y1, w1), c, U && [U(a0, y0), U(a1, y0), U(a1, y1), U(a0, y1)]);
+      quad(F(a1, y0, w0), F(a0, y0, w0), F(a0, y1, w0), F(a1, y1, w0), d, U && [U(a1, y0), U(a0, y0), U(a0, y1), U(a1, y1)]);
+      if (o.top !== false) quad(F(a0, y1, w0), F(a0, y1, w1), F(a1, y1, w1), F(a1, y1, w0), c);
+      if (o.ends !== false) { quad(F(a0, y0, w0), F(a0, y0, w1), F(a0, y1, w1), F(a0, y1, w0), d); quad(F(a1, y0, w1), F(a1, y0, w0), F(a1, y1, w0), F(a1, y1, w1), d); } };
+    const bar = (F, a, y0, y1, r, hex) => box(F, a - r, a + r, y0, y1, -r, r, hex, { top: false });
+    // a tube from A to B, n sides, radius r0 then r1 (cols: one colour a side, round and round)
+    const tube = (A, B, r0, r1, n, cols) => { const d = [B[0] - A[0], B[1] - A[1], B[2] - A[2]], l = Math.hypot(...d); d.forEach((v, i) => d[i] = v / l);
+      let p = Math.abs(d[1]) > 0.9 ? [1, 0, 0] : [0, 1, 0]; let e1 = [d[1] * p[2] - d[2] * p[1], d[2] * p[0] - d[0] * p[2], d[0] * p[1] - d[1] * p[0]]; const k = Math.hypot(...e1); e1 = e1.map(v => v / k);
+      const e2 = [d[1] * e1[2] - d[2] * e1[1], d[2] * e1[0] - d[0] * e1[2], d[0] * e1[1] - d[1] * e1[0]];
+      const ring = (C, r, i) => { const t = i / n * Math.PI * 2, c = Math.cos(t) * r, s = Math.sin(t) * r; return [C[0] + e1[0] * c + e2[0] * s, C[1] + e1[1] * c + e2[1] * s, C[2] + e1[2] * c + e2[2] * s]; };
+      for (let i = 0; i < n; i++) quad(ring(A, r0, i), ring(A, r0, i + 1), ring(B, r1, i + 1), ring(B, r1, i), lin(cols[i % cols.length])); };
+    // a rough ball of leaves: 6 round by 4 down, each point pushed in or out a little
+    const blob = (cx, cy, cz, rx, ry, rz, rnd, cols) => { const R = [], NS = 6, NR = 4;
+      for (let j = 0; j <= NR; j++) { R.push([]); for (let i = 0; i < NS; i++) { const ph = j / NR * Math.PI, th = (i + (j % 2) * 0.5) / NS * Math.PI * 2, k = j === 0 || j === NR ? 1 : 0.82 + rnd() * 0.36;
+        R[j].push([cx + Math.sin(ph) * Math.cos(th) * rx * k, cy + Math.cos(ph) * ry * k, cz + Math.sin(ph) * Math.sin(th) * rz * k]); } }
+      for (let j = 0; j < NR; j++) for (let i = 0; i < NS; i++) { const a = R[j][i], b = R[j][(i + 1) % NS], c = R[j + 1][(i + 1) % NS], d = R[j + 1][i], col = lin(cols[(i + j) % cols.length]);
+        if (j === 0) tri(a, c, d, col); else if (j === NR - 1) tri(a, b, d, col); else quad(a, b, c, d, col); } };
+    const seeded = s => () => (s = (s * 16807) % 2147483647) / 2147483647;
+
+    // ---- the picture: number 10's wall (rows 0-96), the number plates (104-200), plain white (the corner), number 10's ground floor (256-512)
+    const cv = document.createElement("canvas"); cv.width = CW; cv.height = CH; const c = cv.getContext("2d"), rnd = seeded(61);
+    c.fillStyle = "#ffffff"; c.fillRect(0, 0, CW, CH);
+    const WPM = 74, WALL = { a0: 0.2, a1: 13.9 };  // the wall picture: 74 px a metre, from 0.2 m along number 10's front
+    { c.fillStyle = "#f3f2ed"; c.fillRect(0, 0, CW, 96);
+      const tile = document.createElement("canvas"); tile.width = 30; tile.height = 30; { const q = tile.getContext("2d"); q.fillStyle = "rgba(120,120,110,0.26)";  // 0.4 by 0.2 m blocks, every other course moved over half a block
+        q.fillRect(0, 0, 30, 1.3); q.fillRect(0, 15, 30, 1.3); q.fillRect(0, 0, 1.3, 15); q.fillRect(15, 15, 1.3, 15); }
+      c.save(); c.translate(0, -24); c.fillStyle = c.createPattern(tile, "repeat"); c.fillRect(0, 24, CW, 96); c.restore();  // courses up from the foot (row 96)
+      for (let i = 0; i < 120; i++) { const k = Math.floor(rnd() * 7); c.fillStyle = `rgba(60,60,50,${(rnd() * 0.05).toFixed(3)})`; c.fillRect(Math.floor(rnd() * 34) * 30 + (k % 2 ? 0 : 15), 81 - k * 15, 30, 15); }
+      for (let i = 0; i < 70; i++) { const x = rnd() * CW, w = 2 + rnd() * 10, top = rnd() * 8, len = 14 + rnd() * 55, gr = c.createLinearGradient(0, top, 0, top + len);  // mould running down from the top
+        gr.addColorStop(0, `rgba(78,84,70,${(0.1 + rnd() * 0.18).toFixed(2)})`); gr.addColorStop(1, "rgba(70,76,64,0)"); c.fillStyle = gr; c.fillRect(x, top, w, len); }
+      const sp = c.createLinearGradient(0, 96, 0, 76); sp.addColorStop(0, "rgba(84,86,74,0.32)"); sp.addColorStop(1, "rgba(80,82,70,0)"); c.fillStyle = sp; c.fillRect(0, 76, CW, 20);  // splashed at the foot
+      c.fillStyle = "rgba(255,255,255,0)"; }
+    const plate = (x, y, w, h, bg, fg, t, sub) => { c.fillStyle = bg; c.fillRect(x, y, w, h); c.fillStyle = fg; c.textAlign = "center"; c.textBaseline = "middle";
+      c.font = `700 ${Math.round(h * (sub ? 0.62 : 0.78))}px Georgia, "Times New Roman", serif`; c.fillText(t, x + w / 2, y + h * (sub ? 0.4 : 0.52));
+      if (sub) c.fillRect(x + w * 0.2, y + h * 0.82, w * 0.6, Math.max(2, h * 0.04)); };
+    plate(8, 104, 80, 96, "#121212", "#d2a64a", "6", true);  // number 6's plate: black, a gold 6 and a line of small lettering under it
+    plate(100, 104, 96, 64, "#f5f5f2", "#151515", "10");     // number 10's letterbox
+    // a picture's corners for a quad given bottom left, bottom right, top right, top left along a line; flip where the line runs
+    // north (number 6's), whose along is to the left as you face it from the street
+    const uvBox = (x0, y0, x1, y1, flip) => flip ? [uvOf(x1, y1), uvOf(x0, y1), uvOf(x0, y0), uvOf(x1, y0)] : [uvOf(x0, y1), uvOf(x1, y1), uvOf(x1, y0), uvOf(x0, y0)];
+
+    const parts = [];
+    try {
+      // ---- number 6's front and the corner lot's Beaudesert Road side
+      const six = line(S.six[0], S.six[1]), cor = line(S.six[1], S.corner);
+      const BLUE = "#a9bcc6", PIER = "#f0efe9", CAP = "#e3e1da";
+      const pier = (Ln, a, w = 0.42, h = 1.45, dw = 0.42) => { const F = Ln.at(a); box(F, -w / 2, w / 2, -0.15, h, -dw / 2, dw / 2, PIER); box(F, -w / 2 - 0.04, w / 2 + 0.04, h, h + 0.06, -dw / 2 - 0.04, dw / 2 + 0.04, CAP); return F; };
+      const fence = (Ln, a0, a1, posts = true) => { const n = Math.max(1, Math.ceil((a1 - a0) / 2.5));
+        for (let i = 0; i < n; i++) { const b0 = a0 + (a1 - a0) * i / n, b1 = a0 + (a1 - a0) * (i + 1) / n;
+          box(Ln.F, b0, b1, -0.15, 0.15, -0.07, 0.07, "#e8e6df", { ends: false });  // the low white plinth
+          box(Ln.F, b0, b1, 1.07, 1.12, -0.025, 0.025, BLUE, { ends: false });     // the top rail
+          if (posts) bar(Ln.F, b0, 0.12, 1.15, 0.028, BLUE);
+          const q = [Ln.F(b0, 0.15, 0), Ln.F(b1, 0.15, 0), Ln.F(b1, 1.07, 0), Ln.F(b0, 1.07, 0)], T6 = 0.065;
+          for (const [A, B, C] of [[0, 1, 2], [0, 2, 3]]) { const tri3 = [q[A], q[B], q[C]], ts = [[b0, 0.15], [b1, 0.15], [b1, 1.07], [b0, 1.07]];
+            for (const [k, v] of [[A, tri3[0]], [B, tri3[1]], [C, tri3[2]]]) { wire.P.push(...v); wire.N.push(Ln.n[0], 0, Ln.n[1]); wire.U.push(ts[k][0] / T6, ts[k][1] / T6); } } }
+        if (posts) bar(Ln.F, a1, 0.12, 1.15, 0.028, BLUE); };
+      const gate = (F, a0, a1, h, hex, step, mid) => { box(F, a0, a1, 0.05, 0.13, -0.03, 0.03, hex); box(F, a0, a1, h - 0.07, h, -0.025, 0.025, hex);
+        if (mid) box(F, a0, a1, mid, mid + 0.05, -0.02, 0.02, hex, { ends: false });
+        box(F, a0, a0 + 0.05, 0.05, h, -0.03, 0.03, hex); box(F, a1 - 0.05, a1, 0.05, h, -0.03, 0.03, hex);
+        const n = Math.max(2, Math.round((a1 - a0 - 0.1) / step)); for (let i = 1; i < n; i++) bar(F, a0 + 0.05 + (a1 - a0 - 0.1) * i / n, 0.13, h - 0.07, 0.011, hex); };
+      pier(six, 0);                                                       // by number 10, with its solar light
+      { const F = six.at(0); box(F, -0.13, 0.13, 1.51, 1.53, -0.12, 0.12, "#2a2d31"); quad(F(-0.12, 1.53, -0.11), F(0.12, 1.53, -0.11), F(0.12, 1.6, 0.1), F(-0.12, 1.6, 0.1), lin("#20324a")); }
+      gate(six.at(0.21), 0, 4.2, 1.28, "#b4c3cb", 0.11);                  // the sliding gate across the driveway, closed
+      { const F = pier(six, 4.635, 0.46, 1.55);                          // the letterbox pier: the slot, a light, the plate with the 6
+        box(F, -0.16, 0.16, 1.27, 1.35, 0.23, 0.245, "#3d4044"); box(F, -0.045, 0.045, 1.08, 1.17, 0.23, 0.26, "#d9d6cc");
+        quad(F(-0.1, 0.72, 0.232), F(0.1, 0.72, 0.232), F(0.1, 0.96, 0.232), F(-0.1, 0.96, 0.232), lin("#ffffff"), uvBox(8, 104, 88, 200, true)); }
+      fence(six, 4.86, 9.26); fence(six, 10.26, 18.2);
+      { const F = six.at(9.26); gate(F, 0.02, 0.98, 1.2, "#f2f2ef", 0.11, 0.62);  // the white gate, its sign, and the black arch behind it
+        box(F, 0.32, 0.62, 0.86, 1.02, 0.03, 0.04, "#b11d1d"); box(F, 0.34, 0.6, 0.89, 0.99, 0.04, 0.045, "#f4f1ea");
+        const hoop = w => { const pts = []; for (let i = 0; i <= 8; i++) { const t = Math.PI * i / 8; pts.push(F(0.5 - Math.cos(t) * 0.62, 1.62 + Math.sin(t) * 0.62, w)); }
+          tube(F(-0.12, -0.1, w), F(-0.12, 1.62, w), 0.016, 0.016, 4, ["#232323"]); tube(F(1.12, -0.1, w), F(1.12, 1.62, w), 0.016, 0.016, 4, ["#232323"]);
+          for (let i = 0; i < 8; i++) tube(pts[i], pts[i + 1], 0.014, 0.014, 4, ["#232323"]); return pts; };
+        const p1 = hoop(-0.95), p2 = hoop(-1.35); for (let i = 1; i < 8; i += 2) tube(p1[i], p2[i], 0.01, 0.01, 4, ["#232323"]);
+        for (const y of [0.5, 1.0, 1.5]) for (const a of [-0.12, 1.12]) tube(F(a, y, -0.95), F(a, y, -1.35), 0.01, 0.01, 4, ["#232323"]); }
+      pier(six, six.L);                                                   // number 6's corner with the corner lot
+      fence(cor, 0.21, cor.L - 0.21); pier(cor, cor.L);
+
+      // ---- number 10: its wall, letterbox, green gate, and the cream pier where number 12 starts
+      const ten = line(S.ten[0], S.ten[1]), WU = (a, y) => uvOf(bsClamp((a - WALL.a0) * WPM, 0, CW), bsClamp(96 - y * WPM, 0, 96));
+      for (const [a0, a1, h] of [[0.2, 2.6, 1.05], [2.6, 5, 1.05], [5, 7.3, 1.05], [7.3, 9.4, 1.05], [9.4, 11.6, 1.22], [11.6, 13.9, 1.22]]) {
+        box(ten.F, a0, a1, -0.15, h, -0.19, 0, "#ffffff", { uv: WU, top: false, ends: a0 === 0.2 || a1 === 13.9 || a0 === 9.4 });
+        box(ten.F, a0, a1, h, h + 0.05, -0.21, 0.02, "#dedcd4", { ends: a0 === 0.2 || a1 === 13.9 || a0 === 9.4 }); }
+      { const F = ten.at(4.6, g(...ten.xz(4.6, 0)) + 1.1); box(F, -0.2, 0.2, 0, 0.32, -0.36, 0.06, "#f1f1ee"); box(F, -0.21, 0.21, 0.32, 0.36, -0.37, 0.07, "#d8d8d4");
+        quad(F(-0.12, 0.08, 0.062), F(0.12, 0.08, 0.062), F(0.12, 0.24, 0.062), F(-0.12, 0.24, 0.062), lin("#ffffff"), uvBox(100, 104, 196, 168)); }
+      gate(ten.at(13.9), 0, 3.45, 1.55, "#5f9c58", 0.12, 0.78);
+      { const F = ten.at(17.55); box(F, -0.2, 0.2, -0.15, 1.85, -0.2, 0.2, "#e6dbb0"); box(F, -0.23, 0.23, 1.85, 1.9, -0.23, 0.23, "#d8cda3"); }
+
+      // ---- number 10's ground floor under the house (brick, two cream roller doors, its number) and its water tank.
+      // Where the model's own builder puts the walls and the floor: 0.45 m inside the survey outline, the floor 2.75 m under the eaves.
+      const hs = S.tenHouse, fr = line(hs.a, hs.b);
+      const corners = [fr.xz(0, 0), fr.xz(fr.L, 0), fr.xz(fr.L, -hs.depth), fr.xz(0, -hs.depth)].map(([x, z]) => g(x, z)), cxz = fr.xz(fr.L / 2, -hs.depth / 2);
+      const d = Math.min(Math.max(...corners), Math.max(Math.min(...corners), g(...cxz))), floor = Math.max(0.3, Math.max(hs.eave - d, 2.6) - 2.75);
+      if (floor > 1.2) {
+        const top = floor - 0.28, A0 = 0.45, A1 = fr.L - 0.45, F = fr.at(0, d), BU = (a, y) => uvOf(bsClamp((a - A0) / (A1 - A0) * CW, 0, CW), 256 + bsClamp(1 - y / top, 0, 1) * 255);
+        const low = Math.min(...[0, 0.25, 0.5, 0.75, 1].map(t => g(...fr.xz(A0 + (A1 - A0) * t, -0.4)))) - d - 0.1;
+        box(F, A0, A1, low, top, -0.5, -0.4, "#ffffff", { uv: BU });
+        box(F, A0 - 0.05, A0 + 0.05, low, top, -1.1, -0.4, "#8b4d39"); box(F, A1 - 0.05, A1 + 0.05, low, top, -1.1, -0.4, "#8b4d39");  // the brick round the corners
+        // its picture: brick, two roller doors, and the number on the pier between them (from photo, about 2.4 m doors)
+        const ppm = CW / (A1 - A0), y2p = y => 256 + (1 - y / top) * 255, br = seeded(17);
+        const bw = Math.round(0.24 * ppm), bh = Math.max(4, Math.round(0.086 * 255 / top)), bt = document.createElement("canvas"); bt.width = bw; bt.height = bh * 2;
+        { const q = bt.getContext("2d"); q.fillStyle = "#c2b29e"; q.fillRect(0, 0, bw, bh * 2); q.fillStyle = "#8b4d39"; q.fillRect(1, 1, bw - 2, bh - 1.5); q.fillRect(-bw / 2 + 1, bh + 1, bw - 2, bh - 1.5); q.fillRect(bw / 2 + 1, bh + 1, bw - 2, bh - 1.5); }
+        c.fillStyle = c.createPattern(bt, "repeat"); c.fillRect(0, 256, CW, 256);  // courses from the picture's top; a few bricks lighter or darker
+        for (let i = 0; i < 160; i++) { const r = Math.floor(256 / bh) + Math.floor(br() * 256 / bh); c.fillStyle = br() < 0.5 ? "rgba(40,15,5,0.12)" : "rgba(255,220,190,0.08)"; c.fillRect(Math.floor(br() * CW / bw) * bw + (r % 2) * bw / 2 + 1, r * bh + 1, bw - 2, bh - 1.5); }
+        const dh = Math.min(2.15, top - 0.3);
+        for (const [a0, a1] of [[4.6, 7.2], [7.9, 10.5]]) { const x0 = (a0 - A0) * ppm, x1 = (a1 - A0) * ppm, y0 = y2p(dh), y1 = y2p(0);
+          c.fillStyle = "#e9e1c5"; c.fillRect(x0, y0, x1 - x0, y1 - y0);
+          for (let y = y0 + 3; y < y1; y += 5) { c.fillStyle = "rgba(90,80,50,0.16)"; c.fillRect(x0, y, x1 - x0, 1.2); }
+          c.fillStyle = "rgba(60,50,30,0.35)"; c.fillRect(x0, y1 - 4, x1 - x0, 4); c.strokeStyle = "#cfc5a6"; c.lineWidth = 3; c.strokeRect(x0, y0, x1 - x0, y1 - y0); }
+        c.fillStyle = "#1d1a17"; c.textAlign = "center"; c.textBaseline = "middle"; c.font = `600 ${Math.round(0.24 / top * 255)}px system-ui, sans-serif`; c.fillText("10", (7.55 - A0) * ppm, y2p(dh - 0.4));
+        // the tank: green, corrugated, a lid
+        const [tx, tz, tr, th] = S.tank, ty = g(tx, tz) - 0.05, ribs = ["#587c53", "#4f7149"];
+        for (let i = 0; i < 16; i++) { const a0 = i / 16 * Math.PI * 2, a1 = (i + 1) / 16 * Math.PI * 2, p = (a, y) => [tx + Math.cos(a) * tr, ty + y, tz + Math.sin(a) * tr];
+          quad(p(a0, 0), p(a1, 0), p(a1, th), p(a0, th), lin(ribs[i % 2])); tri(p(a0, th), p(a1, th), [tx, ty + th + 0.12, tz], lin("#4a6a45")); }
+      }
+
+      // ---- number 6: an air conditioner on the front wall by the big window, banana plants by the front steps
+      { const hs6 = S.sixHouse, f6 = line(hs6.a, hs6.b), cr = [f6.xz(0, 0), f6.xz(f6.L, 0), f6.xz(f6.L, -hs6.depth), f6.xz(0, -hs6.depth)].map(([x, z]) => g(x, z));
+        const d6 = Math.min(Math.max(...cr), Math.max(Math.min(...cr), g(...f6.xz(f6.L / 2, -hs6.depth / 2)))), fl6 = Math.max(0.3, Math.max(hs6.eave - d6, 2.6) - 2.75), F = f6.at(0, d6);
+        box(F, 0.85, 1.7, fl6 + 1.55, fl6 + 2.1, -0.45, -0.2, "#efefea"); quad(F(0.95, fl6 + 1.62, -0.198), F(1.4, fl6 + 1.62, -0.198), F(1.4, fl6 + 2.04, -0.198), F(0.95, fl6 + 2.04, -0.198), lin("#5b5f63"));
+        tube(F(1.27, fl6 + 1.55, -0.3), F(1.27, fl6 + 0.4, -0.3), 0.025, 0.025, 4, ["#e6e4dc"]);
+        const br = seeded(29);
+        for (const [a, w] of [[7.4, 1.5], [6.6, 2.3], [8.3, 2.5]]) { const [x, z] = f6.xz(a, w), y = g(x, z), hgt = 1.45 + br() * 0.5;
+          tube([x, y - 0.1, z], [x, y + hgt, z], 0.11, 0.08, 5, ["#6d7a3c", "#5f6c34"]);
+          for (let i = 0; i < 6; i++) { const t = i / 6 * Math.PI * 2 + br(), cx = Math.cos(t), cz = Math.sin(t), px = -cz, pz = cx, L = 1.3 + br() * 0.4, rise = 0.35 + br() * 0.25;
+            const base = [x, y + hgt, z], mid = [x + cx * L * 0.45, y + hgt + rise, z + cz * L * 0.45], tip = [x + cx * L, y + hgt + rise - 0.55, z + cz * L], wv = 0.22;
+            const col = lin(i % 3 ? "#5f9a3a" : "#86a447");
+            quad([base[0] + px * 0.04, base[1], base[2] + pz * 0.04], [base[0] - px * 0.04, base[1], base[2] - pz * 0.04], [mid[0] - px * wv, mid[1], mid[2] - pz * wv], [mid[0] + px * wv, mid[1], mid[2] + pz * wv], col);
+            quad([mid[0] + px * wv, mid[1], mid[2] + pz * wv], [mid[0] - px * wv, mid[1], mid[2] - pz * wv], [tip[0] - px * 0.05, tip[1], tip[2] - pz * 0.05], [tip[0] + px * 0.05, tip[1], tip[2] + pz * 0.05], col); } } }
+
+      // ---- crepe myrtles on the verge: several smooth, mottled stems leaning out, a light, spreading crown
+      for (const [x, z, h, seed] of S.myrtles) { const r = seeded(seed * 7919 + 5), y = g(x, z), tops = [], bark = ["#cfc1a6", "#b9aa8f", "#d9cfbc", "#a99b83", "#c8bba2"];
+        for (let i = 0; i < 4; i++) { const t = i / 4 * Math.PI * 2 + r() * 0.9, lean = 0.45 + r() * 0.45, r0 = 0.085 + r() * 0.035, cx = Math.cos(t), cz = Math.sin(t);
+          const A = [x + cx * 0.1, y - 0.1, z + cz * 0.1], B = [x + cx * lean, y + h * 0.42, z + cz * lean], C = [x + cx * lean * 1.9, y + h * 0.7, z + cz * lean * 1.9];
+          tube(A, B, r0, r0 * 0.78, 5, bark.slice(i)); tube(B, C, r0 * 0.78, r0 * 0.45, 5, bark.slice(i + 1)); tops.push(C); }
+        const leaf = ["#5d8b39", "#6e9a44", "#54803a", "#78a24c"];  // the crown: small clumps over and between the stems, a dome
+        for (const C of tops) { blob(C[0] + (C[0] - x) * 0.3, C[1] + h * 0.06, C[2] + (C[2] - z) * 0.3, h * 0.16, h * 0.11, h * 0.16, r, leaf);
+          blob((C[0] + x) / 2, C[1] + h * 0.16, (C[2] + z) / 2, h * 0.15, h * 0.1, h * 0.15, r, leaf); }
+        blob(x, y + h * 0.9, z, h * 0.17, h * 0.09, h * 0.17, r, leaf); }
+
+      // ---- the timber bollards along Stimpson Park
+      { const k = S.park; for (let z = k.from; z <= k.to; z += 1.65) { if (z > k.gap[0] && z < k.gap[1]) continue;
+        const x = k.x + k.k * (z - k.z) - k.back, y = g(x, z), dir = Math.atan2(1, k.k), F = (a, yy, w) => [x + Math.cos(dir) * a - Math.sin(dir) * w, y + yy, z + Math.sin(dir) * a + Math.cos(dir) * w];
+        box(F, -0.075, 0.075, -0.1, 0.78, -0.075, 0.075, "#6c4a34"); } }
+    } catch (e) { console.warn("Town model: number 6's street couldn't be built", e); return null; }
+
+    const chain = document.createElement("canvas"); chain.width = chain.height = 64; { const q = chain.getContext("2d"); q.strokeStyle = "rgba(196,203,206,0.95)"; q.lineWidth = 3;
+      q.beginPath(); q.moveTo(0, 32); q.lineTo(32, 0); q.lineTo(64, 32); q.lineTo(32, 64); q.closePath(); q.stroke(); }
+    parts.push({ positions: new Float32Array(P), normals: new Float32Array(Nn), colors: new Float32Array(Cc), uvs: new Float32Array(Uv), map: cv, matrix: I, color: [1, 1, 1], roughness: 0.85, doubleSide: true });
+    parts.push({ positions: new Float32Array(wire.P), normals: new Float32Array(wire.N), uvs: new Float32Array(wire.U), map: chain, matrix: I, color: [1, 1, 1], opacity: 0.98, roughness: 0.5, metalness: 0.3, doubleSide: true });
+    const h = m.addParts(parts), FAR = new THREE.Matrix4().makeTranslation(0, -1e5, 0).elements;
+    T.no6Cost = { triangles: (P.length + wire.P.length) / 9, calls: 2 };  // what it adds, for measuring
+    let shown = true, n = 0;
+    return { frame() { if (n++ % 15) return; const F = BS.fly; if (!F) return;
+      const far = Math.hypot(F.pos.x - S.centre[0], F.pos.z - S.centre[1]) > 420 || F.pos.y - g(F.pos.x, F.pos.z) > 320;
+      if (far !== shown) return;  // already where it should be
+      shown = !far; for (let i = 0; i < parts.length; i++) h.setMatrix(i, shown ? I : FAR); } };
   }
   // The town centre, the Rotary clock and number 11 Norman Road are copied out of the weather's Inverloch (which is left as it
   // is) and stood in the whole-town model where they really are: their shapes, colours and pictures. The clock's hands, its lit
@@ -10100,7 +10307,7 @@ const handle = async (m, post) => {
     m.setCamera(F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch);
     m.setMinutes(bsMins(BS.view.ms));
     T.streets?.update();
-    T.car?.frame(); T.peers?.frame(); T.me?.frame(); T.traffic?.frame(); T.critter?.frame();
+    T.car?.frame(); T.peers?.frame(); T.me?.frame(); T.traffic?.frame(); T.critter?.frame(); T.no6?.frame();
     // flying: held down at the lowest you can fly (Down, or C) for a moment, and you are on foot there
     if (!T.walk && !T.tween && !F.drive && F.floor && F.hot?.f) { const low = F.pos.y <= F.floor() + 0.1, down = F.vert < -0.3 || F.keys.has("KeyC"), now = performance.now();
       if (!(low && down)) T.downAt = 0; else if (!T.downAt) T.downAt = now; else if (now - T.downAt > 600) { T.downAt = 0; F.hot.f(); } }
