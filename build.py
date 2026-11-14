@@ -90,7 +90,8 @@ def stamped(hd, bd, folder):
     from datetime import datetime, timedelta, timezone
     built = datetime.now(timezone(timedelta(hours=10))).strftime("%-d %b %H:%M")  # Brisbane time, shown to Rod and Ash
     # the git commit it was built from (shown to Ash next to the title, the same short id as GitHub and the update notes)
-    commit = (os.environ.get("GITHUB_SHA") or "")[:7]
+    # (AN_COMMIT first: the news publish builds from main's newest files, which can be newer than the commit it started on)
+    commit = (os.environ.get("AN_COMMIT") or os.environ.get("GITHUB_SHA") or "")[:7]
     if not commit:
         try:
             import subprocess
