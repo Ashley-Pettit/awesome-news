@@ -591,3 +591,18 @@ model is unchanged (`?v=22`).
 - **Keys on the buttons, desktop only:** each button with a key has it as a small keycap at its bottom right corner
   (`data-key`, shown under `(hover: hover) and (pointer: fine)`): Esc on Exit explore, F on Walk and Fly, N on street
   names, J on Jump to, Enter on Get in and Get out, Shift on Boost, Space and C on Up and Down where they show.
+
+## The car: 100 km/h, a fifth more acceleration, and a boost that runs on a charge (14 November 2026)
+
+Ash: "Make the car top speed 100, boost shows an icon around the car with boost charge amount. Average acceleration
+20% more". All in `townCar` in `app.html`.
+
+- **Top speed** 100 km/h (it was 70). **Acceleration** up by a fifth (5.04 m/s2 off the line, from 4.2; the boost's from
+  17 to 20.4): averaged from a standstill to nine tenths of top speed that is 1.97 m/s2 against 1.64. 0 to 60 km/h now
+  takes 5 seconds (it was 9, most of that from the higher top speed).
+- **The boost has a charge:** about four seconds' worth, back in ten. From 100 km/h a full charge takes the car to about
+  180 km/h, and it eases back to 100 when the boost stops. Run right out, it waits until a fifth is back.
+- **The ring:** 24 pieces on the ground round the car, lit as far round as there is charge left (the last quarter
+  orange), over a faint full circle. It shows while the boost is on and until the charge is full again. The Boost
+  button fills and empties with it.
+- The plane's boost is as it was: no charge, no ring.
