@@ -1307,6 +1307,12 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
   body.bstown .bs-town-list.bs-town-floods { top: calc(60px + env(safe-area-inset-top)); right: calc(24px + var(--bs-jumpw, 104px)); }
   body.bstown .bs-flood-banner { top: calc(62px + env(safe-area-inset-top)); }
 }
+/* Driving in a town model: Get in the car shows above Up and Down while a parked car is within reach, and is Get out while you
+   drive (when Up and Down are away: your eyes are the car's). */
+.bs-fly-x.bs-car { top: auto; left: 50%; right: auto; bottom: calc(166px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: #fff; color: #1b1830; z-index: 2; }
+.bs-fly-x.bs-car[hidden] { display: none; }
+body.bsdrive .bs-ud { display: none; }
+body.bsdrive .bs-fly-x.bs-car { bottom: calc(68px + env(safe-area-inset-bottom)); }
 /* Admin mode (Ash only): the pencil in the tools opens this toolbar under the top buttons. Tools, then width, line, undo, copy
    and clear, then a line saying what to do and what is waiting to be copied. With a tool on, the model takes the touch. */
 .bs-admin { pointer-events: auto; position: absolute; z-index: 3; top: calc(106px + env(safe-area-inset-top)); left: 16px; right: 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
@@ -1858,6 +1864,7 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <div class="bs-town-ask" id="bsTownAsk" role="alertdialog" aria-labelledby="bsTownAskText" hidden><p id="bsTownAskText"></p><div><button type="button" data-ask="yes">Yes</button><button type="button" data-ask="no">No</button></div></div>
     <div class="bs-fly-time bs-town-tide bs-town-rise" id="bsTownRise" hidden><span>Water</span><input type="range" id="bsTownRiseIn" min="0" max="1" step="0.01" value="1" aria-label="Flood water level"><output id="bsTownRiseOut" for="bsTownRiseIn"></output></div>
     <button class="bs-fly-x bs-fly-jump" type="button" id="bsFlyJump" hidden>Jump to Norman Rd</button>
+    <button class="bs-fly-x bs-car" type="button" id="bsCarBtn" hidden>Get in the car</button>
     <button class="bs-fly-x bs-fly-lock" type="button" id="bsFlyLock" hidden>Use this view for the weather</button>
     <div class="bs-ud" role="group" aria-label="Fly up or down">
       <button type="button" class="bs-udb" data-ud="1" aria-label="Fly up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg><span>Up</span></button>
@@ -7583,6 +7590,9 @@ const handle = async (m, post) => {
         F.keys.add(e.code); if (/^(Space|Arrow)/.test(e.code)) e.preventDefault();
         if (e.ctrlKey || e.metaKey || e.altKey) return;
         if (e.key === "?") { bsTipToggle(); return; }
+        if (e.code === "Enter" || e.code === "NumpadEnter") {  // get into the nearest parked car, or out of it (the town models). A focused button keeps its own Enter
+          const el = document.activeElement, free = !el || el === document.body || el.id === "bsFly" || el.id === "bsCarBtn" || !!el.closest?.("#bsTownMode");
+          if (free && F.hot?.enter?.()) { e.preventDefault(); return; } }
         if (e.code === "KeyF" && F.hot?.f) { F.hot.f(); return; }  // walk or fly (the town models)
         if (e.code === "KeyJ") { if (F.hot?.j) F.hot.j(); else if (!$("bsFlyJump").hidden) $("bsFlyJump").click(); return; }  // jump to a place
         if (e.code === "KeyN" && F.hot?.n) { F.hot.n(); return; }  // street names on or off (the town models)
@@ -7631,6 +7641,7 @@ const handle = async (m, post) => {
   }
   function bsFlyTick(dt) {
     const F = BS.fly, k = F.keys, has = (...c) => c.some(x => k.has(x));
+    if (F.drive) return F.drive(dt);  // driving a car in a town model (townCar): the car moves, and the view follows it
     const sp = (has("ShiftLeft", "ShiftRight") ? 34 : 11) * (F.speed ? F.speed() : 1) * Math.min(dt, 0.1);  // the whole-town model flies faster the higher you are
     const f = (has("KeyW", "ArrowUp") ? 1 : 0) - (has("KeyS", "ArrowDown") ? 1 : 0) + F.stick.y;
     const r = (has("KeyD", "ArrowRight") ? 1 : 0) - (has("KeyA", "ArrowLeft") ? 1 : 0) + F.stick.x;
@@ -7816,7 +7827,7 @@ const handle = async (m, post) => {
   // of: "Logan"), floodNote (the line under the list) and floodWarn (show the not-official notice first, and a banner while a flood is on).
   const TOWNS = {
     inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=14", assets: TOWN3D, place: "inv", up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
-    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=21", assets: TOWN3D + "moorooka/", place: "moo", up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
+    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=22", assets: TOWN3D + "moorooka/", place: "moo", up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
       walkStart: { x: -269.8, z: -991.4, yaw: -1.623 },  // Ash's pick for where Moorooka starts: the Beaudesert Road footpath, looking at the house he chose
       // its floods: widest over the Oxley Creek flats along the model's western edge, seen from the east. floodWarn: the not-official notice has to be accepted
       // before the list opens, and a banner says the same while a flood is showing (Ash asked for both).
@@ -7890,7 +7901,7 @@ const handle = async (m, post) => {
     const first = direct ? (seen.slow ? "low" : best) : "low";
     const hiBox = $("bsHiRes");
     let cur = null, next = null, dead = false;
-    const log = [], last = {}, LAST = ["setLabelObstacles", "setTide", "setFlood", "setFloodLevel", "setMinutes", "setCamera", "setGroundEdits", "setRemoved"];
+    const log = [], last = {}, LAST = ["setLabelObstacles", "setTide", "setFlood", "setFloodLevel", "setMinutes", "setCamera", "setGroundEdits", "setRemoved", "driveCar"];
     const make = (q, own) => { const t0 = performance.now(); let mm = null;
       mm = lib.create(box, { ...opts, quality: q, onProgress: own ? cb.onProgress : undefined,
         onFloodLevel: v => { if (mm === cur) cb.onFloodLevel(v); },
@@ -8161,7 +8172,10 @@ const handle = async (m, post) => {
           T.namesToggle = () => nb.click(); }
         // admin mode: published edits for everyone, the editing tools for Ash (townAdmin)
         try { T.admin = townAdmin(T, cfg, box, m, { ptrs }); } catch (e) { console.warn("Town model: admin mode couldn't start", e); }
+        // driving: Enter, or the Get in button, when a parked car is close (townCar)
+        try { T.car = townCar(T, m, F, ground); } catch (e) { console.warn("Town model: driving couldn't start", e); }
         F.hot = { f: () => toMode(!T.walk),
+          enter: () => T.car?.enter(),
           n: () => T.namesToggle?.(),
           j: () => openList(list.hidden),
           esc: () => { if (!ask.hidden) { closeAsk(); return true; } if (!list.hidden) { openList(false); return true; } if (!fl.hidden) { fl.hidden = true; fb.setAttribute("aria-expanded", "false"); return true; } return false; },
@@ -8977,6 +8991,81 @@ const handle = async (m, post) => {
     A.dispose = () => { on.forEach(([el, f]) => el.removeEventListener("click", f)); ink.remove(); bar.hidden = true; btn.hidden = true; btn.setAttribute("aria-pressed", "false"); document.body.classList.remove("bsadmin", "bsadmin-tool"); clearTimeout(say.t); clearTimeout(clear.t); clear.dataset.sure = ""; clear.classList.add("bs-admin-ic"); clear.innerHTML = bin; };
     return A;
   }
+  // Driving (Ash, 14 November 2026: "if i press enter when walking i get into the car"). In a town model that hands over its
+  // parked cars (Moorooka's: nearestCar, driveCar, solidAt), walking up to within 8 m of a parked car shows a Get in button, and
+  // Enter (or the button) puts you in the nearest one. The view follows from behind. W or the up arrow (or the left stick forward)
+  // goes, S or down brakes and then reverses, A and D or left and right steer, Space is the handbrake; the right stick or a drag
+  // looks round the car, and the view settles back behind it once you drive on. The car follows the ground, stops at buildings,
+  // deep water and the edge of the model, and stays where you leave it. Enter again (or Get out) and you step out of the driver's
+  // door, on the right. Flying, jumping to a place or starting again gets you out too.
+  function townCar(T, m, F, ground) {
+    const C = { in: false, enter() {}, frame() {}, dispose() {} };
+    if (!m.driveCar) return C;
+    const btn = $("bsCarBtn"), chip = $("bsHeight"), REACH = 8, VMAX = 19.5, VREV = 5.5, wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
+    const keys = !matchMedia("(pointer: coarse)").matches;  // a keyboard to hand: the button says which key does the same
+    let car = null, last = null, off = null, camYaw = 0, idle = 0, at = 0;
+    // whether the car fits there: its four corners and its middle clear of buildings, inside the model, and not in deep water
+    const fits = (x, z, h) => { const s = Math.sin(h), c = Math.cos(h);
+      for (const [a, b] of [[2.1, 0.8], [2.1, -0.8], [-2.1, 0.8], [-2.1, -0.8], [0, 0]]) { const px = x + s * a - c * b, pz = z + c * a + s * b;
+        if (m.solidAt(px, pz) || px < F.lim[0] || px > F.lim[1] || pz < F.lim[2] || pz > F.lim[3]) return false; }
+      return ground(x, z) - m.groundAt(x, z) < 0.35; };
+    // stand the car on the ground under its wheels, tipped with the slope
+    const sit = dt => { const s = Math.sin(car.h), c = Math.cos(car.h), g = (a, b) => ground(car.x + s * a - c * b, car.z + c * a + s * b);
+      const yf = g(1.3, 0), yb = g(-1.3, 0), yr = g(0, 0.8), yl = g(0, -0.8), e = dt ? Math.min(1, dt * 12) : 1;
+      car.y += ((yf + yb + yr + yl) / 4 + 0.05 - car.y) * e; car.p += (Math.atan2(yf - yb, 2.6) - car.p) * e; car.r += (Math.atan2(yl - yr, 1.6) - car.r) * e;
+      m.driveCar(car.id[0], car.id[1], car.x, car.y, car.z, car.h, car.p, car.r); };
+    const leave = step => { if (!car) return; car.v = 0; sit(0);
+      if (step) { F.pos.x = car.x - Math.cos(car.h) * 1.8; F.pos.z = car.z + Math.sin(car.h) * 1.8; F.yaw = car.h + Math.PI; F.pitch = -0.04; }  // out of the driver's door, on the right, facing the way the car does
+      car = null; C.in = false; F.drive = null; F.hText = ""; F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.keys.clear(); document.body.classList.remove("bsdrive"); at = 0; C.frame(); };
+    const tick = dt0 => { const dt = Math.min(dt0, 0.1), k = F.keys, has = (...c) => c.some(x => k.has(x));
+      // flying, a jump to a place or starting again has moved the view: that is getting out
+      if (!T.walk || T.tween || BS.town !== T || Math.abs(F.pos.x - last[0]) + Math.abs(F.pos.y - last[1]) + Math.abs(F.pos.z - last[2]) > 1e-3) return leave(false);
+      // looking round the car: the right stick, or a drag (which has already turned the view)
+      F.yaw -= F.lookStick.x * Math.abs(F.lookStick.x) * 2.4 * dt; F.pitch += F.lookStick.y * Math.abs(F.lookStick.y) * 1.6 * dt;
+      const dy = wrap(F.yaw - last[3]), dp = F.pitch - last[4]; idle = Math.abs(dy) + Math.abs(dp) > 1e-4 ? 0 : idle + dt;
+      off[0] = wrap(off[0] + dy); off[1] = bsClamp(off[1] + dp, -1, 0.55);
+      if (idle > 1.2 && Math.abs(car.v) > 1) { const e = Math.min(1, dt * 2.5); off[0] -= off[0] * e; off[1] -= off[1] * e; }  // left alone, the view settles back behind the car
+      // the pedals and the wheel
+      const thr = bsClamp((has("KeyW", "ArrowUp") ? 1 : 0) - (has("KeyS", "ArrowDown") ? 1 : 0) + F.stick.y, -1, 1), str = bsClamp((has("KeyD", "ArrowRight") ? 1 : 0) - (has("KeyA", "ArrowLeft") ? 1 : 0) + F.stick.x, -1, 1);
+      let v = car.v;
+      if (has("Space")) v -= Math.sign(v) * Math.min(Math.abs(v), 14 * dt);
+      else if (thr > 0.05) v += (v < -0.2 ? 10 : 4.2 * (1 - Math.max(0, v) / VMAX)) * thr * dt;
+      else if (thr < -0.05) v += (v > 0.2 ? -11 : -3 * (1 + Math.min(0, v) / VREV)) * -thr * dt;
+      else v -= Math.sign(v) * Math.min(Math.abs(v), (0.6 + Math.abs(v) * 0.08) * dt);
+      v = bsClamp(v, -VREV, VMAX);
+      car.steer += (str * 0.55 / (1 + (Math.abs(v) / 8) ** 2 * 1.2) - car.steer) * Math.min(1, dt * 7);  // less lock the faster it goes
+      const h = car.h - (v / 2.6) * Math.tan(car.steer) * dt, x = car.x + Math.sin(h) * v * dt, z = car.z + Math.cos(h) * v * dt;
+      if (fits(x, z, h) || !fits(car.x, car.z, car.h)) { car.x = x; car.z = z; car.h = h; car.v = v; }  // (a car parked inside a building's outline can still drive out)
+      else car.v = Math.abs(v) > 2 ? -v * 0.2 : 0;  // a bump
+      sit(dt);
+      const kmh = Math.round(Math.abs(car.v) * 3.6) + " km/h"; if (chip.textContent !== kmh) chip.textContent = kmh;
+      // the view: behind and above the car, swinging round after it
+      camYaw += wrap(car.h + Math.PI - camYaw) * Math.min(1, dt * 3.5);
+      const yaw = camYaw + off[0], pitch = bsClamp(-0.2 + off[1], -1.2, 0.35), cp = Math.cos(pitch), sx = Math.sin(yaw) * cp, sz = Math.cos(yaw) * cp;
+      let D = 7.5; while (D > 2.5 && (m.solidAt(car.x + sx * D, car.z + sz * D) || m.solidAt(car.x + sx * D * 0.55, car.z + sz * D * 0.55))) D -= 1.25;  // closer in where a building is behind the car, so the view is not from inside it
+      const px = car.x + sx * D, pz = car.z + sz * D, py = Math.max(car.y + 1.5 - Math.sin(pitch) * D, ground(px, pz) + 0.7), e = Math.min(1, dt * 9);
+      F.pos.x += (px - F.pos.x) * e; F.pos.y += (py - F.pos.y) * e; F.pos.z += (pz - F.pos.z) * e; F.yaw = yaw; F.pitch = pitch;
+      last = [F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch]; };
+    C.enter = () => { if (car) return leave(true), true;
+      if (!T.walk || T.tween) return false;
+      const c = m.nearestCar(F.pos.x, F.pos.z, REACH);
+      if (!c) { const far = m.nearestCar(F.pos.x, F.pos.z, 5000); toast(far ? `No car close enough to get into. The nearest is ${Math.round(far.distance)} m away.` : "There are no parked cars here to get into."); return true; }
+      car = { id: c.id, x: c.x, z: c.z, h: c.heading, y: ground(c.x, c.z) + 0.05, p: 0, r: 0, v: 0, steer: 0 };
+      if (!m.driveCar(c.id[0], c.id[1], car.x, car.y, car.z, car.h, 0, 0)) { car = null; toast("That car won't start. Try another one."); return true; }
+      C.in = true; camYaw = car.h + Math.PI; off = [wrap(F.yaw - camYaw), bsClamp(F.pitch + 0.2, -1, 0.55)]; idle = 0; last = [F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch];
+      F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.keys.clear(); F.drive = tick; document.body.classList.add("bsdrive");
+      btn.textContent = keys ? "Get out (Enter)" : "Get out"; btn.hidden = false;
+      toast(keys ? "W A S D or the arrows to drive, Space for the handbrake. Enter to get out." : "Left stick to drive, right stick to look around. Tap Get out to leave the car.", 4500);
+      return true; };
+    // the Get in button: there while a parked car is within reach of where you are walking (looked for a few times a second)
+    C.frame = () => { if (car) return; const now = performance.now(); if (now - at < 300) return; at = now;
+      const near = T.walk && !T.tween ? m.nearestCar(F.pos.x, F.pos.z, REACH) : null;
+      const say = keys ? "Get in the car (Enter)" : "Get in the car"; if (btn.hidden !== !near) btn.hidden = !near; if (near && btn.textContent !== say) btn.textContent = say; };
+    btn.onclick = () => { C.enter(); btn.blur(); };
+    C.where = () => car && { x: car.x, z: car.z, heading: car.h, speed: car.v };  // for checking
+    C.dispose = () => { if (car) leave(false); btn.onclick = null; btn.hidden = true; document.body.classList.remove("bsdrive"); };
+    return C;
+  }
   function townStreetNames(T, cfg, box, m) {
     const THREE = BS.B.THREE, cam = new THREE.PerspectiveCamera(60, 1, 1, 1e7), v = new THREE.Vector3(), CELL = 250;
     const LIM = [2200, 1800, 1300, 800, 550, 450];  // how far off a name can be read, by class of road (m)
@@ -9066,6 +9155,7 @@ const handle = async (m, post) => {
     m.setCamera(F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch);
     m.setMinutes(bsMins(BS.view.ms));
     T.streets?.update();
+    T.car?.frame();
     // the clock's hands, the koala and the wombats: wherever the weather's own are now
     if (T.live?.length) { const M = T.mtx || (T.mtx = new BS.B.THREE.Matrix4());
       T.roots.forEach(r => r.updateWorldMatrix(true, true));
@@ -9080,8 +9170,9 @@ const handle = async (m, post) => {
     BS.town = null; T.dead = true; T.on = false; T.ungest?.(); T.unlay?.(); T.unflood?.();
     T.streets?.dispose(); T.streets = null; $("bsNamesBtn").hidden = true;
     T.admin?.dispose(); T.admin = null;
+    T.car?.dispose(); T.car = null;
     T.unbar?.();
-    if (BS.fly) { const F = BS.fly; F.walk = F.speed = F.floor = F.hot = null; F.ceil = 0; F.lim = null; }  // Explore, if it carries on, is its old self
+    if (BS.fly) { const F = BS.fly; F.walk = F.speed = F.floor = F.hot = F.drive = null; F.ceil = 0; F.lim = null; }  // Explore, if it carries on, is its old self
     try { T.model?.dispose(); } catch {}
     const box = $("bsTown"); box.hidden = true; box.textContent = "";
     document.body.classList.remove("bstown", "bswalk"); $("bsHeight").hidden = true; $("bsTownTide").hidden = true; $("bsTideBtn").hidden = true; $("bsTownMode").hidden = true; $("bsTownList").hidden = true;
