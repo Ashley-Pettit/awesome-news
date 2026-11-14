@@ -630,3 +630,23 @@ to adjust my pitch so that if i press down my plane shifts upwards and vica vers
   Jump to; the shops plane reaches 115 km/h in 5 s on W alone without touching anything, leaves the ground with the
   down arrow, noses down with the up arrow, and levels out with neither; the up arrow alone gives no power on the
   ground; the arrows still drive a car. Not tried on a real phone or keyboard.
+
+## Admin mode: Ctrl+Z, and a Save that publishes without Claude (14 November 2026)
+
+Ash: "Crnt z to undo. A save that I can do as an admin so i can update without needing claude."
+
+- **Ctrl+Z** (Cmd+Z on a Mac) undoes the last edit while the edit bar is open, the same as the Undo button, which
+  shows the key on a desktop. With the bar shut it does nothing.
+- **Save** (`#bsAdminSave`, `send` in `townAdmin`): sends the edits waiting on this device to everyone. It uses the
+  GitHub key saved in Admin in Settings (the one Update now, kept views and food edits use) to ask GitHub to run
+  `.github/workflows/town-edits.yml`, which pipes them into `tools/town/add_edits.py`, commits `edits.json` and runs
+  the quick publish: in everyone's app in about 5 minutes. The tool checks every number and only writes
+  `town3d/<town>/edits.json`. Many edits go in lots of 50,000 characters, one request each (GitHub's limit is 65,535).
+- **What was sent** stays drawn on that device (`an3d-sent-<place>`) and comes off the count on Save. Once the
+  published file holds it, it is dropped; if it still is not published 20 minutes on, it goes back to waiting so it
+  can be saved again. Undo does not reach back past a save.
+- With no key, Save says where to put one. A refused key or no connection says so and keeps the edits waiting.
+  **Copy** is still there to paste to Claude.
+- Checked on a local build with the request to GitHub caught, not sent: Ctrl+Z and Cmd+Z, Save with and without a
+  key, a refused key, no connection, 1,501 edits in 3 lots, sent edits dropped once published and put back after 25
+  minutes unpublished. The workflow itself has not run yet: its first run is Ash's first Save.

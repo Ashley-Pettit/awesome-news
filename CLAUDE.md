@@ -43,7 +43,9 @@ Several agents work on this repository at once, and their pushes into `main` col
 ### What can still go straight to `main`
 
 Data only, never code: the scheduled "Awesome News refresh" task (its `ratings/*.json` commits marked `[skip ci]`)
-and the GitHub Actions workflows (news data and the `chat` branch). Everything else comes in by pull request.
+and the GitHub Actions workflows (news data, the `chat` branch, and what an admin saves from the app with the GitHub
+key: kept views, food edits and, since 14 November 2026, map edits to `town3d/<town>/edits.json`). Everything else
+comes in by pull request.
 
 ### For the Awesome News chat (the one that merges)
 

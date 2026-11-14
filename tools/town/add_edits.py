@@ -2,9 +2,11 @@
 
   python3 tools/town/add_edits.py <file with the pasted text>      (or pipe the text in)
 
-Ash paints ground and takes things out on his own device, taps Copy edits and pastes the text to Claude. This adds
-what he pasted to the town's edits.json (town3d/<town>/edits.json), which every copy of the app lays over the model
-when it opens. Edits already in the file are not added twice. Then send it in as a pull request like anything else.
+Ash paints ground and takes things out on his own device. Then either he taps Save, and the "Map edits from admin
+mode" workflow (.github/workflows/town-edits.yml) pipes the edits into this script and publishes; or he taps Copy and
+pastes the text to Claude, who runs this and sends it in as a pull request like anything else. Either way this adds
+the edits to the town's edits.json (town3d/<town>/edits.json), which every copy of the app lays over the model when
+it opens. Edits already in the file are not added twice.
 
 The pasted text is a line of words and then one JSON object:
   {"town": "moorooka", "v": 1,

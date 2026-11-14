@@ -1344,7 +1344,7 @@ body.bsdrive .bs-fly-tip { display: none !important; }
   .bs-fly [data-key]::after { content: attr(data-key); position: absolute; right: -5px; bottom: -8px; z-index: 1; padding: 2px 4px 1px; border-radius: 5px; background: #fff; color: #1b1830; font: 700 9.5px/1 var(--ui); letter-spacing: 0.01em;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(27, 24, 48, 0.22); pointer-events: none; white-space: nowrap; }
   .bs-fly .bs-slides > .bs-fly-x[data-key] { position: relative; inset: auto; }  /* in its place in the row, as before: only there to carry the keycap */
-  .bs-udb[data-key] { position: relative; }
+  .bs-udb[data-key], .bs-admin button[data-key] { position: relative; }
 }
 /* Admin mode (Ash only): the pencil in the tools opens this toolbar under the top buttons. Tools, then width, line, undo, copy
    and clear, then a line saying what to do and what is waiting to be copied. With a tool on, the model takes the touch. */
@@ -1356,9 +1356,10 @@ body.bsdrive .bs-fly-tip { display: none !important; }
 .bs-admin button[hidden], .bs-admin-w[hidden] { display: none; }
 .bs-admin button.bs-admin-ic { width: 34px; padding: 0; justify-content: center; }
 .bs-admin button svg { width: 17px; height: 17px; flex: none; }
-.bs-admin button[data-tool][aria-pressed="true"] { background: #fff; color: #1b1830; }
+.bs-admin button[data-tool][aria-pressed="true"], .bs-admin #bsAdminSave.has { background: #fff; color: #1b1830; }
+.bs-admin button:disabled { opacity: 0.55; cursor: default; }
 .bs-admin button:focus-visible { outline: 2px solid var(--bs-ink); outline-offset: 0; }
-@media (hover: hover) { .bs-admin button:hover { background: rgba(255, 255, 255, 0.16); } .bs-admin button[data-tool][aria-pressed="true"]:hover { background: #fff; } }
+@media (hover: hover) { .bs-admin button:hover { background: rgba(255, 255, 255, 0.16); } .bs-admin button[data-tool][aria-pressed="true"]:hover, .bs-admin #bsAdminSave.has:hover { background: #fff; } }
 .bs-admin button i { width: 12px; height: 12px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55); }
 .bs-admin-w { display: inline-flex; align-items: center; }
 .bs-admin-w button { width: 32px; padding: 0; justify-content: center; font-size: 1.05rem; }
@@ -1882,7 +1883,7 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <div class="bs-slides" role="group" aria-label="Share, street names, edit, tide, time and flood"><button class="bs-fly-x bs-ic" type="button" id="bsShareBtn" aria-label="Share a link to this 3D model" title="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button><button class="bs-fly-x bs-ic" type="button" id="bsNamesBtn" data-key="N" aria-pressed="false" aria-label="Street names" title="Show street names (N)" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M9 21h6"/><path d="M5 5h11l3 2.5L16 10H5z"/><path d="M19 12H8l-3 2.5L8 17h11z"/></svg></button><button class="bs-fly-x bs-ic" type="button" id="bsEditBtn" aria-pressed="false" aria-controls="bsAdmin" aria-label="Edit the map" title="Edit the map" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg></button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false" aria-label="Time of day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span id="bsTimeBtnT">Time</span></button><button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button></div>
     <div class="bs-admin" id="bsAdmin" role="toolbar" aria-label="Edit the map" hidden>
       <div class="bs-admin-row" role="group" aria-label="Tool"><button type="button" data-tool="path" aria-pressed="false"><i style="background:#cfcabd"></i>Path</button><button type="button" data-tool="grass" aria-pressed="false"><i style="background:#6fa64b"></i>Grass</button><button type="button" data-tool="road" aria-pressed="false"><i style="background:#4a4d52"></i>Road</button><button type="button" data-tool="delete" aria-pressed="false">Delete</button></div>
-      <div class="bs-admin-row"><span class="bs-admin-w" id="bsAdminW" role="group" aria-label="Width" hidden><button type="button" data-w="-1" aria-label="Narrower">&minus;</button><output id="bsAdminWOut"></output><button type="button" data-w="1" aria-label="Wider">+</button></span><button type="button" id="bsAdminLine" aria-pressed="true" hidden>Straight</button><button type="button" class="bs-admin-ic" id="bsAdminUndo" aria-label="Undo" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5 4 9l4 4"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button><button type="button" id="bsAdminCopy" aria-label="Copy edits">Copy</button><button type="button" class="bs-admin-ic" id="bsAdminClear" aria-label="Clear all my edits" title="Clear all my edits"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 7V4h4v3M6 7l1 13h10l1-13"/></svg></button></div>
+      <div class="bs-admin-row"><span class="bs-admin-w" id="bsAdminW" role="group" aria-label="Width" hidden><button type="button" data-w="-1" aria-label="Narrower">&minus;</button><output id="bsAdminWOut"></output><button type="button" data-w="1" aria-label="Wider">+</button></span><button type="button" id="bsAdminLine" aria-pressed="true" hidden>Straight</button><button type="button" class="bs-admin-ic" id="bsAdminUndo" aria-label="Undo" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5 4 9l4 4"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button><button type="button" id="bsAdminSave" aria-label="Save my edits for everyone">Save</button><button type="button" id="bsAdminCopy" aria-label="Copy edits">Copy</button><button type="button" class="bs-admin-ic" id="bsAdminClear" aria-label="Clear all my edits" title="Clear all my edits"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 7V4h4v3M6 7l1 13h10l1-13"/></svg></button></div>
       <p class="bs-admin-note" id="bsAdminNote" role="status"></p>
     </div>
     <p class="bs-town-note" id="bsTownNote" hidden></p>
@@ -7622,6 +7623,7 @@ const handle = async (m, post) => {
     F.on = {
       keydown: e => { if (typing(e)) return;
         if (e.code === "Escape" && document.pointerLockElement !== canvas) { bsFlyOff(); return; }
+        if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.code === "KeyZ" && F.hot?.undo?.()) { e.preventDefault(); return; }  // admin mode, with its bar open: undo the last edit
         F.keys.add(e.code); if (/^(Space|Arrow)/.test(e.code)) e.preventDefault();
         if (e.ctrlKey || e.metaKey || e.altKey) return;
         if (e.key === "?") { if (!F.hot?.keys?.()) bsTipToggle(); return; }  // the list of controls: the walking one, or the one for what you are driving
@@ -8214,7 +8216,7 @@ const handle = async (m, post) => {
         // driving: Enter, or the Get in button, when a parked car is close (townCar)
         try { T.car = townCar(T, m, F, ground); } catch (e) { console.warn("Town model: driving couldn't start", e); }
         F.hot = { f: () => toMode(!T.walk),
-          enter: () => T.car?.enter(), keys: () => !!T.car?.keys?.(),
+          enter: () => T.car?.enter(), keys: () => !!T.car?.keys?.(), undo: () => !!T.admin?.undo?.(),
           n: () => T.namesToggle?.(),
           j: () => openList(list.hidden),
           esc: () => { if (!ask.hidden) { closeAsk(); return true; } if (!list.hidden) { openList(false); return true; } if (!fl.hidden) { fl.hidden = true; fb.setAttribute("aria-expanded", "false"); return true; } return false; },
@@ -8913,8 +8915,14 @@ const handle = async (m, post) => {
   // - For Ash (the name in Settings is Ash or Ashley): a pencil button opens a toolbar. Path, Grass and Road paint the ground by
   //   dragging on it (a straight line from where the finger goes down to where it lifts, or freehand); Delete takes out the parked
   //   car, tree or person tapped (a person is whoever walks there: nobody is drawn within 12 m of the spot from then on), or one of
-  //   Ash's own strokes. Undo, Clear, and Copy edits. Edits show straight away and are kept on this device only: Copy edits puts
-  //   them on the clipboard to paste to Claude, who adds them to edits.json for everyone (there is nothing to sign in to or set up).
+  //   Ash's own strokes. Undo (Ctrl+Z, or Cmd+Z on a Mac, while the bar is open), Clear, Save and Copy. Edits show straight away
+  //   and are kept on this device until they are saved.
+  // - Save (Ash, 14 November 2026: "A save that I can do as an admin so i can update without needing claude") sends them to
+  //   everyone: with the GitHub key saved in Admin (the one Update now and kept views use) it asks GitHub to run the "Map edits
+  //   from admin mode" workflow (town-edits.yml), which adds them to edits.json with tools/town/add_edits.py and publishes. What
+  //   was sent stays drawn on this device (`sent`) and comes off the list of edits waiting; once the published file holds them
+  //   they are dropped, and if it still does not 20 minutes on they are put back as waiting, to save again.
+  // - Copy puts the edits on the clipboard to paste to Claude instead, who adds them the same way (no key needed).
   // Painted ground shows where the model draws the ground by kind (near the view), on devices that draw it.
   function townAdmin(T, cfg, box, m, nav) {
     const A = { tool: null, down: () => false, move: () => false, up: () => false, dispose() {} };
@@ -8925,21 +8933,26 @@ const handle = async (m, post) => {
       for (const s of Array.isArray(o.paint) ? o.paint : []) if (s && [1, 2, 3].includes(s.k) && s.w > 0 && s.w <= 40 && Array.isArray(s.p) && s.p.length >= 2 && s.p.length % 2 === 0 && s.p.every(Number.isFinite)) b.paint.push({ k: s.k, w: +s.w, p: s.p.map(r2) });
       for (const [kind, n] of [["cars", 2], ["trees", 2], ["people", 3]]) for (const g of Array.isArray(o.gone?.[kind]) ? o.gone[kind] : []) if (Array.isArray(g) && g.length === n && g.every(Number.isFinite)) b.gone[kind].push(g.map(r2));
       return b; };
-    let mine = blank(), pub = blank(), draft = null;
+    let mine = blank(), pub = blank(), sent = blank(), sentAt = 0, draft = null;  // mine: waiting on this device. sent: saved, on its way to everyone
+    const sentKey = "an3d-sent-" + cfg.place, KINDS = ["cars", "trees", "people"], all = e => e.paint.length + e.gone.cars.length + e.gone.trees.length + e.gone.people.length;
     try { mine = tidy(JSON.parse(localStorage.getItem(key))); } catch {}
-    const save = () => { try { localStorage.setItem(key, JSON.stringify(mine)); } catch {} };
-    const apply = () => { m.setGroundEdits([...pub.paint, ...mine.paint, ...(draft ? [draft] : [])]);
-      m.setRemoved({ cars: [...pub.gone.cars, ...mine.gone.cars], trees: [...pub.gone.trees, ...mine.gone.trees], people: [...pub.gone.people, ...mine.gone.people] }); };
+    try { const j = JSON.parse(localStorage.getItem(sentKey)); sent = tidy(j); sentAt = +j?.at || 0; } catch {}
+    const save = () => { try { localStorage.setItem(key, JSON.stringify(mine)); if (all(sent)) localStorage.setItem(sentKey, JSON.stringify({ ...sent, at: sentAt })); else localStorage.removeItem(sentKey); } catch {} };
+    const apply = () => { m.setGroundEdits([...pub.paint, ...sent.paint, ...mine.paint, ...(draft ? [draft] : [])]);
+      m.setRemoved({ cars: [...pub.gone.cars, ...sent.gone.cars, ...mine.gone.cars], trees: [...pub.gone.trees, ...sent.gone.trees, ...mine.gone.trees], people: [...pub.gone.people, ...sent.gone.people, ...mine.gone.people] }); };
     apply();
     // what has been published for everyone; anything of mine that is in it now comes off my own list
     fetch(cfg.assets + "edits.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(j => { if (!j || T.dead) return; pub = tidy(j);
       const same = (a, b) => { const has = new Set(b.map(x => JSON.stringify(x))); return a.filter(x => !has.has(JSON.stringify(x))); };
-      mine.paint = same(mine.paint, pub.paint); for (const kind of ["cars", "trees", "people"]) mine.gone[kind] = same(mine.gone[kind], pub.gone[kind]);
+      for (const e of [mine, sent]) { e.paint = same(e.paint, pub.paint); for (const kind of KINDS) e.gone[kind] = same(e.gone[kind], pub.gone[kind]); }
+      // saved a while ago and still not published: that save did not get through, so they are waiting again
+      if (all(sent) && Date.now() - sentAt > 20 * 60000) { mine.paint = [...sent.paint, ...mine.paint]; for (const kind of KINDS) mine.gone[kind] = [...sent.gone[kind], ...mine.gone[kind]]; sent = blank(); }
       save(); apply(); count(); }).catch(() => {});
     let count = () => {};
     if (!isAsh()) return A;
 
-    const fly = $("bsFly"), bar = $("bsAdmin"), btn = $("bsEditBtn"), note = $("bsAdminNote"), wOut = $("bsAdminWOut"), line = $("bsAdminLine"), clear = $("bsAdminClear");
+    const fly = $("bsFly"), bar = $("bsAdmin"), btn = $("bsEditBtn"), note = $("bsAdminNote"), wOut = $("bsAdminWOut"), line = $("bsAdminLine"), clear = $("bsAdminClear"), saveBtn = $("bsAdminSave");
+    $("bsAdminUndo").dataset.key = /Mac|iPhone|iPad/.test(navigator.platform || "") ? "\u2318Z" : "Ctrl Z";  // shown on the button on a desktop
     const TOOLS = { path: { k: 3, w: 1.3, min: 0.6, max: 5, step: 0.1, straight: true, col: "#e8e3d6", say: "Drag to lay a footpath." },
       grass: { k: 1, w: 2.5, min: 0.6, max: 14, step: 0.5, straight: false, col: "#8fd06a", say: "Drag to paint grass." },
       road: { k: 2, w: 6, min: 2, max: 16, step: 0.5, straight: true, col: "#9aa0a8", say: "Drag to lay a road." },
@@ -8950,10 +8963,10 @@ const handle = async (m, post) => {
     const straight = () => pref[A.tool + "S"] ?? TOOLS[A.tool].straight;
     const ops = [];  // what was done since the toolbar opened, newest last, for Undo
     const say = (text, ms) => { note.textContent = text; clearTimeout(say.t); if (ms) say.t = setTimeout(count, ms); };
-    // the line under the tools says what the tool in hand does; Copy edits carries how many edits are waiting on this device
-    count = () => { const n = mine.paint.length + mine.gone.cars.length + mine.gone.trees.length + mine.gone.people.length;
-      $("bsAdminCopy").textContent = n ? `Copy (${n})` : "Copy";
-      note.textContent = A.tool ? TOOLS[A.tool].say + (A.tool === "delete" || T.walk ? "" : " Two fingers move the map.") : n ? "Your edits are on this device only. Copy them and paste them to Claude to make them live for everyone." : "Pick a tool. Edits stay on this device until you copy them to Claude."; };
+    // the line under the tools says what the tool in hand does; Save carries how many edits are waiting on this device
+    count = () => { const n = all(mine);
+      saveBtn.textContent = n ? `Save (${n})` : "Save"; saveBtn.classList.toggle("has", !!n);
+      note.textContent = A.tool ? TOOLS[A.tool].say + (A.tool === "delete" || T.walk ? "" : " Two fingers move the map.") : n ? "Your edits are on this device only. Save puts them in everyone's app." : all(sent) ? "Saved. Your edits will be in everyone's app in about 5 minutes." : "Pick a tool. Edits stay on this device until you save them."; };
     const show = () => { for (const b of bar.querySelectorAll("[data-tool]")) b.setAttribute("aria-pressed", String(b.dataset.tool === A.tool));
       const paint = !!A.tool && A.tool !== "delete"; $("bsAdminW").hidden = line.hidden = !paint;
       if (paint) { wOut.textContent = width().toFixed(1) + " m"; line.textContent = straight() ? "Straight" : "Freehand"; line.setAttribute("aria-pressed", String(straight())); }
@@ -9005,6 +9018,34 @@ const handle = async (m, post) => {
       if (pts) { mine.paint.push({ k: TOOLS[A.tool].k, w: width(), p: pts }); ops.push({ paint: 1 }); save(); count(); }
       else say(p.pts ? "Drag to draw." : "That missed the ground.", 2000);
       apply(); return true; };
+    const undo = () => { const o = ops.pop() || (mine.paint.length ? { paint: 1 } : null);
+      if (!o) return say(all(sent) ? "Nothing to undo. What you saved is on its way to everyone." : "Nothing to undo.", 2500);
+      if (o.paint) mine.paint.pop(); else if (o.gone) mine.gone[o.gone].pop(); else mine.paint.splice(Math.min(o.at, mine.paint.length), 0, o.back);
+      save(); apply(); count(); };
+    A.undo = () => { if (bar.hidden) return false; done(); undo(); return true; };  // Ctrl+Z, while the bar is open
+    // Save: send what is waiting to everyone. In lots small enough for GitHub to take (65,535 characters a request), one after another.
+    let saving = false;
+    const send = async () => { if (saving) return; if (!all(mine)) return say("Nothing to save yet.", 2500);
+      const tok = store.get("brief.ghToken", "");
+      if (!tok) return say("To save for everyone, first save the GitHub key in Admin (in Settings), then tap Save again. Or Copy, and paste to Claude.", 9000);
+      const town = cfg.assets.replace(/\/$/, "").split("/").pop(), gone = { cars: [...mine.gone.cars], trees: [...mine.gone.trees], people: [...mine.gone.people] }, lots = [[]];
+      let size = JSON.stringify(gone).length;
+      for (const st of mine.paint) { const n = JSON.stringify(st).length + 1; if (size + n > 50000 && lots[lots.length - 1].length) { lots.push([]); size = 0; } lots[lots.length - 1].push(st); size += n; }
+      saving = true; saveBtn.disabled = true; say("Saving\u2026");
+      let did = 0, bad = 0;
+      try { for (let i = 0; i < lots.length; i++) {
+          const r = await fetch(GH_DISPATCH.replace("pages.yml", "town-edits.yml"), { method: "POST", headers: { Authorization: `Bearer ${tok}`, Accept: "application/vnd.github+json" },
+            body: JSON.stringify({ ref: "main", inputs: { edits: JSON.stringify({ town, v: 1, paint: lots[i], gone: i ? blank().gone : gone }) } }) });
+          if (!(r.ok || r.status === 204)) { bad = r.status || -1; break; }
+          did++; } } catch { bad = -1; }
+      saving = false; saveBtn.disabled = false; if (T.dead) return;
+      if (did) {  // what went stays drawn here, and comes off the list of edits waiting
+        const went = new Set(lots.slice(0, did).flat()); sent.paint.push(...mine.paint.filter(st => went.has(st))); mine.paint = mine.paint.filter(st => !went.has(st));
+        for (const kind of KINDS) { const w = new Set(gone[kind]); sent.gone[kind].push(...mine.gone[kind].filter(g => w.has(g))); mine.gone[kind] = mine.gone[kind].filter(g => !w.has(g)); }
+        sentAt = Date.now(); ops.length = 0; save(); apply(); count(); }
+      if (!bad) { toast("Saved for everyone. It's in everyone's app in about 5 minutes.", 6000); say("Saved. In everyone's app in about 5 minutes.", 8000); }
+      else say(bad === 401 || bad === 403 || bad === 404 ? "The GitHub key didn't work for this. Check it in Admin (in Settings), or Copy and paste to Claude."
+        : bad === -1 ? "Couldn't reach GitHub. Check your connection and tap Save again." : `GitHub wouldn't take that (error ${bad}). Copy, and paste to Claude instead.`, 10000); };
     const on = [], bin = clear.innerHTML;
     const listen = (el, f) => { el.addEventListener("click", f); on.push([el, f]); };
     listen(btn, () => { const open = bar.hidden; bar.hidden = !open; btn.setAttribute("aria-pressed", String(open)); document.body.classList.toggle("bsadmin", open); if (!open) { A.tool = null; done(); } show(); });
@@ -9012,14 +9053,12 @@ const handle = async (m, post) => {
       if (b.dataset.tool) { A.tool = A.tool === b.dataset.tool ? null : b.dataset.tool; done(); show(); }
       else if (b.dataset.w) { const t = TOOLS[A.tool]; pref[A.tool + "W"] = r2(bsClamp(width() + t.step * +b.dataset.w, t.min, t.max)); keep(); show(); }
       else if (b === line) { pref[A.tool + "S"] = !straight(); keep(); show(); }
-      else if (b.id === "bsAdminUndo") { const o = ops.pop() || (mine.paint.length ? { paint: 1 } : null);
-        if (!o) return say("Nothing to undo.", 2000);
-        if (o.paint) mine.paint.pop(); else if (o.gone) mine.gone[o.gone].pop(); else mine.paint.splice(Math.min(o.at, mine.paint.length), 0, o.back);
-        save(); apply(); count(); }
+      else if (b.id === "bsAdminUndo") undo();
+      else if (b === saveBtn) send();
       else if (b.id === "bsAdminCopy") {  // words for whoever it is pasted to, then the edits themselves
         const town = cfg.assets.replace(/\/$/, "").split("/").pop(), text = `Awesome News map edits for ${town}, from admin mode. Claude: add these to town3d/${town}/edits.json with tools/town/add_edits.py and publish them.\n` + JSON.stringify({ town, v: 1, paint: mine.paint, gone: mine.gone });
         if (!mine.paint.length && !mine.gone.cars.length && !mine.gone.trees.length && !mine.gone.people.length) return say("Nothing to copy yet.", 2500);
-        const ok = () => { toast("Edits copied. Paste them to Claude to make them live for everyone."); say("Copied. Paste them to Claude.", 4000); };
+        const ok = () => { toast("Edits copied. Paste them to Claude to make them live for everyone (or tap Save)."); say("Copied. Paste them to Claude.", 4000); };
         const old = () => { const ta = document.createElement("textarea"); ta.value = text; ta.setAttribute("readonly", ""); ta.style.cssText = "position:fixed;left:-9999px;top:0"; document.body.appendChild(ta); ta.select(); let did = false; try { did = document.execCommand("copy"); } catch {} ta.remove(); if (did) ok(); else say("Couldn't copy on this browser.", 4000); };
         if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).then(ok, old); else old(); }
       else if (b === clear) { const unsure = () => { clear.dataset.sure = ""; clear.classList.add("bs-admin-ic"); clear.innerHTML = bin; };
