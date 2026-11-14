@@ -768,3 +768,28 @@ now read with the gradients of the ground's own coordinates, taken outside the "
 `town3d/terrain.ts`). Moorooka (`?v=23`) and Inverloch (`?v=16`) are rebuilt with it. The software renderer used
 for checking does not load the sharper tiles, so the line could not be reproduced or seen gone here: the build was
 checked to draw the ground as before with no shader errors, and the fix rests on the cause.
+
+## Other players in Logan (15 November 2026)
+
+Ash: "Build for everyone but instead of news name let's add a new settings btn where user can type their player
+name. Add to Logan. Consider lag implications. There is no need for amazing speed between players yet an individual
+load time should not be excessive and should not be jittery."
+
+- Everyone with Logan's Explore open sees the others: a figure where each walks, or the car, bus, plane or helicopter
+  they are in, with their player name over it (`townPeers` in `app.html`; `TOWN_TOGETHER` lists the towns it is on).
+- **No account, no server of ours.** Browsers talk straight to each other, and find one another through public Nostr
+  relays, using Trystero 0.21.8 (MIT), bundled to `town3d/vendor/trystero-nostr.js` (20 KB) so nothing comes from a
+  CDN. One room a town. Because the link is direct, a technical person could read another player's IP address.
+- **Load time:** nothing is fetched or connected until the model has been open 2.5 s.
+- **Not jittery:** each player sends seven small numbers 5 times a second while moving and once every 3 s when
+  still. What arrives is drawn a fifth of a second behind, gliding from where they were last drawn to the newest
+  place, so uneven arrival does not show. A jump of more than 60 m is not glided. At most 12 others are drawn, and
+  one not heard from for 12 s is taken away.
+- Someone flying the camera (not walking, not in anything) is not shown.
+- **Settings > Exploring with others:** Player name (16 characters; "Player" and three digits if left empty) and
+  "Show me to other players", which when off stops the device joining at all.
+- Known gaps: a vehicle someone else is in is drawn as well as your own copy of it standing where it lives; cars
+  others drive off still stand in your copy of the town; there is no chat and players pass through each other.
+- Checked with two pages in one browser: through a stand-in for the relay, each sees the other's figure and name, and
+  the name follows them; and with the real bundle two pages found each other through the public relays from here.
+  Not yet tried between two real devices on different networks.
