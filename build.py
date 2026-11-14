@@ -172,7 +172,7 @@ if os.path.exists(os.path.join(here, "local", "brands.json")):
         sub = {"inv": "Inverloch", "moo": "Moorooka", "logan": "Logan"}.get(slug)
         if sub and os.path.exists(os.path.join(here, "local", slug, "explore-share.jpg")):
             ex = os.path.join(out, "explore"); os.makedirs(ex, exist_ok=True)
-            for fn in ("explore-share.jpg", "explore-icon.png"):
+            for fn in ("explore-share.jpg", "explore-icon.png", "explore-icon-192.png", "explore-icon-512.png"):
                 shutil.copy(os.path.join(here, "local", slug, fn), ex)
             t, dsc, eu = f"3D model of {sub}", f"Explore {sub} in 3D: fly over it and walk its streets, right in your browser. Built from open map data.", f"{url}explore/"
             # The full app at this address (so a link preview, which runs the page, stays here), with the 3D model's own card and
@@ -186,10 +186,18 @@ if os.path.exists(os.path.join(here, "local", "brands.json")):
                           .replace(f"{nm} app icon and name", f"{t}, seen from the air")
                           .replace(f'href="{d}/icon-192.png?v=1"', f'href="{d}/explore/explore-icon.png?v=1"')
                           .replace(f'href="{d}/icon-180.png?v=1"', f'href="{d}/explore/explore-icon.png?v=1"')
+                          .replace(f'href="{d}/manifest.webmanifest"', f'href="{d}/explore/manifest.webmanifest"')
+                          .replace(f'name="apple-mobile-web-app-title" content="{nm}"', f'name="apple-mobile-web-app-title" content="{sub} 3D"')
                           .replace("<head>\n", f'<head>\n<meta name="an-explore" content="{slug}">\n', 1))
             assert "explore-share.jpg" in ehead and "an-explore" in ehead and '<base href="../../">' in ehead, "explore page head"
             with open(os.path.join(ex, "index.html"), "w", encoding="utf-8") as f:
                 f.write(stamped(ehead, lbody, ex) + lbody.strip() + "\n</body>\n</html>\n")
+            # its own home-screen app (Ash, 15 November 2026: "In settings show how someone can make this explore an app on their
+            # phone"): added from this page, it opens straight into the 3D model
+            with open(os.path.join(ex, "manifest.webmanifest"), "w", encoding="utf-8") as f:
+                json.dump({"name": t, "short_name": f"{sub} 3D", "description": dsc, "start_url": "./", "scope": "./", "id": "./",
+                           "display": "standalone", "background_color": "#0e0d16", "theme_color": "#0e0d16",
+                           "icons": [{"src": "explore-icon-192.png", "sizes": "192x192", "type": "image/png"}, {"src": "explore-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"}]}, f)
         print(f"Built {out}/index.html")
 open(os.path.join(site, ".nojekyll"), "w").close()
 print(f"Built {site}/index.html")
