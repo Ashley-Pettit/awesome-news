@@ -1307,6 +1307,31 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
   body.bstown .bs-town-list.bs-town-floods { top: calc(60px + env(safe-area-inset-top)); right: calc(24px + var(--bs-jumpw, 104px)); }
   body.bstown .bs-flood-banner { top: calc(62px + env(safe-area-inset-top)); }
 }
+/* Admin mode (Ash only): the pencil in the tools opens this toolbar under the top buttons. Tools, then width, line, undo, copy
+   and clear, then a line saying what to do and what is waiting to be copied. With a tool on, the model takes the touch. */
+.bs-admin { pointer-events: auto; position: absolute; z-index: 3; top: calc(106px + env(safe-area-inset-top)); left: 16px; right: 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.bs-admin[hidden] { display: none; }
+.bs-admin-row { display: flex; flex-wrap: wrap; gap: 2px; padding: 3px; border-radius: 19px; background: var(--bs-scrim);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22), inset 0 0 0 1px rgba(255, 255, 255, 0.14); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.bs-admin button { height: 32px; padding: 0 12px; border: 0; border-radius: 999px; background: none; color: var(--bs-ink); font: 700 0.82rem var(--ui); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.bs-admin button[hidden], .bs-admin-w[hidden] { display: none; }
+.bs-admin button.bs-admin-ic { width: 34px; padding: 0; justify-content: center; }
+.bs-admin button svg { width: 17px; height: 17px; flex: none; }
+.bs-admin button[data-tool][aria-pressed="true"] { background: #fff; color: #1b1830; }
+.bs-admin button:focus-visible { outline: 2px solid var(--bs-ink); outline-offset: 0; }
+@media (hover: hover) { .bs-admin button:hover { background: rgba(255, 255, 255, 0.16); } .bs-admin button[data-tool][aria-pressed="true"]:hover { background: #fff; } }
+.bs-admin button i { width: 12px; height: 12px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55); }
+.bs-admin-w { display: inline-flex; align-items: center; }
+.bs-admin-w button { width: 32px; padding: 0; justify-content: center; font-size: 1.05rem; }
+.bs-admin-w output { min-width: 46px; text-align: center; font: 700 0.8rem var(--ui); color: var(--bs-ink); font-variant-numeric: tabular-nums; }
+.bs-admin-note { margin: 0; max-width: 34em; padding: 6px 12px; border-radius: 14px; background: var(--bs-scrim); color: var(--bs-ink); font: 600 0.78rem/1.35 var(--ui); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.bs-admin-note:empty { display: none; }
+.bs-admin-ink { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+.bs-admin-ink polyline { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 2 7; filter: drop-shadow(0 0 1.5px rgba(0, 0, 0, 0.9)); }
+body.bstown.bsadmin-tool #bsTown { pointer-events: auto; touch-action: none; cursor: crosshair; }
+/* flying with a tool in hand, the sticks and Up and Down make way for the map: two fingers move, turn and zoom it */
+@media (pointer: coarse) { body.bstown.bsadmin-tool:not(.bswalk) .bs-joy, body.bstown.bsadmin-tool:not(.bswalk) .bs-ud { display: none; } }
+@media (min-width: 1000px) { .bs-admin { top: calc(60px + env(safe-area-inset-top)); left: auto; right: 16px; align-items: flex-end; } }
 /* street names in the town models: drawn by the app over the model, along each street, never upside down */
 .bs-streets { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
 .bs-streets span { position: absolute; left: 0; top: 0; white-space: nowrap; font: 600 12px/1 var(--ui); letter-spacing: .01em; color: #23272f;
@@ -1815,7 +1840,12 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <div class="bs-town-mode" id="bsTownMode" role="group" aria-label="Walk or fly" hidden><button type="button" data-town-mode="walk" aria-pressed="true">Walk</button><button type="button" data-town-mode="fly" aria-pressed="false">Fly</button></div>
     <div class="bs-town-list" id="bsTownList" role="menu" aria-label="Places to jump to" hidden></div>
     <div class="bs-town-list bs-town-floods" id="bsTownFloods" role="menu" aria-label="Floods to show on the map" hidden></div>
-    <div class="bs-slides" role="group" aria-label="Share, street names, tide, time and flood"><button class="bs-fly-x bs-ic" type="button" id="bsShareBtn" aria-label="Share a link to this 3D model" title="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button><button class="bs-fly-x bs-ic" type="button" id="bsNamesBtn" aria-pressed="false" aria-label="Street names" title="Show street names (N)" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M9 21h6"/><path d="M5 5h11l3 2.5L16 10H5z"/><path d="M19 12H8l-3 2.5L8 17h11z"/></svg></button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false" aria-label="Time of day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span id="bsTimeBtnT">Time</span></button><button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button></div>
+    <div class="bs-slides" role="group" aria-label="Share, street names, edit, tide, time and flood"><button class="bs-fly-x bs-ic" type="button" id="bsShareBtn" aria-label="Share a link to this 3D model" title="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button><button class="bs-fly-x bs-ic" type="button" id="bsNamesBtn" aria-pressed="false" aria-label="Street names" title="Show street names (N)" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M9 21h6"/><path d="M5 5h11l3 2.5L16 10H5z"/><path d="M19 12H8l-3 2.5L8 17h11z"/></svg></button><button class="bs-fly-x bs-ic" type="button" id="bsEditBtn" aria-pressed="false" aria-controls="bsAdmin" aria-label="Edit the map" title="Edit the map" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg></button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false" aria-label="Time of day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span id="bsTimeBtnT">Time</span></button><button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button></div>
+    <div class="bs-admin" id="bsAdmin" role="toolbar" aria-label="Edit the map" hidden>
+      <div class="bs-admin-row" role="group" aria-label="Tool"><button type="button" data-tool="path" aria-pressed="false"><i style="background:#cfcabd"></i>Path</button><button type="button" data-tool="grass" aria-pressed="false"><i style="background:#6fa64b"></i>Grass</button><button type="button" data-tool="road" aria-pressed="false"><i style="background:#4a4d52"></i>Road</button><button type="button" data-tool="delete" aria-pressed="false">Delete</button></div>
+      <div class="bs-admin-row"><span class="bs-admin-w" id="bsAdminW" role="group" aria-label="Width" hidden><button type="button" data-w="-1" aria-label="Narrower">&minus;</button><output id="bsAdminWOut"></output><button type="button" data-w="1" aria-label="Wider">+</button></span><button type="button" id="bsAdminLine" aria-pressed="true" hidden>Straight</button><button type="button" class="bs-admin-ic" id="bsAdminUndo" aria-label="Undo" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5 4 9l4 4"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button><button type="button" id="bsAdminCopy" aria-label="Copy edits">Copy</button><button type="button" class="bs-admin-ic" id="bsAdminClear" aria-label="Clear all my edits" title="Clear all my edits"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 7V4h4v3M6 7l1 13h10l1-13"/></svg></button></div>
+      <p class="bs-admin-note" id="bsAdminNote" role="status"></p>
+    </div>
     <p class="bs-town-note" id="bsTownNote" hidden></p>
     <p class="bs-flood-banner" id="bsFloodBanner" role="alert" hidden>Experimental. Not official flood information. Do not rely on this model. Not endorsed by <span data-fw="council">Brisbane City Council</span>.</p>
     <div class="bs-flood-warn" id="bsFloodWarn" role="alertdialog" aria-modal="true" aria-labelledby="bsFloodWarnH" aria-describedby="bsFloodWarnD" hidden><div>
@@ -7786,7 +7816,7 @@ const handle = async (m, post) => {
   // of: "Logan"), floodNote (the line under the list) and floodWarn (show the not-official notice first, and a banner while a flood is on).
   const TOWNS = {
     inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=14", assets: TOWN3D, place: "inv", up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
-    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=19", assets: TOWN3D + "moorooka/", place: "moo", up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
+    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=20", assets: TOWN3D + "moorooka/", place: "moo", up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
       walkStart: { x: -269.8, z: -991.4, yaw: -1.623 },  // Ash's pick for where Moorooka starts: the Beaudesert Road footpath, looking at the house he chose
       // its floods: widest over the Oxley Creek flats along the model's western edge, seen from the east. floodWarn: the not-official notice has to be accepted
       // before the list opens, and a banner says the same while a flood is showing (Ash asked for both).
@@ -7860,7 +7890,7 @@ const handle = async (m, post) => {
     const first = direct ? (seen.slow ? "low" : best) : "low";
     const hiBox = $("bsHiRes");
     let cur = null, next = null, dead = false;
-    const log = [], last = {}, LAST = ["setLabelObstacles", "setTide", "setFlood", "setFloodLevel", "setMinutes", "setCamera"];
+    const log = [], last = {}, LAST = ["setLabelObstacles", "setTide", "setFlood", "setFloodLevel", "setMinutes", "setCamera", "setGroundEdits", "setRemoved"];
     const make = (q, own) => { const t0 = performance.now(); let mm = null;
       mm = lib.create(box, { ...opts, quality: q, onProgress: own ? cb.onProgress : undefined,
         onFloodLevel: v => { if (mm === cur) cb.onFloodLevel(v); },
@@ -8012,14 +8042,15 @@ const handle = async (m, post) => {
           F.yaw += turn; const R2 = bsClamp(R * scale, 20, out), e = look3(); F.pos.set(L[0] - e[0] * R2, L[1] - e[1] * R2, L[2] - e[2] * R2); keepIn(); };
         const ptrs = new Map(); let pinch = null;
         const gest = {
-          pointerdown: e => { if (T.walk) return; list.hidden = true; jump.setAttribute("aria-expanded", "false"); fl.hidden = true; fb.setAttribute("aria-expanded", "false"); closeAsk(); try { box.setPointerCapture(e.pointerId); } catch {}
+          pointerdown: e => { if (T.admin?.down(e)) return; if (T.walk) return; list.hidden = true; jump.setAttribute("aria-expanded", "false"); fl.hidden = true; fb.setAttribute("aria-expanded", "false"); closeAsk(); try { box.setPointerCapture(e.pointerId); } catch {}
             ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); pinch = null; T.tween = null; tip.classList.add("dim"); e.preventDefault(); },
-          pointermove: e => { const p = ptrs.get(e.pointerId); if (!p || T.walk) return; const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
+          pointermove: e => { if (T.admin?.move(e)) return; const p = ptrs.get(e.pointerId); if (!p || T.walk) return; const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
             if (ptrs.size === 1) { if (e.pointerType === "mouse" && (e.buttons & 2)) { F.yaw -= dx * 0.005; F.pitch = bsClamp(F.pitch - dy * 0.005, -1.45, 0.4); } else pan(dx, dy); }
             else if (ptrs.size === 2) { const [p1, p2] = [...ptrs.values()], d = Math.hypot(p2.x - p1.x, p2.y - p1.y) || 1, ang = Math.atan2(p2.y - p1.y, p2.x - p1.x);
-              if (pinch) { const da = ang - pinch.ang; zoomTurn(pinch.d / d, Math.atan2(Math.sin(da), Math.cos(da))); } pinch = { d, ang }; }
+              if (pinch) { const da = ang - pinch.ang; zoomTurn(pinch.d / d, Math.atan2(Math.sin(da), Math.cos(da))); } pinch = { d, ang };
+              if (T.admin?.tool) pan(dx / 2, dy / 2); }  // with an editing tool on, two fingers drag the map as well
             e.preventDefault(); },
-          pointerup: e => { ptrs.delete(e.pointerId); pinch = null; },
+          pointerup: e => { if (T.admin?.up(e)) return; ptrs.delete(e.pointerId); pinch = null; },
           wheel: e => { if (T.walk) return; T.tween = null; zoomTurn(Math.exp(bsClamp(e.deltaY, -300, 300) * 0.0015), 0); e.preventDefault(); },
           contextmenu: e => e.preventDefault(),
         };
@@ -8128,6 +8159,8 @@ const handle = async (m, post) => {
         { const nb = $("bsNamesBtn"), show = on => { T.streets.set(on); nb.setAttribute("aria-pressed", String(on)); nb.title = on ? "Hide street names (N)" : "Show street names (N)"; };
           show(streetsPref()); nb.hidden = false; nb.onclick = () => { const on = nb.getAttribute("aria-pressed") !== "true"; show(on); streetsSave(on); };
           T.namesToggle = () => nb.click(); }
+        // admin mode: published edits for everyone, the editing tools for Ash (townAdmin)
+        try { T.admin = townAdmin(T, cfg, box, m, { ptrs }); } catch (e) { console.warn("Town model: admin mode couldn't start", e); }
         F.hot = { f: () => toMode(!T.walk),
           n: () => T.namesToggle?.(),
           j: () => openList(list.hidden),
@@ -8821,6 +8854,129 @@ const handle = async (m, post) => {
     }
     return { spots, chains, cgrid };
   }
+  // Admin mode in a town model (Ash, 14 November 2026: "an admin mode here i can self add path, grass or road ... if user is ash
+  // or ashley. Also delete cars or people"). Two parts:
+  // - For everyone: what has been published in the model's edits.json (painted ground, and things taken out) is laid over the model.
+  // - For Ash (the name in Settings is Ash or Ashley): a pencil button opens a toolbar. Path, Grass and Road paint the ground by
+  //   dragging on it (a straight line from where the finger goes down to where it lifts, or freehand); Delete takes out the parked
+  //   car, tree or person tapped (a person is whoever walks there: nobody is drawn within 12 m of the spot from then on), or one of
+  //   Ash's own strokes. Undo, Clear, and Copy edits. Edits show straight away and are kept on this device only: Copy edits puts
+  //   them on the clipboard to paste to Claude, who adds them to edits.json for everyone (there is nothing to sign in to or set up).
+  // Painted ground shows where the model draws the ground by kind (near the view), on devices that draw it.
+  function townAdmin(T, cfg, box, m, nav) {
+    const A = { tool: null, down: () => false, move: () => false, up: () => false, dispose() {} };
+    if (!m.setGroundEdits) return A;
+    const key = "an3d-edits-" + cfg.place, r2 = v => Math.round(v * 100) / 100;
+    const blank = () => ({ v: 1, paint: [], gone: { cars: [], trees: [], people: [] } });
+    const tidy = o => { const b = blank(); if (!o || typeof o !== "object") return b;
+      for (const s of Array.isArray(o.paint) ? o.paint : []) if (s && [1, 2, 3].includes(s.k) && s.w > 0 && s.w <= 40 && Array.isArray(s.p) && s.p.length >= 2 && s.p.length % 2 === 0 && s.p.every(Number.isFinite)) b.paint.push({ k: s.k, w: +s.w, p: s.p.map(r2) });
+      for (const [kind, n] of [["cars", 2], ["trees", 2], ["people", 3]]) for (const g of Array.isArray(o.gone?.[kind]) ? o.gone[kind] : []) if (Array.isArray(g) && g.length === n && g.every(Number.isFinite)) b.gone[kind].push(g.map(r2));
+      return b; };
+    let mine = blank(), pub = blank(), draft = null;
+    try { mine = tidy(JSON.parse(localStorage.getItem(key))); } catch {}
+    const save = () => { try { localStorage.setItem(key, JSON.stringify(mine)); } catch {} };
+    const apply = () => { m.setGroundEdits([...pub.paint, ...mine.paint, ...(draft ? [draft] : [])]);
+      m.setRemoved({ cars: [...pub.gone.cars, ...mine.gone.cars], trees: [...pub.gone.trees, ...mine.gone.trees], people: [...pub.gone.people, ...mine.gone.people] }); };
+    apply();
+    // what has been published for everyone; anything of mine that is in it now comes off my own list
+    fetch(cfg.assets + "edits.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(j => { if (!j || T.dead) return; pub = tidy(j);
+      const same = (a, b) => { const has = new Set(b.map(x => JSON.stringify(x))); return a.filter(x => !has.has(JSON.stringify(x))); };
+      mine.paint = same(mine.paint, pub.paint); for (const kind of ["cars", "trees", "people"]) mine.gone[kind] = same(mine.gone[kind], pub.gone[kind]);
+      save(); apply(); count(); }).catch(() => {});
+    let count = () => {};
+    if (!isAsh()) return A;
+
+    const fly = $("bsFly"), bar = $("bsAdmin"), btn = $("bsEditBtn"), note = $("bsAdminNote"), wOut = $("bsAdminWOut"), line = $("bsAdminLine"), clear = $("bsAdminClear");
+    const TOOLS = { path: { k: 3, w: 1.3, min: 0.6, max: 5, step: 0.1, straight: true, col: "#e8e3d6", say: "Drag to lay a footpath." },
+      grass: { k: 1, w: 2.5, min: 0.6, max: 14, step: 0.5, straight: false, col: "#8fd06a", say: "Drag to paint grass." },
+      road: { k: 2, w: 6, min: 2, max: 16, step: 0.5, straight: true, col: "#9aa0a8", say: "Drag to lay a road." },
+      delete: { say: "Tap a parked car, a tree, a person or one of your own strokes." } };
+    let pref = {}; try { pref = JSON.parse(localStorage.getItem("an3d-admin") || "{}") || {}; } catch {}
+    const keep = () => { try { localStorage.setItem("an3d-admin", JSON.stringify(pref)); } catch {} };
+    const width = () => { const t = TOOLS[A.tool]; return bsClamp(pref[A.tool + "W"] ?? t.w, t.min, t.max); };
+    const straight = () => pref[A.tool + "S"] ?? TOOLS[A.tool].straight;
+    const ops = [];  // what was done since the toolbar opened, newest last, for Undo
+    const say = (text, ms) => { note.textContent = text; clearTimeout(say.t); if (ms) say.t = setTimeout(count, ms); };
+    // the line under the tools says what the tool in hand does; Copy edits carries how many edits are waiting on this device
+    count = () => { const n = mine.paint.length + mine.gone.cars.length + mine.gone.trees.length + mine.gone.people.length;
+      $("bsAdminCopy").textContent = n ? `Copy (${n})` : "Copy";
+      note.textContent = A.tool ? TOOLS[A.tool].say + (A.tool === "delete" || T.walk ? "" : " Two fingers move the map.") : n ? "Your edits are on this device only. Copy them and paste them to Claude to make them live for everyone." : "Pick a tool. Edits stay on this device until you copy them to Claude."; };
+    const show = () => { for (const b of bar.querySelectorAll("[data-tool]")) b.setAttribute("aria-pressed", String(b.dataset.tool === A.tool));
+      const paint = !!A.tool && A.tool !== "delete"; $("bsAdminW").hidden = line.hidden = !paint;
+      if (paint) { wOut.textContent = width().toFixed(1) + " m"; line.textContent = straight() ? "Straight" : "Freehand"; line.setAttribute("aria-pressed", String(straight())); }
+      document.body.classList.toggle("bsadmin-tool", !!A.tool); count(); };
+    // the line being drawn, over the view: instant, while the ground itself catches up a few times a second
+    const ink = document.createElementNS("http://www.w3.org/2000/svg", "svg"); ink.setAttribute("class", "bs-admin-ink"); ink.setAttribute("aria-hidden", "true");
+    const trail = document.createElementNS("http://www.w3.org/2000/svg", "polyline"); ink.appendChild(trail); fly.insertBefore(ink, fly.firstChild);
+    let ptr = null, liveAt = 0;
+    const done = () => { ptr = null; trail.setAttribute("points", ""); if (draft) { draft = null; apply(); } };
+    const live = force => { const now = performance.now(); if (!force && now - liveAt < 300) return; liveAt = now; apply(); };
+    // a freehand line with the wobble taken out: points are dropped while the line stays within 12 cm of them
+    const thin = p => { const n = p.length / 2; if (n < 3) return p; const keepPt = new Uint8Array(n); keepPt[0] = keepPt[n - 1] = 1; const todo = [[0, n - 1]];
+      while (todo.length) { const [a, b] = todo.pop(); let far = 0, at = -1; const ax = p[a * 2], az = p[a * 2 + 1], dx = p[b * 2] - ax, dz = p[b * 2 + 1] - az, L = dx * dx + dz * dz || 1;
+        for (let i = a + 1; i < b; i++) { const t = bsClamp(((p[i * 2] - ax) * dx + (p[i * 2 + 1] - az) * dz) / L, 0, 1), d = Math.hypot(p[i * 2] - ax - dx * t, p[i * 2 + 1] - az - dz * t); if (d > far) { far = d; at = i; } }
+        if (far > 0.12) { keepPt[at] = 1; todo.push([a, at], [at, b]); } }
+      const out = []; for (let i = 0; i < n; i++) if (keepPt[i]) out.push(p[i * 2], p[i * 2 + 1]); return out; };
+    const length = p => { let L = 0; for (let i = 2; i < p.length; i += 2) L += Math.hypot(p[i] - p[i - 2], p[i + 1] - p[i - 1]); return L; };
+    const strokeAt = (x, z) => { for (let i = mine.paint.length - 1; i >= 0; i--) { const s = mine.paint[i], p = s.p;
+        for (let a = 0; a < Math.max(1, p.length / 2 - 1); a++) { const b = Math.min(a + 1, p.length / 2 - 1), ax = p[a * 2], az = p[a * 2 + 1], dx = p[b * 2] - ax, dz = p[b * 2 + 1] - az, L = dx * dx + dz * dz;
+          const t = L ? bsClamp(((x - ax) * dx + (z - az) * dz) / L, 0, 1) : 0; if (Math.hypot(x - ax - dx * t, z - az - dz * t) <= s.w / 2) return i; } }
+      return -1; };
+    const takeOut = (cx, cy) => { const th = m.pickThing(cx, cy), g = m.groundUnder(cx, cy);
+      if (th?.type === "car") { mine.gone.cars.push([r2(th.x), r2(th.z)]); ops.push({ gone: "cars" }); say("Parked car taken out.", 2500); }
+      else if (th?.type === "tree") { mine.gone.trees.push([r2(th.x), r2(th.z)]); ops.push({ gone: "trees" }); say("Tree taken out.", 2500); }
+      else if (th?.type === "person") { mine.gone.people.push([r2(th.x), r2(th.z), 12]); ops.push({ gone: "people" }); say("No one walks within 12 m of there now.", 3000); }
+      else { const i = g ? strokeAt(g.x, g.z) : -1; if (i < 0) return say("Nothing to take out there. Tap a parked car, a tree, a person or one of your own strokes.", 3500);
+        ops.push({ back: mine.paint[i], at: i }); mine.paint.splice(i, 1); say("Stroke taken out.", 2500); }
+      save(); apply(); };
+    A.down = e => { if (!A.tool) return false;
+      if (e.pointerType === "mouse" && e.button !== 0) return false;
+      if (ptr) { nav.ptrs.set(ptr.id, { x: ptr.x, y: ptr.y }); done(); return false; }  // a second finger: stop drawing, and both fingers move the map
+      if (nav.ptrs.size) return false;
+      const g = m.groundUnder(e.clientX, e.clientY);
+      ptr = { id: e.pointerId, x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, pts: g && A.tool !== "delete" ? [g.x, g.z] : null, scr: [e.clientX, e.clientY] };
+      trail.setAttribute("stroke", TOOLS[A.tool].col || "#fff");
+      try { box.setPointerCapture(e.pointerId); } catch {} e.preventDefault(); return true; };
+    A.move = e => { if (!ptr || e.pointerId !== ptr.id) return false; ptr.x = e.clientX; ptr.y = e.clientY; e.preventDefault();
+      if (!ptr.pts) return true;
+      const g = m.groundUnder(e.clientX, e.clientY); if (!g) return true;
+      if (straight()) { ptr.pts = [ptr.pts[0], ptr.pts[1], g.x, g.z]; ptr.scr = [ptr.sx, ptr.sy, e.clientX, e.clientY]; }
+      else { const n = ptr.pts.length; if (Math.hypot(g.x - ptr.pts[n - 2], g.z - ptr.pts[n - 1]) < Math.max(0.25, width() / 8)) return true; ptr.pts.push(g.x, g.z); ptr.scr.push(e.clientX, e.clientY); }
+      const o = fly.getBoundingClientRect(); trail.setAttribute("points", ptr.scr.map((v, i) => (v - (i % 2 ? o.top : o.left)).toFixed(1)).join(" "));
+      draft = { k: TOOLS[A.tool].k, w: width(), p: ptr.pts.map(r2) }; live(); return true; };
+    A.up = e => { if (!ptr || e.pointerId !== ptr.id) return false; const p = ptr; ptr = null; trail.setAttribute("points", "");
+      if (e.type === "pointercancel") { draft = null; apply(); return true; }
+      if (A.tool === "delete") { if (Math.hypot(e.clientX - p.sx, e.clientY - p.sy) < 12) takeOut(e.clientX, e.clientY); return true; }
+      draft = null; let pts = p.pts ? (straight() ? p.pts : thin(p.pts)).map(r2) : null;
+      if (pts && length(pts) < 0.4) pts = A.tool === "grass" ? pts.slice(0, 2) : null;  // a tap: a dot of grass, or nothing
+      if (pts) { mine.paint.push({ k: TOOLS[A.tool].k, w: width(), p: pts }); ops.push({ paint: 1 }); save(); count(); }
+      else say(p.pts ? "Drag to draw." : "That missed the ground.", 2000);
+      apply(); return true; };
+    const on = [], bin = clear.innerHTML;
+    const listen = (el, f) => { el.addEventListener("click", f); on.push([el, f]); };
+    listen(btn, () => { const open = bar.hidden; bar.hidden = !open; btn.setAttribute("aria-pressed", String(open)); document.body.classList.toggle("bsadmin", open); if (!open) { A.tool = null; done(); } show(); });
+    listen(bar, e => { const b = e.target.closest("button"); if (!b) return;
+      if (b.dataset.tool) { A.tool = A.tool === b.dataset.tool ? null : b.dataset.tool; done(); show(); }
+      else if (b.dataset.w) { const t = TOOLS[A.tool]; pref[A.tool + "W"] = r2(bsClamp(width() + t.step * +b.dataset.w, t.min, t.max)); keep(); show(); }
+      else if (b === line) { pref[A.tool + "S"] = !straight(); keep(); show(); }
+      else if (b.id === "bsAdminUndo") { const o = ops.pop() || (mine.paint.length ? { paint: 1 } : null);
+        if (!o) return say("Nothing to undo.", 2000);
+        if (o.paint) mine.paint.pop(); else if (o.gone) mine.gone[o.gone].pop(); else mine.paint.splice(Math.min(o.at, mine.paint.length), 0, o.back);
+        save(); apply(); count(); }
+      else if (b.id === "bsAdminCopy") {  // words for whoever it is pasted to, then the edits themselves
+        const town = cfg.assets.replace(/\/$/, "").split("/").pop(), text = `Awesome News map edits for ${town}, from admin mode. Claude: add these to town3d/${town}/edits.json with tools/town/add_edits.py and publish them.\n` + JSON.stringify({ town, v: 1, paint: mine.paint, gone: mine.gone });
+        if (!mine.paint.length && !mine.gone.cars.length && !mine.gone.trees.length && !mine.gone.people.length) return say("Nothing to copy yet.", 2500);
+        const ok = () => { toast("Edits copied. Paste them to Claude to make them live for everyone."); say("Copied. Paste them to Claude.", 4000); };
+        const old = () => { const ta = document.createElement("textarea"); ta.value = text; ta.setAttribute("readonly", ""); ta.style.cssText = "position:fixed;left:-9999px;top:0"; document.body.appendChild(ta); ta.select(); let did = false; try { did = document.execCommand("copy"); } catch {} ta.remove(); if (did) ok(); else say("Couldn't copy on this browser.", 4000); };
+        if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).then(ok, old); else old(); }
+      else if (b === clear) { const unsure = () => { clear.dataset.sure = ""; clear.classList.add("bs-admin-ic"); clear.innerHTML = bin; };
+        if (clear.dataset.sure !== "1") { if (!mine.paint.length && !mine.gone.cars.length && !mine.gone.trees.length && !mine.gone.people.length) return say("Nothing to clear.", 2000);
+          clear.dataset.sure = "1"; clear.classList.remove("bs-admin-ic"); clear.textContent = "Clear all?"; clearTimeout(clear.t); clear.t = setTimeout(unsure, 4000); return; }
+        clearTimeout(clear.t); unsure(); mine = blank(); ops.length = 0; save(); apply(); count(); say("All your edits on this device are cleared.", 3000); } });
+    btn.hidden = false; show();
+    A.dispose = () => { on.forEach(([el, f]) => el.removeEventListener("click", f)); ink.remove(); bar.hidden = true; btn.hidden = true; btn.setAttribute("aria-pressed", "false"); document.body.classList.remove("bsadmin", "bsadmin-tool"); clearTimeout(say.t); clearTimeout(clear.t); clear.dataset.sure = ""; clear.classList.add("bs-admin-ic"); clear.innerHTML = bin; };
+    return A;
+  }
   function townStreetNames(T, cfg, box, m) {
     const THREE = BS.B.THREE, cam = new THREE.PerspectiveCamera(60, 1, 1, 1e7), v = new THREE.Vector3(), CELL = 250;
     const LIM = [2200, 1800, 1300, 800, 550, 450];  // how far off a name can be read, by class of road (m)
@@ -8923,6 +9079,7 @@ const handle = async (m, post) => {
     const T = BS.town; if (!T) return;
     BS.town = null; T.dead = true; T.on = false; T.ungest?.(); T.unlay?.(); T.unflood?.();
     T.streets?.dispose(); T.streets = null; $("bsNamesBtn").hidden = true;
+    T.admin?.dispose(); T.admin = null;
     T.unbar?.();
     if (BS.fly) { const F = BS.fly; F.walk = F.speed = F.floor = F.hot = null; F.ceil = 0; F.lim = null; }  // Explore, if it carries on, is its old self
     try { T.model?.dispose(); } catch {}
