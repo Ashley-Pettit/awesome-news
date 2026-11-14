@@ -7623,6 +7623,7 @@ const handle = async (m, post) => {
     F.on = {
       keydown: e => { if (typing(e)) return;
         if (e.code === "Escape" && document.pointerLockElement !== canvas) { bsFlyOff(); return; }
+        if (e.ctrlKey && e.code === "F9" && F.hot?.gold?.()) { e.preventDefault(); return; }
         if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.code === "KeyZ" && F.hot?.undo?.()) { e.preventDefault(); return; }  // admin mode, with its bar open: undo the last edit
         F.keys.add(e.code); if (/^(Space|Arrow)/.test(e.code)) e.preventDefault();
         if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -8048,6 +8049,8 @@ const handle = async (m, post) => {
         if (cfg.place === "moo" && m.driveCar) for (const P of MOO_PLANES) mine.push({ name: P.name, group: "Things to drive and fly", what: P.what,
           walk: (() => { const s = Math.sin(P.h), c = Math.cos(P.h), dx = s * 7 - c * 5, dz = c * 7 + s * 5;  // ahead of its nose and off to one side, clear of the wing
             return { x: P.x + dx, z: P.z + dz, yaw: Math.atan2(dx, dz), pitch: -0.06 }; })(), target: [P.x, P.z] });
+        if (cfg.place === "moo" && m.driveCar) { const G = MOO_GOLD_CAR, dx = -Math.cos(G.h) * 5 + Math.sin(G.h) * 3, dz = Math.sin(G.h) * 5 + Math.cos(G.h) * 3;  // by its driver's door, a little ahead
+          mine.push({ name: G.name, group: "Things to drive and fly", what: G.what, walk: { x: G.x + dx, z: G.z + dz, yaw: Math.atan2(dx, dz), pitch: -0.1 }, target: [G.x, G.z] }); }
         // Places to jump to: each as somewhere to stand (walking) and a view from above (flying). Where the model knows a
         // spot on the kerb of the nearest street (Moorooka's does), you stand there; otherwise a few steps back from the place.
         // (Logan's list starts with the whole city, which is only ever seen from the air, like the water.)
@@ -8216,7 +8219,7 @@ const handle = async (m, post) => {
         // driving: Enter, or the Get in button, when a parked car is close (townCar)
         try { T.car = townCar(T, m, F, ground); } catch (e) { console.warn("Town model: driving couldn't start", e); }
         F.hot = { f: () => toMode(!T.walk),
-          enter: () => T.car?.enter(), keys: () => !!T.car?.keys?.(), undo: () => !!T.admin?.undo?.(),
+          enter: () => T.car?.enter(), keys: () => !!T.car?.keys?.(), undo: () => !!T.admin?.undo?.(), gold: () => !!T.car?.toGold?.(),
           n: () => T.namesToggle?.(),
           j: () => openList(list.hidden),
           esc: () => { if (!ask.hidden) { closeAsk(); return true; } if (!list.hidden) { openList(false); return true; } if (!fl.hidden) { fl.hidden = true; fb.setAttribute("aria-expanded", "false"); return true; } return false; },
@@ -9093,8 +9096,9 @@ const handle = async (m, post) => {
   //   bump or a landing, a door. It starts with the key or tap that gets you in (a browser needs that before it plays anything).
   const MOO_PLANES = [
     { x: -308, z: -992, h: 2.71, name: "The plane in Stimpson Park", at: "in Stimpson Park", what: "On the grass, across the road from 6 Beaudesert Road. Walk up to it and get in" },
-    { x: -158.9, z: -320, h: 3.595, name: "The plane at the Moorooka shops", at: "at the shops", what: "Out the front of Moorooka Central, across Beaudesert Road from the post office. Walk up to it and get in" },
+    { x: -158.9, z: -320, h: 3.595, gold: true, name: "The golden plane at the Moorooka shops", at: "at the shops", what: "Out the front of Moorooka Central, across Beaudesert Road from the post office. Faster, and quicker to turn" },
   ];
+  const MOO_GOLD_CAR = { x: -299.8, z: -988.2, h: 2.71, name: "The golden car", what: "In Stimpson Park, beside the plane. Twice as fast as the others" };
   function townSound() {
     let ac = null, master = null, hiss = null, eng = null;
     const ctx = () => { if (!ac) { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
@@ -9122,8 +9126,8 @@ const handle = async (m, post) => {
       set(rev, load, speed, boost, skid) { if (!eng || !ac) return; const t = ac.currentTime, to = (p, v, k = 0.07) => p.setTargetAtTime(v, t, k);
         const f = (eng.plane ? 50 + 62 * rev : 36 + 150 * rev) * (boost ? 1.3 : 1);
         to(eng.o1.frequency, f); to(eng.o2.frequency, f * (eng.plane ? 1.5 : 0.5)); if (eng.beat) to(eng.beat.frequency, 11 + 24 * rev);
-        to(eng.lp.frequency, 240 + 1500 * load + (boost ? 1500 : 0)); to(eng.out.gain, 0.07 + 0.17 * load + (boost ? 0.1 : 0));
-        to(eng.wf.frequency, 450 + 1500 * Math.min(1, speed / 70)); to(eng.wg.gain, Math.min(0.24, (speed / 45) ** 2 * 0.08) + (boost ? 0.07 : 0));
+        to(eng.lp.frequency, 240 + 1500 * load + (boost ? 1500 : 0)); to(eng.out.gain, 0.042 + 0.1 * load + (boost ? 0.06 : 0));  // (turned down by about two fifths: Ash, "the engine sounds are slightly too loud")
+        to(eng.wf.frequency, 450 + 1500 * Math.min(1, speed / 70)); to(eng.wg.gain, Math.min(0.19, (speed / 45) ** 2 * 0.065) + (boost ? 0.055 : 0));
         to(eng.sg.gain, skid * 0.1, 0.03); },
       thud(k = 1) { hit(0.28, 320, 0.5 * k, 74); },
       door() { hit(0.09, 1100, 0.3, 120); },
@@ -9135,9 +9139,9 @@ const handle = async (m, post) => {
   }
   // The plane: a small high-winged four-seater, white with a blue stripe. Nose to +Z, wheels on y = 0. Returns the body and, apart,
   // the propeller's blades and the blur they become when it spins (each about the propeller's own centre).
-  function townPlaneParts() {
+  function townPlaneParts(stripe = "#1f6fb2", car = false) {
     const lin = hex => { const v = parseInt(hex.slice(1), 16); return [((v >> 16) & 255) / 255, ((v >> 8) & 255) / 255, (v & 255) / 255].map(c => Math.pow(c, 2.2)); };
-    const WHITE = lin("#f3f3ee"), BLUE = lin("#1f6fb2"), GLASS = lin("#1c2a36"), DARK = lin("#2a2c30"), TYRE = lin("#17181a"), GREY = lin("#b9bcc0");
+    const WHITE = lin("#f3f3ee"), BLUE = lin(stripe), GLASS = lin("#1c2a36"), DARK = lin("#2a2c30"), TYRE = lin("#17181a"), GREY = lin("#b9bcc0");
     const mesh = () => { const P = [], N = [], C = [];
       const tri = (a, b, c, col) => { const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2];
         let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; const l = Math.hypot(nx, ny, nz) || 1; nx /= l; ny /= l; nz /= l;
@@ -9152,6 +9156,16 @@ const handle = async (m, post) => {
           quad(p(a0, -1), p(a1, -1), p(a1, 1), p(a0, 1), TYRE); tri([x + w / 2, y, z], p(a0, 1), p(a1, 1), TYRE); tri([x - w / 2, y, z], p(a1, -1), p(a0, -1), TYRE); } };
       return { P, N, C, tri, quad, hull, box, wheel, part: extra => ({ positions: new Float32Array(P), normals: new Float32Array(N), colors: new Float32Array(C), color: [1, 1, 1], roughness: 0.55, doubleSide: true, ...extra }) }; };
     const b = mesh();
+    if (car) {  // the golden car: low and wide, a black stripe down the middle and a wing on the back. Nose to +Z, wheels on y = 0
+      const GOLD = lin(stripe), BLACK = lin("#18181a");
+      b.hull([2.15, 0.78, 0.28, 0.6], [1.2, 0.9, 0.26, 0.8], GOLD); b.hull([1.2, 0.9, 0.26, 0.8], [-1.6, 0.9, 0.26, 0.86], GOLD); b.hull([-1.6, 0.9, 0.26, 0.86], [-2.15, 0.84, 0.32, 0.8], GOLD);
+      b.hull([0.8, 0.74, 0.8, 0.83], [0.1, 0.68, 0.84, 1.22], GLASS, GLASS); b.hull([0.1, 0.68, 0.84, 1.22], [-0.8, 0.68, 0.85, 1.22], GLASS, GOLD); b.hull([-0.8, 0.68, 0.85, 1.22], [-1.5, 0.74, 0.86, 0.9], GLASS, GLASS);
+      b.quad([-0.2, 0.612, 2.1], [0.2, 0.612, 2.1], [0.2, 0.812, 1.2], [-0.2, 0.812, 1.2], BLACK); b.quad([-0.2, 1.232, 0.1], [0.2, 1.232, 0.1], [0.2, 1.232, -0.8], [-0.2, 1.232, -0.8], BLACK);
+      b.quad([-0.2, 0.872, -1.52], [0.2, 0.872, -1.52], [0.2, 0.815, -2.12], [-0.2, 0.815, -2.12], BLACK);
+      b.box(-0.88, 0.88, 1.04, 1.1, -2.22, -1.9, BLACK); for (const sx of [-0.6, 0.52]) b.box(sx, sx + 0.08, 0.84, 1.04, -2.1, -2.0, BLACK);
+      for (const sx of [-1, 1]) { b.box(sx * 0.6 - 0.14, sx * 0.6 + 0.14, 0.5, 0.58, 2.1, 2.17, lin("#fff6d8")); b.box(sx * 0.6 - 0.14, sx * 0.6 + 0.14, 0.58, 0.68, -2.17, -2.12, lin("#b3202a")); for (const z of [1.32, -1.3]) b.wheel(sx * 0.86, 0.34, z, 0.34, 0.26); }
+      return [b.part({ roughness: 0.3 })];
+    }
     // the body, nose to tail: spinner, cowl, firewall, cabin, tail cone
     const S = [[2.78, 0.07, 1.24, 1.38], [2.5, 0.45, 0.95, 1.6], [1.5, 0.58, 0.85, 1.75], [0.85, 0.6, 0.8, 2.0], [-1.0, 0.58, 0.85, 1.98], [-2.8, 0.3, 1.2, 1.75], [-4.4, 0.08, 1.45, 1.7]];
     S.slice(0, -1).forEach((s, i) => b.hull(s, S[i + 1], i === 0 ? GREY : WHITE, i === 2 ? GLASS : WHITE, i === 0 || i === S.length - 2));  // the slope from the cowl up to the roof is the windscreen
@@ -9187,7 +9201,7 @@ const handle = async (m, post) => {
     const lie = (o, half, wide) => { const s = Math.sin(o.h), c = Math.cos(o.h), g = (a, b) => ground(o.x + s * a - c * b, o.z + c * a + s * b), yf = g(half, 0), yb = g(-half, 0), yr = g(0, wide), yl = g(0, -wide);
       return [(yf + yb + yr + yl) / 4, Math.atan2(yf - yb, half * 2), Math.atan2(yl - yr, wide * 2)]; };
     const sit = dt => { const [y, p, r] = lie(car, 1.3, 0.8), e = dt ? Math.min(1, dt * 12) : 1; car.y += (y + 0.05 - car.y) * e; car.p += (p - car.p) * e; car.r += (r - car.r) * e;
-      m.driveCar(car.id[0], car.id[1], car.x, car.y, car.z, car.h, car.p, car.r); };
+      if (car.gold) { Object.assign(gold, { x: car.x, y: car.y, z: car.z, h: car.h, p: car.p, r: car.r }); showGold(); } else m.driveCar(car.id[0], car.id[1], car.x, car.y, car.z, car.h, car.p, car.r); };
     // ---- the planes, each stood in the model as the app's own mesh where it lives (MOO_PLANES); `plane` is the one you are in
     const M = new THREE.Matrix4(), M2 = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), ONE = new THREE.Vector3(1, 1, 1);
     const hub = new THREE.Matrix4().makeTranslation(0, 1.31, 2.74);
@@ -9198,12 +9212,19 @@ const handle = async (m, post) => {
       P.parts.setMatrix(2, fast ? M2.elements.slice() : M2.clone().scale(V.set(0, 0, 0)).elements); };
     const planes = MOO_PLANES.map(home => { const P = { home, x: home.x, z: home.z, h: home.h, y: 0, p: 0, r: 0, v: 0, air: false, spin: 0, turn: 0, ang: 0 };
       const [y, p, r] = lie(P, 2, 1.2); P.y = y; P.p = p; P.r = r;
-      P.parts = m.addParts(townPlaneParts().map(q => ({ ...q, matrix: M.identity().elements.slice() }))); showPlane(P); return P; });
+      P.gold = !!home.gold; P.k = P.gold ? 2 : 1;  // the golden one: twice the push and twice as quick on the controls, and a good deal faster
+      P.parts = m.addParts(townPlaneParts(P.gold ? "#e2ad1c" : undefined).map(q => ({ ...q, matrix: M.identity().elements.slice() }))); showPlane(P); return P; });
+    // ---- the golden car, the app's own mesh too: twice the top speed and the acceleration of a parked car
+    const gold = { x: MOO_GOLD_CAR.x, z: MOO_GOLD_CAR.z, h: MOO_GOLD_CAR.h, y: 0, p: 0, r: 0 };
+    { const [y, p, r] = lie(gold, 1.3, 0.8); gold.y = y; gold.p = p; gold.r = r; }
+    gold.parts = m.addParts(townPlaneParts("#e8b923", true).map(q => ({ ...q, matrix: M.identity().elements.slice() })));
+    const showGold = () => { M.compose(V.set(gold.x, gold.y, gold.z), Q.setFromEuler(E.set(-gold.p, gold.h, gold.r, "YXZ")), ONE); gold.parts.setMatrix(0, M.elements.slice()); };
+    showGold();
     // ---- what the keys do, shown while you are in something (the list on a desktop, the line that says what to do next on both)
     const keysBox = $("bsKeys"), keysNow = $("bsKeysNow"), keysList = $("bsKeysList"), keysQ = keysBox.querySelector(".bs-keys-q");
     const joyName = document.querySelector('#bsFly .bs-joy[data-joy="move"] span'), udName = [...document.querySelectorAll("#bsFly .bs-udb span")];
-    const KEYS = { plane: [[["W", "S"], "Power up, power down"], [["A", "D"], "Turn (\u2190 and \u2192 too)"], [["\u2193"], "Nose up, to climb"], [["\u2191"], "Nose down, to come down"], [["Shift"], "Boost"], [["Drag"], "Look around"], [["Enter"], "Get out, once you have landed"]],
-      car: [[["W", "S"], "Go, and brake or reverse (\u2191 and \u2193 too)"], [["A", "D"], "Steer (\u2190 and \u2192 too)"], [["Space"], "Handbrake"], [["Shift"], "Mega boost"], [["Drag"], "Look around"], [["Enter"], "Get out"]] };
+    const KEYS = { plane: [[["W", "S"], "Power up, power down (S backs up on the ground)"], [["A", "D"], "Turn (\u2190 and \u2192 too)"], [["\u2193"], "Nose up, to climb"], [["\u2191"], "Nose down, to come down"], [["Shift"], "Boost"], [["Drag"], "Look around"], [["Enter"], "Get out, once you have landed"]],
+      car: [[["W", "S"], "Go, and brake or reverse (\u2191 and \u2193 too)"], [["A", "D"], "Steer (\u2190 and \u2192 too)"], [["Space"], "Handbrake: swings the tail round"], [["Shift"], "Mega boost"], [["Drag"], "Look around"], [["Enter"], "Get out"]] };
     const hint = text => { if (keysNow.textContent !== text) { keysNow.textContent = text; if (touch) keysBox.hidden = !text; } };
     const keysOff = off => { keysBox.classList.toggle("off", off); keysQ.textContent = off ? "? to show the controls" : "? to hide this list"; };
     const showKeys = kind => { keysNow.textContent = ""; keysOff(false); keysBox.hidden = !kind || touch;  // (on a phone it shows once there is something to say)
@@ -9213,19 +9234,25 @@ const handle = async (m, post) => {
       if (joyName) joyName.textContent = kind === "plane" ? "Power and turn" : kind === "car" ? "Drive" : "Move";
       if (udName.length === 2) { udName[0].textContent = kind === "plane" ? "Climb" : "Up"; udName[1].textContent = kind === "plane" ? "Dive" : "Down"; } };
     C.keys = () => { if (!veh) return false; keysOff(!keysBox.classList.contains("off")); return true; };  // "?" hides the list and brings it back
-    // ---- the boost's charge: a ring of 24 pieces on the ground round the car, lit as far round as there is charge left. It shows
-    // while the boost is on and until it is full again. (The Boost button fills and empties with it too.)
-    const RING = 24, ring = m.addParts((() => { const lin = hex => { const v = parseInt(hex.slice(1), 16); return [((v >> 16) & 255) / 255, ((v >> 8) & 255) / 255, (v & 255) / 255].map(c => Math.pow(c, 2.2)); };
-      const arc = (a0, a1, r0, r1, col, opacity) => { const P = [], N = [], K = [], n = Math.max(1, Math.round((a1 - a0) / 0.14));
-        for (let i = 0; i < n; i++) { const a = a0 + (a1 - a0) * i / n, b = a0 + (a1 - a0) * (i + 1) / n, q = (t, r) => [Math.sin(t) * r, 0.22, Math.cos(t) * r];
+    // ---- the boost's charge: a fine ring of 48 slanted ticks on the ground round the car, lit as far round as there is charge
+    // left, running from red-orange (nearly out) through gold to pale (full), between two hairlines. It shows while the boost is
+    // on and until it is full again, and beats while the boost is on. (The Boost button fills and empties with it too.)
+    const RING = 48, ring = m.addParts((() => { const lin = hex => { const v = parseInt(hex.slice(1), 16); return [((v >> 16) & 255) / 255, ((v >> 8) & 255) / 255, (v & 255) / 255].map(c => Math.pow(c, 2.2)); };
+      const arc = (a0, a1, r0, r1, col, opacity, lean = 0) => { const P = [], N = [], K = [], n = Math.max(1, Math.round((a1 - a0) / 0.14));
+        for (let i = 0; i < n; i++) { const a = a0 + (a1 - a0) * i / n, b = a0 + (a1 - a0) * (i + 1) / n, q = (t, r) => [Math.sin(t + (r === r1 ? lean : 0)) * r, 0.22, Math.cos(t + (r === r1 ? lean : 0)) * r];
           for (const v of [q(a, r0), q(b, r0), q(b, r1), q(a, r0), q(b, r1), q(a, r1)]) { P.push(...v); N.push(0, 1, 0); K.push(...col); } }
         return { positions: new Float32Array(P), normals: new Float32Array(N), colors: new Float32Array(K), color: [1, 1, 1], unlit: true, opacity, doubleSide: true, matrix: new THREE.Matrix4().makeScale(0, 0, 0).elements }; };
-      const step = Math.PI * 2 / RING, out = [arc(0, Math.PI * 2, 3.02, 3.34, lin("#ffffff"), 0.2)];
-      for (let i = 0; i < RING; i++) out.push(arc(i * step + 0.03, (i + 1) * step - 0.03, 2.98, 3.38, lin(i < RING / 4 ? "#ff7a1a" : "#ffd166"), 0.95));  // the last quarter is orange: nearly out
+      const hair = [arc(0, Math.PI * 2, 2.9, 2.93, lin("#ffffff"), 0.34), arc(0, Math.PI * 2, 3.27, 3.3, lin("#ffffff"), 0.34)];
+      const two = { ...hair[0], positions: new Float32Array([...hair[0].positions, ...hair[1].positions]), normals: new Float32Array([...hair[0].normals, ...hair[1].normals]), colors: new Float32Array([...hair[0].colors, ...hair[1].colors]) };
+      const STOPS = [[0, "#ff4326"], [0.22, "#ff8a1c"], [0.55, "#ffd04a"], [1, "#fff4c2"]].map(([t, c]) => [t, lin(c)]);
+      const tint = t => { let i = 1; while (i < STOPS.length - 1 && t > STOPS[i][0]) i++; const [t0, c0] = STOPS[i - 1], [t1, c1] = STOPS[i], k = bsClamp((t - t0) / (t1 - t0), 0, 1); return c0.map((v, j) => v + (c1[j] - v) * k); };
+      const step = Math.PI * 2 / RING, out = [two];
+      for (let i = 0; i < RING; i++) out.push(arc(i * step + 0.022, (i + 1) * step - 0.022, 2.98, 3.22, tint(i / (RING - 1)), 0.96, 0.05));
       return out; })());
     const NONE = new THREE.Matrix4().makeScale(0, 0, 0).elements, lit = new Array(RING + 1).fill(false);
-    const showRing = on => { const full = on && car ? Math.ceil(charge * RING - 1e-6) : 0;
-      if (on && car) M.compose(V.set(car.x, car.y, car.z), Q.setFromEuler(E.set(-car.p, car.h, car.r, "YXZ")), ONE);
+    const BEAT = new THREE.Vector3();
+    const showRing = (on, hot) => { const full = on && car ? Math.ceil(charge * RING - 1e-6) : 0, beat = hot ? 1 + 0.03 * Math.sin(performance.now() / 55) : 1;
+      if (on && car) M.compose(V.set(car.x, car.y, car.z), Q.setFromEuler(E.set(-car.p, car.h, car.r, "YXZ")), BEAT.set(beat, 1, beat));
       for (let i = 0; i <= RING; i++) { const show = !!on && !!car && (i === 0 || i <= full); if (show || lit[i]) { ring.setMatrix(i, show ? M.elements.slice() : NONE); lit[i] = show; } }
       const pc = Math.round(charge * 100) + "%"; if (boostBtn.style.getPropertyValue("--charge") !== pc) boostBtn.style.setProperty("--charge", pc); };
     const leave = step => { if (!veh) return; const was = veh; snd.door(); snd.stop();
@@ -9251,39 +9278,49 @@ const handle = async (m, post) => {
         // the boost runs on a charge: about four seconds' worth, back in ten. Run right out, it waits until a fifth is back
         const boosting = boost && thr > 0.05 && !brake && charge > 0 && !spent;
         if (boosting) { charge = Math.max(0, charge - dt / 4); if (!charge) spent = true; } else { charge = Math.min(1, charge + dt / 10); if (charge >= 0.2) spent = false; }
-        if (brake) v -= Math.sign(v) * Math.min(Math.abs(v), 14 * dt);
-        else if (thr > 0.05) v += (v < -0.2 ? 10 : boosting ? 20.4 * (1 - Math.max(0, v) / VBOOST) : 5.04 * (1 - Math.max(0, v) / VMAX)) * thr * dt;
+        const K = car.gold ? 2 : 1, vmax = VMAX * K, vboost = VBOOST * (car.gold ? 1.5 : 1);  // the golden car: twice the top speed and the push (its boost runs half as far again)
+        // the handbrake is not much of a brake (Ash, 14 November 2026: "unrealistic where it only slightly slows the car but
+        // drastically increases turning for burnouts"): it swings the car round fast while it carries on the way it was going
+        const slide = brake && Math.abs(v) > 3;
+        if (brake) v -= Math.sign(v) * Math.min(Math.abs(v), 2.2 * dt);
+        if (thr > 0.05) v += (v < -0.2 ? 10 : boosting ? 20.4 * K * (1 - Math.max(0, v) / vboost) : 5.04 * K * (1 - Math.max(0, v) / vmax)) * thr * dt * (brake ? 0.5 : 1);
         else if (thr < -0.05) v += (v > 0.2 ? -11 : -3 * (1 + Math.min(0, v) / VREV)) * -thr * dt;
-        else v -= Math.sign(v) * Math.min(Math.abs(v), (0.6 + Math.abs(v) * 0.08) * dt);
-        if (v > VMAX && !boosting) v = Math.max(VMAX, v - 9 * dt);  // off the boost, it eases back to its own top speed
-        v = bsClamp(v, -VREV, VBOOST);
-        car.steer += (str * 0.55 / (1 + (Math.abs(v) / 8) ** 2 * 1.2) - car.steer) * Math.min(1, dt * 7);  // less lock the faster it goes
+        else if (!brake) v -= Math.sign(v) * Math.min(Math.abs(v), (0.6 + Math.abs(v) * 0.08) * dt);
+        if (v > vmax && !boosting) v = Math.max(vmax, v - 9 * K * dt);  // off the boost, it eases back to its own top speed
+        v = bsClamp(v, -VREV, vboost);
+        car.steer += (str * 0.55 / (1 + (Math.abs(v) / (8 * K)) ** 2 * 1.2) - car.steer) * Math.min(1, dt * 7);  // less lock the faster it goes
         car.v = v; let bump = 0;
         for (let n = Math.max(1, Math.ceil(Math.abs(v) * dt / 1.2)), i = 0, st = dt / n; i < n; i++) {  // in steps of a metre or so, so it cannot skip through a wall
-          const h = car.h - (car.v / 2.6) * Math.tan(car.steer) * st, x = car.x + Math.sin(h) * car.v * st, z = car.z + Math.cos(h) * car.v * st;
-          if (inside(x, z) && (fits(CAR, x, z, h) || !fits(CAR, car.x, car.z, car.h))) { car.x = x; car.z = z; car.h = h; }  // (a car parked inside a building's outline can still drive out)
-          else { bump = Math.abs(car.v); car.v = bump > 2 ? -car.v * 0.2 : 0; break; } }
+          const h = car.h - (slide ? str * 2.7 * Math.sign(car.v) : (car.v / 2.6) * Math.tan(car.steer)) * st;
+          const d = car.dir + wrap(h - car.dir) * Math.min(1, st * (slide ? 1.5 : 10));  // the way it travels comes round to the way it points: slowly while it slides
+          const x = car.x + Math.sin(d) * car.v * st, z = car.z + Math.cos(d) * car.v * st;
+          if (inside(x, z) && (fits(CAR, x, z, h) || !fits(CAR, car.x, car.z, car.h))) { car.x = x; car.z = z; car.h = h; car.dir = d; }  // (a car parked inside a building's outline can still drive out)
+          else { bump = Math.abs(car.v); car.v = bump > 2 ? -car.v * 0.2 : 0; car.dir = car.h; break; } }
         if (bump > 1.5) snd.thud(Math.min(1.6, 0.4 + bump / 14));
         sit(dt);
         const a = Math.abs(car.v), G = [0, 7, 14, 21, 30, 44, 60], g = Math.max(0, G.findIndex(q => a < q) - 1), top = G[g + 1] ?? 60;  // the engine rises through each gear and drops into the next
-        snd.set(0.18 + 0.82 * bsClamp((a - G[g]) / (top - G[g]), 0, 1), Math.abs(thr) > 0.05 && !brake ? 0.35 + 0.65 * Math.abs(thr) : 0.08, a, boosting, brake && a > 3 ? 1 : 0);
-        showRing(boosting || charge < 0.999);
+        snd.set(0.18 + 0.82 * bsClamp((a - G[g]) / (top - G[g]), 0, 1), Math.abs(thr) > 0.05 && !brake ? 0.35 + 0.65 * Math.abs(thr) : 0.08, a, boosting, slide ? 1 : Math.min(1, Math.abs(wrap(car.h - car.dir)) * 2.5));
+        showRing(boosting || charge < 0.999, boosting);
         o = car; D = 7.5 + Math.min(5, a / 9); text = Math.round(a * 3.6) + " km/h";
-      } else { const P = plane, top = boost ? JET : CRUISE;
+      } else { const P = plane, K = P.k, top = (boost ? JET : CRUISE) * (P.gold ? 1.6 : 1);
         // the nose: the down arrow lifts it and the up arrow lowers it, as pulling back and pushing on a plane's stick does
         // (Ash, 14 November 2026: "if i press down my plane shifts upwards and vica versa"). Space and C, and Climb and Dive, too.
         const climb = bsClamp((has("ArrowDown", "Space") ? 1 : 0) - (has("ArrowUp", "KeyC") ? 1 : 0) + F.vert, -1, 1);
-        if (thr > 0.05) P.v += (boost ? 34 : 9) * thr * Math.max(0, 1 - P.v / top) * dt; else if (thr < -0.05) P.v += thr * (P.air ? 9 : 16) * dt; else P.v -= (P.air ? P.v * 0.02 : 1.2) * dt;
-        if (P.v > top) P.v = Math.max(top, P.v - 25 * dt); P.v = Math.max(P.air ? 16 : 0, P.v);  // in the air it keeps some way on, and glides down
-        P.turn += (str - P.turn) * Math.min(1, dt * 5); let thud = 0;
+        // on the ground S brakes and then backs it up, slowly, so a plane nosed into a wall can get out again (Ash, 14 November
+        // 2026: "the plane needs reverse when on the ground. Sometimes ive been stuck before and unable to fly again")
+        if (thr > 0.05) P.v += (P.v < -0.2 ? 12 : (boost ? 34 : 9) * K * Math.max(0, 1 - P.v / top)) * thr * dt;
+        else if (thr < -0.05) P.v += thr * (P.air ? 9 : P.v > 0.2 ? 16 : 3.5) * dt;
+        else P.v -= P.air ? P.v * 0.02 * dt : Math.sign(P.v) * Math.min(Math.abs(P.v), 1.2 * dt);
+        if (P.v > top) P.v = Math.max(top, P.v - 25 * dt); P.v = Math.max(P.air ? 16 : -6, P.v);  // in the air it keeps some way on, and glides down
+        P.turn += (str - P.turn) * Math.min(1, dt * 5 * K); let thud = 0;
         if (!P.air) {  // on its wheels: it steers like a car, and leaves the ground at speed with the nose up (or, faster still, by itself)
-          for (let n = Math.max(1, Math.ceil(P.v * dt / 1.2)), i = 0, st = dt / n; i < n; i++) { const h = P.h - P.turn * 0.9 * Math.min(1, P.v / 5) / (1 + P.v / 30) * st, x = P.x + Math.sin(h) * P.v * st, z = P.z + Math.cos(h) * P.v * st;
-            if (inside(x, z) && (fits(PLANE, x, z, h) || !fits(PLANE, P.x, P.z, P.h))) { P.x = x; P.z = z; P.h = h; } else { thud = P.v; P.v = 0; break; } }
+          for (let n = Math.max(1, Math.ceil(Math.abs(P.v) * dt / 1.2)), i = 0, st = dt / n; i < n; i++) { const h = P.h - P.turn * 0.9 * bsClamp(P.v / 5, -1, 1) / (1 + Math.abs(P.v) / 30) * st, x = P.x + Math.sin(h) * P.v * st, z = P.z + Math.cos(h) * P.v * st;
+            if (inside(x, z) && (fits(PLANE, x, z, h) || !fits(PLANE, P.x, P.z, P.h))) { P.x = x; P.z = z; P.h = h; } else { thud = Math.abs(P.v); P.v = 0; break; } }
           const [y, p, r] = lie(P, 2, 1.2), e = Math.min(1, dt * 10); P.y += (y - P.y) * e; P.p += (p - P.p) * e; P.r += (r - P.r) * e;
           if (P.v > LIFT && (climb > 0.05 || P.v > LIFT * 1.3)) P.air = true;
-        } else { P.r += (P.turn * 0.78 - P.r) * Math.min(1, dt * 2.4); P.h -= (Math.sin(P.r) * 0.95 + P.turn * 0.08) * dt;  // banked, it turns
+        } else { P.r += (P.turn * 0.78 - P.r) * Math.min(1, dt * 2.4 * K); P.h -= (Math.sin(P.r) * 0.95 + P.turn * 0.08) * (P.gold ? 1.6 : 1) * dt;  // banked, it turns
           const slow = bsClamp((LIFT * 0.92 - P.v) / (LIFT * 0.92), 0, 1);  // too slow to stay up: the nose drops and it sinks
-          P.p += ((climb > 0 ? 0.42 : 0.5) * climb - slow * 0.45 - P.p) * Math.min(1, dt * 1.8);
+          P.p += ((climb > 0 ? 0.42 : 0.5) * climb * (P.gold ? 1.3 : 1) - slow * 0.45 - P.p) * Math.min(1, dt * 1.8 * K);
           P.x = bsClamp(P.x + Math.sin(P.h) * P.v * Math.cos(P.p) * dt, F.lim[0], F.lim[1]); P.z = bsClamp(P.z + Math.cos(P.h) * P.v * Math.cos(P.p) * dt, F.lim[2], F.lim[3]);
           const sink = P.v * Math.sin(P.p) - slow * 7; P.y = Math.min(P.y + sink * dt, ground(P.x, P.z) + 1500);
           const roof = m.solidAt(P.x, P.z), floor = ground(P.x, P.z) + (roof ? 12 : 0);
@@ -9293,7 +9330,7 @@ const handle = async (m, post) => {
         P.spin += ((thr > 0.05 ? 1 : 0.45) - P.spin) * Math.min(1, dt * 1.5); P.ang = (P.ang || 0) + P.spin * 40 * dt; showPlane(P);
         const alt = Math.max(0, P.y - ground(P.x, P.z));
         // what to do next
-        hint(!P.air ? (P.v >= LIFT ? (touch ? "Fast enough. Hold Climb to take off" : "Fast enough. Press \u2193 to take off") : P.v < 1 && thr <= 0.05 ? (touch ? "Push the left stick forward for power" : "Hold W for power") : "Faster: it flies at 95 km/h")
+        hint(!P.air && P.v < -0.3 ? "Backing up" : !P.air ? (P.v >= LIFT ? (touch ? "Fast enough. Hold Climb to take off" : "Fast enough. Press \u2193 to take off") : P.v < 1 && thr <= 0.05 ? (touch ? "Push the left stick forward for power" : "Hold W for power") : "Faster: it flies at 95 km/h")
           : P.v < LIFT * 0.92 ? (touch ? "Too slow to stay up. Push the stick forward" : "Too slow to stay up. W for more power")
           : touch ? "Flying. Pull the stick back to slow down and land" : "Flying. \u2193 climbs, \u2191 dives, S slows it down to land");
         snd.set(0.25 + 0.75 * bsClamp(P.spin * (0.6 + 0.4 * P.v / CRUISE), 0, 1), thr > 0.05 ? 0.5 + 0.5 * thr : 0.2, P.v, boost && thr > 0.05, !P.air && thr < -0.05 && P.v > 4 ? 0.7 : 0);
@@ -9310,15 +9347,15 @@ const handle = async (m, post) => {
       last = [F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch]; };
     // what is in reach of where you stand: a plane within 11 m, a parked car within 8 m, whichever is nearer
     const nearPlane = () => { let best = null, far = Infinity; for (const P of planes) { const d = Math.hypot(P.x - F.pos.x, P.z - F.pos.z); if (d < far) { far = d; best = P; } } return [best, far]; };
-    const reach = () => { const c = m.nearestCar(F.pos.x, F.pos.z, 8), [P, d] = nearPlane(); return d < 11 && (!c || d - 2 < c.distance) ? { plane: P } : c; };
+    const reach = () => { const c0 = m.nearestCar(F.pos.x, F.pos.z, 8), dg = Math.hypot(gold.x - F.pos.x, gold.z - F.pos.z), c = dg < 8 && (!c0 || dg < c0.distance) ? { gold: true, distance: dg } : c0, [P, d] = nearPlane(); return d < 11 && (!c || d - 2 < c.distance) ? { plane: P } : c; };
     C.enter = () => { if (veh) { if (veh === "plane" && (plane.air || plane.v > 6)) return toast(touch ? "Land and stop first: pull the left stick back to slow down, and it comes down as it slows (or hold Dive)." : "Land and stop first: S slows the plane, and it comes down as it slows (or hold the up arrow)."), true; return leave(true), true; }
       if (!T.walk || T.tween) return false;
       const c = reach();
       if (!c) { const far = m.nearestCar(F.pos.x, F.pos.z, 5000), [P, d] = nearPlane(), home = P && Math.hypot(P.x - P.home.x, P.z - P.home.z) < 30;
         toast(`Nothing close enough to get into. ${far ? `The nearest car is ${Math.round(far.distance)} m away` : ""}${far && P ? ", and t" : P ? "T" : "."}${P ? `he nearest plane is ${Math.round(d)} m away${home ? ", " + P.home.at : ""}.` : ""}`, 4500); return true; }
       if (c.plane) { plane = c.plane; veh = "plane"; plane.v = 0; plane.spin = 0; plane.turn = 0; camYaw = plane.h + Math.PI; document.body.classList.add("bsdrive", "bsplane"); boostBtn.style.setProperty("--charge", "100%"); }
-      else { car = { id: c.id, x: c.x, z: c.z, h: c.heading, y: ground(c.x, c.z) + 0.05, p: 0, r: 0, v: 0, steer: 0 };
-        if (!m.driveCar(c.id[0], c.id[1], car.x, car.y, car.z, car.h, 0, 0)) { car = null; toast("That car won't start. Try another one."); return true; }
+      else { car = c.gold ? { gold: true, x: gold.x, z: gold.z, h: gold.h, dir: gold.h, y: gold.y, p: gold.p, r: gold.r, v: 0, steer: 0 } : { id: c.id, x: c.x, z: c.z, h: c.heading, dir: c.heading, y: ground(c.x, c.z) + 0.05, p: 0, r: 0, v: 0, steer: 0 };
+        if (!car.gold && !m.driveCar(c.id[0], c.id[1], car.x, car.y, car.z, car.h, 0, 0)) { car = null; toast("That car won't start. Try another one."); return true; }
         veh = "car"; camYaw = car.h + Math.PI; document.body.classList.add("bsdrive"); showRing(charge < 0.999); }
       C.in = true; off = [wrap(F.yaw - camYaw), bsClamp(F.pitch + 0.2, -1, 0.55)]; idle = 0; last = [F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch];
       F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.vert = 0; F.boost = false; F.keys.clear(); F.drive = tick;
@@ -9329,17 +9366,21 @@ const handle = async (m, post) => {
       return true; };
     // the Get in button: there while something is in reach of where you are walking (looked for a few times a second)
     C.frame = () => { if (veh) return; const now = performance.now(); if (now - at < 300) return; at = now;
-      const near = T.walk && !T.tween ? reach() : null, say = near?.plane ? "Get in the plane" : "Get in the car";
+      const near = T.walk && !T.tween ? reach() : null, say = near?.plane ? "Get in the plane" : near?.gold ? "Get in the golden car" : "Get in the car";
       if (btn.hidden !== !near) btn.hidden = !near; if (near && btn.textContent !== say) btn.textContent = say; };
     btn.onclick = () => { C.enter(); btn.blur(); };
     const hold = on => e => { F.boost = on && !!veh; boostBtn.classList.toggle("on", F.boost); e.preventDefault(); };
     const press = { pointerdown: hold(true), pointerup: hold(false), pointercancel: hold(false), pointerleave: hold(false), contextmenu: e => e.preventDefault() };
     Object.entries(press).forEach(([k, f]) => boostBtn.addEventListener(k, f));
     const hidden = () => snd.quiet(document.hidden); document.addEventListener("visibilitychange", hidden);
-    C.where = () => veh === "car" ? { kind: "car", x: car.x, z: car.z, heading: car.h, speed: car.v, charge } : veh ? { kind: "plane", x: plane.x, y: plane.y, z: plane.z, heading: plane.h, pitch: plane.p, speed: plane.v, air: plane.air } : null;  // for checking
-    C.planes = planes;
+    C.where = () => veh === "car" ? { kind: "car", gold: !!car.gold, x: car.x, z: car.z, heading: car.h, dir: car.dir, speed: car.v, charge } : veh ? { kind: "plane", x: plane.x, y: plane.y, z: plane.z, heading: plane.h, pitch: plane.p, speed: plane.v, air: plane.air } : null;  // for checking
+    C.planes = planes; C.gold = gold;
+    // to the golden plane (a key of Ash's own, not shown anywhere)
+    C.toGold = () => { const G = planes.find(P => P.gold); if (!G) return false; if (veh) leave(false);
+      const sn = Math.sin(G.h), cs = Math.cos(G.h), dx = sn * 7 - cs * 5, dz = cs * 7 + sn * 5; T.tween = null;
+      F.pos.x = G.x + dx; F.pos.z = G.z + dz; F.pos.y = ground(F.pos.x, F.pos.z) + (T.walk ? F.eye : 14); F.yaw = Math.atan2(dx, dz); F.pitch = T.walk ? -0.06 : -0.6; at = 0; return true; };
     C.dispose = () => { if (veh) leave(false); btn.onclick = null; btn.hidden = boostBtn.hidden = true; Object.entries(press).forEach(([k, f]) => boostBtn.removeEventListener(k, f));
-      document.removeEventListener("visibilitychange", hidden); document.body.classList.remove("bsdrive", "bsplane"); snd.dispose(); showKeys(null); try { for (const P of planes) P.parts.remove(); ring.remove(); } catch {} };
+      document.removeEventListener("visibilitychange", hidden); document.body.classList.remove("bsdrive", "bsplane"); snd.dispose(); showKeys(null); try { for (const P of planes) P.parts.remove(); gold.parts.remove(); ring.remove(); } catch {} };
     return C;
   }
   function townStreetNames(T, cfg, box, m) {
