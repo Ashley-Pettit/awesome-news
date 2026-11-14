@@ -1344,7 +1344,13 @@ body.bstown.bswalk:not(.bsdrive) .bs-ud { display: none !important; }
 /* No text selection or iPhone copy menu anywhere in Explore (Ash, 15 November 2026: a held finger on the stick selected "Get out",
    the Copy / Look Up bar came up, and the selection took the touch off the stick so the car stopped). Typing boxes still select. */
 .bs-fly, .bs-fly * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
-.bs-fly input, .bs-fly textarea { -webkit-user-select: text; user-select: text; }  /* on foot, no Up and Down (Ash, 15 November 2026) */
+.bs-fly input, .bs-fly textarea { -webkit-user-select: text; user-select: text; }
+/* ...and the whole page while Explore is open: an iPhone long-press picks the nearest words anywhere (a place name on the model,
+   a player's name, the news under the view), and starting a selection cancels every finger on the screen, so the sticks went back
+   to the middle and looking round stopped (Ash, 15 November 2026: "It keeps going back to center ... Pivoting up and down does
+   the same thing") */
+body.bsfly, body.bsfly * { -webkit-user-select: none !important; user-select: none !important; -webkit-touch-callout: none !important; }
+body.bsfly input, body.bsfly textarea { -webkit-user-select: text !important; user-select: text !important; }  /* on foot, no Up and Down (Ash, 15 November 2026) */
 .bs-me input[type="range"] { height: 28px; padding: 0; background: none; accent-color: #ffd36b; }
 .bs-me-time { display: flex; justify-content: space-between; align-items: baseline; }
 .bs-me-time output { font: 700 0.9rem var(--ui); }
@@ -7721,7 +7727,7 @@ const handle = async (m, post) => {
       const h = {
         touchstart: e => { e.preventDefault(); if (id !== null) return; const t = e.changedTouches[0]; id = t.identifier; set(t); tip.classList.add("dim"); },
         touchmove: e => { e.preventDefault(); const t = mine(e); if (t) set(t); },
-        touchend: e => { if (mine(e)) end(); }, touchcancel: e => { if (mine(e)) end(); },
+        touchend: e => { if (mine(e)) end(); }, touchcancel: e => { if (mine(e)) { end(); bsLost("stick"); } },
         pointerdown: e => { if (e.pointerType !== "mouse") return; id = "m"; try { el.setPointerCapture(e.pointerId); } catch {} set(e); tip.classList.add("dim"); e.preventDefault(); },
         pointermove: e => { if (e.pointerType === "mouse" && id === "m") set(e); },
         pointerup: e => { if (e.pointerType === "mouse" && id === "m") end(); },
@@ -7783,7 +7789,7 @@ const handle = async (m, post) => {
         t.x = e.clientX; t.y = e.clientY; e.preventDefault(); },
       pointerup: e => { F.drag = null; canvas.style.cursor = ""; const t = F.touches.get(e.pointerId); if (t?.move) { F.stick.x = 0; F.stick.y = 0; } F.touches.delete(e.pointerId); },
     };
-    F.on.pointercancel = F.on.pointerup;
+    F.on.pointercancel = e => { if (e.pointerType !== "mouse") bsLost("view"); F.on.pointerup(e); };
     addEventListener("keydown", F.on.keydown); addEventListener("keyup", F.on.keyup); addEventListener("blur", F.on.blur);
     document.addEventListener("mousemove", F.on.mousemove);
     ["pointerdown", "pointermove", "pointerup", "pointercancel"].forEach(k => canvas.addEventListener(k, F.on[k]));
@@ -7817,6 +7823,11 @@ const handle = async (m, post) => {
     $("bsTownAskText").textContent = "Leave Explore?"; yes.textContent = "Leave"; no.textContent = "Stay"; ask.dataset.exit = "1"; ask.hidden = false;
     ask.onclick = e => { const b = e.target.closest("[data-ask]"); if (!b) return; close(); if (b.dataset.ask === "yes") bsFlyOff(); };
     yes.focus({ preventScroll: true }); }
+  // For Ash, while the sticks are being looked into: say when the phone takes a finger away (a "touchcancel") and what had the
+  // page selected, so the cause shows on the device itself. Selection is cleared straight away too.
+  document.addEventListener("selectionchange", () => { if (!BS.fly) return; try { const sel = getSelection(); if (sel && !sel.isCollapsed && !/^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName || "")) { bsLost.sel = String(sel).slice(0, 30); sel.removeAllRanges(); } } catch {} });
+  function bsLost(what) { if (!isAsh()) return; const now = performance.now(); if (now - (bsLost.at || 0) < 4000) return; bsLost.at = now;
+    toast(`The phone took your finger off the ${what}${bsLost.sel ? ` (it selected "${bsLost.sel}")` : ""}. Screenshot this for Claude.`, 5000); bsLost.sel = ""; }
   function bsFlyTick(dt) {
     const F = BS.fly, k = F.keys, has = (...c) => c.some(x => k.has(x));
     if (F.drive) return F.drive(dt);  // driving a car in a town model (townCar): the car moves, and the view follows it
