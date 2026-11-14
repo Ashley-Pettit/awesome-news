@@ -564,3 +564,30 @@ over its parked cars).
 - **In the model** (`moorooka-model.js`, `?v=22`; ai-forge `claude/moorooka-drive` at `78a2231`): `nearestCar(x, z, reach)`,
   `driveCar(x0, z0, x, y, z, heading, pitch, roll)` (the car is known by where it was first parked; up to twelve can be
   driven off in one visit) and `solidAt(x, z)`.
+
+## Sound, the mega boost, a plane, and keys shown on the buttons (14 November 2026)
+
+Ash: "Nice needs sounds, shift for mega boost, also add a plane near 6 beaudesert rd that i can get in", and "place
+the hotkeys on desktop at the bottom right of things desktop only. Like n for street names". All in `app.html`; the
+model is unchanged (`?v=22`).
+
+- **Sound** (`townSound`): made on the spot with Web Audio, no files. An engine that rises through the gears, wind and
+  road noise with speed, tyres under the handbrake, a thud for a bump or a landing, a door getting in and out; the
+  plane's engine has a propeller's beat. It starts with the key or tap that gets you in (browsers need that), stops
+  when you get out, and pauses with the tab. On an iPhone the ring switch has to be on to hear it.
+- **Mega boost:** hold Shift (or the yellow Boost button) with the power on. The car goes to about 210 km/h, the plane
+  to about 540 km/h. The car moves a metre at a time inside each frame, so it cannot skip through a wall at that speed.
+- **The plane** (`townPlaneParts`, `MOO_PLANE`): a small high-winged plane, white with a blue stripe, on the grass of
+  Stimpson Park across Beaudesert Road from number 6 (38 m from where Moorooka starts), nose to the road junction. It
+  is the app's own mesh stood in the model (`addParts`), with its propeller apart so it can turn. Jump to has it under
+  "Things to drive and fly". Within 11 m, Get in the plane (or Enter).
+  - W and S (or the left stick forward and back) are the power, A and D (or sideways) turn it: on the ground it steers,
+    in the air it banks. Space (or Up) lifts the nose, C (or Down) lowers it.
+  - It leaves the ground at about 95 km/h with the nose up (or at about 120 km/h by itself), cruises at up to 220 km/h,
+    and sinks as it slows, which is how it comes down. It lands wherever it meets the ground, however it arrives, and
+    climbs over a building rather than into one (it does not know how tall each is: it clears 12 m).
+  - You can only get out on the ground, stopped. Left in the air (you flew the camera off, or jumped somewhere), it goes
+    back to the park. It goes back there on a reload too.
+- **Keys on the buttons, desktop only:** each button with a key has it as a small keycap at its bottom right corner
+  (`data-key`, shown under `(hover: hover) and (pointer: fine)`): Esc on Exit explore, F on Walk and Fly, N on street
+  names, J on Jump to, Enter on Get in and Get out, Shift on Boost, Space and C on Up and Down where they show.

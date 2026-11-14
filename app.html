@@ -1307,12 +1307,25 @@ body.bstown .bs-fly-x.bs-fly-jump { top: calc(14px + env(safe-area-inset-top)); 
   body.bstown .bs-town-list.bs-town-floods { top: calc(60px + env(safe-area-inset-top)); right: calc(24px + var(--bs-jumpw, 104px)); }
   body.bstown .bs-flood-banner { top: calc(62px + env(safe-area-inset-top)); }
 }
-/* Driving in a town model: Get in the car shows above Up and Down while a parked car is within reach, and is Get out while you
-   drive (when Up and Down are away: your eyes are the car's). */
+/* Driving and flying in a town model: Get in the car (or the plane) shows above Up and Down while one is within reach, and is Get
+   out while you are in it (in the car, Up and Down are away: your eyes are the car's). */
 .bs-fly-x.bs-car { top: auto; left: 50%; right: auto; bottom: calc(166px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: #fff; color: #1b1830; z-index: 2; }
 .bs-fly-x.bs-car[hidden] { display: none; }
-body.bsdrive .bs-ud { display: none; }
-body.bsdrive .bs-fly-x.bs-car { bottom: calc(68px + env(safe-area-inset-bottom)); }
+body.bsdrive:not(.bsplane) .bs-ud { display: none; }  /* in the plane, Up and Down lift and lower the nose */
+body.bsdrive:not(.bsplane) .bs-fly-x.bs-car { bottom: calc(68px + env(safe-area-inset-bottom)); }
+/* Boost: held down while you drive or fly (Shift on a keyboard). Over the right stick on a phone, by Get out on a desktop */
+.bs-fly-x.bs-boost { top: auto; left: auto; right: 34px; bottom: calc(192px + env(safe-area-inset-bottom)); background: #ffd166; color: #1b1830; z-index: 2; touch-action: none; user-select: none; -webkit-user-select: none; }
+.bs-fly-x.bs-boost[hidden] { display: none; }
+.bs-fly-x.bs-boost.on { background: #ff9f1c; }
+@media (hover: hover) and (pointer: fine) { .bs-fly-x.bs-boost { right: auto; left: calc(50% + 70px); bottom: calc(68px + env(safe-area-inset-bottom)); } body.bsplane .bs-fly-x.bs-boost { bottom: calc(166px + env(safe-area-inset-bottom)); left: calc(50% + 100px); } }
+/* On a desktop, the key that does the same as a button sits at its bottom right corner as a small keycap (Ash, 14 November 2026:
+   "place the hotkeys on desktop at the bottom right of things desktop only. Like n for street names") */
+@media (hover: hover) and (pointer: fine) {
+  .bs-fly [data-key]::after { content: attr(data-key); position: absolute; right: -5px; bottom: -8px; z-index: 1; padding: 2px 4px 1px; border-radius: 5px; background: #fff; color: #1b1830; font: 700 9.5px/1 var(--ui); letter-spacing: 0.01em;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(27, 24, 48, 0.22); pointer-events: none; white-space: nowrap; }
+  .bs-fly .bs-slides > .bs-fly-x[data-key] { position: relative; inset: auto; }  /* in its place in the row, as before: only there to carry the keycap */
+  .bs-udb[data-key] { position: relative; }
+}
 /* Admin mode (Ash only): the pencil in the tools opens this toolbar under the top buttons. Tools, then width, line, undo, copy
    and clear, then a line saying what to do and what is waiting to be copied. With a tool on, the model takes the touch. */
 .bs-admin { pointer-events: auto; position: absolute; z-index: 3; top: calc(106px + env(safe-area-inset-top)); left: 16px; right: 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
@@ -1837,16 +1850,16 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
   <div class="bs-drive" id="bsDrive"></div>
   <div class="bs-fly" id="bsFly" tabindex="-1" hidden>
     <p class="bs-fly-tip" id="bsFlyTip"></p>
-    <button class="bs-fly-x" type="button" id="bsFlyX">Exit explore</button>
+    <button class="bs-fly-x" type="button" id="bsFlyX" data-key="Esc">Exit explore</button>
     <button class="bs-fly-x bs-fly-peek" type="button" id="bsFlyPeek" aria-pressed="false">Show weather</button>
     <div class="bs-fly-time" id="bsFlyTimeBox" hidden><input type="range" id="bsFlyTime" min="0" max="1439" step="5" aria-label="Time of day"><output id="bsFlyTimeOut" for="bsFlyTime"></output></div>
     <div class="bs-fly-time bs-town-tide" id="bsTownTide" hidden><span>Tide</span><input type="range" id="bsTownTideIn" step="0.05" aria-label="Tide level"><output id="bsTownTideOut" for="bsTownTideIn"></output></div>
     <div class="bs-height" id="bsHeight" hidden aria-hidden="true"></div>
     <span class="bs-hires" id="bsHiRes" role="status" aria-label="Loading the sharper view" title="Loading the sharper view" hidden><i></i></span>
-    <div class="bs-town-mode" id="bsTownMode" role="group" aria-label="Walk or fly" hidden><button type="button" data-town-mode="walk" aria-pressed="true">Walk</button><button type="button" data-town-mode="fly" aria-pressed="false">Fly</button></div>
+    <div class="bs-town-mode" id="bsTownMode" role="group" aria-label="Walk or fly" data-key="F" hidden><button type="button" data-town-mode="walk" aria-pressed="true">Walk</button><button type="button" data-town-mode="fly" aria-pressed="false">Fly</button></div>
     <div class="bs-town-list" id="bsTownList" role="menu" aria-label="Places to jump to" hidden></div>
     <div class="bs-town-list bs-town-floods" id="bsTownFloods" role="menu" aria-label="Floods to show on the map" hidden></div>
-    <div class="bs-slides" role="group" aria-label="Share, street names, edit, tide, time and flood"><button class="bs-fly-x bs-ic" type="button" id="bsShareBtn" aria-label="Share a link to this 3D model" title="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button><button class="bs-fly-x bs-ic" type="button" id="bsNamesBtn" aria-pressed="false" aria-label="Street names" title="Show street names (N)" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M9 21h6"/><path d="M5 5h11l3 2.5L16 10H5z"/><path d="M19 12H8l-3 2.5L8 17h11z"/></svg></button><button class="bs-fly-x bs-ic" type="button" id="bsEditBtn" aria-pressed="false" aria-controls="bsAdmin" aria-label="Edit the map" title="Edit the map" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg></button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false" aria-label="Time of day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span id="bsTimeBtnT">Time</span></button><button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button></div>
+    <div class="bs-slides" role="group" aria-label="Share, street names, edit, tide, time and flood"><button class="bs-fly-x bs-ic" type="button" id="bsShareBtn" aria-label="Share a link to this 3D model" title="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button><button class="bs-fly-x bs-ic" type="button" id="bsNamesBtn" data-key="N" aria-pressed="false" aria-label="Street names" title="Show street names (N)" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M9 21h6"/><path d="M5 5h11l3 2.5L16 10H5z"/><path d="M19 12H8l-3 2.5L8 17h11z"/></svg></button><button class="bs-fly-x bs-ic" type="button" id="bsEditBtn" aria-pressed="false" aria-controls="bsAdmin" aria-label="Edit the map" title="Edit the map" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg></button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false" aria-label="Time of day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span id="bsTimeBtnT">Time</span></button><button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button></div>
     <div class="bs-admin" id="bsAdmin" role="toolbar" aria-label="Edit the map" hidden>
       <div class="bs-admin-row" role="group" aria-label="Tool"><button type="button" data-tool="path" aria-pressed="false"><i style="background:#cfcabd"></i>Path</button><button type="button" data-tool="grass" aria-pressed="false"><i style="background:#6fa64b"></i>Grass</button><button type="button" data-tool="road" aria-pressed="false"><i style="background:#4a4d52"></i>Road</button><button type="button" data-tool="delete" aria-pressed="false">Delete</button></div>
       <div class="bs-admin-row"><span class="bs-admin-w" id="bsAdminW" role="group" aria-label="Width" hidden><button type="button" data-w="-1" aria-label="Narrower">&minus;</button><output id="bsAdminWOut"></output><button type="button" data-w="1" aria-label="Wider">+</button></span><button type="button" id="bsAdminLine" aria-pressed="true" hidden>Straight</button><button type="button" class="bs-admin-ic" id="bsAdminUndo" aria-label="Undo" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5 4 9l4 4"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button><button type="button" id="bsAdminCopy" aria-label="Copy edits">Copy</button><button type="button" class="bs-admin-ic" id="bsAdminClear" aria-label="Clear all my edits" title="Clear all my edits"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 7V4h4v3M6 7l1 13h10l1-13"/></svg></button></div>
@@ -1863,12 +1876,13 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     </div></div>
     <div class="bs-town-ask" id="bsTownAsk" role="alertdialog" aria-labelledby="bsTownAskText" hidden><p id="bsTownAskText"></p><div><button type="button" data-ask="yes">Yes</button><button type="button" data-ask="no">No</button></div></div>
     <div class="bs-fly-time bs-town-tide bs-town-rise" id="bsTownRise" hidden><span>Water</span><input type="range" id="bsTownRiseIn" min="0" max="1" step="0.01" value="1" aria-label="Flood water level"><output id="bsTownRiseOut" for="bsTownRiseIn"></output></div>
-    <button class="bs-fly-x bs-fly-jump" type="button" id="bsFlyJump" hidden>Jump to Norman Rd</button>
-    <button class="bs-fly-x bs-car" type="button" id="bsCarBtn" hidden>Get in the car</button>
+    <button class="bs-fly-x bs-fly-jump" type="button" id="bsFlyJump" data-key="J" hidden>Jump to Norman Rd</button>
+    <button class="bs-fly-x bs-car" type="button" id="bsCarBtn" data-key="Enter" hidden>Get in the car</button>
+    <button class="bs-fly-x bs-boost" type="button" id="bsBoostBtn" data-key="Shift" hidden>Boost</button>
     <button class="bs-fly-x bs-fly-lock" type="button" id="bsFlyLock" hidden>Use this view for the weather</button>
     <div class="bs-ud" role="group" aria-label="Fly up or down">
-      <button type="button" class="bs-udb" data-ud="1" aria-label="Fly up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg><span>Up</span></button>
-      <button type="button" class="bs-udb" data-ud="-1" aria-label="Fly down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><span>Down</span></button>
+      <button type="button" class="bs-udb" data-ud="1" data-key="Space" aria-label="Fly up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg><span>Up</span></button>
+      <button type="button" class="bs-udb" data-ud="-1" data-key="C" aria-label="Fly down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><span>Down</span></button>
     </div>
     <div class="bs-joy" data-joy="move" aria-hidden="true"><i></i><span>Move</span></div>
     <div class="bs-joy" data-joy="look" aria-hidden="true"><i></i><span>Look</span></div>
@@ -8007,6 +8021,10 @@ const handle = async (m, post) => {
         // the town centre round the Rotary clock and number 11 Norman Road, stood in the model where they really are
         let mine = []; if (inv) try { mine = townModelGuests(T, m); } catch (e) { console.warn("Town model: the town centre and Norman Road couldn't be added", e); }
         if (cfg.place === "moo") try { mine = mine.concat(townShops(T, m)); } catch (e) { console.warn("Town model: Moorooka's shops couldn't be added", e); }
+        // the plane (townCar), with somewhere to stand beside it
+        if (cfg.place === "moo" && m.driveCar) mine.push({ name: "The plane", group: "Things to drive and fly", what: "In Stimpson Park, across the road from 6 Beaudesert Road. Walk up to it and get in",
+          walk: (() => { const s = Math.sin(MOO_PLANE.h), c = Math.cos(MOO_PLANE.h), dx = s * 7 - c * 5, dz = c * 7 + s * 5;  // ahead of its nose and off to one side, clear of the wing
+            return { x: MOO_PLANE.x + dx, z: MOO_PLANE.z + dz, yaw: Math.atan2(dx, dz), pitch: -0.06 }; })(), target: [MOO_PLANE.x, MOO_PLANE.z] });
         // Places to jump to: each as somewhere to stand (walking) and a view from above (flying). Where the model knows a
         // spot on the kerb of the nearest street (Moorooka's does), you stand there; otherwise a few steps back from the place.
         // (Logan's list starts with the whole city, which is only ever seen from the air, like the water.)
@@ -8991,79 +9009,224 @@ const handle = async (m, post) => {
     A.dispose = () => { on.forEach(([el, f]) => el.removeEventListener("click", f)); ink.remove(); bar.hidden = true; btn.hidden = true; btn.setAttribute("aria-pressed", "false"); document.body.classList.remove("bsadmin", "bsadmin-tool"); clearTimeout(say.t); clearTimeout(clear.t); clear.dataset.sure = ""; clear.classList.add("bs-admin-ic"); clear.innerHTML = bin; };
     return A;
   }
-  // Driving (Ash, 14 November 2026: "if i press enter when walking i get into the car"). In a town model that hands over its
-  // parked cars (Moorooka's: nearestCar, driveCar, solidAt), walking up to within 8 m of a parked car shows a Get in button, and
-  // Enter (or the button) puts you in the nearest one. The view follows from behind. W or the up arrow (or the left stick forward)
-  // goes, S or down brakes and then reverses, A and D or left and right steer, Space is the handbrake; the right stick or a drag
-  // looks round the car, and the view settles back behind it once you drive on. The car follows the ground, stops at buildings,
-  // deep water and the edge of the model, and stays where you leave it. Enter again (or Get out) and you step out of the driver's
-  // door, on the right. Flying, jumping to a place or starting again gets you out too.
+  // Driving and flying (Ash, 14 November 2026: "if i press enter when walking i get into the car", then "needs sounds, shift for
+  // mega boost, also add a plane near 6 beaudesert rd that i can get in"). In a town model that hands over its parked cars
+  // (Moorooka's: nearestCar, driveCar, solidAt):
+  // - Walking within 8 m of a parked car, or 11 m of the plane, shows a Get in button; Enter (or the button) puts you in the nearer.
+  //   Enter again (or Get out) and you step out of the door. Flying the camera, jumping to a place or starting again gets you out too.
+  // - The car: W or the up arrow (or the left stick forward) goes, S or down brakes and then reverses, A and D or left and right
+  //   steer, Space is the handbrake, Shift (or the Boost button) is the mega boost: to about 210 km/h. It follows the ground, stops
+  //   with a bump at buildings, deep water and the edge of the model, and stays where you leave it.
+  // - The plane stands on the grass of Stimpson Park, across Beaudesert Road from number 6 (MOO_PLANE). W and S are the throttle,
+  //   A and D bank and turn it, Space (or Up) lifts the nose and C (or Down) lowers it, Shift is the boost. It leaves the ground
+  //   at about 95 km/h with the nose up, sinks when it gets too slow (which is how it comes down), lands whenever it meets the
+  //   ground, and climbs over a building rather than into it. You can only get out on the ground, stopped.
+  // - The view follows from behind; the right stick or a drag looks round, and the view settles back once you move on.
+  // - Sound is made on the spot (townSound): an engine that rises through the gears, wind, tyres under the handbrake, a thud for a
+  //   bump or a landing, a door. It starts with the key or tap that gets you in (a browser needs that before it plays anything).
+  const MOO_PLANE = { x: -308, z: -992, h: 2.71 };
+  function townSound() {
+    let ac = null, master = null, hiss = null, eng = null;
+    const ctx = () => { if (!ac) { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
+        ac = new AC(); master = ac.createGain(); master.gain.value = 0.9; master.connect(ac.destination);
+        hiss = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate); const d = hiss.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+      if (ac.state === "suspended") ac.resume().catch(() => {}); return ac; };
+    const noise = () => { const s = ac.createBufferSource(); s.buffer = hiss; s.loop = true; return s; };
+    // a short sound: noise through a filter, and a low note, both dying away
+    const hit = (len, cut, loud, note) => { const a = ctx(); if (!a) return; const t = a.currentTime;
+      const n = noise(), f = a.createBiquadFilter(), g = a.createGain(); f.type = "lowpass"; f.frequency.value = cut; g.gain.setValueAtTime(loud, t); g.gain.exponentialRampToValueAtTime(0.001, t + len);
+      n.connect(f); f.connect(g); g.connect(master); n.start(t); n.stop(t + len + 0.02);
+      if (note) { const o = a.createOscillator(), og = a.createGain(); o.type = "sine"; o.frequency.setValueAtTime(note, t); o.frequency.exponentialRampToValueAtTime(note * 0.55, t + len);
+        og.gain.setValueAtTime(loud * 1.4, t); og.gain.exponentialRampToValueAtTime(0.001, t + len); o.connect(og); og.connect(master); o.start(t); o.stop(t + len + 0.02); } };
+    return {
+      start(kind) { const a = ctx(); if (!a) return; this.stop(); const t = a.currentTime, plane = kind === "plane";
+        const o1 = a.createOscillator(), o2 = a.createOscillator(), mix = a.createGain(), lp = a.createBiquadFilter(), out = a.createGain();
+        o1.type = "sawtooth"; o2.type = plane ? "sawtooth" : "square"; mix.gain.value = 0.5; lp.type = "lowpass"; lp.frequency.value = 300; out.gain.value = 0;
+        o1.connect(mix); o2.connect(mix); mix.connect(lp); lp.connect(out); out.connect(master);
+        let beat = null; if (plane) { beat = a.createOscillator(); const bg = a.createGain(); beat.frequency.value = 16; bg.gain.value = 0.3; beat.connect(bg); bg.connect(mix.gain); beat.start(t); }  // the propeller's beat
+        const wn = noise(), wf = a.createBiquadFilter(), wg = a.createGain(); wf.type = "bandpass"; wf.frequency.value = 700; wf.Q.value = 0.6; wg.gain.value = 0; wn.connect(wf); wf.connect(wg); wg.connect(master);  // wind and road
+        const sn = noise(), sf = a.createBiquadFilter(), sg = a.createGain(); sf.type = "bandpass"; sf.frequency.value = 2300; sf.Q.value = 3; sg.gain.value = 0; sn.connect(sf); sf.connect(sg); sg.connect(master);  // tyres
+        for (const n of [o1, o2, wn, sn]) n.start(t);
+        eng = { plane, o1, o2, lp, out, wf, wg, sg, beat, all: [o1, o2, wn, sn, beat].filter(Boolean) }; },
+      // every frame: how fast the engine turns (0 to 1), how hard it works (0 to 1), the speed (m/s), the boost, and tyres sliding (0 to 1)
+      set(rev, load, speed, boost, skid) { if (!eng || !ac) return; const t = ac.currentTime, to = (p, v, k = 0.07) => p.setTargetAtTime(v, t, k);
+        const f = (eng.plane ? 50 + 62 * rev : 36 + 150 * rev) * (boost ? 1.3 : 1);
+        to(eng.o1.frequency, f); to(eng.o2.frequency, f * (eng.plane ? 1.5 : 0.5)); if (eng.beat) to(eng.beat.frequency, 11 + 24 * rev);
+        to(eng.lp.frequency, 240 + 1500 * load + (boost ? 1500 : 0)); to(eng.out.gain, 0.07 + 0.17 * load + (boost ? 0.1 : 0));
+        to(eng.wf.frequency, 450 + 1500 * Math.min(1, speed / 70)); to(eng.wg.gain, Math.min(0.24, (speed / 45) ** 2 * 0.08) + (boost ? 0.07 : 0));
+        to(eng.sg.gain, skid * 0.1, 0.03); },
+      thud(k = 1) { hit(0.28, 320, 0.5 * k, 74); },
+      door() { hit(0.09, 1100, 0.3, 120); },
+      stop() { if (!eng || !ac) return; const e = eng, t = ac.currentTime; eng = null; for (const g of [e.out, e.wg, e.sg]) g.gain.setTargetAtTime(0, t, 0.06);
+        setTimeout(() => e.all.forEach(n => { try { n.stop(); } catch {} }), 500); },
+      quiet(on) { if (ac) (on ? ac.suspend() : ac.resume()).catch(() => {}); },
+      dispose() { this.stop(); const a = ac; ac = null; if (a) setTimeout(() => a.close().catch(() => {}), 700); },
+    };
+  }
+  // The plane: a small high-winged four-seater, white with a blue stripe. Nose to +Z, wheels on y = 0. Returns the body and, apart,
+  // the propeller's blades and the blur they become when it spins (each about the propeller's own centre).
+  function townPlaneParts() {
+    const lin = hex => { const v = parseInt(hex.slice(1), 16); return [((v >> 16) & 255) / 255, ((v >> 8) & 255) / 255, (v & 255) / 255].map(c => Math.pow(c, 2.2)); };
+    const WHITE = lin("#f3f3ee"), BLUE = lin("#1f6fb2"), GLASS = lin("#1c2a36"), DARK = lin("#2a2c30"), TYRE = lin("#17181a"), GREY = lin("#b9bcc0");
+    const mesh = () => { const P = [], N = [], C = [];
+      const tri = (a, b, c, col) => { const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2];
+        let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; const l = Math.hypot(nx, ny, nz) || 1; nx /= l; ny /= l; nz /= l;
+        for (const q of [a, b, c]) { P.push(q[0], q[1], q[2]); N.push(nx, ny, nz); C.push(col[0], col[1], col[2]); } };
+      const quad = (a, b, c, d, col) => { tri(a, b, c, col); tri(a, c, d, col); };
+      // a solid between two upright rectangles: each is [z, half width, bottom, top] (and, for a wing, x of its middle)
+      const hull = (s0, s1, col, top = col, ends = true) => { const c = s => { const x = s[4] || 0; return [[x - s[1], s[2], s[0]], [x + s[1], s[2], s[0]], [x + s[1], s[3], s[0]], [x - s[1], s[3], s[0]]]; }, a = c(s0), b = c(s1);
+        quad(a[3], a[2], b[2], b[3], top); quad(a[1], a[0], b[0], b[1], col); quad(a[0], a[3], b[3], b[0], col); quad(a[2], a[1], b[1], b[2], col);
+        if (ends) { quad(a[0], a[1], a[2], a[3], col); quad(b[1], b[0], b[3], b[2], col); } };
+      const box = (x0, x1, y0, y1, z0, z1, col) => hull([z1, (x1 - x0) / 2, y0, y1, (x0 + x1) / 2], [z0, (x1 - x0) / 2, y0, y1, (x0 + x1) / 2], col);
+      const wheel = (x, y, z, r, w) => { for (let i = 0; i < 8; i++) { const a0 = i / 8 * Math.PI * 2, a1 = (i + 1) / 8 * Math.PI * 2, p = (a, s) => [x + s * w / 2, y + Math.cos(a) * r, z + Math.sin(a) * r];
+          quad(p(a0, -1), p(a1, -1), p(a1, 1), p(a0, 1), TYRE); tri([x + w / 2, y, z], p(a0, 1), p(a1, 1), TYRE); tri([x - w / 2, y, z], p(a1, -1), p(a0, -1), TYRE); } };
+      return { P, N, C, tri, quad, hull, box, wheel, part: extra => ({ positions: new Float32Array(P), normals: new Float32Array(N), colors: new Float32Array(C), color: [1, 1, 1], roughness: 0.55, doubleSide: true, ...extra }) }; };
+    const b = mesh();
+    // the body, nose to tail: spinner, cowl, firewall, cabin, tail cone
+    const S = [[2.78, 0.07, 1.24, 1.38], [2.5, 0.45, 0.95, 1.6], [1.5, 0.58, 0.85, 1.75], [0.85, 0.6, 0.8, 2.0], [-1.0, 0.58, 0.85, 1.98], [-2.8, 0.3, 1.2, 1.75], [-4.4, 0.08, 1.45, 1.7]];
+    S.slice(0, -1).forEach((s, i) => b.hull(s, S[i + 1], i === 0 ? GREY : WHITE, i === 2 ? GLASS : WHITE, i === 0 || i === S.length - 2));  // the slope from the cowl up to the roof is the windscreen
+    for (const sx of [-1, 1]) {
+      b.quad([sx * 0.612, 1.3, 0.75], [sx * 0.612, 1.3, -0.85], [sx * 0.6, 1.9, -0.85], [sx * 0.612, 1.9, 0.75], GLASS);  // side windows
+      b.quad([sx * 0.47, 1.2, 2.45], [sx * 0.6, 1.22, 1.45], [sx * 0.6, 1.36, 1.45], [sx * 0.47, 1.34, 2.45], BLUE); b.quad([sx * 0.6, 1.0, 1.45], [sx * 0.615, 1.0, -1.0], [sx * 0.615, 1.2, -1.0], [sx * 0.6, 1.2, 1.45], BLUE);  // the stripe
+      b.quad([sx * 0.6, 1.02, -1.0], [sx * 0.31, 1.36, -2.8], [sx * 0.31, 1.5, -2.8], [sx * 0.6, 1.2, -1.0], BLUE); b.quad([sx * 0.31, 1.36, -2.8], [sx * 0.09, 1.5, -4.38], [sx * 0.09, 1.6, -4.38], [sx * 0.31, 1.5, -2.8], BLUE);
+      b.box(sx * 5.4 - 0.4, sx * 5.4 + 0.4, 1.99, 2.17, -0.56, 0.96, BLUE);  // wing tips
+      b.quad([sx * 0.55, 0.9, 0.42], [sx * 2.4, 2.0, 0.42], [sx * 2.4, 2.0, 0.3], [sx * 0.55, 0.9, 0.3], GREY);  // wing strut
+      b.quad([sx * 0.5, 0.88, -0.05], [sx * 1.15, 0.3, -0.05], [sx * 1.15, 0.3, -0.2], [sx * 0.5, 0.88, -0.2], GREY); b.wheel(sx * 1.2, 0.24, -0.12, 0.24, 0.14);  // main wheels
+    }
+    b.box(-5.0, 5.0, 2.0, 2.16, -0.55, 0.95, WHITE);  // the wing, over the cabin
+    b.box(-1.8, 1.8, 1.52, 1.6, -4.35, -3.5, WHITE);  // tailplane
+    b.hull([-3.3, 0.04, 1.68, 1.7], [-4.42, 0.04, 1.68, 2.95], WHITE); b.hull([-3.98, 0.045, 2.6, 2.62], [-4.44, 0.045, 2.6, 2.97], BLUE);  // fin, with a blue tip
+    b.box(-0.04, 0.04, 0.2, 0.95, 1.95, 2.05, GREY); b.wheel(0, 0.2, 2.0, 0.2, 0.12);  // nose wheel
+    const p = mesh(); p.box(-0.95, 0.95, -0.075, 0.075, -0.02, 0.02, DARK); p.box(-0.12, 0.12, -0.12, 0.12, -0.05, 0.12, GREY);
+    const d = mesh(); for (let i = 0; i < 20; i++) { const a0 = i / 20 * Math.PI * 2, a1 = (i + 1) / 20 * Math.PI * 2; d.tri([0, 0, 0], [Math.cos(a0) * 0.97, Math.sin(a0) * 0.97, 0], [Math.cos(a1) * 0.97, Math.sin(a1) * 0.97, 0], GREY); }
+    return [b.part({}), p.part({}), d.part({ opacity: 0.22, unlit: true })];
+  }
   function townCar(T, m, F, ground) {
     const C = { in: false, enter() {}, frame() {}, dispose() {} };
     if (!m.driveCar) return C;
-    const btn = $("bsCarBtn"), chip = $("bsHeight"), REACH = 8, VMAX = 19.5, VREV = 5.5, wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
-    const keys = !matchMedia("(pointer: coarse)").matches;  // a keyboard to hand: the button says which key does the same
-    let car = null, last = null, off = null, camYaw = 0, idle = 0, at = 0;
-    // whether the car fits there: its four corners and its middle clear of buildings, inside the model, and not in deep water
-    const fits = (x, z, h) => { const s = Math.sin(h), c = Math.cos(h);
-      for (const [a, b] of [[2.1, 0.8], [2.1, -0.8], [-2.1, 0.8], [-2.1, -0.8], [0, 0]]) { const px = x + s * a - c * b, pz = z + c * a + s * b;
-        if (m.solidAt(px, pz) || px < F.lim[0] || px > F.lim[1] || pz < F.lim[2] || pz > F.lim[3]) return false; }
+    const THREE = BS.B.THREE, btn = $("bsCarBtn"), boostBtn = $("bsBoostBtn"), chip = $("bsHeight"), wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
+    const VMAX = 19.5, VREV = 5.5, VBOOST = 58, LIFT = 26, CRUISE = 62, JET = 150, touch = matchMedia("(pointer: coarse)").matches, snd = townSound();
+    let veh = null, car = null, last = null, off = null, camYaw = 0, idle = 0, at = 0;
+    // whether something fits there: points along and across it (metres from its middle) clear of buildings, and out of deep water
+    const CAR = [[2.1, 0.8], [2.1, -0.8], [-2.1, 0.8], [-2.1, -0.8], [0, 0]], PLANE = [[2.7, 0], [0, 0], [-4.2, 0], [0.2, 5.2], [0.2, -5.2]];
+    const fits = (pts, x, z, h) => { const s = Math.sin(h), c = Math.cos(h);
+      for (const [a, b] of pts) if (m.solidAt(x + s * a - c * b, z + c * a + s * b)) return false;
       return ground(x, z) - m.groundAt(x, z) < 0.35; };
-    // stand the car on the ground under its wheels, tipped with the slope
-    const sit = dt => { const s = Math.sin(car.h), c = Math.cos(car.h), g = (a, b) => ground(car.x + s * a - c * b, car.z + c * a + s * b);
-      const yf = g(1.3, 0), yb = g(-1.3, 0), yr = g(0, 0.8), yl = g(0, -0.8), e = dt ? Math.min(1, dt * 12) : 1;
-      car.y += ((yf + yb + yr + yl) / 4 + 0.05 - car.y) * e; car.p += (Math.atan2(yf - yb, 2.6) - car.p) * e; car.r += (Math.atan2(yl - yr, 1.6) - car.r) * e;
+    const inside = (x, z) => x >= F.lim[0] && x <= F.lim[1] && z >= F.lim[2] && z <= F.lim[3];  // the edge of the model: nothing goes past it
+    // how the ground lies under something: its height, and how far the nose is up and the right side down
+    const lie = (o, half, wide) => { const s = Math.sin(o.h), c = Math.cos(o.h), g = (a, b) => ground(o.x + s * a - c * b, o.z + c * a + s * b), yf = g(half, 0), yb = g(-half, 0), yr = g(0, wide), yl = g(0, -wide);
+      return [(yf + yb + yr + yl) / 4, Math.atan2(yf - yb, half * 2), Math.atan2(yl - yr, wide * 2)]; };
+    const sit = dt => { const [y, p, r] = lie(car, 1.3, 0.8), e = dt ? Math.min(1, dt * 12) : 1; car.y += (y + 0.05 - car.y) * e; car.p += (p - car.p) * e; car.r += (r - car.r) * e;
       m.driveCar(car.id[0], car.id[1], car.x, car.y, car.z, car.h, car.p, car.r); };
-    const leave = step => { if (!car) return; car.v = 0; sit(0);
-      if (step) { F.pos.x = car.x - Math.cos(car.h) * 1.8; F.pos.z = car.z + Math.sin(car.h) * 1.8; F.yaw = car.h + Math.PI; F.pitch = -0.04; }  // out of the driver's door, on the right, facing the way the car does
-      car = null; C.in = false; F.drive = null; F.hText = ""; F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.keys.clear(); document.body.classList.remove("bsdrive"); at = 0; C.frame(); };
+    // ---- the plane, stood in the model as the app's own mesh
+    const plane = { ...MOO_PLANE, y: 0, p: 0, r: 0, v: 0, air: false, spin: 0, turn: 0 }, M = new THREE.Matrix4(), M2 = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), ONE = new THREE.Vector3(1, 1, 1);
+    const hub = new THREE.Matrix4().makeTranslation(0, 1.31, 2.74);
+    { const [y, p, r] = lie(plane, 2, 1.2); plane.y = y; plane.p = p; plane.r = r; }
+    const parts = m.addParts(townPlaneParts().map(q => ({ ...q, matrix: M.identity().elements.slice() })));
+    const showPlane = () => { M.compose(V.set(plane.x, plane.y, plane.z), Q.setFromEuler(E.set(-plane.p, plane.h, plane.r, "YXZ")), ONE); parts.setMatrix(0, M.elements);
+      const fast = veh === "plane" && plane.spin > 0.2; M2.copy(M).multiply(hub);
+      parts.setMatrix(1, fast ? M2.clone().scale(V.set(0, 0, 0)).elements : M2.clone().multiply(new THREE.Matrix4().makeRotationZ(plane.ang || 0)).elements);  // the blades, or the blur they make
+      parts.setMatrix(2, fast ? M2.elements : M2.clone().scale(V.set(0, 0, 0)).elements); };
+    showPlane();
+    const leave = step => { if (!veh) return; const was = veh; snd.door(); snd.stop();
+      if (was === "car") { car.v = 0; sit(0); if (step) { F.pos.x = car.x - Math.cos(car.h) * 1.8; F.pos.z = car.z + Math.sin(car.h) * 1.8; F.yaw = car.h + Math.PI; F.pitch = -0.04; } }  // out of the driver's door, on the right, facing the way the car does
+      else { if (plane.air) { Object.assign(plane, MOO_PLANE); plane.air = false; }  // left in the air (you flew off as the camera, or jumped somewhere): it is back in the park
+        plane.v = 0; plane.spin = 0; const [y, p, r] = lie(plane, 2, 1.2); plane.y = y; plane.p = p; plane.r = r;
+        if (step) { F.pos.x = plane.x + Math.cos(plane.h) * 1.9; F.pos.z = plane.z - Math.sin(plane.h) * 1.9; F.yaw = plane.h + Math.PI; F.pitch = -0.04; }  // out of the left door
+        veh = null; showPlane(); }
+      veh = null; car = null; C.in = false; F.drive = null; F.boost = false; F.hText = ""; F.vert = 0; F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.keys.clear();
+      document.body.classList.remove("bsdrive", "bsplane"); boostBtn.hidden = true; at = 0; C.frame(); };
     const tick = dt0 => { const dt = Math.min(dt0, 0.1), k = F.keys, has = (...c) => c.some(x => k.has(x));
-      // flying, a jump to a place or starting again has moved the view: that is getting out
+      // flying the camera, a jump to a place or starting again has moved the view: that is getting out
       if (!T.walk || T.tween || BS.town !== T || Math.abs(F.pos.x - last[0]) + Math.abs(F.pos.y - last[1]) + Math.abs(F.pos.z - last[2]) > 1e-3) return leave(false);
-      // looking round the car: the right stick, or a drag (which has already turned the view)
+      // looking round: the right stick, or a drag (which has already turned the view)
       F.yaw -= F.lookStick.x * Math.abs(F.lookStick.x) * 2.4 * dt; F.pitch += F.lookStick.y * Math.abs(F.lookStick.y) * 1.6 * dt;
       const dy = wrap(F.yaw - last[3]), dp = F.pitch - last[4]; idle = Math.abs(dy) + Math.abs(dp) > 1e-4 ? 0 : idle + dt;
       off[0] = wrap(off[0] + dy); off[1] = bsClamp(off[1] + dp, -1, 0.55);
-      if (idle > 1.2 && Math.abs(car.v) > 1) { const e = Math.min(1, dt * 2.5); off[0] -= off[0] * e; off[1] -= off[1] * e; }  // left alone, the view settles back behind the car
-      // the pedals and the wheel
       const thr = bsClamp((has("KeyW", "ArrowUp") ? 1 : 0) - (has("KeyS", "ArrowDown") ? 1 : 0) + F.stick.y, -1, 1), str = bsClamp((has("KeyD", "ArrowRight") ? 1 : 0) - (has("KeyA", "ArrowLeft") ? 1 : 0) + F.stick.x, -1, 1);
-      let v = car.v;
-      if (has("Space")) v -= Math.sign(v) * Math.min(Math.abs(v), 14 * dt);
-      else if (thr > 0.05) v += (v < -0.2 ? 10 : 4.2 * (1 - Math.max(0, v) / VMAX)) * thr * dt;
-      else if (thr < -0.05) v += (v > 0.2 ? -11 : -3 * (1 + Math.min(0, v) / VREV)) * -thr * dt;
-      else v -= Math.sign(v) * Math.min(Math.abs(v), (0.6 + Math.abs(v) * 0.08) * dt);
-      v = bsClamp(v, -VREV, VMAX);
-      car.steer += (str * 0.55 / (1 + (Math.abs(v) / 8) ** 2 * 1.2) - car.steer) * Math.min(1, dt * 7);  // less lock the faster it goes
-      const h = car.h - (v / 2.6) * Math.tan(car.steer) * dt, x = car.x + Math.sin(h) * v * dt, z = car.z + Math.cos(h) * v * dt;
-      if (fits(x, z, h) || !fits(car.x, car.z, car.h)) { car.x = x; car.z = z; car.h = h; car.v = v; }  // (a car parked inside a building's outline can still drive out)
-      else car.v = Math.abs(v) > 2 ? -v * 0.2 : 0;  // a bump
-      sit(dt);
-      const kmh = Math.round(Math.abs(car.v) * 3.6) + " km/h"; if (chip.textContent !== kmh) chip.textContent = kmh;
-      // the view: behind and above the car, swinging round after it
-      camYaw += wrap(car.h + Math.PI - camYaw) * Math.min(1, dt * 3.5);
+      const boost = has("ShiftLeft", "ShiftRight") || !!F.boost;
+      let o, D, text;  // what the view follows, how far back, and what the chip says
+      if (veh === "car") { let v = car.v; const brake = has("Space");
+        if (brake) v -= Math.sign(v) * Math.min(Math.abs(v), 14 * dt);
+        else if (thr > 0.05) v += (v < -0.2 ? 10 : boost ? 17 * (1 - Math.max(0, v) / VBOOST) : 4.2 * (1 - Math.max(0, v) / VMAX)) * thr * dt;
+        else if (thr < -0.05) v += (v > 0.2 ? -11 : -3 * (1 + Math.min(0, v) / VREV)) * -thr * dt;
+        else v -= Math.sign(v) * Math.min(Math.abs(v), (0.6 + Math.abs(v) * 0.08) * dt);
+        if (v > VMAX && !(boost && thr > 0.05)) v = Math.max(VMAX, v - 9 * dt);  // off the boost, it eases back to its own top speed
+        v = bsClamp(v, -VREV, VBOOST);
+        car.steer += (str * 0.55 / (1 + (Math.abs(v) / 8) ** 2 * 1.2) - car.steer) * Math.min(1, dt * 7);  // less lock the faster it goes
+        car.v = v; let bump = 0;
+        for (let n = Math.max(1, Math.ceil(Math.abs(v) * dt / 1.2)), i = 0, st = dt / n; i < n; i++) {  // in steps of a metre or so, so it cannot skip through a wall
+          const h = car.h - (car.v / 2.6) * Math.tan(car.steer) * st, x = car.x + Math.sin(h) * car.v * st, z = car.z + Math.cos(h) * car.v * st;
+          if (inside(x, z) && (fits(CAR, x, z, h) || !fits(CAR, car.x, car.z, car.h))) { car.x = x; car.z = z; car.h = h; }  // (a car parked inside a building's outline can still drive out)
+          else { bump = Math.abs(car.v); car.v = bump > 2 ? -car.v * 0.2 : 0; break; } }
+        if (bump > 1.5) snd.thud(Math.min(1.6, 0.4 + bump / 14));
+        sit(dt);
+        const a = Math.abs(car.v), G = [0, 7, 14, 21, 30, 44, 60], g = Math.max(0, G.findIndex(q => a < q) - 1), top = G[g + 1] ?? 60;  // the engine rises through each gear and drops into the next
+        snd.set(0.18 + 0.82 * bsClamp((a - G[g]) / (top - G[g]), 0, 1), Math.abs(thr) > 0.05 && !brake ? 0.35 + 0.65 * Math.abs(thr) : 0.08, a, boost && thr > 0.05, brake && a > 3 ? 1 : 0);
+        o = car; D = 7.5 + Math.min(5, a / 9); text = Math.round(a * 3.6) + " km/h";
+      } else { const P = plane, climb = bsClamp((has("Space") ? 1 : 0) - (has("KeyC") ? 1 : 0) + F.vert, -1, 1), top = boost ? JET : CRUISE;
+        if (thr > 0.05) P.v += (boost ? 34 : 9) * thr * Math.max(0, 1 - P.v / top) * dt; else if (thr < -0.05) P.v += thr * (P.air ? 9 : 16) * dt; else P.v -= (P.air ? P.v * 0.02 : 1.2) * dt;
+        if (P.v > top) P.v = Math.max(top, P.v - 25 * dt); P.v = Math.max(P.air ? 16 : 0, P.v);  // in the air it keeps some way on, and glides down
+        P.turn += (str - P.turn) * Math.min(1, dt * 5); let thud = 0;
+        if (!P.air) {  // on its wheels: it steers like a car, and leaves the ground at speed with the nose up (or, faster still, by itself)
+          for (let n = Math.max(1, Math.ceil(P.v * dt / 1.2)), i = 0, st = dt / n; i < n; i++) { const h = P.h - P.turn * 0.9 * Math.min(1, P.v / 5) / (1 + P.v / 30) * st, x = P.x + Math.sin(h) * P.v * st, z = P.z + Math.cos(h) * P.v * st;
+            if (inside(x, z) && (fits(PLANE, x, z, h) || !fits(PLANE, P.x, P.z, P.h))) { P.x = x; P.z = z; P.h = h; } else { thud = P.v; P.v = 0; break; } }
+          const [y, p, r] = lie(P, 2, 1.2), e = Math.min(1, dt * 10); P.y += (y - P.y) * e; P.p += (p - P.p) * e; P.r += (r - P.r) * e;
+          if (P.v > LIFT && (climb > 0.05 || P.v > LIFT * 1.3)) P.air = true;
+        } else { P.r += (P.turn * 0.78 - P.r) * Math.min(1, dt * 2.4); P.h -= (Math.sin(P.r) * 0.95 + P.turn * 0.08) * dt;  // banked, it turns
+          const slow = bsClamp((LIFT * 0.92 - P.v) / (LIFT * 0.92), 0, 1);  // too slow to stay up: the nose drops and it sinks
+          P.p += ((climb > 0 ? 0.42 : 0.5) * climb - slow * 0.45 - P.p) * Math.min(1, dt * 1.8);
+          P.x = bsClamp(P.x + Math.sin(P.h) * P.v * Math.cos(P.p) * dt, F.lim[0], F.lim[1]); P.z = bsClamp(P.z + Math.cos(P.h) * P.v * Math.cos(P.p) * dt, F.lim[2], F.lim[3]);
+          const sink = P.v * Math.sin(P.p) - slow * 7; P.y = Math.min(P.y + sink * dt, ground(P.x, P.z) + 1500);
+          const roof = m.solidAt(P.x, P.z), floor = ground(P.x, P.z) + (roof ? 12 : 0);
+          if (P.y <= floor) { P.y = floor; if (roof) P.p = Math.max(P.p, 0.08); else { P.air = false; thud = Math.max(2, -sink * 1.6); } }  // over a building it clears the roof; anywhere else that is a landing
+        }
+        if (thud > 1.5) snd.thud(Math.min(1.6, 0.4 + thud / 14));
+        P.spin += ((thr > 0.05 ? 1 : 0.45) - P.spin) * Math.min(1, dt * 1.5); P.ang = (P.ang || 0) + P.spin * 40 * dt; showPlane();
+        const alt = Math.max(0, P.y - ground(P.x, P.z));
+        snd.set(0.25 + 0.75 * bsClamp(P.spin * (0.6 + 0.4 * P.v / CRUISE), 0, 1), thr > 0.05 ? 0.5 + 0.5 * thr : 0.2, P.v, boost && thr > 0.05, !P.air && thr < -0.05 && P.v > 4 ? 0.7 : 0);
+        o = P; D = 13 + Math.min(16, P.v / 7); text = Math.round(P.v * 3.6) + " km/h" + (P.air ? " · " + Math.round(alt) + " m" : "");
+      }
+      if (chip.textContent !== text) chip.textContent = text;
+      if (idle > 1.2 && o.v > 1) { const e = Math.min(1, dt * 2.5); off[0] -= off[0] * e; off[1] -= off[1] * e; }  // left alone, the view settles back behind
+      // the view: behind and above, swinging round after it; closer in where a building is behind, so it is not from inside one
+      camYaw += wrap(o.h + Math.PI - camYaw) * Math.min(1, dt * 3.5);
       const yaw = camYaw + off[0], pitch = bsClamp(-0.2 + off[1], -1.2, 0.35), cp = Math.cos(pitch), sx = Math.sin(yaw) * cp, sz = Math.cos(yaw) * cp;
-      let D = 7.5; while (D > 2.5 && (m.solidAt(car.x + sx * D, car.z + sz * D) || m.solidAt(car.x + sx * D * 0.55, car.z + sz * D * 0.55))) D -= 1.25;  // closer in where a building is behind the car, so the view is not from inside it
-      const px = car.x + sx * D, pz = car.z + sz * D, py = Math.max(car.y + 1.5 - Math.sin(pitch) * D, ground(px, pz) + 0.7), e = Math.min(1, dt * 9);
+      if (!o.air) while (D > 2.5 && (m.solidAt(o.x + sx * D, o.z + sz * D) || m.solidAt(o.x + sx * D * 0.55, o.z + sz * D * 0.55))) D -= 1.25;
+      const px = o.x + sx * D, pz = o.z + sz * D, py = Math.max(o.y + (veh === "car" ? 1.5 : 2.4) - Math.sin(pitch) * D, ground(px, pz) + 0.7), e = Math.min(1, dt * (9 + Math.abs(o.v) / 6));
       F.pos.x += (px - F.pos.x) * e; F.pos.y += (py - F.pos.y) * e; F.pos.z += (pz - F.pos.z) * e; F.yaw = yaw; F.pitch = pitch;
       last = [F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch]; };
-    C.enter = () => { if (car) return leave(true), true;
+    // what is in reach of where you stand: the plane within 11 m, a parked car within 8 m, whichever is nearer
+    const reach = () => { const c = m.nearestCar(F.pos.x, F.pos.z, 8), d = Math.hypot(plane.x - F.pos.x, plane.z - F.pos.z); return d < 11 && (!c || d - 2 < c.distance) ? { plane: true } : c; };
+    C.enter = () => { if (veh) { if (veh === "plane" && (plane.air || plane.v > 6)) return toast("Land and stop first: S slows the plane, and it comes down as it slows (or hold C)."), true; return leave(true), true; }
       if (!T.walk || T.tween) return false;
-      const c = m.nearestCar(F.pos.x, F.pos.z, REACH);
-      if (!c) { const far = m.nearestCar(F.pos.x, F.pos.z, 5000); toast(far ? `No car close enough to get into. The nearest is ${Math.round(far.distance)} m away.` : "There are no parked cars here to get into."); return true; }
-      car = { id: c.id, x: c.x, z: c.z, h: c.heading, y: ground(c.x, c.z) + 0.05, p: 0, r: 0, v: 0, steer: 0 };
-      if (!m.driveCar(c.id[0], c.id[1], car.x, car.y, car.z, car.h, 0, 0)) { car = null; toast("That car won't start. Try another one."); return true; }
-      C.in = true; camYaw = car.h + Math.PI; off = [wrap(F.yaw - camYaw), bsClamp(F.pitch + 0.2, -1, 0.55)]; idle = 0; last = [F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch];
-      F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.keys.clear(); F.drive = tick; document.body.classList.add("bsdrive");
-      btn.textContent = keys ? "Get out (Enter)" : "Get out"; btn.hidden = false;
-      toast(keys ? "W A S D or the arrows to drive, Space for the handbrake. Enter to get out." : "Left stick to drive, right stick to look around. Tap Get out to leave the car.", 4500);
+      const c = reach();
+      if (!c) { const far = m.nearestCar(F.pos.x, F.pos.z, 5000), d = Math.round(Math.hypot(plane.x - F.pos.x, plane.z - F.pos.z));
+        toast(`Nothing close enough to get into. ${far ? `The nearest car is ${Math.round(far.distance)} m away, and t` : "T"}he plane is ${d} m away, in Stimpson Park.`, 4500); return true; }
+      if (c.plane) { veh = "plane"; plane.v = 0; plane.spin = 0; plane.turn = 0; camYaw = plane.h + Math.PI; document.body.classList.add("bsdrive", "bsplane"); }
+      else { car = { id: c.id, x: c.x, z: c.z, h: c.heading, y: ground(c.x, c.z) + 0.05, p: 0, r: 0, v: 0, steer: 0 };
+        if (!m.driveCar(c.id[0], c.id[1], car.x, car.y, car.z, car.h, 0, 0)) { car = null; toast("That car won't start. Try another one."); return true; }
+        veh = "car"; camYaw = car.h + Math.PI; document.body.classList.add("bsdrive"); }
+      C.in = true; off = [wrap(F.yaw - camYaw), bsClamp(F.pitch + 0.2, -1, 0.55)]; idle = 0; last = [F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch];
+      F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.vert = 0; F.boost = false; F.keys.clear(); F.drive = tick;
+      btn.textContent = "Get out"; btn.hidden = false; boostBtn.hidden = false;
+      snd.door(); snd.start(veh);
+      toast(veh === "plane" ? (touch ? "Left stick: forward for power, sideways to turn. Up lifts the nose once you are fast. Hold Boost for more." : "W for power, A and D to turn, Space to lift the nose once you are fast, C to lower it. Shift is the boost.")
+        : touch ? "Left stick to drive, right stick to look around. Hold Boost for the mega boost." : "W A S D or the arrows to drive, Space for the handbrake, Shift for the mega boost.", 5500);
       return true; };
-    // the Get in button: there while a parked car is within reach of where you are walking (looked for a few times a second)
-    C.frame = () => { if (car) return; const now = performance.now(); if (now - at < 300) return; at = now;
-      const near = T.walk && !T.tween ? m.nearestCar(F.pos.x, F.pos.z, REACH) : null;
-      const say = keys ? "Get in the car (Enter)" : "Get in the car"; if (btn.hidden !== !near) btn.hidden = !near; if (near && btn.textContent !== say) btn.textContent = say; };
+    // the Get in button: there while something is in reach of where you are walking (looked for a few times a second)
+    C.frame = () => { if (veh) return; const now = performance.now(); if (now - at < 300) return; at = now;
+      const near = T.walk && !T.tween ? reach() : null, say = near?.plane ? "Get in the plane" : "Get in the car";
+      if (btn.hidden !== !near) btn.hidden = !near; if (near && btn.textContent !== say) btn.textContent = say; };
     btn.onclick = () => { C.enter(); btn.blur(); };
-    C.where = () => car && { x: car.x, z: car.z, heading: car.h, speed: car.v };  // for checking
-    C.dispose = () => { if (car) leave(false); btn.onclick = null; btn.hidden = true; document.body.classList.remove("bsdrive"); };
+    const hold = on => e => { F.boost = on && !!veh; boostBtn.classList.toggle("on", F.boost); e.preventDefault(); };
+    const press = { pointerdown: hold(true), pointerup: hold(false), pointercancel: hold(false), pointerleave: hold(false), contextmenu: e => e.preventDefault() };
+    Object.entries(press).forEach(([k, f]) => boostBtn.addEventListener(k, f));
+    const hidden = () => snd.quiet(document.hidden); document.addEventListener("visibilitychange", hidden);
+    C.where = () => veh === "car" ? { kind: "car", x: car.x, z: car.z, heading: car.h, speed: car.v } : veh ? { kind: "plane", x: plane.x, y: plane.y, z: plane.z, heading: plane.h, speed: plane.v, air: plane.air } : null;  // for checking
+    C.plane = plane;
+    C.dispose = () => { if (veh) leave(false); btn.onclick = null; btn.hidden = boostBtn.hidden = true; Object.entries(press).forEach(([k, f]) => boostBtn.removeEventListener(k, f));
+      document.removeEventListener("visibilitychange", hidden); document.body.classList.remove("bsdrive", "bsplane"); snd.dispose(); try { parts.remove(); } catch {} };
     return C;
   }
   function townStreetNames(T, cfg, box, m) {
