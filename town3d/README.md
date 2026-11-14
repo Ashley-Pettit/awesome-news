@@ -542,3 +542,25 @@ then: do it within 40 m of number 6.
   properties, before the long building was dropped.) Scaled up: about 100 houses stand within 160 m of a point in the
   residential streets, which would be about 300,000 triangles, so the whole suburb would need full detail kept to
   about 60 m and a middle level where pickets and battens are a picture on a flat panel.
+
+## Driving: Enter gets you into the nearest parked car (14 November 2026)
+
+Ash: "Add a feature where if i press enter when walking i get into the car." Moorooka only for now (its model hands
+over its parked cars).
+
+- **Getting in and out** (`townCar` in `app.html`): walking within 8 m of a parked car shows a Get in the car button
+  above Up and Down. Enter, or the button, puts you in the nearest one; with none in reach a message says how far the
+  nearest is. Enter or Get out again and you step out of the driver's door, on the right. Flying, jumping to a place or
+  starting again gets you out too. Enter is left to a focused button (Exit, Jump to, the tools), so those still work
+  from the keyboard.
+- **Driving:** W or the up arrow (or the left stick forward) goes, S or down brakes and then reverses, A and D or left
+  and right steer (less lock the faster you go), Space is the handbrake. About 0 to 60 km/h in 8 seconds, 70 km/h flat
+  out, 20 km/h in reverse. The height chip shows the speed.
+- **The view** follows from behind and above, swinging round after the car. The right stick or a drag looks round it,
+  and the view settles back once you drive on. It moves in closer where a building is behind the car.
+- **What the car does:** follows the ground and tips with the slope; stops with a bump at buildings (their surveyed
+  outlines), deep water and the edge of the model; stays where you leave it until the page is reloaded. It goes
+  straight through fences, trees, other cars and people, and has no sound.
+- **In the model** (`moorooka-model.js`, `?v=22`; ai-forge `claude/moorooka-drive` at `78a2231`): `nearestCar(x, z, reach)`,
+  `driveCar(x0, z0, x, y, z, heading, pitch, roll)` (the car is known by where it was first parked; up to twelve can be
+  driven off in one visit) and `solidAt(x, z)`.
