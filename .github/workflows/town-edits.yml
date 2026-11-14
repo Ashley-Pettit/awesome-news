@@ -1,0 +1,39 @@
+name: Map edits from admin mode
+
+# Explore's admin mode (the pencil, for Ash): Save sends the ground he has painted and the things he has taken out. The
+# phone or computer asks for this with its GitHub key; the edits are added to town3d/<town>/edits.json by
+# tools/town/add_edits.py (which checks every number and only ever writes that one file), then the quick publish puts
+# them in every app. Data only: no code is changed.
+on:
+  workflow_dispatch:
+    inputs:
+      edits: { description: 'What Copy edits gives: {"town": "moorooka", "v": 1, "paint": [...], "gone": {...}}', required: true }
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  save:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add the edits, commit and publish
+        env:
+          EDITS: ${{ inputs.edits }}
+          GH_TOKEN: ${{ github.token }}
+        # Each try starts again from the newest main, so two saves at once (or anything else pushed meanwhile) cannot
+        # lose one another: adding the same edit twice changes nothing.
+        run: |
+          git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for i in 1 2 3 4 5; do
+            git fetch -q origin main && git reset -q --hard origin/main
+            printf '%s' "$EDITS" | python3 tools/town/add_edits.py
+            git add town3d/*/edits.json
+            if git diff --cached --quiet; then echo "no change"; exit 0; fi
+            git commit -q -m "Map edits from admin mode, saved from the app"
+            if git push -q origin HEAD:main; then gh workflow run quick.yml --ref main; exit 0; fi
+            sleep $((i * 4))
+          done
+          echo "could not push after 5 tries"; exit 1
