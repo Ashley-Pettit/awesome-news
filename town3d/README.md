@@ -482,3 +482,32 @@ photos to model businesses if you can".
   ribbon only for a bridge, no end caps, and the two lift tables (the road's, all 0.05, and the kerbs', all 0.02;
   `Vh` and `rv` in the `?v=19` bundle). It was patched onto the bundle built for the drawn-by-distance change above.
 - **Footpaths to the corner** (`surface/*.webp`, by `tools/ground/tidy.py`): see its README.
+
+## Admin mode: paint the ground and take things out (14 November 2026)
+
+Ash: "can you an an admin mode here i can self add path, grass or road? if user is ash or ashley. Also delete cars or
+people etc...". Moorooka only for now (it is the model whose ground is drawn by kind).
+
+- **Who sees it:** the pencil in the tools shows when the name in Settings is Ash or Ashley (`isAsh()`), and the model
+  has `setGroundEdits`. Everyone else sees no button. This is a convenience, not security: nothing a visitor does in
+  their own browser reaches anyone else, because edits are only published by a pull request (below).
+- **Tools** (`townAdmin` in `app.html`): Path (concrete, 1.3 m), Grass (2.5 m) and Road (asphalt, 6 m) paint by dragging
+  on the ground: a straight line from where the finger goes down to where it lifts, or freehand (the toggle; freehand
+  lines have their wobble taken out). Width with the minus and plus. Delete takes out the parked car or tree tapped, or
+  one of Ash's own strokes; tapping a person keeps everyone from being drawn within 12 m of that spot (walkers are made
+  up as you go, so there is no one person to remove). Undo, and the bin (asks once) to clear everything on the device.
+- **Moving about with a tool on:** two fingers drag, turn and zoom the map when flying (the sticks hide to make room);
+  when walking, the sticks stay and a finger on the view above them draws.
+- **Where edits live:** on the device (`localStorage["an3d-edits-moo"]`), drawn straight away. Copy puts them on the
+  clipboard with a line saying what they are. Ash pastes that to Claude; `python3 tools/town/add_edits.py <file>` adds
+  them to `town3d/moorooka/edits.json`, which every copy of the app fetches and lays over the model. One edit to a line:
+  to take a published edit back out, delete its line. Once an edit is published it drops off the device's own list.
+- **In the model** (`moorooka-model.js`, `?v=20`; ai-forge `claude/moorooka-admin-mode`): `setGroundEdits(strokes)` lays
+  strokes into the blocks of ground by kind as they come in (the same distance fields the plan uses, so edges are as
+  sharp as the plan's; a block in view is fetched again when a stroke over it changes), `groundUnder(x, y)` and
+  `pickThing(x, y)` say what a point on the screen is on, `setRemoved({cars, trees, people})` hides things by where
+  they stand, and `frameCost()` gives the last frame's triangles and draw calls.
+- **Limits:** painted ground shows where the ground is drawn by kind (within a few hundred metres of the view, on
+  devices that draw it), not on the far ground picture. People only exist on the medium and sharp settings. Moving
+  traffic, buildings, fences and what stands in backyards cannot be taken out yet. The road change of the round before
+  (no ribbons) is now in the source too (`groundDrawsRoads`), and a car parked at the kerb sits on the ground.
