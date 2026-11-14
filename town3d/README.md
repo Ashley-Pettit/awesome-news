@@ -818,3 +818,18 @@ crossings were drawn as a few long bars running along the walk. Each is now a ro
 running with the traffic, one every 1.1 m from kerb to kerb. Fixed in the generator (`scripts/logan/precinct.py` in
 ai-forge) and applied to `town3d/logan/map.json` directly (the 21 old bars replaced by 54), since the full data
 build needs the fetched source files. Checked in a picture from above one crossing.
+
+## Things to do to other players: wave, dance and more (15 November 2026)
+
+Ash: "I want to be able to interact with other players like wave or dance or lots of fun things, no shooting no
+violence." `TOWN_EMOTES` in `app.html`: Wave, Dance, Jump, Cheer, Spin, Bow and Heart.
+
+- While someone else is in the town and you are walking, an **Emote** button sits on the right edge (E on a
+  desktop). It opens the seven; on a desktop the keys 1 to 7 do them straight off. One every 1.2 seconds at most.
+- Others see your figure do it for 2 to 4.5 seconds (its arms are parts of their own, hung from the shoulders, so
+  they can be raised), with the emote's sign beside your name. You get a short line saying what you did, since you
+  cannot see yourself.
+- It is sent as one word on its own channel ("emote") and only words in the list are acted on.
+- Checked on a local build: the button and its list, the sign beside the name on the other player's screen, and the
+  figure with both arms up (Cheer), one arm up (Wave) and arms out in front (Heart) in pictures. Dance, Jump, Spin
+  and Bow were not caught in a picture.
