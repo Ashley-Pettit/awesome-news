@@ -993,6 +993,12 @@ past the house along the south fence (another car parks there), with a strip of 
 - The slab and the striped lawn it replaces show where the plan's ground is drawn (every quality setting, except a
   device reporting under 4 GB or asking to save data), the same as every other driveway in Moorooka.
 
+**Polished (15 November 2026, Ash: "Needs minor polish"):** the slab's edges are 0.6 m strokes and the filling 1.8 m strokes
+kept 0.9 m inside the outline (with two rows along the slanting north edge), so the edges are straight, the corners tight and
+nothing bulges past them; the front of the slab stops at the foot of the stairs. The path from the white gate to the stairs is
+painted in the same concrete, and the model's lighter path ribbon over it is gone (`?v=26`). A small model tree that stood on
+the drive in front of the stairs is taken out (`edits.json`). The first round's drive strokes were swapped out, not added to.
+
 ## Fly to Walk taken out again, fewer cars, clues for dropped fingers (15 November 2026)
 
 - The automatic switch from Fly to Walk (zooming into the ground, or holding Down at the lowest height) is gone, and zoom is
