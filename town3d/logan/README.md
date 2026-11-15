@@ -71,6 +71,9 @@ Wembley Road is in detail:
   shape of ground is drawn over another, so nothing shows through as the ground fades at a distance or at night.
 - **The bays along the west wing:** a row nose-in against its wall off the road south of the west roundabout, the
   road widened on its far side where they take some of it.
+- **Where bays meet the road:** the wall bays and the small car park by the booster are one sealed surface with
+  the road, rounded where they join, with a kerb only on their outside edge; car park driveways leave square off the
+  end of the aisle, then turn to the road, rounded where they meet it.
 - The railway and its wiring, and the named schools, parks and streets.
 
 A block of **Browns Plains** is in the same detail: about 100 m from Ammons Street down Sutton and Coyle courts to
