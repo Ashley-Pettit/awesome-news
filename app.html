@@ -1340,6 +1340,12 @@ body.bsdrive:not(.bsplane) .bs-fly-x.bs-boost { bottom: calc(240px + env(safe-ar
    gear; Exit explore lives in the panel, and the height (or speed while driving) sits under the gear. */
 .bs-fly-x.bs-me-btn { position: absolute; top: calc(14px + env(safe-area-inset-top)); left: 16px; right: auto; bottom: auto; width: 38px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
 .bs-fly-x.bs-me-btn[hidden] { display: none; }
+/* Share, just right of the gear (Ash, 15 November 2026: "Move share to the right of settings cog") */
+.bs-fly-x.bs-share-btn { position: absolute; top: calc(14px + env(safe-area-inset-top)); left: 16px; right: auto; bottom: auto; width: 38px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+.bs-fly-x.bs-me-btn:not([hidden]) ~ .bs-share-btn { left: 62px; }
+.bs-fly-x.bs-share-btn svg { width: 18px; height: 18px; }
+.bs-fly-x.bs-share-btn[aria-expanded="true"] { background: #fff; color: #1b1830; }
+body:not(.bstown) .bs-share-btn { display: none; }
 .bs-fly-x.bs-me-btn svg { width: 19px; height: 19px; }
 .bs-fly-x.bs-me-btn[aria-expanded="true"] { background: #fff; color: #1b1830; }
 body.bsme #bsFlyX, body.bsme #bsTimeBtn, body.bsme #bsFlyTimeBox { display: none !important; }
@@ -1390,6 +1396,9 @@ body.bsme .bs-height, body.bstown.bsme .bs-height { left: 16px; top: calc(62px +
 .bs-me-show[aria-checked="true"] i { background: #3a9d5d; }
 .bs-me-show[aria-checked="true"] i::after { transform: translateX(18px); }
 @media (prefers-reduced-motion: reduce) { .bs-me-show i, .bs-me-show i::after { transition: none; } }
+.bs-me-num { display: flex; align-items: center; justify-content: space-between; gap: 10px; font: 650 0.8rem/1.2 var(--ui); }
+.bs-me-num small { display: block; margin-top: 2px; font-weight: 500; font-size: 0.7rem; color: rgba(255, 255, 255, 0.6); }
+.bs-me .bs-me-num input { flex: none; width: 5.2em; height: 36px; padding: 0 8px; text-align: right; }
 .bs-me-h { display: flex; justify-content: space-between; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.14); font-weight: 650; }
 .bs-me-exit { width: 100%; min-height: 42px; border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 12px; background: none; color: #fff; font: 700 0.86rem var(--ui); cursor: pointer; }
 .bs-me-exit:hover { background: rgba(255, 255, 255, 0.1); }
@@ -1972,7 +1981,7 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <div class="bs-town-mode" id="bsTownMode" role="group" aria-label="Walk or fly" data-key="F" hidden><button type="button" data-town-mode="walk" aria-pressed="true">Walk</button><button type="button" data-town-mode="fly" aria-pressed="false">Fly</button></div>
     <div class="bs-town-list" id="bsTownList" role="menu" aria-label="Places to jump to" hidden></div>
     <div class="bs-town-list bs-town-floods" id="bsTownFloods" role="menu" aria-label="Floods to show on the map" hidden></div>
-    <div class="bs-slides" role="group" aria-label="Share, street names, edit, tide, time and flood"><button class="bs-fly-x bs-ic" type="button" id="bsShareBtn" aria-label="Share a link to this 3D model" title="Share" aria-expanded="false" aria-controls="bsShareBox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button><button class="bs-fly-x bs-ic" type="button" id="bsNamesBtn" data-key="N" aria-pressed="false" aria-label="Street names" title="Show street names (N)" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M9 21h6"/><path d="M5 5h11l3 2.5L16 10H5z"/><path d="M19 12H8l-3 2.5L8 17h11z"/></svg></button><button class="bs-fly-x bs-ic" type="button" id="bsEditBtn" aria-pressed="false" aria-controls="bsAdmin" aria-label="Edit the map" title="Edit the map" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg></button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false" aria-label="Time of day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span id="bsTimeBtnT">Time</span></button><button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button></div>
+    <div class="bs-slides" role="group" aria-label="Street names, edit, tide, time and flood"><button class="bs-fly-x bs-ic" type="button" id="bsNamesBtn" data-key="N" aria-pressed="false" aria-label="Street names" title="Show street names (N)" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M9 21h6"/><path d="M5 5h11l3 2.5L16 10H5z"/><path d="M19 12H8l-3 2.5L8 17h11z"/></svg></button><button class="bs-fly-x bs-ic" type="button" id="bsEditBtn" aria-pressed="false" aria-controls="bsAdmin" aria-label="Edit the map" title="Edit the map" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg></button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false" aria-label="Time of day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span id="bsTimeBtnT">Time</span></button><button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button></div>
     <div class="bs-admin" id="bsAdmin" role="toolbar" aria-label="Edit the map" hidden>
       <div class="bs-admin-row" role="group" aria-label="Tool"><button type="button" data-tool="path" aria-pressed="false"><i style="background:#cfcabd"></i>Path</button><button type="button" data-tool="grass" aria-pressed="false"><i style="background:#6fa64b"></i>Grass</button><button type="button" data-tool="road" aria-pressed="false"><i style="background:#4a4d52"></i>Road</button><button type="button" data-tool="delete" aria-pressed="false">Delete</button></div>
       <div class="bs-admin-row"><span class="bs-admin-w" id="bsAdminW" role="group" aria-label="Width" hidden><button type="button" data-w="-1" aria-label="Narrower">&minus;</button><output id="bsAdminWOut"></output><button type="button" data-w="1" aria-label="Wider">+</button></span><button type="button" id="bsAdminLine" aria-pressed="true" hidden>Straight</button><button type="button" class="bs-admin-ic" id="bsAdminUndo" aria-label="Undo" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5 4 9l4 4"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button><button type="button" id="bsAdminSave" aria-label="Save my edits for everyone">Save</button><button type="button" id="bsAdminCopy" aria-label="Copy edits">Copy</button><button type="button" class="bs-admin-ic" id="bsAdminClear" aria-label="Clear all my edits" title="Clear all my edits"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 7V4h4v3M6 7l1 13h10l1-13"/></svg></button></div>
@@ -1991,6 +2000,7 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <div class="bs-fly-time bs-town-tide bs-town-rise" id="bsTownRise" hidden><span>Water</span><input type="range" id="bsTownRiseIn" min="0" max="1" step="0.01" value="1" aria-label="Flood water level"><output id="bsTownRiseOut" for="bsTownRiseIn"></output></div>
     <button class="bs-fly-x bs-fly-jump" type="button" id="bsFlyJump" data-key="J" hidden>Jump to Norman Rd</button>
     <button class="bs-fly-x bs-me-btn" type="button" id="bsMeBtn" aria-expanded="false" aria-controls="bsMe" aria-label="Settings" title="Settings" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+    <button class="bs-fly-x bs-share-btn" type="button" id="bsShareBtn" aria-label="Share a link to this 3D model" title="Share" aria-expanded="false" aria-controls="bsShareBox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button>
     <div class="bs-me" id="bsMe" hidden></div>
     <button class="bs-fly-x bs-emote" type="button" id="bsEmoteBtn" data-key="E" aria-expanded="false" aria-controls="bsEmotes" hidden>Emote</button>
     <div class="bs-emotes" id="bsEmotes" hidden></div>
@@ -5496,8 +5506,6 @@ const handle = async (m, post) => {
     const adm = t.closest("[data-admin]");
     if (adm) { A.full = !A.full; saveAdmin(); adm.setAttribute("aria-checked", String(A.full)); const sb = adm.querySelector(".sub"); if (sb) sb.textContent = A.full ? "On. Every story opens in full right here." : "Off. Stories show the publisher's preview."; toast(A.full ? "Full articles on" : "Full articles off"); applyVault(); for (const k in textCache) delete textCache[k]; store.set("brief.offlineAt", ""); saveOffline(); render(true); return; }
     if (t.closest("[data-player-show]")) { try { if (localStorage.getItem("an-player-off") === "1") localStorage.removeItem("an-player-off"); else localStorage.setItem("an-player-off", "1"); } catch {} renderSettings(); return; }
-    { const xp = t.closest("[data-ex-part]"); if (xp) { const off = exOff(), k = xp.dataset.exPart; if (off.has(k)) off.delete(k); else off.add(k); try { localStorage.setItem("an3d-off", JSON.stringify([...off])); } catch {} renderSettings(); toast(`${EX_PARTS.find(p => p[0] === k)[1]}: ${off.has(k) ? "off" : "on"} next time Explore opens.`, 3000); return; } }
-    if (t.closest("[data-ride-reset]")) { try { localStorage.removeItem("an3d-rides"); } catch {} renderSettings(); toast("Cars and planes are back to their usual numbers."); return; }
     if (t.closest("#adminLock")) { A.unlocked = false; saveAdmin(); keepSecret(""); store.set("brief.ghToken", ""); vaultKey = null; applyVault(); renderSettings(); render(true); return; }
     if (t.closest("#weather") && bsClick(t)) return;
     const stb = t.closest("[data-stab]");
@@ -5558,9 +5566,6 @@ const handle = async (m, post) => {
     document.getElementById(kind === "topics" ? "addTopic" : "addMuted")?.focus();
   });
   document.addEventListener("change", e => {
-    if (e.target.dataset?.ride) { const k = e.target.dataset.ride, def = RIDE_DEF[k]; if (!def) return; let o = {}; try { o = JSON.parse(localStorage.getItem("an3d-rides") || "{}") || {}; } catch {}
-      const v = e.target.value.trim() === "" ? NaN : +e.target.value; if (Number.isFinite(v)) o[k] = bsClamp(v, def[3], def[4]); else delete o[k];
-      try { localStorage.setItem("an3d-rides", JSON.stringify(o)); } catch {} e.target.value = rideSettings()[k]; toast(`${def[1]}: ${rideSettings()[k]} ${def[2].split(".")[0]}. It applies the next time you open Explore.`); return; }
     if (e.target.id === "setVoice") { store.set("brief.voice", e.target.value); aiBroken = false; dropClips(-1); toast("Voice changed. Tap Play a sample to hear it."); renderSettings(); return; }
     if (e.target.id === "setRegion") { S.region = e.target.value; saveSettings(); renderSettings(); loadWeather(); toast(state.mode === "claude" && !(state.status?.regions || []).some(r => r.id === S.region) ? `${regionLabel()} news arrives with the next update` : `Local news: ${regionLabel()}`); }
   });
@@ -5899,7 +5904,11 @@ const handle = async (m, post) => {
           <output id="bsHourOut" for="bsHourIn"></output>
         </div>
       </section>`;
-    $("bsFlyBtn").onclick = () => bsFlyOn();
+    // Explore from the weather screen opens the same 3D town as everywhere else (Ash, 15 November 2026: "Bring Inverloch in line
+    // with the other apps settings and layout"): Inverloch's weather scene used to open a fly-about of the weather's own scene,
+    // with its old buttons. The old fly-about stays for keeping a view for the weather (Admin with the passphrase, or Claude's copy).
+    $("bsFlyBtn").onclick = () => { const k = ({ invTown: "inv", invBeach: "inv", moo: "moo", mooBowls: "moo", logan: "logan" })[BS.sceneKey];
+      if (k && TOWNS[k] && !(A.unlocked || state.mode === "claude")) townModelOpen(true, k); else bsFlyOn(); };
     $("bsHourIn").addEventListener("change", () => { BS.view.play = true; });
     $("bsHourIn").addEventListener("input", e => { BS.view.play = false; BS.view.ms = bsMidnight(bsKey(BS.view.ms)) + (+e.target.value) * 60000; BS.view.day = bsKey(BS.view.ms); if (BS.view.mode === "live") BS.view.mode = "day"; bsApply(true); });
     bsApply(true); bsTick();
@@ -7797,7 +7806,7 @@ const handle = async (m, post) => {
       ti.oninput = () => { BS.view.ms = bsMidnight(BS.view.day) + (+ti.value) * 60000; to.textContent = bsTime(BS.view.ms); $("bsTimeBtnT").textContent = to.textContent; bsApply(true); }; }
     const F = BS.fly = { ...start, pos: start.pos.clone(), start, keys: new Set(), stick: { x: 0, y: 0 }, lookStick: { x: 0, y: 0 }, vert: 0, touches: new Map(), drag: null };
     const canvas = $("bsGl"), touch = matchMedia("(pointer: coarse)").matches;
-    document.body.classList.add("bsfly"); $("bsFly").hidden = false; try { bsWatchOn(); } catch {}
+    document.body.classList.add("bsfly"); $("bsFly").hidden = false;
     const tip = $("bsFlyTip"); tip.classList.remove("dim");
     if (touch) tip.textContent = "Left stick to move, right stick to look. Up and Down are top right.";
     else bsTip("Drag to look around\nW A S D or the arrows to move\nSpace to go up · C to go down\nShift to go faster\nR to start again · Esc to exit\n? to hide this list");
@@ -7842,7 +7851,7 @@ const handle = async (m, post) => {
       const h = {
         touchstart: e => { if (id !== null) return; const t = e.changedTouches[0]; id = t.identifier; set(t); tip.classList.add("dim"); },
         touchmove: e => { const t = mine(e); if (t) set(t); },
-        touchend: e => { if (mine(e)) end(); }, touchcancel: e => { if (mine(e)) { end(); bsLost("stick", e); } },
+        touchend: e => { if (mine(e)) end(); }, touchcancel: e => { if (mine(e)) end(); },
         pointerdown: e => { if (e.pointerType !== "mouse") return; id = "m"; try { el.setPointerCapture(e.pointerId); } catch {} set(e); tip.classList.add("dim"); e.preventDefault(); },
         pointermove: e => { if (e.pointerType === "mouse" && id === "m") set(e); },
         pointerup: e => { if (e.pointerType === "mouse" && id === "m") end(); },
@@ -7908,7 +7917,7 @@ const handle = async (m, post) => {
         t.x = e.clientX; t.y = e.clientY; e.preventDefault(); },
       pointerup: e => { F.drag = null; canvas.style.cursor = ""; const t = F.touches.get(e.pointerId); if (t?.move) { F.stick.x = 0; F.stick.y = 0; } F.touches.delete(e.pointerId); },
     };
-    F.on.pointercancel = e => { if (e.pointerType !== "mouse") bsLost("view", null); F.on.pointerup(e); };
+    F.on.pointercancel = e => F.on.pointerup(e);
     addEventListener("keydown", F.on.keydown); addEventListener("keyup", F.on.keyup); addEventListener("blur", F.on.blur);
     document.addEventListener("mousemove", F.on.mousemove);
     ["pointerdown", "pointermove", "pointerup", "pointercancel"].forEach(k => canvas.addEventListener(k, F.on[k]));
@@ -7942,25 +7951,9 @@ const handle = async (m, post) => {
     $("bsTownAskText").textContent = "Leave Explore?"; yes.textContent = "Leave"; no.textContent = "Stay"; ask.dataset.exit = "1"; ask.hidden = false;
     ask.onclick = e => { const b = e.target.closest("[data-ask]"); if (!b) return; close(); if (b.dataset.ask === "yes") bsFlyOff(); };
     yes.focus({ preventScroll: true }); }
-  // For Ash, while the sticks are being looked into: say when the phone takes a finger away (a "touchcancel") and what had the
-  // page selected, so the cause shows on the device itself. Selection is cleared straight away too.
-  document.addEventListener("selectionchange", () => { if (!BS.fly) return; try { const sel = getSelection(); if (sel && !sel.isCollapsed && !/^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName || "")) { bsLost.sel = String(sel).slice(0, 30); sel.removeAllRanges(); } } catch {} });
-  function bsLost(what, e) { if (!isAsh()) return; const now = performance.now(); if (now - (bsLost.at || 0) < 4000) return; bsLost.at = now;
-    // clues: the slowest frame in the last 3 seconds (a busy page), how many fingers were down, and what had just happened
-    const slow = (BS.gaps || []).filter(g => now - g[0] < 3000).reduce((a, g) => Math.max(a, g[1]), 0), fingers = e?.touches?.length ?? "?", recent = (BS.notes || []).filter(n => now - n[0] < 1500).slice(-6).map(n => n[1]).join(", ");
-    toast(`The phone took your finger off the ${what}${bsLost.sel ? ` (it selected "${bsLost.sel}")` : ""}. Slowest frame ${Math.round(slow)} ms, ${fingers} other finger${fingers === 1 ? "" : "s"}${recent ? ", after: " + recent : ""}. Screenshot this for Claude.`, 7000); bsLost.sel = ""; }
+  // If the page ever gets something selected while exploring (a long press), clear it straight away, so no Copy bar comes up.
+  document.addEventListener("selectionchange", () => { if (!BS.fly) return; try { const sel = getSelection(); if (sel && !sel.isCollapsed && !/^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName || "")) { sel.removeAllRanges(); } } catch {} });
   const bsNote = what => { const n = (BS.notes ||= []), now = performance.now(); if (n.length && n[n.length - 1][1] === what && now - n[n.length - 1][0] < 1000) { n[n.length - 1][0] = now; return; } n.push([now, what]); if (n.length > 20) n.shift(); };
-  // For Ash, while the dropped finger is looked into: note what on the page changed (shown, hidden, restyled, added), so the
-  // message can say what happened just before the phone let go. The sticks' own knobs and the place names are left out.
-  let bsWatch = null;
-  function bsWatchOn() { if (bsWatch || !isAsh() || !window.MutationObserver) return;
-    const name = el => el.id ? "#" + el.id : el.className && typeof el.className === "string" ? "." + el.className.trim().split(/\s+/)[0] : el.tagName?.toLowerCase();
-    bsWatch = new MutationObserver(list => { for (const m of list) { const t = m.target; if (!t || t.nodeType !== 1) continue;
-      if (t.closest?.(".bs-joy, #toast, .inv-embed-labels, .bs-peer, #verBadge") || t.id === "bsHeight" || t.id === "bsMeH") continue;
-      if (m.type === "attributes") { if (m.attributeName === "style" && /^(CANVAS)$/.test(t.tagName)) continue; bsNote(`${name(t)} ${m.attributeName}${m.attributeName === "hidden" ? (t.hidden ? " on" : " off") : ""}`); }
-      else if (m.addedNodes.length || m.removedNodes.length) bsNote(`${name(t)} ${m.addedNodes.length ? "+" : "-"}${name(m.addedNodes[0] || m.removedNodes[0]) || "text"}`); } });
-    bsWatch.observe($("bsFly"), { subtree: true, childList: true, attributes: true, attributeFilter: ["hidden", "class", "style"] });
-    bsWatch.observe(document.body, { attributes: true, attributeFilter: ["class", "style"] }); }
   function bsFlyTick(dt) {
     const F = BS.fly, k = F.keys, has = (...c) => c.some(x => k.has(x));
     if (F.drive) return F.drive(dt);  // driving a car in a town model (townCar): the car moves, and the view follows it
@@ -7989,7 +7982,6 @@ const handle = async (m, post) => {
     BS.raf = requestAnimationFrame(bsLoop);
     if (document.hidden) return;
     const t = performance.now() / 1000, real = bsClamp(t - BS.lastT, 0, 1), dt = Math.min(real, 0.1); BS.lastT = t;
-    if (real > 0.15) { (BS.gaps ||= []).push([t * 1000, real * 1000]); if (BS.gaps.length > 30) BS.gaps.shift(); }  // slow frames, for bsLost
     // Play through the forecast, 30 minutes a second, then round again from now.
     const v = BS.view;
     // Play through the day; at the end of it, replay the same day from 6am.
@@ -8149,8 +8141,8 @@ const handle = async (m, post) => {
   // latitude, longitude, metres back, tilt and bearing). A model with floods can also set floodOf (what its flooded area is a share
   // of: "Logan"), floodNote (the line under the list) and floodWarn (show the not-official notice first, and a banner while a flood is on).
   const TOWNS = {
-    inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=18", assets: TOWN3D, place: "inv", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
-    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=26", assets: TOWN3D + "moorooka/", place: "moo", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
+    inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=19", assets: TOWN3D, place: "inv", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
+    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=27", assets: TOWN3D + "moorooka/", place: "moo", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
       walkStart: { x: -269.8, z: -991.4, yaw: -1.623 },  // Ash's pick for where Moorooka starts: the Beaudesert Road footpath, looking at the house he chose
       // its floods: widest over the Oxley Creek flats along the model's western edge, seen from the east. floodWarn: the not-official notice has to be accepted
       // before the list opens, and a banner says the same while a flood is showing (Ash asked for both).
@@ -9971,7 +9963,7 @@ const handle = async (m, post) => {
         if (!onEx) { const a = el("a", "bs-me-go", "Open the 3D model's page"); a.href = url; app.append(a); }
         app.append(after); }
       const hi = el("div", "bs-me-h"), ho = el("span", "", F.hText || ""); ho.id = "bsMeH"; hi.append(el("span", "", "Height above the ground"), ho);
-      meBox.append(head, you, as, sw, tm, app, hi); };  // no Exit explore (Ash, 15 November 2026: "Remove exit explore"); Esc, or the browser's back, still leaves
+      meBox.append(head, you, as, sw, tm, app, ...(isAsh() ? exAshSecs(meDraw) : []), hi); };  // no Exit explore (Ash, 15 November 2026: "Remove exit explore"); Esc, or the browser's back, still leaves
     // closes with its \u00d7, the gear again, or a tap anywhere else
     const meOut = e => { if (!meBox.hidden && !meBox.contains(e.target) && !meBtn.contains(e.target)) meClose(); }; document.addEventListener("pointerdown", meOut, true);
     document.body.classList.add("bsme"); meBtn.hidden = false; meBtn.onclick = () => { meBox.hidden = !meBox.hidden; meBtn.setAttribute("aria-expanded", String(!meBox.hidden)); if (!meBox.hidden) meDraw(); meBtn.blur(); };
@@ -9986,11 +9978,12 @@ const handle = async (m, post) => {
     // what I am doing now, as seven small numbers
     const mine = () => { const v = T.car?.in && !off ? T.car.pose?.() : null; if (v) return [v.x, v.y, v.z, v.h, v.k, v.p, v.r];
       return T.walk && !off ? [F.pos.x, ground(F.pos.x, F.pos.z), F.pos.z, F.yaw + Math.PI, townRole() === "builder" ? "builder" : "walk", 0, 0] : [0, 0, 0, 0, "none", 0, 0]; };
+    // the Emote button shows whenever you walk, on your own too (Ash, 15 November 2026: "Yes still show single")
     P.frame = () => { const now = performance.now();
       if (sendPose && now - tick > 200) { tick = now; const a = mine().map(v => typeof v === "number" ? Math.round(v * 100) / 100 : v);
         const moved = !lastSent || a[4] !== lastSent[4] || Math.hypot(a[0] - lastSent[0], a[1] - lastSent[1], a[2] - lastSent[2]) > 0.04 || Math.abs(wrap(a[3] - lastSent[3])) > 0.02;
         if (moved || now - lastAt > 3000) { lastSent = a; lastAt = now; try { sendPose(a); } catch {} } }
-      const can = peers.size > 0 && T.walk && !T.car?.in; if (emoteBtn.hidden === can) { emoteBtn.hidden = !can; if (!can) emoteBox.hidden = true; }
+      const can = !!T.walk && !T.car?.in; if (emoteBtn.hidden === can) { emoteBtn.hidden = !can; if (!can) emoteBox.hidden = true; }
       if (!peers.size) return;
       const cam = m.getCamera(), w = box.clientWidth, h = box.clientHeight, f = 1 / Math.tan(((m.fov ? m.fov() : 50) * Math.PI) / 360);
       const cp = Math.cos(cam.pitch), fx = -Math.sin(cam.yaw) * cp, fy = Math.sin(cam.pitch), fz = -Math.cos(cam.yaw) * cp, rx = Math.cos(cam.yaw), rz = -Math.sin(cam.yaw), ux = -fy * rz, uy = fz * rx - fx * rz, uz = fy * rx;
@@ -10394,10 +10387,10 @@ const handle = async (m, post) => {
       if (btn.hidden !== !near) btn.hidden = !near; if (near && btn.textContent !== say) btn.textContent = say; };
     btn.onclick = () => { C.enter(); btn.blur(); };
     const hold = on => e => { F.boost = on && !!veh; boostBtn.classList.toggle("on", F.boost); e.preventDefault(); };
-    const press = { pointerdown: hold(true), pointerup: hold(false), pointercancel: e => { bsLost("boost", null); hold(false)(e); }, pointerleave: hold(false), contextmenu: e => e.preventDefault() };
+    const press = { pointerdown: hold(true), pointerup: hold(false), pointercancel: hold(false), pointerleave: hold(false), contextmenu: e => e.preventDefault() };
     Object.entries(press).forEach(([k, f]) => boostBtn.addEventListener(k, f));
     const handBtn = $("bsHandBtn"), pull = on => e => { F.hand = on && veh === "car"; handBtn.classList.toggle("on", !!F.hand); e.preventDefault(); };
-    const handPress = { pointerdown: pull(true), pointerup: pull(false), pointercancel: e => { bsLost("handbrake", null); pull(false)(e); }, pointerleave: pull(false), contextmenu: e => e.preventDefault() };
+    const handPress = { pointerdown: pull(true), pointerup: pull(false), pointercancel: pull(false), pointerleave: pull(false), contextmenu: e => e.preventDefault() };
     Object.entries(handPress).forEach(([k, f]) => handBtn.addEventListener(k, f));
     const hidden = () => snd.quiet(document.hidden); document.addEventListener("visibilitychange", hidden);
     C.pose = () => veh === "car" ? { k: car.bus ? "bus" : car.gold ? "gold" : "car", x: car.x, y: car.y, z: car.z, h: car.h, p: car.p, r: car.r }
@@ -11120,23 +11113,36 @@ const handle = async (m, post) => {
       <div class="beta-chips"><button type="button" class="bchip" data-tv-new>Awesome News TV (no ads)</button><button type="button" class="bchip" data-open-tv>Old TV (YouTube clips)</button></div>
       ${state.mode === "claude" ? "" : `<div class="beta-tog">${toggle("data-skipads", "1", S.skipAds, "Hide YouTube ads", "Old TV: sound off and headlines on screen while an ad plays")}</div>`}
     </div></div>
-    ${isAsh() ? ridesHTML() + exPartsHTML() : ""}
     ${state.mode === "claude" ? "" : `<div class="group"><h2>Updates</h2><div class="card">${ghFieldHTML()}</div></div>`}`;
   }
-  // Explore's parts, each switched on or off on this device, for Ash to find what makes an iPhone let go of the stick (Ash,
-  // 15 November 2026: the stick, Boost and looking round stop at random, since a change made this morning). Read when a town opens.
-  const EX_PARTS = [["traffic", "The app's moving traffic (none for now)"], ["animal", "The animal by Norman Road's helicopter"], ["rides", "Cars, planes, helicopter and bus to drive"], ["admin", "Map editing (the pencil)"],
+  // Explore's parts, each switched on or off on this device by Ash (they were for finding what made an iPhone let go of the
+  // stick, 15 November 2026). Read when a town opens.
+  const EX_PARTS = [["animal", "The animal by Norman Road's helicopter"], ["rides", "Cars, planes, helicopter and bus to drive"], ["admin", "Map editing (the pencil)"],
     ["players", "Other players and the Settings gear"], ["me", "Construction worker view"], ["no6", "6 Beaudesert Road's street detail"], ["streets", "Street names"], ["places", "Place names on the model"]];
   const exOff = () => { try { return new Set(JSON.parse(localStorage.getItem("an3d-off") || "[]")); } catch { return new Set(); } };
-  function exPartsHTML() { const off = exOff();
-    return `<div class="group"><h2>Explore parts</h2><div class="card">${EX_PARTS.map(([k, name]) => `<button class="field" type="button" role="switch" aria-checked="${!off.has(k)}" data-ex-part="${k}"><span class="lbl">${name}<span class="sub">${off.has(k) ? "Off" : "On"}</span></span><span class="track"></span></button>`).join("")}
-    </div><p class="hint">For Ash, to find what makes the phone let go of the stick. Turn one off, close Explore and open it again, and try. On this device only.</p></div>`; }
-  // Cars and planes: the numbers Ash can change (RIDE_DEF). Kept on this device; a model reads them when it opens
-  function ridesHTML() { const r = rideSettings();
-    return `<div class="group"><h2>Cars and planes</h2><div class="card">${Object.entries(RIDE_DEF).map(([k, [d, name, unit, lo, hi]]) =>
-      `<label class="field"><span class="lbl">${name}<span class="sub">${unit}. Usually ${d} (${lo} to ${hi})</span></span><input type="number" inputmode="decimal" data-ride="${k}" min="${lo}" max="${hi}" step="any" value="${r[k]}" style="flex:none;width:5.5em;margin-left:10px;text-align:right;font:inherit;padding:6px 8px;border-radius:8px;border:1px solid var(--line, #8886);background:transparent;color:inherit" aria-label="${name}, ${unit}"></label>`).join("")}
-      <button class="field" type="button" data-ride-reset><span class="lbl">Put them all back<span class="sub">The usual numbers for every car and plane</span></span><span class="chev" aria-hidden="true">\u203a</span></button>
-    </div><p class="hint">For Ash. These change the cars and planes in Explore on this device only, in every town, the next time you open Explore.</p></div>`; }
+  // Ash's own Explore settings, in Explore's Settings panel (Ash, 15 November 2026: "Move the settings for explore into the
+  // settings for explore rather than in the main awesome news"): the cars and planes numbers (RIDE_DEF) and Explore's parts.
+  // On this device only; a model reads them when it opens.
+  function exAshSecs(redraw) {
+    const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+    const cars = el("div", "bs-me-sec"), r = rideSettings(); cars.append(el("span", "bs-me-lbl", "Cars and planes (just you)"));
+    for (const [k, [d, name, unit, lo, hi]] of Object.entries(RIDE_DEF)) { const row = el("label", "bs-me-num"), t = el("span", "", name), inp = el("input");
+      t.append(el("small", "", `${unit.split(".")[0]}, usually ${d}`)); inp.type = "number"; inp.inputMode = "decimal"; inp.min = lo; inp.max = hi; inp.step = "any"; inp.value = r[k];
+      inp.onchange = () => { let o = {}; try { o = JSON.parse(localStorage.getItem("an3d-rides") || "{}") || {}; } catch {}
+        const v = inp.value.trim() === "" ? NaN : +inp.value; if (Number.isFinite(v)) o[k] = bsClamp(v, lo, hi); else delete o[k];
+        try { localStorage.setItem("an3d-rides", JSON.stringify(o)); } catch {} inp.value = rideSettings()[k]; toast(`${name}: ${rideSettings()[k]}. It applies the next time you open Explore.`, 2600); };
+      row.append(t, inp); cars.append(row); }
+    const back = el("button", "bs-me-exit", "Put the usual numbers back"); back.type = "button";
+    back.onclick = () => { try { localStorage.removeItem("an3d-rides"); } catch {} redraw(); toast("Cars and planes are back to their usual numbers.", 2200); };
+    cars.append(back);
+    const parts = el("div", "bs-me-sec"), off = exOff(); parts.append(el("span", "bs-me-lbl", "Explore parts (just you)"));
+    for (const [k, name] of EX_PARTS) { const sw = el("button", "bs-me-show"); sw.type = "button"; sw.setAttribute("role", "switch"); sw.setAttribute("aria-checked", String(!off.has(k))); sw.append(el("span", "", name), el("i"));
+      sw.onclick = () => { if (off.has(k)) off.delete(k); else off.add(k); try { localStorage.setItem("an3d-off", JSON.stringify([...off])); } catch {} redraw();
+        toast(`${name}: ${off.has(k) ? "off" : "on"}. It applies the next time you open Explore.`, 2600); };
+      parts.append(sw); }
+    parts.append(el("p", "", "Only you see these, and only on this device."));
+    for (const sec of [cars, parts]) { sec.addEventListener("keydown", e => e.stopPropagation()); sec.addEventListener("keyup", e => e.stopPropagation()); }
+    return [cars, parts]; }
   function previewGo() {
     const p = state.prevSel;
     BS.prev = { place: p.place === "bowls" ? "moo" : p.place === "invbeach" ? "inv" : p.place, sky: p.sky };
