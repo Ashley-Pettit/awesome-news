@@ -1386,6 +1386,13 @@ body.bsnoplaces #bsTown .inv-embed-labels { display: none !important; }
    to the middle and looking round stopped (Ash, 15 November 2026: "It keeps going back to center ... Pivoting up and down does
    the same thing") */
 body.bsfly, body.bsfly * { -webkit-user-select: none !important; user-select: none !important; -webkit-touch-callout: none !important; }
+/* While exploring nothing on the page may scroll, bounce or zoom: the news page behind, and the weather sheet the 3D view sits in,
+   were still scrollable. When a finger's drag was taken as the start of a scroll (or the browser's toolbars moving), the phone
+   cancelled the touch, and the stick or the look went back to the middle (Ash, 15 November 2026, "joystick bug", in every
+   version tried). Locked here; unlocked when Explore closes. */
+html:has(body.bsfly), body.bsfly { overflow: hidden !important; overscroll-behavior: none !important; touch-action: none; height: 100%; }
+body.bsfly #weather { overflow: hidden !important; overscroll-behavior: none !important; touch-action: none; }
+body.bsfly #bsFly, body.bsfly #bsTown, body.bsfly #bsTown * { touch-action: none; }
 body.bsfly input, body.bsfly textarea { -webkit-user-select: text !important; user-select: text !important; }  /* on foot, no Up and Down (Ash, 15 November 2026) */
 .bs-me input[type="range"] { height: 28px; padding: 0; background: none; accent-color: #ffd36b; }
 .bs-me-time { display: flex; justify-content: space-between; align-items: baseline; }

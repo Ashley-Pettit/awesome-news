@@ -1245,3 +1245,11 @@ off again (#135). The models are as at #130 too.
   when Explore's player name is set, `isAsh()` goes by it alone; the news app's name only counts when no player name
   is set. Read at most once a second. This also lets Ash test the stick as not-Ash by setting his player name to
   anything else.
+
+## The stick letting go: the page could scroll (15 November 2026)
+
+Every version tried (back to #118 with this morning's models) had it, so it isn't a feature added today. What every
+version shares: while exploring, the news page behind and the weather sheet the 3D view sits in could still scroll. On an
+iPhone (more so in an in-app browser such as Edge, whose toolbars move with scrolling), a drag that the phone takes as
+the start of a scroll cancels the touch, and the stick or the look goes back to the middle. While exploring, the page,
+the weather sheet and the 3D view are now locked: no scrolling, bouncing or zooming (`body.bsfly` rules).
