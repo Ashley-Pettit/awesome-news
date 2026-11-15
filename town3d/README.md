@@ -1652,3 +1652,10 @@ Ash: "Logan doors still too low. I can't walk in building".
   wide at the doors and 8 m wide further in, 9 m deep. It has a counter, a timber wall with a sign panel, and benches. The room is
   unlit (`unlit: true`) with its shading painted on, because the outdoor light turned its ceiling olive. `T.solid` leaves the foyer
   walkable; the rest of the building stays solid. Logan's `addParts` has no textures, so the sign is a plain panel.
+
+## Link previews for the local apps (16 November 2026)
+
+Ash: "Improve sharing link images". Moorooka News and Coastline News links showed the old Awesome News card, and The Logan Wire's
+was plain text. Each local app's `local/<slug>/share.png` is now its town from the 3D model, with the app's icon, name, tagline and
+colours. They're made by `tools/share_cards.py`; run it again after a new `explore-share.jpg` or a change to `local/brands.json`.
+The pages ask for `share.png?v=2`.
