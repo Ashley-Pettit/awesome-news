@@ -1130,3 +1130,27 @@ driving it, other players starting, and the ordinary weather view. Not checked o
 - **Name labels were upside down**: the label's up vector had `uy` with the wrong sign, so a name sat mirrored about
   the middle of the screen (far above someone below your eyes). Fixed.
 - **Jump to lists other players first** (nearest first, with how far): one stands you 6 m in front of them, facing them.
+## The possum at 16 Kingwell Street (15 November 2026)
+
+Ash: "add a possum. The possum should be 3x faster than walking. It should travel up objects like light poles and
+buildings ... Only add this to moorooka. Add the possum at 16 kingwell street moorooka. You enter into the possum just like
+a car but then move around as a possum not a car. Add a teleport to kingwell street near this", "A brushtail possum", and
+"Lazy load things as appropriate like the possum".
+
+- **Where:** a common brushtail possum on number 16's front lawn (address point and house outline from the Queensland
+  address and building data), looking at the street light out the front. `MOO_POSSUM` in `app.html`, Moorooka only
+  (`TOWN_RIDES.moo.possum`). **Jump to > Things to drive and fly > Kingwell Street: the possum** stands you beside it.
+- **Being the possum:** walk up to it and **Be the possum** (or Enter), just like getting in a car. W and S run forward
+  and back at three times walking pace (33 m/s; Shift or Boost half as fast again), A and D turn, Space (Jump on a phone)
+  hops. Run at a street light or a building and it climbs it while you keep pushing; S (Let go) drops off. At the top of a
+  light it sits until W is pressed again; on a roof it runs about and drops off the edge. **Hop out** leaves it where it
+  is; flying off, jumping somewhere else or wandering 150 m away sends it home.
+- **Street lights:** the model has none, so the app stands five (grey steel, 8.2 m, arm over the road) on the even side of
+  Kingwell Street, about 40 m apart and clear of buildings. Cars and planes bump into them too.
+- **Roofs:** each building's eave and ridge come from `moorooka/town.json` (already cached by the model); a roof rises from
+  its eave at the edges towards the ridge. Until they are in, a building counts as 4.5 m tall.
+- **Lazy:** nothing is built until you come within 400 m of Kingwell Street; the roofs are fetched once you are within
+  80 m of the possum, or when you become it (with a note while they load).
+- **Other players** see you as the possum, tail swaying, with your name over it.
+- Tested in headless Chrome at 1280 by 800 and at phone size (390 by 844, touch): the climb up the light, sitting on top,
+  running across number 16's roof and off its edge, jumping, hopping out, and the Jump to entry.
