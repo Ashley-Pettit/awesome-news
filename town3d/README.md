@@ -1069,3 +1069,6 @@ driving it, other players starting, and the ordinary weather view. Not checked o
   other players (and the Settings gear), the construction worker view, 6 Beaudesert Road's street detail, street names and
   place names can each be switched off on the device (`localStorage["an3d-off"]`), read when a town opens. They are there to
   find which part makes an iPhone let go of the stick.
+- **The app's own traffic is off** (`townTraffic`, `N = 0`; Ash, 15 November 2026: "Reduce traffic through the apps, they are
+  a bit dumb and run into each other"). Nothing is loaded for it. The models' own moving cars carry on. Set `N` above 0 to
+  bring the app's cars back.

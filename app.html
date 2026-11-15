@@ -9792,7 +9792,10 @@ const handle = async (m, post) => {
     // fewer than at first (Ash, 15 November 2026: "too much traffic in moorooka and they overlap ... app getting a little laggy"):
     // Moorooka's model has cars of its own on Beaudesert Road
     // (fewer again, and on main roads only: Ash, 15 November 2026: "less cars. They cause lag and often look silly")
-    const home = T.spawn || [F.pos.x, F.pos.z], N = 3, NEAR = 300, FAR = 800, NONE = new THREE.Matrix4().makeScale(0, 0, 0).elements;
+    // none for now (Ash, 15 November 2026: "Reduce traffic through the apps, they are a bit dumb and run into each other"):
+    // the models' own traffic carries on. Set N above 0 to bring the app's cars back.
+    const home = T.spawn || [F.pos.x, F.pos.z], N = 0, NEAR = 300, FAR = 800, NONE = new THREE.Matrix4().makeScale(0, 0, 0).elements;
+    if (!N) return P;  // nothing to load or draw
     let roads = null, nodes = null, dead = false, last = 0;
     const key = (x, z) => Math.round(x / 2) + "," + Math.round(z / 2);
     const start = C => { // a random point on a street, mostly near the start
@@ -11122,7 +11125,7 @@ const handle = async (m, post) => {
   }
   // Explore's parts, each switched on or off on this device, for Ash to find what makes an iPhone let go of the stick (Ash,
   // 15 November 2026: the stick, Boost and looking round stop at random, since a change made this morning). Read when a town opens.
-  const EX_PARTS = [["traffic", "Moving traffic"], ["animal", "The animal by Norman Road's helicopter"], ["rides", "Cars, planes, helicopter and bus to drive"], ["admin", "Map editing (the pencil)"],
+  const EX_PARTS = [["traffic", "The app's moving traffic (none for now)"], ["animal", "The animal by Norman Road's helicopter"], ["rides", "Cars, planes, helicopter and bus to drive"], ["admin", "Map editing (the pencil)"],
     ["players", "Other players and the Settings gear"], ["me", "Construction worker view"], ["no6", "6 Beaudesert Road's street detail"], ["streets", "Street names"], ["places", "Place names on the model"]];
   const exOff = () => { try { return new Set(JSON.parse(localStorage.getItem("an3d-off") || "[]")); } catch { return new Set(); } };
   function exPartsHTML() { const off = exOff();
