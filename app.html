@@ -2344,6 +2344,9 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
   // News: …/moorooka/#explore, The Logan Wire: …/logan/#explore). #explore-logan, #explore-moorooka and #explore-inverloch
   // name the model, from any of the apps. Holds which model: "inv", "moo" or "logan", or "" for none.
   if (document.querySelector('meta[name="an-explore"]')) addEventListener("beforeinstallprompt", e => { e.preventDefault(); window.anInstall = e; });  // Settings > Make it an app
+  // Logan on a phone gets its ground photo at half size, 2048 x 1728 (about 19 MB of graphics memory, not 75): the full one ran
+  // the iPhone out of memory and the page reloaded (Ash, 16 November 2026). logan-model.js ?v=42 reads this.
+  window.anSmallGround = matchMedia("(pointer: coarse)").matches;
   // When the phone reloads the page in the middle of a game (iOS does when a tab runs out of memory), come back to the town you were
   // in, not the one the address names: switching towns doesn't change the address (Ash, 16 November 2026: "Logan just crashed then
   // reload as moorooka"). The town is kept for this tab only, from opening a town until you leave Explore.
@@ -2367,7 +2370,7 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
   if (pendingExplore) setTimeout(() => { try { const cfg = TOWNS[pendingExplore]; if (!cfg) return;
       const hint = (href, as) => { const l = document.createElement("link"); l.rel = "preload"; l.as = as; l.href = href; if (as !== "script") l.crossOrigin = "anonymous"; document.head.appendChild(l); };
       hint("https://cdnjs.cloudflare.com/ajax/libs/three.js/0.152.2/three.min.js", "script"); hint(cfg.src, "script");
-      for (const f of cfg.pre || []) hint(cfg.assets + f, /\.webp$/.test(f) && cfg.place !== "logan" ? "image" : "fetch"); } catch {} }, 0);
+      for (const f of cfg.pre || []) hint(cfg.assets + (f === "ground.webp" && cfg.place === "logan" && window.anSmallGround ? "ground-2k.webp" : f), /\.webp$/.test(f) && cfg.place !== "logan" ? "image" : "fetch"); } catch {} }, 0);
   const hash = pendingStory || pendingTV || pendingExplore ? "" : rawHash;
   const state = {
     tab: hash || store.get("brief.tab3", "foryou"),
@@ -8333,7 +8336,7 @@ const handle = async (m, post) => {
       floodLook: [-27.5375, 153.0115, 1100, 40, 100], floodOf: "this map", noFloodSlider: true,  // Ash: no water level slider ("At the peak") in Moorooka: a flood just rises to its peak
       floodWarn: { council: "Brisbane City Council", short: "BCC", how: "our own computer simulation of rain running over the ground and the creeks rising (and, in big river floods, Oxley Creek backing up), on a 5 m model of the terrain", map: "Brisbane City Council's Flood Awareness Map and FloodWise Property Report" },
       floodNote: "A guide only: our own simulation, from the terrain, the buildings and the Bureau's design rainfall for Moorooka. It includes water running over the ground to the creeks. No council flood mapping is used. For property, insurance or planning decisions, use Brisbane City Council's Flood Awareness Map and FloodWise Property Report." },
-    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=41", assets: TOWN3D + "logan/", place: "logan", lift: [5320, -13743.6, 6320, -12743.6, 0.25], pre: ["map.json", "height.png", "roads.bin", "buildings.bin", "ground.webp", "relief.webp", "lights.webp", "cover.png"], up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
+    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=42", assets: TOWN3D + "logan/", place: "logan", lift: [5320, -13743.6, 6320, -12743.6, 0.25], pre: ["map.json", "height.png", "roads.bin", "buildings.bin", "ground.webp", "relief.webp", "lights.webp", "cover.png"], up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
       start: "council", onFoot: true, noFloodSlider: true, flyTo: { id: "brownsplains", label: "Fly to Browns Plains" }, wait: 90000, ceil: 110000, fast: 600, far: 150000, out: 130000, stride: 0.02, pad: 80000, stand: [0.45, 400], floodLook: [-27.69, 153.17, 12000, 55, -35],
       // the same not-official notice and banner as Moorooka's (Ash, 12 November 2026)
       floodWarn: { council: "Logan City Council", short: "LCC", how: "the 2017 flood as mapped, and the others worked out from river gauge heights and rainfall over a terrain model", map: "Logan City Council's flood maps" } },  // shown small in the bottom right corner the whole time the model is open
