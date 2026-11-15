@@ -1323,7 +1323,7 @@ body.bsdrive:not(.bsplane) .bs-fly-x.bs-car { bottom: calc(68px + env(safe-area-
 .bs-fly-x.bs-hand { top: auto; left: auto; right: 34px; bottom: calc(192px + env(safe-area-inset-bottom)); z-index: 2; touch-action: none; user-select: none; -webkit-user-select: none; }
 .bs-fly-x.bs-hand[hidden] { display: none; }
 /* the golden car's 180: over Boost on a phone, beside it on a desktop (X) */
-.bs-fly-x.bs-flip { top: auto; left: auto; right: 34px; bottom: calc(288px + env(safe-area-inset-bottom)); min-width: 58px; z-index: 2; touch-action: none; user-select: none; -webkit-user-select: none; background: #e8b923; color: #1b1830; }
+.bs-fly-x.bs-flip { top: auto; left: auto; right: 34px; bottom: calc(316px + env(safe-area-inset-bottom)); min-width: 58px; z-index: 2; touch-action: none; user-select: none; -webkit-user-select: none; background: #e8b923; color: #1b1830; }
 .bs-fly-x.bs-flip[hidden] { display: none; }
 @media (hover: hover) and (pointer: fine) { .bs-fly-x.bs-flip { right: auto; left: calc(50% + 190px); bottom: calc(68px + env(safe-area-inset-bottom)); } }
 /* the map-editing pencil: where the handbrake shows in a car, over the Look stick (Ash, 15 November 2026), and away while you drive or fly one */
@@ -1332,7 +1332,9 @@ body.bsdrive:not(.bsplane) .bs-fly-x.bs-car { bottom: calc(68px + env(safe-area-
 .bs-fly-x.bs-edit[hidden], body.bsdrive .bs-fly-x.bs-edit, body.flypeek .bs-fly-x.bs-edit { display: none; }
 .bs-fly-x.bs-edit[aria-pressed="true"] { background: #fff; color: #1b1830; }
 .bs-fly-x.bs-hand.on { background: #fff; color: #1b1830; }
-body.bsdrive:not(.bsplane) .bs-fly-x.bs-boost { bottom: calc(240px + env(safe-area-inset-bottom)); }
+body.bsdrive:not(.bsplane) .bs-fly-x.bs-boost { bottom: calc(254px + env(safe-area-inset-bottom)); }  /* a little apart, to hit easily (Ash, 15 November 2026) */
+body.bspossum .bs-fly-x.bs-hand { background: #ffd166; color: #1b1830; min-width: 84px; }  /* the possum's Boost, where the handbrake goes; Jump above it */
+body.bspossum .bs-fly-x.bs-hand.on { background: #ff9f1c; }
 /* the possum: Jump where the handbrake goes, over the right stick, plain white (it has no charge) */
 body.bspossum .bs-fly-x.bs-boost { bottom: calc(192px + env(safe-area-inset-bottom)); background: #fff; color: #1b1830; min-width: 84px; }
 body.bspossum .bs-fly-x.bs-boost.on { background: #ffd166; }
@@ -2062,8 +2064,8 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <div class="bs-share" id="bsShareBox" role="group" aria-label="More ways to share" hidden></div>
     <button class="bs-fly-x bs-car" type="button" id="bsCarBtn" data-key="Enter" hidden>Get in the car</button>
     <button class="bs-fly-x bs-boost" type="button" id="bsBoostBtn" data-key="Shift" hidden>Boost</button>
-    <button class="bs-fly-x bs-hand" type="button" id="bsHandBtn" hidden>Handbrake</button>
-    <button class="bs-fly-x bs-flip" type="button" id="bsFlipBtn" aria-label="Spin round (X)" hidden>180</button>
+    <button class="bs-fly-x bs-hand" type="button" id="bsHandBtn" data-key="Space" hidden>Handbrake</button>
+    <button class="bs-fly-x bs-flip" type="button" id="bsFlipBtn" data-key="X" aria-label="Spin round (X)" hidden>180</button>
     <button class="bs-fly-x bs-edit" type="button" id="bsEditBtn" aria-pressed="false" aria-controls="bsAdmin" aria-label="Edit the map" title="Edit the map" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg></button>
     <div class="bs-keys" id="bsKeys" hidden><p class="bs-keys-now" id="bsKeysNow"></p><dl id="bsKeysList"></dl><p class="bs-keys-q">? to hide this list</p></div>
     <button class="bs-fly-x bs-fly-lock" type="button" id="bsFlyLock" hidden>Use this view for the weather</button>
@@ -7860,7 +7862,7 @@ const handle = async (m, post) => {
       const tb = $("bsTimeBtn"), tbox = $("bsFlyTimeBox"); $("bsTimeBtnT").textContent = bsTime(BS.view.ms); tbox.hidden = true; tb.setAttribute("aria-expanded", "false");
       $("bsShareBtn").onclick = exploreShare;
       tb.onclick = () => { tbox.hidden = !tbox.hidden; tb.setAttribute("aria-expanded", String(!tbox.hidden)); };
-      ti.oninput = () => { BS.view.ms = bsMidnight(BS.view.day) + (+ti.value) * 60000; to.textContent = bsTime(BS.view.ms); $("bsTimeBtnT").textContent = to.textContent; bsApply(true); }; }
+      ti.oninput = () => { BS.exTimeSet = true; BS.view.ms = bsMidnight(BS.view.day) + (+ti.value) * 60000; to.textContent = bsTime(BS.view.ms); $("bsTimeBtnT").textContent = to.textContent; bsApply(true); }; }
     const F = BS.fly = { ...start, pos: start.pos.clone(), start, keys: new Set(), stick: { x: 0, y: 0 }, lookStick: { x: 0, y: 0 }, vert: 0, touches: new Map(), drag: null };
     const canvas = $("bsGl"), touch = matchMedia("(pointer: coarse)").matches;
     document.body.classList.add("bsfly"); $("bsFly").hidden = false;
@@ -8200,7 +8202,7 @@ const handle = async (m, post) => {
   // of: "Logan"), floodNote (the line under the list) and floodWarn (show the not-official notice first, and a banner while a flood is on).
   const TOWNS = {
     inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=20", assets: TOWN3D, place: "inv", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
-    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=28", assets: TOWN3D + "moorooka/", place: "moo", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
+    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=29", assets: TOWN3D + "moorooka/", place: "moo", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
       walkStart: { x: -269.8, z: -991.4, yaw: -1.623 },  // Ash's pick for where Moorooka starts: the Beaudesert Road footpath, looking at the house he chose
       // its floods: widest over the Oxley Creek flats along the model's western edge, seen from the east. floodWarn: the not-official notice has to be accepted
       // before the list opens, and a banner says the same while a flood is showing (Ash asked for both).
@@ -8233,7 +8235,7 @@ const handle = async (m, post) => {
       BS.wxWait(); return; }
     openWeather(); if ($("weather").hidden) return;
     BS.invBeach = false; BS.mooAlt = false; BS.exploreOnly = cfg.place; if (BS.B) bsPlace();  // Inverloch's town, not its beach; Moorooka's streets, not its bowls club
-    const T = BS.town = { on: false, model: null, dead: false, keep: !!viaExplore, cfg };
+    const T = BS.town = { on: false, model: null, dead: false, keep: !!viaExplore, cfg }; BS.exTimeSet = false;  // (each town opens at midday)
     exLoadShow(exploreName(cfg.place));
     // the loading screen goes once the town's up, the view has held still for a moment and (where the model can say so, as
     // Logan's does) everything around you is in, so nothing pops in as it lifts (or if it didn't start)
@@ -9010,6 +9012,63 @@ const handle = async (m, post) => {
         for (const C of tops) { blob(C[0] + (C[0] - x) * 0.3, C[1] + h * 0.06, C[2] + (C[2] - z) * 0.3, h * 0.16, h * 0.11, h * 0.16, r, leaf);
           blob((C[0] + x) / 2, C[1] + h * 0.16, (C[2] + z) / 2, h * 0.15, h * 0.1, h * 0.15, r, leaf); }
         blob(x, y + h * 0.9, z, h * 0.17, h * 0.09, h * 0.17, r, leaf); }
+
+      // ---- out the back: the pool and the shed (Ash, 15 November 2026, with two photos: "Add my pool and my shed to 6 Beaudesert rd.
+      // The pool is directly behind the house. The clothes line is no longer there. The shed is left of the pool. From the house
+      // it's on the back left"). Laid out square to the house, from the middle of its back wall: a along, away from the house (east),
+      // w across (+ to the south). Travertine paving out from the house; the pool across the yard, 8.2 by 3.6 m, its south end
+      // rounded off, with a raised spa on the house side at that end; a garden bed of cordylines and gingers behind it, and a black
+      // pool fence round the lot. The shed is outside the fence on the north (left) side: blue weatherboards, white trim, a grey
+      // Colorbond gable, white double doors with little panes at the end facing the house, a window on its pool side, up on stumps
+      // with three blue steps. (The model's clothes hoist and the garden box by the back wall are taken out of its data.)
+      { const k = S.sixHouse, fx = k.b[0] - k.a[0], fz = k.b[1] - k.a[1], fl = Math.hypot(fx, fz), ux = -fz / fl, uz = fx / fl;  // away from the street, square to the front wall
+        const bx = (k.a[0] + k.b[0]) / 2 + ux * k.depth, bz = (k.a[1] + k.b[1]) / 2 + uz * k.depth, lvl = g(bx + ux * 4, bz + uz * 4);
+        const F = (a, y, w) => [bx + ux * a - uz * w, lvl + y, bz + uz * a + ux * w];  // (w: to the right of looking out from the house, the south)
+        const TRAV = "#e4d9c3", COPE = "#ece3d0", WATER = "#2391c9", DEEP = "#1d6fa6", SPA = "#2f7fd4", BLACK = "#24262a";
+        box(F, 0, 8.2, -0.35, 0.06, -4.9, 6.9, TRAV, { ends: false });  // the paving, out to the pool fence
+        // the pool: a coping, then the water just under it; its south end in three steps for the rounded corners
+        box(F, 2.2, 6.2, 0.06, 0.09, -3.8, 4.4, COPE, { ends: false });
+        for (const [a0, a1, w0, w1] of [[2.4, 6.0, -3.6, 3.6], [2.6, 5.8, 3.6, 4.0], [2.9, 5.5, 4.0, 4.2]]) { box(F, a0, a1, 0.08, 0.1, w0, w1, WATER, { ends: false }); }
+        box(F, 2.4, 6.0, 0.08, 0.101, -3.6, -3.3, DEEP, { ends: false }); box(F, 5.7, 6.0, 0.08, 0.101, -3.3, 3.6, DEEP, { ends: false });  // the shade of the far walls
+        // the spa: raised, its wall stepped down into the pool
+        box(F, 0.5, 2.6, 0.06, 0.42, 1.4, 4.4, COPE); box(F, 0.7, 2.4, 0.42, 0.43, 1.6, 4.2, SPA, { ends: false });
+        // the umbrella, furled, on its stand by the pool
+        box(F, 1.6, 2.0, 0.06, 0.18, -0.4, 0, "#8d8f92"); box(F, 1.76, 1.84, 0.18, 2.7, -0.24, -0.16, "#3b3d42"); box(F, 1.6, 2.0, 1.3, 2.9, -0.4, 0, "#5f6374");
+        // the garden bed behind the pool, and its plants
+        box(F, 6.6, 7.9, -0.3, 0.12, -4.7, 6.7, "#5a4433", { ends: false });
+        { const r = seeded(6061); for (let i = 0; i < 11; i++) { const w = -4.2 + i * 1.05 + (r() - 0.5) * 0.4, a = 7.25 + (r() - 0.5) * 0.5, [x, , z] = F(a, 0, w), y = lvl + 0.12, red = i % 3 === 1;
+          blob(x, y + 0.55, z, 0.45, 0.55, 0.45, r, red ? ["#8e2b3c", "#a8344a", "#6f2433"] : ["#5f9a3a", "#86a447", "#4f8a34"]); } }
+        // the pool fence: black, 1.2 m, posts every 2.4 m, rails top and bottom and pickets between
+        { const run = (pa, pb) => { const L = Math.hypot(pb[0] - pa[0], pb[1] - pa[1]), n = Math.round(L / 2.4);
+            const at = (t, y) => F(pa[0] + (pb[0] - pa[0]) * t, y, pa[1] + (pb[1] - pa[1]) * t);
+            for (let i = 0; i <= n; i++) { const t = i / n, c = at(t, 0); box((a, y, w) => [c[0] + ux * a - uz * w, c[1] + y, c[2] + uz * a + ux * w], -0.03, 0.03, -0.3, 1.22, -0.03, 0.03, BLACK); }
+            for (const y of [0.1, 1.15]) { const A = at(0, y), B = at(1, y), d = 0.02; quad([A[0], A[1] - d, A[2]], [B[0], B[1] - d, B[2]], [B[0], B[1] + d, B[2]], [A[0], A[1] + d, A[2]], lin(BLACK)); }
+            const m2 = Math.round(L / 0.11); for (let i = 1; i < m2; i++) { if (i % Math.round(m2 / n) === 0) continue; const t = i / m2, A = at(t, 0.1), B = at(t, 1.15), ex = (pb[0] - pa[0]) / L * 0.008, ez = (pb[1] - pa[1]) / L * 0.008;
+              const P0 = F(pa[0] + (pb[0] - pa[0]) * t - ex, 0.1, pa[1] + (pb[1] - pa[1]) * t - ez), P1 = F(pa[0] + (pb[0] - pa[0]) * t + ex, 0.1, pa[1] + (pb[1] - pa[1]) * t + ez);
+              quad(P0, P1, [P1[0], B[1], P1[2]], [P0[0], A[1] + 1.05, P0[2]], lin(BLACK)); } };
+          run([0.2, -5.0], [8.2, -5.0]); run([8.2, -5.0], [8.2, 7.0]); run([8.2, 7.0], [0.2, 7.0]); }
+        // the shed: 3 m across, 4.2 m long, its doors facing the house
+        { const a0 = 4.4, a1 = 8.6, w0 = -8.05, w1 = -5.2, up = 0.38, eave = 2.45, ridge = 3.25, BLUE = "#2f4ea6", WHITE = "#f2f2ee", ROOF = "#5e6368";
+          for (const [a, w] of [[a0 + 0.2, w0 + 0.2], [a1 - 0.2, w0 + 0.2], [a0 + 0.2, w1 - 0.2], [a1 - 0.2, w1 - 0.2]]) box(F, a - 0.08, a + 0.08, -0.3, up, w - 0.08, w + 0.08, "#d8d4ca");  // stumps
+          box(F, a0, a1, up, up + 0.16, w0, w1, WHITE);  // the white base board
+          box(F, a0, a1, up + 0.16, eave, w0, w1, BLUE, { top: false });
+          for (const a of [a0 + 0.02, a1 - 0.02]) { const c = lin(BLUE), M = (w0 + w1) / 2;  // the gables
+            tri(F(a, eave, w0), F(a, eave, w1), F(a, ridge, M), c); tri(F(a, eave, w1), F(a, eave, w0), F(a, ridge, M), c); }
+          { const c = lin(ROOF), M = (w0 + w1) / 2, o = 0.25;  // the roof, with a little overhang, both faces seen from above and below
+            quad(F(a0 - o, eave - 0.08, w0 - o), F(a1 + o, eave - 0.08, w0 - o), F(a1 + o, ridge + 0.04, M), F(a0 - o, ridge + 0.04, M), c);
+            quad(F(a1 + o, eave - 0.08, w1 + o), F(a0 - o, eave - 0.08, w1 + o), F(a0 - o, ridge + 0.04, M), F(a1 + o, ridge + 0.04, M), c); }
+          for (const w of [w0, w1]) for (const a of [a0, a1]) box(F, a - 0.05, a + 0.05, up, eave, w - 0.05, w + 0.05, WHITE);  // white corner boards
+          box(F, a0 - 0.05, a0 + 0.02, eave - 0.08, eave, w0, w1, WHITE);
+          // the double doors, white with three rows of little panes in each upper half, and a cat flap
+          box(F, a0 - 0.04, a0 + 0.01, up + 0.18, 2.25, -7.45, -6.15, WHITE);
+          for (const [d0, d1] of [[-7.35, -6.85], [-6.75, -6.25]]) for (let r = 0; r < 3; r++) for (let c = 0; c < 2; c++) {
+            const y0 = 1.45 + r * 0.24, ww = (d1 - d0 - 0.08) / 2; box(F, a0 - 0.06, a0 - 0.04, y0, y0 + 0.19, d0 + 0.03 + c * (ww + 0.02), d0 + 0.03 + c * (ww + 0.02) + ww, "#2b3540"); }
+          box(F, a0 - 0.06, a0 - 0.04, up + 0.3, up + 0.52, -7.2, -7.02, "#cfcfcf");
+          // a window on the side facing the pool
+          box(F, 6.5, 7.3, 1.25, 2.05, w1 - 0.01, w1 + 0.04, WHITE); box(F, 6.6, 7.2, 1.35, 1.95, w1 + 0.04, w1 + 0.06, "#2b3540");
+          // three blue steps up to the doors
+          for (let i = 0; i < 3; i++) box(F, a0 - 1.0 + i * 0.32, a0, 0, up * (i + 1) / 3, -7.5, -6.1, BLUE); }
+      }
 
       // ---- the timber bollards along Stimpson Park
       { const k = S.park; for (let z = k.from; z <= k.to; z += 1.65) { if (z > k.gap[0] && z < k.gap[1]) continue;
@@ -10171,8 +10230,8 @@ const handle = async (m, post) => {
       const here = el("p", "", peers.size ? `${peers.size} other player${peers.size === 1 ? " is" : "s are"} in town now.` : room ? "No other players in town right now." : "Looking for other players\u2026");
       sw.onclick = () => { off = !off; try { if (off) localStorage.setItem("an-player-off", "1"); else localStorage.removeItem("an-player-off"); } catch {} if (!off) tell(); lastSent = null; meDraw(); meBox.querySelector(".bs-me-show")?.focus(); toast(off ? "Other players can't see you now." : "Other players can see you.", 2500); };
       // the time of day (it was a button on the top bar)
-      const tm = el("div", "bs-me-sec"), th = el("div", "bs-me-time"), tl = el("label", "bs-me-lbl", "Time of day"), tout = el("output", "", $("bsFlyTimeOut")?.textContent || ""), tr = el("input");
-      tr.type = "range"; tr.id = "bsMeTime"; tl.htmlFor = "bsMeTime"; tr.min = "0"; tr.max = "1439"; tr.step = "5"; tr.value = $("bsFlyTime")?.value || "720";
+      const tm = el("div", "bs-me-sec"), th = el("div", "bs-me-time"), tl = el("label", "bs-me-lbl", "Time of day"), tout = el("output", "", BS.exTimeSet ? $("bsFlyTimeOut")?.textContent || "" : "12:00 pm"), tr = el("input");
+      tr.type = "range"; tr.id = "bsMeTime"; tl.htmlFor = "bsMeTime"; tr.min = "0"; tr.max = "1439"; tr.step = "5"; tr.value = BS.exTimeSet ? $("bsFlyTime")?.value || "720" : "720";
       tr.oninput = () => { const ti = $("bsFlyTime"); if (!ti) return; ti.value = tr.value; ti.dispatchEvent(new Event("input")); tout.textContent = $("bsFlyTimeOut").textContent; };
       th.append(tl, tout); tm.append(th, tr); if (!isAdmin()) tm.hidden = true;  // (admins only: for everyone else it stays midday)
       // make the 3D model an app on the phone's home screen, from its own page (/<suburb>/explore/), which has its own manifest
@@ -10303,7 +10362,10 @@ const handle = async (m, post) => {
     planeTop: [223, "Plane top speed", "km/h", 120, 1500], planeBoostTop: [540, "Plane top speed on boost", "km/h", 150, 3000], planeAccel: [9, "Plane acceleration", "m/s\u00b2", 2, 80], planeLift: [94, "Plane take-off speed", "km/h", 30, 300],
     gold: [20, "Golden car and plane are better by", "%", 0, 400],
     goldTurn: [100, "Golden car turning", "%", 20, 400], goldSlideTurn: [240, "Golden car handbrake spin", "degrees a second", 20, 1440], goldSlideSlow: [5, "Golden car handbrake slows it by", "km/h a second", 0, 100],
-    goldBoostSecs: [5, "Golden car boost lasts", "seconds", 1, 60], goldBoostBack: [5, "Golden car boost refills in", "seconds", 0.5, 120], planeBoost: [0, "Standard plane has a boost", "0 for no, 1 for yes", 0, 1], volume: [100, "Engine volume", "%", 0, 300] };
+    goldBoostSecs: [5, "Golden car boost lasts", "seconds", 1, 60], goldBoostBack: [5, "Golden car boost refills in", "seconds", 0.5, 120], planeBoost: [0, "Standard plane has a boost", "0 for no, 1 for yes", 0, 1],
+    // the possum (Ash, 15 November 2026: "Add into settings the ability to customise the possum. Slow it down by 25% but add back
+    // boost"): 71 km/h is a quarter under the 95 it was
+    possumTop: [71, "Possum top speed", "km/h", 10, 300], possumBoost: [60, "Possum boost adds", "%", 0, 400], possumJump: [11.1, "Possum jump", "m/s upwards", 2, 40], possumClimb: [12, "Possum climbing speed", "m/s", 2, 60], volume: [100, "Engine volume", "%", 0, 300] };
   function rideSettings() { let o = {}; try { o = JSON.parse(localStorage.getItem("an3d-rides") || "{}") || {}; } catch {}
     const r = {}; for (const k in RIDE_DEF) { const [d, , , lo, hi] = RIDE_DEF[k], v = o[k] == null || o[k] === "" ? NaN : +o[k]; r[k] = Number.isFinite(v) ? bsClamp(v, lo, hi) : d; } return r; }
   function townSound() {
@@ -10693,8 +10755,8 @@ const handle = async (m, post) => {
     const KEYS = { plane: [[["W", "S"], "Power up, power down (S backs up on the ground)"], [["A", "D"], "Turn (\u2190 and \u2192 too)"], [["\u2193"], "Nose up, to climb"], [["\u2191"], "Nose down, to come down"], [["Shift"], "Boost"], [["Drag"], "Look around"], [["Enter"], "Get out, once you have landed"]],
       car: [[["W", "S"], "Go, and brake or reverse (\u2191 and \u2193 too)"], [["A", "D"], "Steer (\u2190 and \u2192 too)"], [["Space"], "Handbrake: swings the tail round"], [["Shift"], "Mega boost"], [["Drag"], "Look around"], [["Enter"], "Get out"]] };
     KEYS.heli = [[["W", "S"], "Forward, back"], [["A", "D"], "Turn (\u2190 and \u2192 too)"], [["\u2193"], "Up (Space too)"], [["\u2191"], "Down (C too)"], [["Drag"], "Look around"], [["Enter"], "Get out, once you have landed"]];
-    KEYS.bus = KEYS.car;
-    KEYS.possum = [[["W", "A", "S", "D"], "Run that way, from where you're looking (the arrows too)"], [["W"], "Into a street light or a wall: climb it"], [["S"], "On a wall: let go"], [["Space"], "Jump (off a wall too)"], [["Drag"], "Look around"], [["Enter"], "Hop out"]];
+    KEYS.bus = KEYS.car; KEYS.gold = [...KEYS.car.slice(0, 4), [["X"], "180: hop and spin round, still going"], ...KEYS.car.slice(4)];
+    KEYS.possum = [[["W", "A", "S", "D"], "Run that way, from where you're looking (the arrows too)"], [["W"], "Into a street light or a wall: climb it"], [["S"], "On a wall: let go"], [["Space"], "Jump (off a wall too)"], [["Shift"], "Boost"], [["Drag"], "Look around"], [["Enter"], "Hop out"]];
     const hint = text => { if (keysNow.textContent !== text) { keysNow.textContent = text; if (touch) keysBox.hidden = !text; } };
     const keysOff = off => { keysBox.classList.toggle("off", off); keysQ.textContent = off ? "? to show the controls" : "? to hide this list"; };
     const showKeys = kind => { keysNow.textContent = ""; keysOff(false); keysBox.hidden = !kind || touch;  // (on a phone it shows once there is something to say)
@@ -10805,7 +10867,7 @@ const handle = async (m, post) => {
         snd.set(0.18 + 0.82 * bsClamp((a - G[g]) / (top - G[g]), 0, 1), Math.abs(thr) > 0.05 && !brake ? 0.35 + 0.65 * Math.abs(thr) : 0.08, a, boosting, slide ? 1 : Math.min(1, Math.abs(wrap(car.h - car.dir)) * 2.5));
         showRing(boosting || charge < 0.999, boosting);
         o = car; D = (car.bus ? 15 : 7.5) + Math.min(5, a / 9); text = Math.round(a * 3.6) + " km/h";
-      } else if (veh === "possum") { const P = pos, top = 11 * 3 * 0.8, jump = has("Space") || !!F.boost, drop = has("KeyC");  // walking is 11 m/s: three times that, less a fifth (Ash, 15 November 2026: "speed down by 20%"); no boost, the button is Jump
+      } else if (veh === "possum") { const P = pos, run = has("ShiftLeft", "ShiftRight") || !!F.hand, top = R.possumTop / 3.6 * (run ? 1 + R.possumBoost / 100 : 1), jump = has("Space") || !!F.boost, drop = has("KeyC");  // (Boost: the button over Jump, or Shift)  // walking is 11 m/s: three times that, less a fifth (Ash, 15 November 2026: "speed down by 20%"); no boost, the button is Jump
         P.t += dt;
         // holding on to another player's plane or helicopter (Ash, 15 November 2026: "when a player is in the possum and a player is in
         // the plane that the possum can hold onto the plane"): it rides on top where it grabbed, until Jump springs it off
@@ -10816,7 +10878,7 @@ const handle = async (m, post) => {
           if (jump && !P.jumped) { P.cling = null; P.mode = "air"; P.vy = 8; T.peers?.ride?.(CL.id, false); toast("You've let go.", 1800); } }
         else if (P.mode === "climb") { const W = P.wall; P.v = 0;
           if (thr < -0.1 || drop || (jump && !P.jumped)) { P.mode = "air"; P.vy = jump ? 6 : 0; P.h += Math.PI; P.wall = null; }  // lets go (stick back, or Jump to spring off), turning round as it drops
-          else if (thr > 0.1 || jump) { P.y += 12 * dt * Math.max(thr, jump ? 1 : 0);
+          else if (thr > 0.1 || jump) { P.y += R.possumClimb * dt * Math.max(thr, jump ? 1 : 0);
             if (P.y >= W.top - 0.05) { P.mode = "ground"; P.wall = null;  // over the top: on to the light, or a step on to the roof
               if (W.pole) { P.x = W.pole.x; P.z = W.pole.z; P.sit = true; } else { P.x += Math.sin(P.h) * 0.7; P.z += Math.cos(P.h) * 0.7; }
               P.y = surf(P.x, P.z); } } }
@@ -10839,11 +10901,11 @@ const handle = async (m, post) => {
             if (P.mode === "ground" && s < P.y - 0.6) { P.mode = "air"; P.vy = 0; } }  // off the edge of a roof or the top of a light: it drops
           if (P.mode === "air") { P.vy -= 22 * dt; P.y += P.vy * dt; const s = surf(P.x, P.z);
             if (P.y <= s) { if (P.vy < -9) snd.thud(Math.min(1.2, -P.vy / 18)); P.y = s; P.vy = 0; P.mode = "ground"; } }
-          else if (P.mode === "ground") { P.y += (surf(P.x, P.z) - P.y) * Math.min(1, dt * 20); if (jump && !P.jumped) { P.mode = "air"; P.vy = 11.1; } } }  // two and a half times as high as it was (Ash, 15 November 2026)
+          else if (P.mode === "ground") { P.y += (surf(P.x, P.z) - P.y) * Math.min(1, dt * 20); if (jump && !P.jumped) { P.mode = "air"; P.vy = R.possumJump; } } }  // two and a half times as high as it was (Ash, 15 November 2026)
         // its sounds: a patter of feet as it runs, claws as it climbs, a squeak as it jumps
         P.pat = (P.pat || 0) + (P.mode === "ground" ? Math.abs(P.v) * dt / 0.55 : P.mode === "climb" ? Math.abs(P.y - (P.lastY ?? P.y)) / 0.3 : 0); P.lastY = P.y;
         if (P.pat >= 1) { P.pat %= 1; if (P.mode === "climb") snd.scratch(); else snd.step(0.6 + Math.random() * 0.5); }
-        if (jump && !P.jumped && P.mode === "air" && P.vy > 10) snd.squeak();
+        if (jump && !P.jumped && P.mode === "air" && P.vy > R.possumJump - 1) snd.squeak();
         P.jumped = jump;  // (one jump a press)
         // touching a plane or helicopter someone's flying (running into it, or landing on it): it grabs on
         if (!P.cling && P.mode !== "climb") for (const q of T.peers?.list?.() || []) { if (!CLING[q.k]) continue;
@@ -10950,9 +11012,9 @@ const handle = async (m, post) => {
         veh = "car"; camYaw = car.h + Math.PI; document.body.classList.add("bsdrive"); showRing(charge < 0.999); }
       C.in = true; off = [wrap(F.yaw - camYaw), bsClamp(F.pitch + 0.2, -1, 0.55)]; idle = 0; last = [F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch];
       F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.vert = 0; F.boost = false; F.keys.clear(); F.drive = tick;
-      btn.textContent = veh === "possum" ? "Hop out" : "Get out"; btn.hidden = false; handBtn.hidden = veh !== "car"; flipBtn.hidden = !(veh === "car" && car?.gold); boostBtn.hidden = veh === "ride" || (veh === "plane" && !canBoost(plane));
-      boostBtn.textContent = veh === "possum" ? "Jump" : "Boost";
-      if (veh === "ride") { if (RIDE_UP[ride.k] > 1) snd.door(); } else if (veh !== "possum") { snd.door(); snd.start(veh === "plane" && plane.heli ? "heli" : veh); } showKeys(veh === "plane" && plane.heli ? "heli" : veh === "ride" ? null : veh);
+      btn.textContent = veh === "possum" ? "Hop out" : "Get out"; btn.hidden = false; handBtn.hidden = veh !== "car" && veh !== "possum"; handBtn.textContent = veh === "possum" ? "Boost" : "Handbrake"; handBtn.dataset.key = veh === "possum" ? "Shift" : "Space"; flipBtn.hidden = !(veh === "car" && car?.gold); boostBtn.hidden = veh === "ride" || (veh === "plane" && !canBoost(plane));
+      boostBtn.textContent = veh === "possum" ? "Jump" : "Boost"; boostBtn.dataset.key = veh === "possum" ? "Space" : "Shift";
+      if (veh === "ride") { if (RIDE_UP[ride.k] > 1) snd.door(); } else if (veh !== "possum") { snd.door(); snd.start(veh === "plane" && plane.heli ? "heli" : veh); } showKeys(veh === "plane" && plane.heli ? "heli" : veh === "ride" ? null : veh === "car" && car.gold ? "gold" : veh);
       // on a phone, a word about the sticks (on a desktop the list of keys has just come up, bottom left)
       if (touch && veh !== "ride" && !(veh === "possum" && roofsIn)) toast(veh === "possum" ? "You're the possum. Push the left stick the way to run. Run at a street light or a wall to climb it, pull back to let go. Jump springs up." : veh === "plane" && plane.heli ? "Hold Up to lift off. Left stick: forward to go, sideways to turn. Down lands it." : veh === "plane" ? "Left stick: forward for power, sideways to turn. Climb lifts the nose once you are fast." : "Left stick to drive, right stick to look around. Hold Boost for the mega boost.", 5500);
       return true; };
@@ -10967,7 +11029,7 @@ const handle = async (m, post) => {
     const hold = on => e => { F.boost = on && !!veh; boostBtn.classList.toggle("on", F.boost); e.preventDefault(); };
     const press = { pointerdown: hold(true), pointerup: hold(false), pointercancel: hold(false), pointerleave: hold(false), contextmenu: e => e.preventDefault() };
     Object.entries(press).forEach(([k, f]) => boostBtn.addEventListener(k, f));
-    const handBtn = $("bsHandBtn"), pull = on => e => { F.hand = on && veh === "car"; handBtn.classList.toggle("on", !!F.hand); e.preventDefault(); };
+    const handBtn = $("bsHandBtn"), pull = on => e => { F.hand = on && (veh === "car" || veh === "possum"); handBtn.classList.toggle("on", !!F.hand); e.preventDefault(); };
     const handPress = { pointerdown: pull(true), pointerup: pull(false), pointercancel: pull(false), pointerleave: pull(false), contextmenu: e => e.preventDefault() };
     Object.entries(handPress).forEach(([k, f]) => handBtn.addEventListener(k, f));
     const flipBtn = $("bsFlipBtn"), flipPress = e => { e.preventDefault(); if (veh === "car" && car?.gold) F.flip = true; }; flipBtn.addEventListener("pointerdown", flipPress);
@@ -11074,7 +11136,10 @@ const handle = async (m, post) => {
       F.pos.set(L(w.a.x, w.b.x), L(w.a.y, w.b.y) + (w.arc || 0) * Math.sin(Math.PI * e), L(w.a.z, w.b.z)); F.yaw = w.a.yaw + Math.atan2(Math.sin(dy), Math.cos(dy)) * e; F.pitch = L(w.a.pitch, w.b.pitch);
       if (k >= 1) T.tween = null; }
     m.setCamera(F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch);
-    m.setMinutes(bsMins(BS.view.ms));
+    // midday in every town, whatever the weather view's clock is doing, until an admin moves the time in Settings (Ash, 15 November
+    // 2026: "Logan was nighttime, keep it daytime unless as an admin it's changed": opening another town from Settings, or a clock
+    // that carried on underneath, could give the real time of day)
+    m.setMinutes(BS.exTimeSet ? bsMins(BS.view.ms) : 12 * 60);
     T.streets?.update();
     T.car?.frame(); T.me?.frame(); T.peers?.frame();  // (the worker view sets the camera first, so names and bubbles are placed from where you really look) T.traffic?.frame(); T.critter?.frame(); T.no6?.frame(); T.home6?.frame();
     // flying: held down at the lowest you can fly (Down, or C) for a moment, and you are on foot there
@@ -11715,9 +11780,13 @@ const handle = async (m, post) => {
   // On this device only; a model reads them when it opens.
   function exAshSecs(redraw) {
     const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
-    const cars = el("div", "bs-me-sec"), r = rideSettings(); cars.append(el("span", "bs-me-lbl", "Cars and planes (just you)"));
+    const cars = el("div", "bs-me-sec"), r = rideSettings(); cars.append(el("span", "bs-me-lbl", "Cars, planes and the possum (just you)"));
     for (const [k, [d, name, unit, lo, hi]] of Object.entries(RIDE_DEF)) { const row = el("label", "bs-me-num"), t = el("span", "", name), inp = el("input");
       t.append(el("small", "", `${unit.split(".")[0]}, usually ${d}`)); inp.type = "number"; inp.inputMode = "decimal"; inp.min = lo; inp.max = hi; inp.step = "any"; inp.value = r[k];
+      // kept as you type (Ash, 15 November 2026: "if I reload the app they are lost": the change only came on leaving the box, and
+      // closing Settings straight after a change could lose it); the box itself is tidied when you leave it
+      inp.oninput = () => { const v = inp.value.trim() === "" ? NaN : +inp.value; if (!Number.isFinite(v)) return; let o = {}; try { o = JSON.parse(localStorage.getItem("an3d-rides") || "{}") || {}; } catch {}
+        o[k] = bsClamp(v, lo, hi); try { localStorage.setItem("an3d-rides", JSON.stringify(o)); } catch {} BS.town?.car?.reread?.(); };
       inp.onchange = () => { let o = {}; try { o = JSON.parse(localStorage.getItem("an3d-rides") || "{}") || {}; } catch {}
         const v = inp.value.trim() === "" ? NaN : +inp.value; if (Number.isFinite(v)) o[k] = bsClamp(v, lo, hi); else delete o[k];
         try { localStorage.setItem("an3d-rides", JSON.stringify(o)); } catch {} inp.value = rideSettings()[k]; BS.town?.car?.reread?.();
