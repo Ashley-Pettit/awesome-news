@@ -1418,3 +1418,16 @@ its usual one (Logan's places run out to Jimboomba).
   settings"): a click on the view gives the mouse to the view, flying too; Get in and Get out and Boost are not shown (Enter and
   Shift); on foot the controls list says what each key does; ? hides every button (camera mode) and ? or Esc brings them back.
   Emote stays.
+
+## Democracy like the photo, Mayor Jon Raven, and Moorooka's houses without the stairs (15 November 2026)
+
+- **Democracy** (Ash, with a photo: "Make the democracy ball a bit more like this photo"): the ballot boxes are now mostly blue
+  and cream with some red and orange (no purple, green or yellow), in neat rows with dark gaps between, on a low base so the ball
+  sits on the grass (`logan-model.js`, `?v=38`, patched: the colours and jitter in the ball's builder `M_`).
+- **Mayor Jon Raven** (Ash: "Add a person mayor raven near the democracy ball"): a figure in a dark suit beside the ball, on the
+  side you look at it from, who turns to you as you walk up, with "Mayor Jon Raven" over him within 80 m (`townMayor`).
+- **Moorooka's houses** (Ash: "The stairs in moorooka are often quite silly instead try to make the houses more like the real
+  houses without using too much memory or creating lag"): no stairs, landings or posts. A high-set house has no front door up on
+  its floor; a low-set one keeps its door, step and small roof. Every house window has a hood in the roof's colour over its white
+  frame, as Moorooka's older houses do (`moorooka-model.js`, `?v=32`). On foot in Bohain Street, sharpest setting: 1,849,106
+  triangles before any of this, 1,960,030 with the stairs, 1,905,010 now (+3%).
