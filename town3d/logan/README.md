@@ -60,6 +60,11 @@ Wembley Road is in detail:
 - **Democracy**, Barry Fitzpatrick's sculpture of old ballot boxes on the lawn beside Democracy Way (named after
   it): a ball of many colours, about 3.5 m across, that glows red at night. "Democracy (the ballot box ball)" in
   Jump to. Its spot and size are from the aerial view; how its boxes are laid and coloured is drawn to look right.
+- **Joined up** (from the map's own shapes, not imagery): paths that stopped short run on to the nearest crossing,
+  footpath, path or car park; crossings that landed on grass have a path to the nearest footpath; car parks no road
+  reached have a driveway, with the footpath carried across; thin bare strips beside the paths are grassed.
+- **The bays along the west wing:** a row nose-in against its wall off the road south of the west roundabout, the
+  road widened on its far side where they take some of it.
 - The railway and its wiring, and the named schools, parks and streets.
 
 A block of **Browns Plains** is in the same detail: about 100 m from Ammons Street down Sutton and Coyle courts to
