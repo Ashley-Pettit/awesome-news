@@ -1605,3 +1605,15 @@ change my hairdo", Venky out the back of 10 Beaudesert Road ("Fix up this house"
   `band`, `pole`, `rails`, `kerbPaint`.
 - Logan's sliding doors stood at the building's average floor height, which was below the paving at the door ("in the dirt"); they
   now stand on the precinct's ground at the door.
+
+## Lighter first load into Explore (16 November 2026)
+
+From the size report Ash asked for:
+
+- **Logan's files were downloaded twice.** The page preloaded them without the `?v=19` Logan's model puts on each file, so the browser
+  fetched both addresses (about 9 MB extra). The preload now uses the same address (`assetV` in `TOWNS.logan`; keep it equal to `B_` in
+  `logan-model.js`), the photos preload as images, and the council doors read `map.json` from that address too.
+- **A link straight into Explore no longer loads the news first.** `/<suburb>/explore/` and `#explore` links open the model as soon as
+  `status.json` is in, and the news (feeds, Emma's audio list and the stories kept offline: about 2 MB) loads once you leave Explore.
+  Changing towns from the menu doesn't count as leaving.
+- Still to do: smaller ground photos for phones (the 4096-pixel ground textures are the most likely cause of lag there).
