@@ -1017,3 +1017,9 @@ the drive in front of the stairs is taken out (`edits.json`). The first round's 
   the iPhone cancelling fingers).
 - For Ash, the "phone took your finger off" message also covers Boost and the Handbrake, and lists what on the controls or the
   page's classes changed in the 1.5 s before (a `MutationObserver` on `#bsFly` and `body`).
+- **Traffic cut to three cars**, on main roads only (classes 0 to 2, or 3 where a town has few), and a car more than 450 m
+  from you is hidden and does no work until you come back (Ash, 15 November 2026: "less cars. They cause lag and often look silly").
+- Speed: a profile of Moorooka while walking (headless) put the page's own scripts under 2% of the time; nearly all of it is
+  drawing. Each object the app adds (cars, planes, the helicopter, the bus, players, the animal) is its own mesh with a
+  `MeshStandardMaterial` that casts a shadow (`modelScene.addParts`), so the next real gain is in the model: cheaper materials
+  and no shadows for small added objects, or merging them.
