@@ -9928,7 +9928,7 @@ const handle = async (m, post) => {
     // a button on the right edge opens the player's name, the colour of their top, and whether others see them. A change goes
     // to everyone at once. Hidden, this device says nothing of where it is (and does not join at all if it opens that way).
     const meBtn = $("bsMeBtn"), meBox = $("bsMe"), myColour = () => { let c = NaN; try { c = parseInt(localStorage.getItem("an-player-colour"), 10); } catch {} return c >= 0 && c < TOPS.length ? c : -1; };
-    const tell = id => { try { sendName?.([playerName(), myColour()], id); } catch {} };
+    const tell = id => { if (off) return; try { sendName?.([playerName(), myColour()], id); } catch {} };  // hidden: your name isn't sent either
     const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
     const meClose = () => { meBox.hidden = true; meBtn.setAttribute("aria-expanded", "false"); };
     const meDraw = () => { meBox.replaceChildren();
@@ -9953,7 +9953,8 @@ const handle = async (m, post) => {
         : "Help us build and shape this model! Your edits are sent to the town planner who can permanently update this model."));
       // whether other players see you
       const sw = el("button", "bs-me-show"); sw.type = "button"; sw.setAttribute("role", "switch"); sw.setAttribute("aria-checked", String(!off)); sw.append(el("span", "", "Other players can see me"), el("i"));
-      sw.onclick = () => { off = !off; try { if (off) localStorage.setItem("an-player-off", "1"); else localStorage.removeItem("an-player-off"); } catch {} if (!off && !room && !joining) join(0); lastSent = null; meDraw(); meBox.querySelector(".bs-me-show")?.focus(); toast(off ? "Other players can't see you now." : "Other players can see you.", 2500); };
+      const here = el("p", "", peers.size ? `${peers.size} other player${peers.size === 1 ? " is" : "s are"} in town now.` : room ? "No other players in town right now." : "Looking for other players\u2026");
+      sw.onclick = () => { off = !off; try { if (off) localStorage.setItem("an-player-off", "1"); else localStorage.removeItem("an-player-off"); } catch {} if (!off) tell(); lastSent = null; meDraw(); meBox.querySelector(".bs-me-show")?.focus(); toast(off ? "Other players can't see you now." : "Other players can see you.", 2500); };
       // the time of day (it was a button on the top bar)
       const tm = el("div", "bs-me-sec"), th = el("div", "bs-me-time"), tl = el("label", "bs-me-lbl", "Time of day"), tout = el("output", "", $("bsFlyTimeOut")?.textContent || ""), tr = el("input");
       tr.type = "range"; tr.id = "bsMeTime"; tl.htmlFor = "bsMeTime"; tr.min = "0"; tr.max = "1439"; tr.step = "5"; tr.value = $("bsFlyTime")?.value || "720";
@@ -9988,7 +9989,7 @@ const handle = async (m, post) => {
         if (!onEx) { const a = el("a", "bs-me-go", "Open the 3D model's page"); a.href = url; app.append(a); }
         app.append(after); }
       const hi = el("div", "bs-me-h"), ho = el("span", "", F.hText || ""); ho.id = "bsMeH"; hi.append(el("span", "", "Height above the ground"), ho);
-      meBox.append(head, you, as, sw, tm, app, ...(isAsh() ? exAshSecs(meDraw) : []), hi); };  // no Exit explore (Ash, 15 November 2026: "Remove exit explore"); Esc, or the browser's back, still leaves
+      meBox.append(head, you, as, sw, here, tm, app, ...(isAsh() ? exAshSecs(meDraw) : []), hi); };  // no Exit explore (Ash, 15 November 2026: "Remove exit explore"); Esc, or the browser's back, still leaves
     // closes with its \u00d7, the gear again, or a tap anywhere else
     const meOut = e => { if (!meBox.hidden && !meBox.contains(e.target) && !meBtn.contains(e.target)) meClose(); }; document.addEventListener("pointerdown", meOut, true);
     document.body.classList.add("bsme"); meBtn.hidden = false; meBtn.onclick = () => { meBox.hidden = !meBox.hidden; meBtn.setAttribute("aria-expanded", String(!meBox.hidden)); if (!meBox.hidden) meDraw(); meBtn.blur(); };
@@ -9999,10 +10000,15 @@ const handle = async (m, post) => {
         const [sp, gp] = room.makeAction("pose"), [sn, gn] = room.makeAction("name"), [se, ge] = room.makeAction("emote"); sendPose = sp; sendName = sn; sendEmote = se; gp(got); gn(named); ge(emoted);
         room.onPeerJoin(id => { try { tell(id); if (lastSent) sendPose(lastSent, id); } catch {} }); room.onPeerLeave(drop);
       } catch (e) { console.warn("Town model: other players couldn't connect", e); } }, wait); };
-    if (!off) join(2500);
+    // always in the room, so you see the others even while they can't see you (Ash, 15 November 2026: "I can't see the person
+    // I'm next to": with "Other players can see me" off you used to see no one either); hidden, you send no name and no place
+    join(2500);
     // what I am doing now, as seven small numbers
     const mine = () => { const v = T.car?.in && !off ? T.car.pose?.() : null; if (v) return [v.x, v.y, v.z, v.h, v.k, v.p, v.r];
-      return T.walk && !off ? [F.pos.x, ground(F.pos.x, F.pos.z), F.pos.z, F.yaw + Math.PI, townRole() === "builder" ? "builder" : "walk", 0, 0] : [0, 0, 0, 0, "none", 0, 0]; };
+      if (off) return [0, 0, 0, 0, "none", 0, 0];
+      if (T.walk) return [F.pos.x, ground(F.pos.x, F.pos.z), F.pos.z, F.yaw + Math.PI, townRole() === "builder" ? "builder" : "walk", 0, 0];
+      // flying low (under 60 m), others see you up there where your eyes are, rather than not at all
+      const gy = ground(F.pos.x, F.pos.z); return F.pos.y - gy < 60 ? [F.pos.x, F.pos.y - 1.6, F.pos.z, F.yaw + Math.PI, "walk", 0, 0] : [0, 0, 0, 0, "none", 0, 0]; };
     // the Emote button: while you walk, when another player is about, or for Ash (Ash, 15 November 2026: "hide them unless name is ash or another player is near")
     P.frame = () => { const now = performance.now();
       if (sendPose && now - tick > 200) { tick = now; const a = mine().map(v => typeof v === "number" ? Math.round(v * 100) / 100 : v);
@@ -10098,27 +10104,34 @@ const handle = async (m, post) => {
     const P = { frame() {}, dispose() {} }; if (!m.addParts || !m.groundAt) return P;
     const THREE = BS.B.THREE, g = (x, z) => m.groundAt(x, z), M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), ONE = new THREE.Vector3(1, 1, 1), R = new THREE.Matrix4();
     const FAR = new THREE.Matrix4().makeTranslation(0, -1e5, 0).elements, SH = [new THREE.Matrix4().makeTranslation(-0.25, 1.36, 0), new THREE.Matrix4().makeTranslation(0.25, 1.36, 0)], TAIL = new THREE.Matrix4().makeTranslation(0, 0.33, -0.19);
-    const ME = { x: -252.4, z: -993.6, yaw: -Math.PI / 2 }, LAWN = { x: -252.6, z: -997.2, r: 1.7 };  // on the lawn beside the drive, facing the street (west)
-    const pp = m.addParts(townPlaneParts("#3f7f8c", "ash").map(q => ({ ...q, matrix: FAR.slice() })));
-    const ap = m.addParts(townPlaneParts("#e2b47c", "arlo").map(q => ({ ...q, matrix: FAR.slice() })));
     const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
-    let shown = false, last = performance.now(), look = ME.yaw, waveT = -1, waved = false, t = 0;
+    // who: on the front path at 6, facing the street (west); on the front lawn at 24 (Ash, 15 November 2026: "add pandy, female,
+    // 50 long brown hair, outside 24 Beaudesert rd"), 3.5 m in from the front boundary (lot 2 RP59613), facing the street
+    const folk = [{ kind: "ash", top: "#3f7f8c", x: -252.4, z: -993.6, yaw: -Math.PI / 2 }, { kind: "pandy", top: "#9b4f6b", x: -284.3, z: -907.0, yaw: -1.725 }].map(q => ({ ...q,
+      parts: m.addParts(townPlaneParts(q.top, q.kind).map(p => ({ ...p, matrix: FAR.slice() }))), look: q.yaw, waveT: -1, waved: false, shown: false }));
+    const LAWN = { x: -252.6, z: -997.2, r: 1.7 };  // Arlo's bit of number 6's front lawn
+    const ap = m.addParts(townPlaneParts("#e2b47c", "arlo").map(q => ({ ...q, matrix: FAR.slice() })));
+    let dogShown = false, last = performance.now(), t = 0;
     const dog = { x: LAWN.x + LAWN.r, z: LAWN.z, h: 0, to: null, rest: 1.5, wag: 0 };
-    const drawMe = arm => { M.compose(V.set(ME.x, g(ME.x, ME.z), ME.z), Q.setFromEuler(E.set(0, look, 0, "YXZ")), ONE); pp.setMatrix(0, M.elements.slice());
-      pp.setMatrix(1, M.clone().multiply(SH[0]).multiply(R.makeRotationZ(-arm)).elements); pp.setMatrix(2, M.clone().multiply(SH[1]).multiply(R.makeRotationZ(0.06)).elements); };
+    const draw = (q, arm) => { M.compose(V.set(q.x, g(q.x, q.z), q.z), Q.setFromEuler(E.set(0, q.look, 0, "YXZ")), ONE); q.parts.setMatrix(0, M.elements.slice());
+      q.parts.setMatrix(1, M.clone().multiply(SH[0]).multiply(R.makeRotationZ(-arm)).elements); q.parts.setMatrix(2, M.clone().multiply(SH[1]).multiply(R.makeRotationZ(0.06)).elements); };
     const drawDog = wag => { M.compose(V.set(dog.x, g(dog.x, dog.z), dog.z), Q.setFromEuler(E.set(0, dog.h, 0, "YXZ")), ONE); ap.setMatrix(0, M.elements.slice());
       ap.setMatrix(1, M.clone().multiply(TAIL).multiply(R.makeRotationX(-0.5)).multiply(new THREE.Matrix4().makeRotationZ(wag)).elements); };
     P.frame = () => { const now = performance.now(), dt = Math.min(0.1, (now - last) / 1000); last = now; t += dt; const F = BS.fly; if (!F) return;
-      const dx = F.pos.x - ME.x, dz = F.pos.z - ME.z, d = Math.hypot(dx, dz), up = F.pos.y - g(F.pos.x, F.pos.z);
-      if (d > 260 || up > 220) { if (shown) { for (let i = 0; i < 3; i++) pp.setMatrix(i, FAR.slice()); for (let i = 0; i < 2; i++) ap.setMatrix(i, FAR.slice()); shown = false; } return; }
-      let me = !shown, pet = !shown; shown = true;
-      // Ash: turns to you as you come up the drive (within 14 m, on foot), and waves the first time
-      const want = d < 14 && T.walk ? Math.atan2(dx, dz) : ME.yaw, turn = wrap(want - look);
-      if (Math.abs(turn) > 0.01) { look += turn * Math.min(1, dt * 3); me = true; }
-      if (d < 12 && T.walk && !waved) { waved = true; waveT = 0; } else if (d > 25) waved = false;
-      let arm = 0.06; if (waveT >= 0) { waveT += dt; const k = Math.min(1, waveT * 4, (2.4 - waveT) * 4); arm = 0.06 + k * (2.5 + 0.35 * Math.sin(waveT * 11)); me = true; if (waveT > 2.4) waveT = -1; }
-      if (me) drawMe(arm);
+      const up = F.pos.y - g(F.pos.x, F.pos.z);
+      for (const q of folk) { const dx = F.pos.x - q.x, dz = F.pos.z - q.z, d = Math.hypot(dx, dz);
+        if (d > 260 || up > 220) { if (q.shown) { for (let i = 0; i < 3; i++) q.parts.setMatrix(i, FAR.slice()); q.shown = false; } continue; }
+        let me = !q.shown; q.shown = true;
+        // turns to you as you come up (within 14 m, on foot), and waves the first time
+        const want = d < 14 && T.walk ? Math.atan2(dx, dz) : q.yaw, turn = wrap(want - q.look);
+        if (Math.abs(turn) > 0.01) { q.look += turn * Math.min(1, dt * 3); me = true; }
+        if (d < 12 && T.walk && !q.waved) { q.waved = true; q.waveT = 0; } else if (d > 25) q.waved = false;
+        let arm = 0.06; if (q.waveT >= 0) { q.waveT += dt; const k = Math.min(1, q.waveT * 4, (2.4 - q.waveT) * 4); arm = 0.06 + k * (2.5 + 0.35 * Math.sin(q.waveT * 11)); me = true; if (q.waveT > 2.4) q.waveT = -1; }
+        if (me) draw(q, arm); }
       // Arlo: a few steps across the lawn, a sniff, then off again (only moved while he moves); his tail goes when you're near
+      const d = Math.hypot(F.pos.x - dog.x, F.pos.z - dog.z);
+      if (d > 260 || up > 220) { if (dogShown) { for (let i = 0; i < 2; i++) ap.setMatrix(i, FAR.slice()); dogShown = false; } return; }
+      let pet = !dogShown; dogShown = true;
       if (dog.to) { const ex = dog.to[0] - dog.x, ez = dog.to[1] - dog.z, L = Math.hypot(ex, ez), st = Math.min(L, 0.9 * dt);
         const hw = wrap(Math.atan2(ex, ez) - dog.h); dog.h += hw * Math.min(1, dt * 8); dog.x += ex / (L || 1) * st; dog.z += ez / (L || 1) * st; pet = true;
         if (L < 0.05) { dog.to = null; dog.rest = 2 + Math.random() * 5; } }
@@ -10126,7 +10139,7 @@ const handle = async (m, post) => {
       else if (d < 7 && T.walk) { const hw = wrap(Math.atan2(F.pos.x - dog.x, F.pos.z - dog.z) - dog.h); if (Math.abs(hw) > 0.02) { dog.h += hw * Math.min(1, dt * 4); pet = true; } }
       const wag = d < 9 ? 0.5 * Math.sin(t * 16) : 0; if (wag || dog.wag) pet = true; dog.wag = wag;
       if (pet) drawDog(wag); };
-    P.dispose = () => { try { pp.remove(); } catch {} try { ap.remove(); } catch {} };
+    P.dispose = () => { for (const q of folk) try { q.parts.remove(); } catch {} try { ap.remove(); } catch {} };
     return P;
   }
   function townPlaneParts(stripe = "#1f6fb2", car = false) {
@@ -10152,15 +10165,21 @@ const handle = async (m, post) => {
         R[j].push([cx + Math.sin(ph) * Math.sin(th) * rx * k, cy + Math.cos(ph) * ry * k, cz + Math.sin(ph) * Math.cos(th) * rz * k]); } }
       for (let j = 0; j < nr; j++) for (let i = 0; i < ns; i++) { const a = R[j][i], b2 = R[j][(i + 1) % ns], c = R[j + 1][(i + 1) % ns], d = R[j + 1][i], cl = Array.isArray(col[0]) ? col[(i + j) % col.length] : col;
         if (j === 0) B.tri(a, c, d, cl); else if (j === nr - 1) B.tri(a, b2, d, cl); else B.quad(a, b2, c, d, cl); } };
-    if (car === "ash") {  // Ash, out the front of 6 Beaudesert Road: about 1.75 m, short curly brown hair, feet on y = 0, facing +Z, a top in the colour given
-      const TOP = lin(stripe), JEAN = lin("#3d5878"), SHOE = lin("#ece9e2"), SOLE = lin("#9a948a"), SKIN = lin("#e2b393"), HAIR = [lin("#5a3b24"), lin("#6b4529"), lin("#4c3220")], EYE = lin("#2a1f1a");
+    if (car === "ash" || car === "pandy") {  // Ash (6 Beaudesert Road: short curly brown hair) or Pandy (24 Beaudesert Road: long brown hair), about 1.7 m, feet on y = 0, facing +Z, a top in the colour given
+      const she = car === "pandy", TOP = lin(stripe), JEAN = lin(she ? "#33405a" : "#3d5878"), SHOE = lin(she ? "#7a5236" : "#ece9e2"), SOLE = lin("#9a948a"), SKIN = lin(she ? "#e8bd9e" : "#e2b393"),
+        HAIR = she ? [lin("#5b3a26"), lin("#664330"), lin("#4e3222")] : [lin("#5a3b24"), lin("#6b4529"), lin("#4c3220")], EYE = lin("#2a1f1a"), LIP = lin("#b06a64");
       for (const sx of [-1, 1]) { b.box(sx * 0.1 - 0.06, sx * 0.1 + 0.06, 0, 0.035, -0.09, 0.15, SOLE); b.box(sx * 0.1 - 0.055, sx * 0.1 + 0.055, 0.035, 0.09, -0.085, 0.14, SHOE);
         b.box(sx * 0.1 - 0.07, sx * 0.1 + 0.07, 0.09, 0.84, -0.075, 0.075, JEAN); }
       b.box(-0.19, 0.19, 0.8, 0.9, -0.11, 0.11, JEAN);  // hips
-      b.hull([0.12, 0.2, 0.88, 1.38], [-0.12, 0.2, 0.88, 1.38], TOP); b.box(-0.255, 0.255, 1.2, 1.4, -0.125, 0.125, TOP);  // top, broad at the shoulders
+      if (she) { b.hull([0.115, 0.18, 0.88, 1.36], [-0.115, 0.18, 0.88, 1.36], TOP); b.box(-0.225, 0.225, 1.2, 1.38, -0.115, 0.115, TOP); }  // her top
+      else { b.hull([0.12, 0.2, 0.88, 1.38], [-0.12, 0.2, 0.88, 1.38], TOP); b.box(-0.255, 0.255, 1.2, 1.4, -0.125, 0.125, TOP); }  // his, broad at the shoulders
       b.box(-0.06, 0.06, 1.39, 1.48, -0.055, 0.055, SKIN);
       ball(b, 0, 1.575, 0.005, 0.098, 0.12, 0.108, SKIN, 3, 8, 5, 0.04);  // head
-      for (const [x, y, z, r, sd] of [[0, 1.69, 0, 0.075, 1], [-0.055, 1.675, 0.045, 0.05, 2], [0.055, 1.675, 0.045, 0.05, 3], [-0.06, 1.68, -0.045, 0.055, 4], [0.06, 1.68, -0.045, 0.055, 5],
+      if (she) { ball(b, 0, 1.6, -0.018, 0.108, 0.108, 0.114, HAIR, 5, 8, 4, 0.06);  // long brown hair: over the top, down her back past the shoulders, and either side of her face
+        b.hull([-0.04, 0.115, 1.2, 1.62], [-0.13, 0.11, 1.18, 1.6], HAIR[0], HAIR[1]);
+        for (const sx of [-1, 1]) b.box(sx * 0.098 - 0.026, sx * 0.098 + 0.026, 1.3, 1.6, -0.06, 0.07, HAIR[2]);
+        b.box(-0.022, 0.022, 1.51, 1.52, 0.1, 0.108, LIP); }
+      else for (const [x, y, z, r, sd] of [[0, 1.69, 0, 0.075, 1], [-0.055, 1.675, 0.045, 0.05, 2], [0.055, 1.675, 0.045, 0.05, 3], [-0.06, 1.68, -0.045, 0.055, 4], [0.06, 1.68, -0.045, 0.055, 5],
         [0, 1.685, 0.065, 0.048, 6], [-0.085, 1.63, -0.01, 0.042, 7], [0.085, 1.63, -0.01, 0.042, 8], [0, 1.66, -0.085, 0.05, 9], [-0.05, 1.62, -0.08, 0.042, 10], [0.05, 1.62, -0.08, 0.042, 11]])
         ball(b, x, y, z, r, r * 0.85, r, HAIR, sd, 6, 3, 0.35);  // short curly hair: tight little curls over the top, sides and back
       for (const sx of [-1, 1]) b.box(sx * 0.036 - 0.012, sx * 0.036 + 0.012, 1.575, 1.595, 0.102, 0.11, EYE);
@@ -11213,7 +11232,7 @@ const handle = async (m, post) => {
   // Explore's parts, each switched on or off on this device by Ash (they were for finding what made an iPhone let go of the
   // stick, 15 November 2026). Read when a town opens.
   const EX_PARTS = [["traffic", "A few moving cars"], ["animal", "The animal by Norman Road's helicopter"], ["rides", "Cars, planes, helicopter and bus to drive"], ["admin", "Map editing (the pencil)"],
-    ["players", "Other players and the Settings gear"], ["me", "Construction worker view"], ["no6", "6 Beaudesert Road's street detail"], ["home6", "Ash and Arlo at 6 Beaudesert Road"], ["streets", "Street names"], ["places", "Place names on the model"]];
+    ["players", "Other players and the Settings gear"], ["me", "Construction worker view"], ["no6", "6 Beaudesert Road's street detail"], ["home6", "Ash, Arlo and Pandy on Beaudesert Road"], ["streets", "Street names"], ["places", "Place names on the model"]];
   const exOff = () => { try { return new Set(JSON.parse(localStorage.getItem("an3d-off") || "[]")); } catch { return new Set(); } };
   // Ash's own Explore settings, in Explore's Settings panel (Ash, 15 November 2026: "Move the settings for explore into the
   // settings for explore rather than in the main awesome news"): the cars and planes numbers (RIDE_DEF) and Explore's parts.

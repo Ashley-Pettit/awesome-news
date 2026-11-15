@@ -1108,3 +1108,13 @@ driving it, other players starting, and the ordinary weather view. Not checked o
 - **Emotes** work with no one else about (they used to do nothing), and as a construction worker you see yourself do
   them (`townEmotePose`, shared with other players' figures). The Emote button shows for Ash, or while another player is
   in town, and sits just under Get in the car, between the sticks.
+
+## Seeing the person next to you, and Pandy at 24 Beaudesert Road (15 November 2026)
+
+- **You always join the town's players** (Ash: "I can't see the person I'm next to"). With "Other players can see me"
+  off you used to stay out of the room altogether, so you saw no one either. Now you're always in it: hidden, you send
+  no name and no place, but you still see everyone else. Flying low (under 60 m) you show to others where your eyes
+  are, instead of not at all. Settings says how many other players are in town now.
+- **Pandy** (`townPlaneParts(_, "pandy")`): long brown hair, a plum top, on the front lawn of 24 Beaudesert Road (lot
+  2 RP59613, 1,037 m2; the cadastre has no street numbers, so the lot was matched by its 1,033 m2 listing), 3.5 m in from
+  the front boundary, facing the street. Like Ash at number 6, she turns to you and waves when you walk up.
