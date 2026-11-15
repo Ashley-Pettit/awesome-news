@@ -2344,7 +2344,6 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
   // News: …/moorooka/#explore, The Logan Wire: …/logan/#explore). #explore-logan, #explore-moorooka and #explore-inverloch
   // name the model, from any of the apps. Holds which model: "inv", "moo" or "logan", or "" for none.
   if (document.querySelector('meta[name="an-explore"]')) addEventListener("beforeinstallprompt", e => { e.preventDefault(); window.anInstall = e; });  // Settings > Make it an app
-  let newsLater = false;  // the news held back while a link straight into Explore loads (loadStatic)
   let pendingExplore = document.querySelector('meta[name="an-explore"]')?.content  // a suburb's 3D model page (/<suburb>/explore/)
     || (rawHash === "explore" ? exploreWhich() : rawHash === "explore-logan" ? "logan" : rawHash === "explore-moorooka" ? "moo" : rawHash === "explore-inverloch" ? "inv" : "");
   const exploreName = k => k === "moo" ? "Moorooka" : k === "logan" ? "Logan" : "Inverloch";
@@ -2363,9 +2362,7 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
   if (pendingExplore) setTimeout(() => { try { const cfg = TOWNS[pendingExplore]; if (!cfg) return;
       const hint = (href, as) => { const l = document.createElement("link"); l.rel = "preload"; l.as = as; l.href = href; if (as !== "script") l.crossOrigin = "anonymous"; document.head.appendChild(l); };
       hint("https://cdnjs.cloudflare.com/ajax/libs/three.js/0.152.2/three.min.js", "script"); hint(cfg.src, "script");
-      // (at the very address the model asks for: Logan's model adds ?v=19, and preloading without it fetched every Logan file twice, about
-      // 9 MB more: found in the size report, 16 November 2026)
-      for (const f of cfg.pre || []) hint(cfg.assets + f + (cfg.assetV ? "?v=" + cfg.assetV : ""), /\.webp$/.test(f) ? "image" : "fetch"); } catch {} }, 0);
+      for (const f of cfg.pre || []) hint(cfg.assets + f, /\.webp$/.test(f) && cfg.place !== "logan" ? "image" : "fetch"); } catch {} }, 0);
   const hash = pendingStory || pendingTV || pendingExplore ? "" : rawHash;
   const state = {
     tab: hash || store.get("brief.tab3", "foryou"),
@@ -8330,7 +8327,7 @@ const handle = async (m, post) => {
       floodLook: [-27.5375, 153.0115, 1100, 40, 100], floodOf: "this map", noFloodSlider: true,  // Ash: no water level slider ("At the peak") in Moorooka: a flood just rises to its peak
       floodWarn: { council: "Brisbane City Council", short: "BCC", how: "our own computer simulation of rain running over the ground and the creeks rising (and, in big river floods, Oxley Creek backing up), on a 5 m model of the terrain", map: "Brisbane City Council's Flood Awareness Map and FloodWise Property Report" },
       floodNote: "A guide only: our own simulation, from the terrain, the buildings and the Bureau's design rainfall for Moorooka. It includes water running over the ground to the creeks. No council flood mapping is used. For property, insurance or planning decisions, use Brisbane City Council's Flood Awareness Map and FloodWise Property Report." },
-    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=40", assets: TOWN3D + "logan/", place: "logan", lift: [5320, -13743.6, 6320, -12743.6, 0.25], assetV: "19",  /* (the ?v= Logan's model puts on its files: B_ in logan-model.js; keep them the same) */ pre: ["map.json", "height.png", "roads.bin", "buildings.bin", "ground.webp", "relief.webp", "lights.webp", "cover.png"], up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
+    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=40", assets: TOWN3D + "logan/", place: "logan", lift: [5320, -13743.6, 6320, -12743.6, 0.25], pre: ["map.json", "height.png", "roads.bin", "buildings.bin", "ground.webp", "relief.webp", "lights.webp", "cover.png"], up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
       start: "council", onFoot: true, noFloodSlider: true, flyTo: { id: "brownsplains", label: "Fly to Browns Plains" }, wait: 90000, ceil: 110000, fast: 600, far: 150000, out: 130000, stride: 0.02, pad: 80000, stand: [0.45, 400], floodLook: [-27.69, 153.17, 12000, 55, -35],
       // the same not-official notice and banner as Moorooka's (Ash, 12 November 2026)
       floodWarn: { council: "Logan City Council", short: "LCC", how: "the 2017 flood as mapped, and the others worked out from river gauge heights and rainfall over a terrain model", map: "Logan City Council's flood maps" } },  // shown small in the bottom right corner the whole time the model is open
@@ -10908,7 +10905,7 @@ const handle = async (m, post) => {
   function townCouncil(T, m, ground) {
     const P = { frame() {}, dispose() {} }; if (!m.addParts || !m.groundAt) return P;
     const THREE = BS.B.THREE, M = new THREE.Matrix4(); let dead = false, parts = null, D = null, open = 0, last = performance.now();
-    fetch(TOWN3D + "logan/map.json?v=" + (TOWNS.logan?.assetV || "")).then(r => r.json())  /* (the address the model loaded it from, so it comes from the cache) */.then(d => { if (dead || !d.precinct) return; const pc = d.precinct;
+    fetch(TOWN3D + "logan/map.json").then(r => r.json()).then(d => { if (dead || !d.precinct) return; const pc = d.precinct;
       const polys = pc.buildings.map(b => { const q = b.p.map(v => v / 10); if (q.length < 6) return null; let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
         for (let i = 0; i < q.length; i += 2) { x0 = Math.min(x0, q[i]); x1 = Math.max(x1, q[i]); z0 = Math.min(z0, q[i + 1]); z1 = Math.max(z1, q[i + 1]); }
         return { q, holes: (b.h || []).map(h => h.map(v => v / 10)), x0, x1, z0, z1, council: /Administration Centre/.test(b.n || "") }; }).filter(Boolean);
@@ -12145,9 +12142,6 @@ const handle = async (m, post) => {
       if (k !== E.k) { E.k = k; E.h.setEmissive(E.i, e.r, e.g, e.b, E.mat.emissiveIntensity); } }
   }
   function townModelOff() {
-    // out of Explore: now the news (held back by a link straight into it). Not when it's only changing towns (the menu closes one and
-    // opens the next straight after).
-    if (newsLater) setTimeout(() => { if (newsLater && !BS.town) { newsLater = false; loadStatic(); } }, 400);
     const T = BS.town; if (!T) return;
     BS.town = null; T.dead = true; T.on = false; T.ungest?.(); T.unlay?.(); T.unflood?.();
     T.streets?.dispose(); T.streets = null; $("bsNamesBtn").hidden = true;
@@ -12882,15 +12876,8 @@ const handle = async (m, post) => {
     feeds[key] = { ...(feeds[key] || {}), items: out };
   }
   async function loadStatic(manual) {
-    // in Explore by a direct link, the news waits until you leave: the ten-minute refresh (and coming back to the app) loaded all of
-    // it mid-game, and the busy page dropped the stick (Ash, 16 November 2026: the joystick bouncing back to the middle)
-    if (newsLater && BS.town && !manual) return;
     try {
       const st = await (await fetch(`data/status.json?t=${Date.now()}`, { cache: "no-store" })).json();
-      // a link straight into Explore: open it now and leave the news (the feeds, Emma's audio list, the stories kept for offline: about 2 MB)
-      // until you come out of it (Ash, 16 November 2026, from the size report)
-      if (pendingExplore && !state.loaded && !manual) { const which = pendingExplore; pendingExplore = ""; newsLater = true; state.status = st; /* (its saved forecast is the weather's fallback) */ try { history.replaceState(null, "", location.pathname); } catch {}
-        if (!state.wx) loadWeather(); townModelOpen(true, which); return; }
       const changed = st.updatedAt !== state.status?.updatedAt;
       if (changed || !state.loaded) {
         const v = encodeURIComponent(st.updatedAt);
