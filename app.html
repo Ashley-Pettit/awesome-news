@@ -8318,7 +8318,7 @@ const handle = async (m, post) => {
   // of: "Logan"), floodNote (the line under the list) and floodWarn (show the not-official notice first, and a banner while a flood is on).
   const TOWNS = {
     inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=20", assets: TOWN3D, place: "inv", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
-    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=33", assets: TOWN3D + "moorooka/", place: "moo", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
+    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=34", assets: TOWN3D + "moorooka/", place: "moo", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
       walkStart: { x: -269.8, z: -991.4, yaw: -1.623 },  // Ash's pick for where Moorooka starts: the Beaudesert Road footpath, looking at the house he chose
       // its floods: widest over the Oxley Creek flats along the model's western edge, seen from the east. floodWarn: the not-official notice has to be accepted
       // before the list opens, and a banner says the same while a flood is showing (Ash asked for both).
@@ -8798,20 +8798,20 @@ const handle = async (m, post) => {
   // Names are plain lettering in the business's colours: no logos.
   const MOO_FRONTS = [
     { kind: "verandah", addr: "131 Beaudesert Road", a: [-207.1, -310.4], b: [-210.5, -335.6], n: [0.991, -0.1337], kerb: 20.29, across: 30.29, eave: 45.9, wall: "#eceae4",
-      shops: [{ n: "Butcher", w: 8, c: ["#ffffff", "#9c1c1c"] }, { n: "POST OFFICE", w: 9.4, c: ["#d71920", "#ffffff"], post: true }, { n: "Domino's", w: 8, c: ["#0b3a5e", "#ffffff"], what: "Pizza", jump: true }] },
+      shops: [{ n: "Yeshi Buna", sub: "ETHIO AFRICAN CAFE", w: 8, c: ["#f4ead8", "#6b2a1a"], what: "Ethiopian cafe and restaurant", jump: true }, { n: "POST OFFICE", w: 9.4, c: ["#d71920", "#ffffff"], post: true }, { n: "Domino's", w: 8, c: ["#0b3a5e", "#ffffff"], what: "Pizza", jump: true }] },
     { kind: "centre", addr: "132-146 Beaudesert Road", a: [-153.1, -331.1], b: [-139.7, -311.3], n: [-0.8282, 0.5605], kerb: 18.66, across: 28.96, eave: 46.5, band: "#26282d", wall: "#dcd9d2",
       shops: [{ n: "Commonwealth Bank", w: 9, c: ["#26282d", "#ffcc00"], what: "Bank, in Moorooka Central", jump: true }, { n: "H&R Block", w: 5, c: ["#3a9b35", "#ffffff"], what: "Tax accountants, in Moorooka Central", jump: true },
         { n: "Aussie", w: 5, c: ["#5b2a86", "#ffffff"], what: "Home loans, in Moorooka Central" }, { n: "Jao Jorm Thai", w: 4.9, c: ["#26282d", "#f3e6c8"], what: "Thai restaurant, in Moorooka Central", jump: true }] },
     { kind: "strip", addr: "143 Beaudesert Road", a: [-157.7, -258.7], b: [-164.2, -269.0], n: [0.8457, -0.5337], kerb: 3.98, across: 14.58, eave: 49.5, wall: "#d9cdb8", awning: "#c9c2b4",
       shops: [{ n: "RSPCA Op Shop", w: 12.2, c: ["#1d6fb8", "#ffffff"], what: "Op shop", jump: true }] },
     { kind: "strip", addr: "145-147 Beaudesert Road", a: [-141.4, -235.2], b: [-156.2, -258.7], n: [0.8462, -0.5329], kerb: 2.69, across: 13.29, eave: 50.0, wall: "#e6dfd0", awning: "#d8d4ca",
-      shops: [{ plain: true, w: 5.4 }, { plain: true, w: 5.3 }, { n: "Barber", w: 4.5, c: ["#141414", "#ffffff"] }, { n: "Moorooka Mall", sub: "Ethiopian Village", w: 3.5, c: ["#f4f1ea", "#2a2a2a"], arcade: true, what: "Arcade, with the Ethiopian Village restaurant at the back", jump: true },
+      shops: [{ plain: true, w: 5.4 }, { plain: true, w: 5.3 }, { n: "Cutting Master Barbershop", w: 4.5, c: ["#141414", "#ffffff"], what: "Barber", jump: true }, { n: "Moorooka Mall", sub: "Ethiopian Village", w: 3.5, c: ["#f4f1ea", "#2a2a2a"], arcade: true, what: "Arcade, with the Ethiopian Village restaurant at the back", jump: true },
         { plain: true, w: 3.6, posters: true }, { n: "A La Mode Hair & Beauty", w: 5.5, c: ["#f1e2d6", "#8a2332"] }] },
     { kind: "strip", addr: "201 Beaudesert Road", a: [-97.6, -165.7], b: [-108.0, -182.3], n: [0.8474, -0.5309], kerb: 2.21, across: 13.21, eave: 50.6, wall: "#8f8678", awning: "#3a3a3a",
       shops: [{ n: "Afro Restaurant", w: 6, c: ["#ffffff", "#1a1a1a"], stripe: ["#1f8a3b", "#f2c230", "#d42a2a"], what: "African restaurant", jump: true },
-        { n: "Rannchhod Arcade", sub: "Made in Africa \u00b7 Arhibu", w: 7, c: ["#141414", "#ffffff"], arcade: true, what: "Arcade, with Arhibu (Eritrean and Ethiopian food)", jump: true }, { n: "Optometrist", w: 6.6, c: ["#efe9d6", "#2e5d46"] }] },
+        { n: "Rannchhod Arcade", sub: "Made in Africa \u00b7 Arhibu", w: 7, c: ["#141414", "#ffffff"], arcade: true, what: "Arcade, with Arhibu (Eritrean and Ethiopian food)", jump: true }, { n: "David Stephensen Optometrist", w: 6.6, c: ["#efe9d6", "#2e5d46"], what: "Optometrist", jump: true }] },
     { kind: "strip", addr: "204 Beaudesert Road", a: [-73.8, -173.8], b: [-60.9, -151.3], n: [-0.8675, 0.4974], kerb: 1.22, across: 13.42, eave: 51.5, wall: "#e9e7e2", awning: "#2b2b2b",
-      shops: [{ n: "Barber", w: 4, c: ["#ffffff", "#c22525"] }, { n: "Baba Burger", w: 5, c: ["#1d1d1d", "#f2b632"], what: "Burgers", jump: true }, { n: "Zeitoon", w: 5, c: ["#3f5b2a", "#efe6cf"], what: "Persian and Afghan restaurant", jump: true },
+      shops: [{ n: "Eddy's Barber Shop", w: 4, c: ["#ffffff", "#c22525"], what: "Barber", jump: true }, { n: "Baba Burger", w: 5, c: ["#1d1d1d", "#f2b632"], what: "Burgers", jump: true }, { n: "Zeitoon", w: 5, c: ["#3f5b2a", "#efe6cf"], what: "Persian and Afghan restaurant", jump: true },
         { n: "Ho Choi", w: 5.9, c: ["#b71c1c", "#ffd54f"], what: "Chinese restaurant", jump: true }, { plain: true, w: 6, posters: true }] },
     { kind: "pub", addr: "215 Beaudesert Road", a: [-94.9, -116.9], b: [-92.7, -136.9], n: [0.994, 0.1093], kerb: 11.08, across: 22.08, eave: 0, wall: "#f2f0ea",
       shops: [{ n: "The Willow Hotel", sub: "BAR \u00b7 BISTRO", w: 20.1, c: ["#7a1616", "#ffffff"], what: "Pub: have a few at the bar", jump: true }] },  // (it was the Red Lion: Ash, 16 November 2026, "Update this to be the willow hotel")
@@ -8824,15 +8824,24 @@ const handle = async (m, post) => {
     // the pharmacy). Where each stands: its address along Beaudesert Road (odd numbers on the west side, rising to the south), the
     // building on that corner in the survey, and the wall of it facing the street (as tools/ground/shops.py works it out). The
     // vet has its board out the front with a joke on it, as the real one does (a different joke).
-    { kind: "sign", addr: "93 Beaudesert Road", a: [-245.6, -562.4], b: [-247.1, -570.7], n: [0.9841, -0.1778], kerb: 10.05, across: 20.35, eave: 38.3, wall: "#2b3440", band: true, kerbPaint: "#e8c21a", shops: [{ n: "ADVANCE MECHANICAL CENTRE", w: 8.4, c: ["#d71920", "#ffffff"], what: "Mechanic: one upgrade for your car", jump: true }] },  // (placed by the Queensland address register: north of Helles Street)
-    { kind: "sign", addr: "111 Beaudesert Road", a: [-230.4, -460.5], b: [-228.0, -474.5], n: [0.9856, 0.169], kerb: 9.95, across: 20.45, eave: 39.3, wall: "#f4f1ea", joke: ["WHAT DO YOU CALL A SLEEPING BULL?", "A BULLDOZER"], pole: { n: "+ Vet", c: ["#ffffff", "#1b8a3c"] }, shops: [{ n: "Greencross Vets", w: 14.2, c: ["#ffffff", "#1b8a3c"], what: "Vet: one upgrade for your possum", jump: true }] },
-    { kind: "row", addr: "114-120 Beaudesert Road", a: [-165.8, -429.1], b: [-159.5, -397.0], n: [-0.9813, 0.1926], kerb: 23.91, across: 35.11, eave: 42.9, wall: "#5e6063", shops: [{ n: "TerryWhite Chemmart", w: 8, c: ["#3dae49", "#ffffff"], what: "Pharmacy: ask the pharmacist about a love potion", jump: true }, { n: "PHARMACY", w: 6, c: ["#3dae49", "#ffffff"] }, { n: "CareClinic", w: 6, c: ["#3dae49", "#ffffff"] }, { n: "Hair salon", w: 6.4, c: ["#3a3a3a", "#ffffff"] }, { n: "Cafe", w: 6.3, c: ["#a8d8b0", "#1d3b25"] }] },
-    { kind: "sign", addr: "Shop 2, 122 Beaudesert Road", a: [-155.8, -380.3], b: [-153.7, -368.0], n: [-0.9857, 0.1683], kerb: 24.92, across: 36.12, eave: 44.1, wall: "#f1eee8", band: true, shops: [{ n: "Moorooka Ward Office", w: 12.5, c: ["#b5302a", "#ffffff"], what: "Cr Steve Griffiths' office", jump: true }] },
+    { kind: "sign", addr: "93 Beaudesert Road", a: [-245.6, -562.4], b: [-247.1, -570.7], n: [0.9841, -0.1778], kerb: 10.05, across: 20.35, eave: 38.3, wall: "#2b3440", band: true, kerbPaint: "#e8c21a", num: "93", pad: [-4, 2],
+      posters: [[1.4, 2.7, 1.0, 2.3, "Yes!", "NEW CAR WARRANTY", "#f6d21a", "#c8102e"], [2.9, 4.6, 1.2, 2.2, "SAFETY", "CERTIFICATES", "#ffffff", "#1b3a6b"], [4.8, 8.0, 1.35, 2.05, "TYRES", "", "#1b3a6b", "#ffffff"]],
+      tall: { lines: ["ADVANCE", "MECHANICAL", "CENTRE"], c: ["#d71920", "#ffffff"], foot: { n: "RACQ APPROVED", c: ["#ffffff", "#1b3a6b"] } },
+      shops: [{ n: "ADVANCE MECHANICAL CENTRE", w: 8.4, c: ["#d71920", "#ffffff"], what: "Mechanic: one upgrade for your car", jump: true }] },  // (placed by the Queensland address register: north of Helles Street)
+    { kind: "sign", addr: "111 Beaudesert Road", a: [-230.4, -460.5], b: [-228.0, -474.5], n: [0.9856, 0.169], kerb: 9.95, across: 20.45, eave: 39.3, wall: "#f4f1ea", joke: ["WHAT DO YOU CALL", "A SLEEPING BULL?", "A BULLDOZER"], pole: { n: "Vet", cross: "#1b8a3c", c: ["#ffffff", "#1b8a3c"], x: 1.6, back: 2.3 }, noBoard: true, shops: [{ n: "Greencross Vets", w: 14.2, c: ["#ffffff", "#1b8a3c"], what: "Vet: one upgrade for your possum", jump: true }] },
+    { kind: "row", addr: "114-120 Beaudesert Road", a: [-165.8, -429.1], b: [-159.5, -397.0], n: [-0.9813, 0.1926], kerb: 23.91, across: 35.11, eave: 42.9, wall: "#5e6063", fascia: "#46484c",
+      shops: [{ n: "TerryWhite Chemmart", w: 7, c: ["#3dae49", "#ffffff"], wrap: { n: "MOOROOKA", cross: "#ffffff", c: ["#3dae49", "#ffffff"] }, what: "Pharmacy: ask the pharmacist about a love potion", jump: true },
+        { n: "PHARMACY", w: 6, c: ["#3dae49", "#ffffff"], wrap: { n: "CareClinic", cross: "#ffffff", c: ["#3dae49", "#ffffff"] } }, { n: "TerryWhite Chemmart", w: 6, c: ["#3dae49", "#ffffff"], door: true },
+        { n: "The Cleo Collective", t: "cleo", script: true, big: 1.35, w: 4.6, c: ["#f3f1ed", "#2e2e2e"], what: "Hair salon", jump: true }, { n: "The Cleo Collective", t: "HAIR SALON", w: 3.6, c: ["#f3f1ed", "#2b2b2b"], wt: 300 },
+        { n: "The Cheesecake Shop", w: 6.3, c: ["#f7fbf8", "#2f8f5b"], fascia: "#a6dcc0", what: "Cakes", jump: true }] },
+    { kind: "sign", addr: "Shop 2, 122 Beaudesert Road", a: [-155.8, -380.3], b: [-153.7, -368.0], n: [-0.9857, 0.1683], kerb: 24.92, across: 36.12, eave: 44.1, wall: "#f1eee8", glass: "#6e958f", fascia: { col: "#7a2f2c", raise: 5.2 }, pylon: "#1c1d20",
+      shops: [{ n: "Moorooka Ward Office", t: "Councillor Steve Griffiths", sub: "MOOROOKA WARD OFFICE", w: 12.5, c: ["#ffffff", "#1f3a6b"], what: "Cr Steve Griffiths' office", jump: true }] },
     // the Woolworths centre (125 Beaudesert Road): the supermarket and the shops beside it along its front, the doctors at the Durack Street end
     { kind: "row", addr: "125 Beaudesert Road", a: [-198.5, -361.3], b: [-206.8, -391.6], n: [0.9645, -0.2642], kerb: 1.52, across: 11.22, eave: 44.3, wall: "#e8e6e0", shops: [{ n: "Woolworths", w: 12, c: ["#178841", "#ffffff"], what: "Supermarket", jump: true },
       { n: "Brumby's Bakeries", w: 4, c: ["#c8102e", "#ffffff"], what: "Bakery" }, { n: "Sushi Guru", w: 4, c: ["#1d1d1d", "#ff5a36"], what: "Sushi" }, { n: "Botanicaf\u00e9", w: 4, c: ["#2f6b3a", "#ffffff"], what: "Cafe" },
       { n: "Barra Boys", w: 3.4, c: ["#0b4f8a", "#ffd54f"], what: "Fish and chips" }, { n: "Moorooka Medical Hub", w: 4, c: ["#ffffff", "#0b6fb8"], what: "Doctors: they'll sober you up after the Willow", jump: true }] },
-    { kind: "sign", addr: "Beaudesert Road, across from the Willow", a: [-55.5, -149.3], b: [-53.5, -129.4], n: [-0.995, 0.1], kerb: 5.77, across: 17.97, eave: 53.1, wall: "#8f8476", rails: "#d32222", shops: [{ n: "snap fitness 24/7", w: 20, c: ["#1d1d1d", "#ffffff"], stripe: ["#e2231a"], what: "Gym: a workout makes you 10% quicker on foot", jump: true }] },
+    { kind: "sign", addr: "212 Beaudesert Road", a: [-55.5, -149.3], b: [-53.5, -129.4], n: [-0.995, 0.1], kerb: 5.77, across: 17.97, eave: 53.1, wall: "#8f8476", screen: "#ad6e3e", posts: "#d42a20",
+      shops: [{ n: "Snap Fitness", parts: [["snap ", "#ff3b2f"], ["fitness", "#ffffff"], [" 24/7", "#ffffff"]], w: 20, c: ["#1b1b1d", "#ffffff"], what: "Gym: a workout makes you 10% quicker on foot", jump: true }] },
     { kind: "sign", addr: "180 Beaudesert Road", a: [-112.3, -238.5], b: [-103.3, -225.2], n: [-0.8282, 0.5604], kerb: 3.06, across: 13.36, eave: 52.0, wall: "#f2efe8", shops: [{ n: "Big Boss Pizzas", w: 16.1, c: ["#1d1d1d", "#f2b632"], what: "Pizza: order the best chips ever", jump: true }] },
     { kind: "sign", addr: "Beaudesert Road at Mayfield Road", a: [-91.7, -214.1], b: [-84.9, -210.0], n: [-0.5163, 0.8564], kerb: 7.88, across: 18.18, eave: 51.7, wall: "#efeae0", shops: [{ n: "Rooka Acai", w: 7.9, c: ["#5b2a86", "#ffffff"], what: "Acai bowls", jump: true }] },
     // the servos: a tall sign on a pole by the kerb, a face each way along the road (where each is: its corner, or its number along
@@ -8861,6 +8870,20 @@ const handle = async (m, post) => {
     { kind: "sign", addr: "1 Sherley Street", a: [-189.6, 135.3], b: [-208.0, 132.2], n: [0.1661, -0.9861], kerb: 23.11, across: 33.71, eave: 40.5, wall: "#e9dcc4", shops: [{ n: "Moorooka State School", w: 18.7, c: ["#163e7a", "#ffffff"], what: "Primary school (heritage listed)", jump: true }] },
     { kind: "sign", addr: "17 Hawtree Street", a: [-654.6, 331.9], b: [-647.5, 301.6], n: [0.9736, 0.2281], kerb: 10.82, across: 21.42, eave: 41.7, wall: "#e4d6c2", shops: [{ n: "St Brendan's School", w: 31.1, c: ["#7a1c2a", "#ffffff"], what: "Catholic primary school", jump: true }] },
   ];
+  // A few of the model's own buildings in their real colours, from Ash's photos (16 November 2026: "Use the photos I gave you to make it
+  // realistic"). The model asks for each building as it builds it (moorooka-model.js ?v=34, patched: window.anStyle, given the mean of its
+  // outline's corners in the survey); kind 2 is a shop (a flat roof behind a parapet), 0 a house; base is the colour under a highset
+  // house; flat, a flat roof; noShop, none of the model's own shopfronts and awnings, which it puts on every wall facing Beaudesert Road
+  // along the shopping strip, cottage or not (the vet had one: the dark glass across its front). Colours are 0 to 255.
+  const MOO_STYLE = [
+    { at: [-237.88, -464.82], roof: [168, 74, 50], wall: [238, 231, 214], base: [158, 84, 60], noShop: true },  // Greencross Vets (111): a cream cottage under red tiles, on red brick
+    { at: [-147.55, -372.28], kind: 2, flat: true, wall: [243, 241, 235] },  // the ward office (122): white render, a flat roof behind the fascia
+    { at: [-262.56, -568.09], kind: 2, wall: [40, 48, 60] },                 // Advance Mechanical Centre (93): dark navy cladding
+    { at: [-153.7, -414.8], roof: [172, 166, 158] },                         // the pharmacy row (114-120): a weathered grey iron roof
+    { at: [-99.76, -124.24], wall: [92, 74, 60], noShop: true },             // the Willow (215): dark timber
+    { at: [-36.53, -129.14], wall: [214, 202, 182], noShop: true },          // Snap Fitness (212): a pale render behind its screen
+  ];
+  window.anStyle = (x, z) => { for (const q of MOO_STYLE) if (Math.abs(q.at[0] - x) < 0.6 && Math.abs(q.at[1] - z) < 0.6) return q; return null; };
   function townShops(T, m) {
     const THREE = BS.B.THREE, out = [], parts = [], I = new THREE.Matrix4().elements;
     const P = [], Nn = [], Cc = [];  // everything plain, in one piece: positions, normals, colours
@@ -8876,13 +8899,35 @@ const handle = async (m, post) => {
         const e = H * 0.5, ex = H * 0.2, ey = H / 2 - e * 0.36; x0 = ex + e + H * 0.1;
         g.lineWidth = H * 0.05; g.strokeStyle = fg; g.lineJoin = "round"; g.strokeRect(ex, ey, e, e * 0.72);
         g.beginPath(); g.moveTo(ex, ey); g.lineTo(ex + e / 2, ey + e * 0.4); g.lineTo(ex + e, ey); g.stroke(); }
+      if (s.cross) {  // a green cross before the name (the vet's sign: a cross, not anyone's logo)
+        const e = H * 0.46, ex = H * 0.16, ey = H / 2 - e / 2, t = e / 3; x0 = ex + e + H * 0.08; g.fillStyle = s.cross;
+        g.fillRect(ex + t, ey, t, e); g.fillRect(ex, ey + t, e, t); }
       g.fillStyle = fg; g.textAlign = "center"; g.textBaseline = "middle";
-      const room = W - x0 - H * 0.12, cx = x0 + room / 2, two = !!s.sub;
-      let size = H * (two ? 0.42 : s.stripe ? 0.5 : 0.56);
-      const fit = (t, wt) => { g.font = `${wt} ${size}px ${FONT}`; while (g.measureText(t).width > room && size > 14) { size *= 0.94; g.font = `${wt} ${size}px ${FONT}`; } };
-      fit(s.n, 800); g.fillText(s.n, cx, H * (two ? 0.36 : s.stripe ? 0.42 : 0.52));
-      if (two) { size = Math.min(size * 0.62, H * 0.26); fit(s.sub, 600); g.fillText(s.sub, cx, H * 0.76); }
+      const room = W - x0 - H * 0.12, cx = x0 + room / 2, two = !!s.sub, face = s.script ? '"Segoe Script", "Brush Script MT", "Snell Roundhand", cursive' : FONT;
+      let size = H * (two ? 0.42 : s.stripe ? 0.5 : 0.56) * (s.big || 1);
+      const fit = (t, wt, f = face) => { g.font = `${wt} ${size}px ${f}`; while (g.measureText(t).width > room && size > 14) { size *= 0.94; g.font = `${wt} ${size}px ${f}`; } };
+      if (s.parts) {  // a name in more than one colour (Snap Fitness: "snap" in red), laid end to end
+        const t = s.parts.map(q => q[0]).join(""); fit(t, s.wt || 800); g.textAlign = "left"; let px = cx - g.measureText(t).width / 2;
+        for (const [q, col] of s.parts) { g.fillStyle = col; g.fillText(q, px, H * 0.52); px += g.measureText(q).width; }
+        return c; }
+      const txt = s.t || s.n; fit(txt, s.wt || (s.script ? 400 : 800)); g.fillText(txt, cx, H * (two ? 0.36 : s.stripe ? 0.42 : 0.52));
+      if (two) { size = Math.min(size * 0.62, H * 0.26); fit(s.sub, 600, FONT); g.fillText(s.sub, cx, H * 0.76); }
       return c; };
+    // a tall sign (on a pole): its lines one under the other, as big as they fit, and a panel of another colour at the foot
+    const tall = (w, h, lines, c, foot, W = 128) => { const H = Math.round(W * h / w), cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+      const g = cv.getContext("2d"); g.fillStyle = c[0]; g.fillRect(0, 0, W, H); const fh = foot ? H * 0.2 : 0;
+      if (foot) { g.fillStyle = foot.c[0]; g.fillRect(W * 0.08, H - fh - W * 0.08, W * 0.84, fh); g.fillStyle = foot.c[1]; g.textAlign = "center"; g.textBaseline = "middle";
+        let z = fh * 0.3; g.font = `800 ${z}px ${FONT}`; while (g.measureText(foot.n).width > W * 0.76 && z > 8) { z *= 0.94; g.font = `800 ${z}px ${FONT}`; } g.fillText(foot.n, W / 2, H - fh / 2 - W * 0.08); }
+      const mg = Math.min(W, H) * 0.12, room = H - fh - 2 * mg, step = room / lines.length; g.fillStyle = c[1]; g.textAlign = "center"; g.textBaseline = "middle";
+      lines.forEach((t, i) => { let z = Math.min(step * 0.7, W * 0.3); g.font = `800 ${z}px ${FONT}`; while (g.measureText(t).width > W * 0.86 && z > 8) { z *= 0.94; g.font = `800 ${z}px ${FONT}`; } g.fillText(t, W / 2, mg + step * (i + 0.5)); });
+      return cv; };
+    // a laser-cut screen (Snap Fitness's copper one, from Ash's photo): a sheet with leaves and dots cut out of it, the dark showing through
+    const lace = (w, h, col) => { const S = 48, cv = document.createElement("canvas"); cv.width = Math.min(2048, Math.round(w * S)); cv.height = Math.round(h * S);
+      const g = cv.getContext("2d"), k = cv.width / (w * S); g.fillStyle = col; g.fillRect(0, 0, cv.width, cv.height); g.fillStyle = "rgba(20,14,10,0.92)"; let seed = 11;
+      const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+      for (let y = 0; y < cv.height; y += 9 * k) for (let x = (Math.floor(y / (9 * k)) % 2) * 6 * k; x < cv.width; x += 12 * k) { const r = (1.2 + 2.6 * Math.abs(Math.sin(x * 0.011 / k + y * 0.03 / k) * Math.cos(y * 0.017 / k - x * 0.004 / k)) + rnd() * 0.8) * k;
+        g.beginPath(); if (rnd() < 0.35) g.ellipse(x, y, r * 1.9, r * 0.8, rnd() * Math.PI, 0, Math.PI * 2); else g.arc(x, y, r, 0, Math.PI * 2); g.fill(); }
+      return cv; };
     // a row of shopfronts under the awning, 40 px a metre: piers, a tiled base, glass with a door, posters in some
     const fronts = (F, h, shops) => { const S = 40, c = document.createElement("canvas"); c.width = Math.round(F.len * S); c.height = Math.round(h * S);
       const g = c.getContext("2d"); g.fillStyle = F.wall; g.fillRect(0, 0, c.width, c.height);
@@ -8976,8 +9021,15 @@ const handle = async (m, post) => {
         box(-2, len + 2, 0, 1.15, o, o + 0.2, f.wall);
         [["$20 MAIN MEALS", "#1f7a3d", "#ffffff"], ["OPEN TIL 4AM", "#1f7a3d", "#ffffff"], ["KARAOKE", "#1f7a3d", "#ffffff"]].forEach(([t, bg, fg], i) => { const bx = 1.5 + i * (len - 3) / 3; pic(bx, bx + (len - 3) / 3 - 1, 0.25, 0.95, o + 0.215, sign((len - 3) / 3 - 1, 0.7, { n: t, c: [bg, fg] })); });
       } else if (f.kind === "row") {
-        // a row of businesses along one wall: each its own sign over its share of the front
-        shops.forEach((s, i) => { const [x0, x1] = where[i], w = Math.min(x1 - x0 - 0.5, Math.max(2.6, Math.min(8, s.n.length * 0.4))), cx = (x0 + x1) / 2; board(cx - w / 2, cx + w / 2, 2.55, 3.35, 0.14, s); });
+        // a row of businesses along one wall: each its own sign over its share of the front. With fascia (the pharmacy row, from Ash's
+        // photo): glass shopfronts under a dark fascia the length of the row, each sign on the fascia, a shop's own colour on its share
+        // of it (the Cheesecake Shop's mint), and the big window graphics where a shop has them (wrap)
+        if (f.fascia) { pic(0, len, 0, 2.62, 0.08, fronts({ ...F, wall: f.fascia }, 2.62, shops.map(s => ({ w: s.w, door: s.door })))); plinth(0, len);
+          shops.forEach((s, i) => { const [x0, x1] = where[i]; box(x0 + (i ? 0 : 0.05), x1 - (i < shops.length - 1 ? 0 : 0.05), 2.62, 3.62, 0, 0.22, s.fascia || f.fascia);
+            if (s.wrap) pic(x0 + 0.3, x1 - 0.3, 0.5, 2.45, 0.1, sign(x1 - x0 - 0.6, 1.95, { ...s.wrap, big: 1.25 })); }); }
+        shops.forEach((s, i) => { const [x0, x1] = where[i], w = Math.min(x1 - x0 - 0.5, Math.max(2.6, Math.min(8, (s.t || s.n).length * (s.script ? 0.62 : 0.4)))), cx = (x0 + x1) / 2;
+          if (f.fascia) board(cx - w / 2, cx + w / 2, 2.78, 3.46, 0.3, s); else board(cx - w / 2, cx + w / 2, 2.55, 3.35, 0.14, s); });
+        if (f.fascia) { signY = 2.78; signH = 0.68; }
       } else if (f.kind === "pylon") {
         // a servo's sign: a pole, the name up top in its colours, and FUEL under it (Ash, 16 November 2026: "and the petrol stations")
         const s = shops[0]; box(len / 2 - 0.16, len / 2 + 0.16, 0, 4.4, -0.16, 0.16, f.wall);
@@ -8986,16 +9038,48 @@ const handle = async (m, post) => {
       } else {
         // (as in Ash's photos, 16 November 2026: the mechanic's and the ward office's names on a band the full width of the front; the vet's
         // pole sign with its green cross; red rails up the gym's two stairs; the yellow kerb in front of the mechanic's)
-        const s = shops[0], w = f.band ? len - 0.4 : Math.min(len - 0.6, Math.max(3.2, Math.min(9, s.n.length * 0.42)));
-        board(len / 2 - w / 2, len / 2 + w / 2, f.band ? 2.9 : 2.55, f.band ? 3.75 : 3.4, 0.14, s);
-        if (f.pole) { const px = -1.2, o = bsClamp(f.kerb - 1.6, 2, 9); box(px - 0.08, px + 0.08, 0, 2.6, o - 0.08, o + 0.08, "#d9dbde"); board(px - 0.9, px + 0.9, 2.6, 3.5, o + 0.09, f.pole); }
-        if (f.rails) for (const x0 of [0.4, len - 2.4]) { for (let k = 0; k < 6; k++) box(x0, x0 + 2, k * 0.3, k * 0.3 + 0.3, 0.6 + k * 0.45, 0.6 + (k + 1) * 0.45, "#9a9c9e");  // the stairs
+        const s = shops[0], w = f.band ? len - 0.4 : Math.min(len - 0.6, Math.max(3.2, Math.min(9, (s.t || s.n).length * 0.42)));
+        // the ground in front, followed: a slab drawn on it in strips about 2 m square (the mechanic's concrete forecourt)
+        const drape = (x0, x1, o0, o1, hex) => { const c = rgb(hex), nx = Math.max(1, Math.round((x1 - x0) / 2)), no = Math.max(1, Math.round((o1 - o0) / 2)), Y = (x, o) => { const q = at(x, 0, o); q[1] = m.groundAt(q[0], q[2]) + 0.05; return q; };
+          for (let i = 0; i < nx; i++) for (let j = 0; j < no; j++) { const xa = x0 + (x1 - x0) * i / nx, xb = x0 + (x1 - x0) * (i + 1) / nx, oa = o0 + (o1 - o0) * j / no, ob = o0 + (o1 - o0) * (j + 1) / no;
+            quad(Y(xa, ob), Y(xb, ob), Y(xb, oa), Y(xa, oa), c); } };
+        if (f.pad) drape(f.pad[0], len + f.pad[1], 0.15, f.kerb - 0.3, "#b9b6ae");
+        if (f.glass) { pic(0.35, len - 0.35, 0, 2.75, 0.06, fronts({ ...F, len: len - 0.7, wall: f.glass }, 2.75, [{ w: len - 0.7 }])); plinth(0.35, len - 0.35); }
+        if (f.fascia) {  // the ward office: a deep red fascia across the top, a raised piece in the middle, and the councillor's sign on it
+          const r = f.fascia.raise || 0; box(0, len, 2.75, 3.55, 0, 0.3, f.fascia.col); if (r) box(len / 2 - r / 2, len / 2 + r / 2, 3.55, 4.35, 0, 0.3, f.fascia.col);
+          board(len / 2 - 2.0, len / 2 + 2.0, 2.95, 4.2, 0.42, s); signY = 2.95; signH = 1.25;
+        } else if (f.screen) {  // Snap Fitness, from Ash's photo: the car park under it, the copper screen across the first floor, the
+          // red frame, and the stairs up each end between red walls
+          const top = Math.max(wallH, 6.2), x0 = 2.9, x1 = len - 2.9;
+          box(x0, x1, 0, 3.1, 0.02, 0.06, "#141619");  // the car park's dark under the building
+          box(x0, x1, 3.1, 3.4, 0.02, 0.6, "#3a3c40");  // the first floor's edge
+          pic(x0, x1, 3.4, top - 0.3, 0.55, lace(x1 - x0, top - 3.7, f.screen));
+          box(len / 2 - 3.9, len / 2 + 3.9, 4.2, 5.5, 0.56, 0.62, "#1b1b1d"); pic(len / 2 - 3.8, len / 2 + 3.8, 4.28, 5.42, 0.63, sign(7.6, 1.14, s));
+          for (const px of [0.15, x0 - 0.15, x1 + 0.15, len - 0.15]) box(px - 0.13, px + 0.13, 0, top + 0.3, 0.75, 1.0, f.posts);
+          box(-0.1, len + 0.1, top, top + 0.42, 0, 1.2, f.posts);  // the red roof edge
+          for (const [s0, s1] of [[0.3, 2.6], [len - 2.6, len - 0.3]]) { const n = 10, run = 0.42, o0 = 0.6 + n * run;
+            for (let k = 0; k < n; k++) box(s0, s1, 0, (k + 1) * 0.3, o0 - (k + 1) * run, o0 - k * run, "#a3a5a7");  // each step, solid down to the ground
+            box(s0, s1, 0, 3.0, 0, 0.6, "#a3a5a7");  // the landing at the top
+            for (const xe of [s0 - 0.14, s1]) { const A = at(xe, 0, o0 + 0.1), B = at(xe, 3.0, 0.6), C = at(xe, 4.0, 0.6), D = at(xe, 1.0, o0 + 0.1), A2 = at(xe + 0.14, 0, o0 + 0.1), B2 = at(xe + 0.14, 3.0, 0.6), C2 = at(xe + 0.14, 4.0, 0.6), D2 = at(xe + 0.14, 1.0, o0 + 0.1), c = rgb(f.posts);
+              quad(A, B, C, D, c); quad(B2, A2, D2, C2, c); quad(D, C, C2, D2, rgb(shade(f.posts, 0.8))); } }
+          signY = 4.28; signH = 1.14;
+        } else if (!f.noBoard) board(len / 2 - w / 2, len / 2 + w / 2, f.band ? 2.9 : 2.55, f.band ? 3.75 : 3.4, 0.14, s);
+        if (f.pylon) { const px = -0.9, o = bsClamp(f.kerb - 2.2, 1.6, 6); box(px - 0.3, px + 0.3, 0, 5.4, o - 0.18, o + 0.18, f.pylon); box(px - 0.31, px + 0.31, 4.6, 4.75, o - 0.19, o + 0.19, "#e8e6e0"); }
+        if (f.num) board(0.25, 1.15, 1.9, 2.75, 0.16, { n: f.num, c: ["#d71920", "#ffffff"] });  // the street number, on the wall by the corner
+        if (f.posters) for (const [x0, x1, y0, y1, t, sub, bg, fg] of f.posters) board(x0, x1, y0, y1, 0.16, { n: t, sub, c: [bg, fg] });
+        if (f.tall) { const px = len + 0.9, o = bsClamp(f.kerb - 1.2, 1.5, 9); box(px - 0.07, px + 0.07, 0, 1.1, o - 0.07, o + 0.07, "#8a8d90");
+          box(px - 0.5, px + 0.5, 1.1, 4.2, o - 0.1, o, f.tall.c[0]); pic(px - 0.47, px + 0.47, 1.13, 4.17, o + 0.012, tall(0.94, 3.04, f.tall.lines, f.tall.c, f.tall.foot)); }
+        // the vet's pole sign on the corner, as in Ash's photo: the Vet board up top and its letter board under it, on the same two posts,
+        // with a terrible joke on it (Ash, 16 November 2026: "It should have a lame corny sign out the front with an animal related dad joke")
+        if (f.pole) { const px = f.pole.x ?? -1.6, o = bsClamp(f.kerb - (f.pole.back ?? 1.6), 2, 9);
+          for (const q of [px - 1.05, px + 1.05]) box(q - 0.06, q + 0.06, 0, 3.6, o - 0.06, o + 0.06, "#c9ccd0");
+          board(px - 1.0, px + 1.0, 2.75, 3.55, o + 0.07, f.pole);
+          if (f.joke) { box(px - 1.0, px + 1.0, 1.15, 2.6, o - 0.01, o + 0.07, "#ffffff"); pic(px - 0.97, px + 0.97, 1.18, 2.57, o + 0.082, tall(1.94, 1.39, f.joke, ["#ffffff", "#1d1d1d"], null, 384)); } }  // a letter board: a line at a time
+        else if (f.joke) { const jx = len * 0.8, o = bsClamp(f.kerb - 1.4, 2, 8); for (const px of [jx - 1.25, jx + 1.25]) box(px - 0.05, px + 0.05, 0, 0.95, o - 0.1, o - 0.02, "#4a4f55");
+          board(jx - 1.4, jx + 1.4, 0.9, 2.2, o, { n: f.joke.slice(0, -1).join(" "), sub: f.joke[f.joke.length - 1], c: ["#ffffff", "#1d1d1d"] }); }
+        if (f.rails && !f.screen) for (const x0 of [0.4, len - 2.4]) { for (let k = 0; k < 6; k++) box(x0, x0 + 2, k * 0.3, k * 0.3 + 0.3, 0.6 + k * 0.45, 0.6 + (k + 1) * 0.45, "#9a9c9e");  // the stairs
           for (const xe of [x0, x0 + 2]) quad(at(xe, 1.0, 0.6), at(xe, 2.8, 3.3), at(xe, 2.9, 3.3), at(xe, 1.1, 0.6), rgb(f.rails)); }
         if (f.kerbPaint) box(-1, len + 1, 0, 0.04, f.kerb - 0.25, f.kerb, f.kerbPaint);
-        // the vet's board out the front, with a terrible joke on it (Ash, 16 November 2026: "It should have a lame corny sign out the front
-        // with an animal related dad joke")
-        if (f.joke) { const jx = len * 0.8, o = bsClamp(f.kerb - 1.4, 2, 8); for (const px of [jx - 1.25, jx + 1.25]) box(px - 0.05, px + 0.05, 0, 0.95, o - 0.1, o - 0.02, "#4a4f55");
-          board(jx - 1.4, jx + 1.4, 0.9, 2.2, o, { n: f.joke[0], sub: f.joke[1], c: ["#ffffff", "#1d1d1d"] }); }
       }
       // in Jump to: across the street (or on the near footpath, when the shop stands well back), looking at the shop's sign
       shops.forEach((s, i) => { if (!s.jump) return;
