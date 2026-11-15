@@ -9906,7 +9906,7 @@ const handle = async (m, post) => {
       cars: [MOO_RED6, MOO_GOLD_CAR, { x: -284.4, z: -959.4, h: -0.179, bus: true, name: "The bus", what: "At the bus stop on Beaudesert Road, just up from 6 Beaudesert Road. Slow, long and wide" }], possum: MOO_POSSUM },
     inv: { planes: [{ x: -210, z: -377, h: 1.571, name: "The plane", at: "on the lawn by The Hub", what: "On the lawn by The Hub, off A'Beckett Street. Walk up to it and get in" }],
       cars: [{ x: -228.5, z: -375.5, h: Math.PI, spare: true, name: "The red car", what: "On the lawn by The Hub, beside the plane" }, { x: -232.5, z: -375.5, h: Math.PI, gold: true, name: "The golden car", what: "On the lawn by The Hub. A fifth faster than the red one" }],
-      more: { planes: [{ x: -1602.1, z: 422, h: 2.6, heli: true, name: "The helicopter", at: "behind 11 Norman Road", what: "On the grass behind 11 Norman Road" }], cars: [{ x: -214, z: -357, h: -1.571, bus: true, name: "The bus", what: "In A'Beckett Street, out the front of The Hub" }] },
+      more: { planes: [{ x: -1602.1, z: 422, h: 2.6, heli: true, name: "The helicopter", at: "behind 11 Norman Road", what: "On the grass behind 11 Norman Road" }], cars: [{ x: -214, z: -359.6, h: -1.571, bus: true, name: "The bus", what: "In A'Beckett Street, out the front of The Hub" }] },
       roam: [[-278, -562], [627, -1086], [-108, -190], [17, -179], [-1585, 1221], [575, 1066]] },
     logan: { planes: [{ x: 5732, z: -12989, h: 1.0, name: "The plane", at: "on the big lawn in Civic Centre Park", what: "On the big open lawn in Civic Centre Park, behind the council, with room to take off" }],
       cars: [{ x: 5816.2, z: -13302.9, h: 1.94, spare: true, name: "The red car", what: "On the lawn out the front of the council, by the plane" }, { x: 5789.8, z: -13198.7, h: 2.03, gold: true, name: "The golden car", what: "In the car park behind the council. A fifth faster than the red one" }],
@@ -10681,9 +10681,12 @@ const handle = async (m, post) => {
     const roam = (RIDES.roam || []).filter(([x, z]) => ground(x, z) - m.groundAt(x, z) < 0.35), spot = roam.length ? roam[Math.floor(Math.random() * roam.length)] : null;
     const homes = RIDES.planes.some(q => q.gold) || !spot ? RIDES.planes : [...RIDES.planes, { x: spot[0], z: spot[1], h: Math.random() * Math.PI * 2, gold: true, name: "The golden plane", at: "" }];
     // the golden helicopter (Ash, 15 November 2026: "Add a golden helicopter. Random location no go to btn unless name is ash. 40%
-    // faster"): on open ground picked at random each visit, from the town's open spots and the grass beside each plane and helicopter,
+    // faster"): on open ground picked at random each visit, from the town's open spots,
     // dry and clear of buildings, and not where the golden plane is
-    { const near = homes.flatMap(q => [18, -18].map(d => [q.x + Math.cos(q.h) * d, q.z - Math.sin(q.h) * d])), all = [...roam, ...near]
+    // (only the town's open spots: the grass beside a plane could be a road, and Inverloch's was A'Beckett Street: Ash, 15 November
+    // 2026, "Look through Inverloch for buses or cars placed inappropriately")
+    // where a town has no open spots of its own (Moorooka), the grass beside its planes, which all stand in parks
+    { const near = roam.length > 1 ? [] : homes.flatMap(q => [18, -18].map(d => [q.x + Math.cos(q.h) * d, q.z - Math.sin(q.h) * d])), all = [...roam, ...near]
         .filter(([x, z]) => (!spot || Math.hypot(x - spot[0], z - spot[1]) > 40) && ground(x, z) - m.groundAt(x, z) < 0.35 && inside(x, z) && fits(CAR, x, z, 0) && fits(CAR, x, z, Math.PI / 2));
       if (all.length) { const [x, z] = all[Math.floor(Math.random() * all.length)]; homes.push({ x, z, h: Math.random() * Math.PI * 2, heli: true, gold: true, name: "The golden helicopter", at: "" }); } }
     const planes = homes.map(home => { const P = { home, x: home.x, z: home.z, h: home.h, y: 0, p: 0, r: 0, v: 0, air: false, spin: 0, turn: 0, ang: 0 };
