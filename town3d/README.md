@@ -1332,3 +1332,14 @@ as concrete. It shows where the sharper ground is drawn (close up), like every m
 - **Buttons apart** (Ash: "In the golden car move the buttons a tiny bit apart"): Handbrake, Boost and 180 are 62 px apart.
 - **Hotkeys** (Ash: "Give them hotkeys for pc"): X for the 180 and Shift for the possum's Boost, shown on the buttons' keycaps
   and in the controls list (the golden car's list has X).
+
+## Inverloch's bus and golden helicopter (15 November 2026)
+
+Ash: "Look through Inverloch for buses or cars placed inappropriately". From above, the parked cars, the traffic, the plane,
+the red and golden cars and the helicopter behind 11 Norman Road were all where they should be. Two were not:
+
+- **The bus** straddled A'Beckett Street's centre line out the front of The Hub. It now sits in the lane on The Hub's side
+  (2.6 m north).
+- **The golden helicopter** could land in A'Beckett Street: one of its random spots was the grass 18 m beside the plane, which
+  there is the road. Towns with open spots of their own (Inverloch and Logan) now pick only from those; Moorooka, which has
+  none, still uses the grass beside its planes, all in parks.
