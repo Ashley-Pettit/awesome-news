@@ -1390,3 +1390,10 @@ Now, in full detail only (near the view; the plain far version is unchanged):
   edge (`FE`) worked out before its windows, the frame before each house window's glass, `anFront` after the front edge's
   windows, and `$_.road = anRoadNear(town)` at the start of `buildBuildings`. When the model is rebuilt from ai-forge, make the
   same change in `src/features/moorooka3d/buildings.ts` (`addBuilding`, `buildBuildings`).
+
+## Fix: driving and flying had stopped (15 November 2026)
+
+Ash: "Cars aren't working in Logan." Since #150 nothing could be driven or flown in any town: the note added for `window.anFast`
+went on the same line as the start of `tick`, so it hid `const dt = ..., k = ..., has = ...` and every frame in a vehicle threw.
+The note is on its own line now. Also, the golden car's random parking spot is now picked only from places within 1.2 km of
+its usual one (Logan's places run out to Jimboomba).
