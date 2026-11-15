@@ -1184,3 +1184,14 @@ a car but then move around as a possum not a car. Add a teleport to kingwell str
 - **Version** at the bottom of Explore's Settings, for everyone.
 - **Your own chat bubble**: in your own eyes' view (no figure of you to put it over) what you said shows at the top of
   the screen, under the buttons, as "You said", for the same 30 s. In the worker view it stays over your head.
+
+## The same Explore from the news app, and Ash's settings in the map (15 November 2026)
+
+- **The news app's Explore opens the same town model** for everyone, admins too (Ash: "Why when I launch via awesome
+  news is the ui different. It should load the exact same thing"). With the passphrase unlocked it used to open the old
+  fly-about; it now opens the town model from Moorooka, Moorooka's bowls club and drive, Inverloch's town, beach and drive,
+  and Logan. (The old fly-about, with "Use this view for the weather", is still what Brisbane and the motorway open.)
+- **Ash's settings live in the map** (Ash: "if my name is ash I should see all the settings in the map rather than in
+  awesome news settings"): the news app's Settings no longer has "Exploring with others" (player name and showing you to
+  others are in the map's Settings), and the map's Settings has, for Ash, the GitHub key that saves map edits and kept
+  views for everyone, under Cars and planes and Explore parts.

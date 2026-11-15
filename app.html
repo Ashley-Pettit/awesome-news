@@ -1420,6 +1420,7 @@ body.bsme .bs-height, body.bstown.bsme .bs-height { left: 16px; top: calc(62px +
 .bs-me-num { display: flex; align-items: center; justify-content: space-between; gap: 10px; font: 650 0.8rem/1.2 var(--ui); }
 .bs-me-num small { display: block; margin-top: 2px; font-weight: 500; font-size: 0.7rem; color: rgba(255, 255, 255, 0.6); }
 .bs-me .bs-me-num input { flex: none; width: 5.2em; height: 36px; padding: 0 8px; text-align: right; }
+.bs-me-key { display: flex; gap: 6px; } .bs-me-key input { flex: 1; min-width: 0; } .bs-me-key .bs-me-go { flex: none; padding: 0 14px; }
 .bs-me .bs-me-ver { font: 600 0.7rem var(--ui); color: #8fb4ff; text-align: right; }
 .bs-me-h { display: flex; justify-content: space-between; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.14); font-weight: 650; }
 .bs-me-exit { width: 100%; min-height: 42px; border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 12px; background: none; color: #fff; font: 700 0.86rem var(--ui); cursor: pointer; }
@@ -4069,10 +4070,6 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
         <div class="field"><label for="setName">Your name</label><input type="text" id="setName" placeholder="Optional" autocomplete="given-name" maxlength="30" value="${esc(S.name)}"></div>
         <div class="field"><label for="setRegion">Local news</label><select id="setRegion">${regions.map(r => `<option value="${r.id}"${r.id === S.region ? " selected" : ""}>${esc(r.label)}${counts["local-" + r.id] != null ? ` (${counts["local-" + r.id]})` : ""}</option>`).join("")}</select></div>
       </div><p class="hint">Your name is used in the greeting.</p></div>
-      <div class="group"><h2>Exploring with others</h2><div class="card">
-        <div class="field"><label for="setPlayer">Player name</label><input type="text" id="setPlayer" placeholder="${esc(playerName())}" autocomplete="off" maxlength="16" value="${esc((() => { try { return localStorage.getItem("an-player") || ""; } catch { return ""; } })())}"></div>
-        ${toggle("data-player-show", "1", (() => { try { return localStorage.getItem("an-player-off") !== "1"; } catch { return true; } })(), "Show me to other players", "Others exploring the same suburb in 3D see where you are and your player name")}
-      </div><p class="hint">In each suburb's 3D map, people exploring at the same time see each other. Your player name is shown over you, so pick one you are happy for anyone to see.</p></div>
       <div class="group"><h2>Your suburb</h2><div class="card">${[["moorooka", "Moorooka"], ["inverloch", "Inverloch"], ["logan", "Logan"]].map(([id, label]) =>
         `<a class="field" style="color:inherit;text-decoration:none" href="${location.pathname.replace(/(moorooka|inverloch|logan)\/?(index\.html)?$/, "").replace(/[^/]*$/, "")}${id}/"><span class="lbl">${label}<span class="sub">Open the ${label} news and its 3D map</span></span><span class="chev" aria-hidden="true">\u203a</span></a>`).join("")}
       </div><p class="hint">Each suburb has its own news and its own 3D map to explore.</p></div>
@@ -5933,8 +5930,10 @@ const handle = async (m, post) => {
     // Explore from the weather screen opens the same 3D town as everywhere else (Ash, 15 November 2026: "Bring Inverloch in line
     // with the other apps settings and layout"): Inverloch's weather scene used to open a fly-about of the weather's own scene,
     // with its old buttons. The old fly-about stays for keeping a view for the weather (Admin with the passphrase, or Claude's copy).
-    $("bsFlyBtn").onclick = () => { const k = ({ invTown: "inv", invBeach: "inv", moo: "moo", mooBowls: "moo", logan: "logan" })[BS.sceneKey];
-      if (k && TOWNS[k] && !(A.unlocked || state.mode === "claude")) townModelOpen(true, k); else bsFlyOn(); };
+    // the same town model as the town's own Explore, for everyone, admins too (Ash, 15 November 2026: "Why when I launch via awesome
+    // news is the ui different. It should load the exact same thing": with the passphrase unlocked it used to open the old fly-about)
+    $("bsFlyBtn").onclick = () => { const k = ({ invTown: "inv", invBeach: "inv", driveInv: "inv", moo: "moo", mooBowls: "moo", driveMoo: "moo", logan: "logan" })[BS.sceneKey];
+      if (k && TOWNS[k]) townModelOpen(true, k); else bsFlyOn(); };
     $("bsHourIn").addEventListener("change", () => { BS.view.play = true; });
     $("bsHourIn").addEventListener("input", e => { BS.view.play = false; BS.view.ms = bsMidnight(bsKey(BS.view.ms)) + (+e.target.value) * 60000; BS.view.day = bsKey(BS.view.ms); if (BS.view.mode === "live") BS.view.mode = "day"; bsApply(true); });
     bsApply(true); bsTick();
@@ -11556,8 +11555,13 @@ const handle = async (m, post) => {
         toast(`${name}: ${off.has(k) ? "off" : "on"}. It applies the next time you open Explore.`, 2600); };
       parts.append(sw); }
     parts.append(el("p", "", "Only you see these, and only on this device."));
-    for (const sec of [cars, parts]) { sec.addEventListener("keydown", e => e.stopPropagation()); sec.addEventListener("keyup", e => e.stopPropagation()); }
-    return [cars, parts]; }
+    // the GitHub key that puts your map edits and kept views in everyone's app (the same key as in the news app's Settings > Admin)
+    const key = el("div", "bs-me-sec"), has = !!store.get("brief.ghToken", ""); key.append(el("span", "bs-me-lbl", "GitHub key (just you)"));
+    const kf = el("form", "bs-me-key"), ki = el("input"), kb = el("button", "bs-me-go", "Save"); ki.type = "password"; ki.autocomplete = "off"; ki.placeholder = has ? "Saved. Paste to replace" : "Paste your GitHub key"; ki.setAttribute("aria-label", "GitHub key"); kb.type = "submit";
+    kf.append(ki, kb); kf.onsubmit = e => { e.preventDefault(); const v = ki.value.trim(); if (!v) return; store.set("brief.ghToken", v); A.ghBad = false; saveAdmin(); redraw(); toast("Saved. Map edits and kept views now go to everyone.", 2600); };
+    key.append(kf, el("p", "", has ? (A.ghBad ? "The saved key isn't working. Paste a new one." : "Saved. Save in map editing puts your edits in everyone's app.") : "Without it, your map edits stay on this device."));
+    for (const sec of [cars, parts, key]) { sec.addEventListener("keydown", e => e.stopPropagation()); sec.addEventListener("keyup", e => e.stopPropagation()); }
+    return [cars, parts, key]; }
   function previewGo() {
     const p = state.prevSel;
     BS.prev = { place: p.place === "bowls" ? "moo" : p.place === "invbeach" ? "inv" : p.place, sky: p.sky };
