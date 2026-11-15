@@ -1522,3 +1522,26 @@ the Red Lion; you can get drunk), the gym (+10% speed on foot), letters at the p
   waiting at the Moorooka Post Office. Not private.
 - **Possum mission**: number 6's pool starts it (no more instant gold): gold rings over up to six roofs nearby, a minute to get
   through them all; win and you're the golden possum.
+
+## Moorooka: more businesses and venues, new locals, your look (16 November 2026, later)
+
+Ash: "Add more real moorooka businesses. Not too high res", "Add the bowls club and other missing venues", the doctor near
+Woolworths ("Can't drive until you do"), "An African store where I can get new clothes", "a hairdresser, a real one where I can
+change my hairdo", Venky out the back of 10 Beaudesert Road ("Fix up this house"), and Sue on Bohain Street with bread.
+
+- **Placed by the Queensland address register** this time (PlanningCadastre/LandParcelPropertyFramework layer 0: street number,
+  name, type and locality in title case), which moved three from the first round: Advance Mechanical Centre (93) is north of Helles
+  Street, the ward office (122) is the building with the car park in front, and Big Boss Pizzas (180) is a building further south
+  (its old spot is now Rooka Acai). The 7-Eleven and Ampol signs moved to their own lots.
+- **New fronts** (plain signs, one texture each): the Woolworths centre as a row (Woolworths, Brumby's, Sushi Guru, Botanicafe,
+  Barra Boys, Moorooka Medical Hub), Roo Kitchen & Bar, Istanbul Kebabs, Rooka Acai, Ho Choi (in the 204 row), Red Rooster, Coles
+  Express with Gloria Jean's and Subway, The Vanilla Lab, Star Seafood, The Clubhouse Moorooka (the old bowls club, 76 Koala Road,
+  with Bean on the Green), Moorooka State School, St Brendan's School, and 398 Tarragindi Road as a row (Vizzeto, Go Thai, Sheesh
+  Mahal, Todd and Pup). Servo signs added for Coles Express, Pearl Energy and Moorooka Servo. A new front kind, `row`: one sign per
+  business along a wall.
+- **Locals**: the Doctor (Medical Hub: sobers you up; drunk now stays, on this device, until you see them), Made in Africa (in the
+  Rannchhod Arcade: five shirts), A La Mode Hair (seven styles, seven colours), Venky (chai), Sue (walks Bohain Street; her magic
+  loaf makes you a giant for a minute: twice the stride, three times the size for everyone).
+- **Your look** travels in your figure's kind as `walk~top.hair.colour` (`.g` for a giant); older copies of the app see "walk".
+  With a look of your own you see yourself in third person on foot, as the chef and the construction worker do.
+- **Venky's house**: a front door, porch roof on posts, steps, patio and pot plants on the side facing number 6 (one small piece).

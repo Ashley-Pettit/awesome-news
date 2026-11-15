@@ -1407,6 +1407,8 @@ body.bscam #bsTown .bs-review, body.bscam #bsTown .bs-ridecard { visibility: hid
 .bs-offer .bs-opts { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
 .bs-offer .bs-opts button { display: block; text-align: left; padding: 8px 12px; min-height: 48px; }
 .bs-offer .bs-opts button small { display: block; font-weight: 500; color: inherit; opacity: 0.85; }
+.bs-offer .bs-chips { display: flex; flex-wrap: wrap; gap: 6px; } .bs-offer .bs-chips button { min-height: 40px; padding: 0 12px; font-size: 0.8rem; }
+.bs-offer .bs-hairs > small { margin-top: 4px; }
 .bs-mail { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
 .bs-mail p { margin: 0; padding: 6px 8px; border-radius: 8px; background: rgba(255, 255, 255, 0.08); font-size: 0.84rem; } .bs-mail p.new { background: rgba(255, 209, 102, 0.22); }
 .bs-mail label { display: flex; flex-direction: column; gap: 3px; font-size: 0.78rem; color: #c9cfe0; }
@@ -8105,7 +8107,7 @@ const handle = async (m, post) => {
     const F = BS.fly, k = F.keys, has = (...c) => c.some(x => k.has(x));
     if (F.drive) return F.drive(dt);  // driving a car in a town model (townCar): the car moves, and the view follows it
     // on foot, the gym makes you 10% quicker and Pandy's lime cordial lets you sprint half as fast again (Shift, or the Sprint button)
-    const legs = F.walk ? (F.fit ? 1.1 : 1) * (F.cordial && (F.sprint || has("ShiftLeft", "ShiftRight")) ? 1.5 : 1) * (F.drunk ? 0.8 : 1) : 1;
+    const legs = F.walk ? (F.fit ? 1.1 : 1) * (F.cordial && (F.sprint || has("ShiftLeft", "ShiftRight")) ? 1.5 : 1) * (F.drunk ? 0.8 : 1) * (F.giant ? 2 : 1) : 1;
     const sp = (has("ShiftLeft", "ShiftRight") ? 34 : 11) * (F.speed ? F.speed() : 1) * Math.min(dt, 0.1) * (F.walk && has("ShiftLeft", "ShiftRight") ? 11 / 34 : 1) * legs;  // the whole-town model flies faster the higher you are
     const f = (has("KeyW", "ArrowUp") ? 1 : 0) - (has("KeyS", "ArrowDown") ? 1 : 0) + F.stick.y;
     const r = (has("KeyD", "ArrowRight") ? 1 : 0) - (has("KeyA", "ArrowLeft") ? 1 : 0) + F.stick.x;
@@ -8786,36 +8788,57 @@ const handle = async (m, post) => {
         { plain: true, w: 3.6, posters: true }, { n: "A La Mode Hair & Beauty", w: 5.5, c: ["#f1e2d6", "#8a2332"] }] },
     { kind: "strip", addr: "201 Beaudesert Road", a: [-97.6, -165.7], b: [-108.0, -182.3], n: [0.8474, -0.5309], kerb: 2.21, across: 13.21, eave: 50.6, wall: "#8f8678", awning: "#3a3a3a",
       shops: [{ n: "Afro Restaurant", w: 6, c: ["#ffffff", "#1a1a1a"], stripe: ["#1f8a3b", "#f2c230", "#d42a2a"], what: "African restaurant", jump: true },
-        { n: "Rannchhod Arcade", sub: "Arhibu Restaurant", w: 7, c: ["#141414", "#ffffff"], arcade: true, what: "Arcade, with Arhibu (Eritrean and Ethiopian food)", jump: true }, { n: "Optometrist", w: 6.6, c: ["#efe9d6", "#2e5d46"] }] },
+        { n: "Rannchhod Arcade", sub: "Made in Africa \u00b7 Arhibu", w: 7, c: ["#141414", "#ffffff"], arcade: true, what: "Arcade, with Arhibu (Eritrean and Ethiopian food)", jump: true }, { n: "Optometrist", w: 6.6, c: ["#efe9d6", "#2e5d46"] }] },
     { kind: "strip", addr: "204 Beaudesert Road", a: [-73.8, -173.8], b: [-60.9, -151.3], n: [-0.8675, 0.4974], kerb: 1.22, across: 13.42, eave: 51.5, wall: "#e9e7e2", awning: "#2b2b2b",
       shops: [{ n: "Barber", w: 4, c: ["#ffffff", "#c22525"] }, { n: "Baba Burger", w: 5, c: ["#1d1d1d", "#f2b632"], what: "Burgers", jump: true }, { n: "Zeitoon", w: 5, c: ["#3f5b2a", "#efe6cf"], what: "Persian and Afghan restaurant", jump: true },
-        { plain: true, w: 5.9, posters: true }, { plain: true, w: 6, posters: true }] },
+        { n: "Ho Choi", w: 5.9, c: ["#b71c1c", "#ffd54f"], what: "Chinese restaurant", jump: true }, { plain: true, w: 6, posters: true }] },
     { kind: "pub", addr: "215 Beaudesert Road", a: [-94.9, -116.9], b: [-92.7, -136.9], n: [0.994, 0.1093], kerb: 11.08, across: 22.08, eave: 0, wall: "#f2f0ea",
       shops: [{ n: "The Willow Hotel", sub: "BAR \u00b7 BISTRO", w: 20.1, c: ["#7a1616", "#ffffff"], what: "Pub: have a few at the bar", jump: true }] },  // (it was the Red Lion: Ash, 16 November 2026, "Update this to be the willow hotel")
     { kind: "sign", addr: "108 Beaudesert Road", a: [-180.7, -464.8], b: [-180.0, -457.0], n: [-0.996, 0.0894], kerb: 15.13, across: 25.93, shops: [{ n: "Rising Sun International Church", w: 7.8, c: ["#f4efe4", "#2c3d63"], what: "Church (once Moorooka Church of Christ)", jump: true }] },
     { kind: "sign", addr: "1115 Ipswich Road", a: [-1068.9, -40.9], b: [-1057.6, -46.7], n: [0.4566, 0.8897], kerb: 14.7, across: 24.3, shops: [{ n: "Starbucks", w: 12.7, c: ["#0f5c3e", "#ffffff"], what: "Coffee, drive-through", jump: true }] },
-    { kind: "sign", addr: "398 Tarragindi Road", a: [664.5, 85.7], b: [658.4, 137.6], n: [-0.9932, -0.1167], kerb: 8.96, across: 18.36, shops: [{ n: "Vizzeto Woodfire", w: 52.3, c: ["#1d1d1d", "#e8a33c"], what: "Woodfired pizza", jump: true }] },
+    { kind: "row", addr: "398 Tarragindi Road", a: [664.5, 85.7], b: [658.4, 137.6], n: [-0.9932, -0.1167], kerb: 8.96, across: 18.36, shops: [{ n: "Vizzeto Woodfire", w: 15, c: ["#1d1d1d", "#e8a33c"], what: "Woodfired pizza", jump: true }, { n: "Go Thai", w: 12, c: ["#6a1b9a", "#ffffff"], what: "Thai" }, { n: "Sheesh Mahal", w: 13, c: ["#8a1c1c", "#f2c230"], what: "Indian restaurant", jump: true }, { n: "Todd and Pup", w: 12.3, c: ["#f3efe6", "#2b2b2b"], what: "Cafe" }] },
     { kind: "sign", addr: "40 Gainsborough Street", a: [-481.6, 94.0], b: [-493.9, 91.5], n: [0.1992, -0.98], kerb: 10.67, across: 21.27, shops: [{ n: "Moorooka Community Centre", w: 12.6, c: ["#22466e", "#ffffff"] }] },
     // more of Moorooka (Ash, 16 November 2026: "Add in a few more well known businesses in moorooka and the petrol stations", with
     // Street View photos of Advance Mechanical Centre, the vet on the corner of Durack Street, Cr Steve Griffiths' ward office and
     // the pharmacy). Where each stands: its address along Beaudesert Road (odd numbers on the west side, rising to the south), the
     // building on that corner in the survey, and the wall of it facing the street (as tools/ground/shops.py works it out). The
     // vet has its board out the front with a joke on it, as the real one does (a different joke).
-    { kind: "sign", addr: "93 Beaudesert Road", a: [-227.6, -515.2], b: [-229.0, -523.0], n: [0.9843, -0.1767], kerb: 0.51, across: 11.01, eave: 38.3, wall: "#2b3440", shops: [{ n: "Advance Mechanical Centre", w: 7.9, c: ["#d71920", "#ffffff"], what: "Mechanic: one upgrade for your car", jump: true }] },
+    { kind: "sign", addr: "93 Beaudesert Road", a: [-245.6, -562.4], b: [-247.1, -570.7], n: [0.9841, -0.1778], kerb: 10.05, across: 20.35, eave: 38.3, wall: "#2b3440", shops: [{ n: "Advance Mechanical Centre", w: 8.4, c: ["#d71920", "#ffffff"], what: "Mechanic: one upgrade for your car", jump: true }] },  // (placed by the Queensland address register: north of Helles Street)
     { kind: "sign", addr: "111 Beaudesert Road", a: [-230.4, -460.5], b: [-228.0, -474.5], n: [0.9856, 0.169], kerb: 9.95, across: 20.45, eave: 39.3, wall: "#f4f1ea", joke: ["WHAT DO YOU CALL A SLEEPING BULL?", "A BULLDOZER"], shops: [{ n: "Greencross Vets", w: 14.2, c: ["#ffffff", "#1b8a3c"], what: "Vet: one upgrade for your possum", jump: true }] },
     { kind: "sign", addr: "114-120 Beaudesert Road", a: [-165.8, -429.1], b: [-159.5, -397.0], n: [-0.9813, 0.1926], kerb: 23.91, across: 35.11, eave: 42.9, wall: "#5e6063", shops: [{ n: "TerryWhite Chemmart", w: 32.7, c: ["#3dae49", "#ffffff"], what: "Pharmacy: ask the pharmacist about a love potion", jump: true }] },
-    { kind: "sign", addr: "Shop 2, 122 Beaudesert Road", a: [-166.0, -359.7], b: [-164.2, -350.1], n: [-0.9829, 0.1843], kerb: 11.1, across: 22.3, eave: 47.6, wall: "#f1eee8", shops: [{ n: "Moorooka Ward Office", w: 9.8, c: ["#b5302a", "#ffffff"], what: "Cr Steve Griffiths' office", jump: true }] },
-    { kind: "sign", addr: "Beaudesert Road and Durack Street", a: [-198.5, -361.3], b: [-206.8, -391.6], n: [0.9645, -0.2642], kerb: 1.52, across: 11.22, eave: 44.3, wall: "#e8e6e0", shops: [{ n: "Woolworths", w: 31.4, c: ["#178841", "#ffffff"], what: "Supermarket", jump: true }] },
+    { kind: "sign", addr: "Shop 2, 122 Beaudesert Road", a: [-155.8, -380.3], b: [-153.7, -368.0], n: [-0.9857, 0.1683], kerb: 24.92, across: 36.12, eave: 44.1, wall: "#f1eee8", shops: [{ n: "Moorooka Ward Office", w: 12.5, c: ["#b5302a", "#ffffff"], what: "Cr Steve Griffiths' office", jump: true }] },
+    // the Woolworths centre (125 Beaudesert Road): the supermarket and the shops beside it along its front, the doctors at the Durack Street end
+    { kind: "row", addr: "125 Beaudesert Road", a: [-198.5, -361.3], b: [-206.8, -391.6], n: [0.9645, -0.2642], kerb: 1.52, across: 11.22, eave: 44.3, wall: "#e8e6e0", shops: [{ n: "Woolworths", w: 12, c: ["#178841", "#ffffff"], what: "Supermarket", jump: true },
+      { n: "Brumby's Bakeries", w: 4, c: ["#c8102e", "#ffffff"], what: "Bakery" }, { n: "Sushi Guru", w: 4, c: ["#1d1d1d", "#ff5a36"], what: "Sushi" }, { n: "Botanicaf\u00e9", w: 4, c: ["#2f6b3a", "#ffffff"], what: "Cafe" },
+      { n: "Barra Boys", w: 3.4, c: ["#0b4f8a", "#ffd54f"], what: "Fish and chips" }, { n: "Moorooka Medical Hub", w: 4, c: ["#ffffff", "#0b6fb8"], what: "Doctors: they'll sober you up after the Willow", jump: true }] },
     { kind: "sign", addr: "Beaudesert Road, across from the Willow", a: [-55.5, -149.3], b: [-53.5, -129.4], n: [-0.995, 0.1], kerb: 5.77, across: 17.97, eave: 53.1, wall: "#8f8476", shops: [{ n: "Snap Fitness 24/7", w: 20, c: ["#1d1d1d", "#ffffff"], stripe: ["#e2231a"], what: "Gym: a workout makes you 10% quicker on foot", jump: true }] },
-    { kind: "sign", addr: "180 Beaudesert Road", a: [-91.7, -214.1], b: [-84.9, -210.0], n: [-0.5163, 0.8564], kerb: 7.88, across: 18.18, eave: 51.7, wall: "#f2efe8", shops: [{ n: "Big Boss Pizzas", w: 7.9, c: ["#1d1d1d", "#f2b632"], what: "Pizza: order the best chips ever", jump: true }] },
+    { kind: "sign", addr: "180 Beaudesert Road", a: [-112.3, -238.5], b: [-103.3, -225.2], n: [-0.8282, 0.5604], kerb: 3.06, across: 13.36, eave: 52.0, wall: "#f2efe8", shops: [{ n: "Big Boss Pizzas", w: 16.1, c: ["#1d1d1d", "#f2b632"], what: "Pizza: order the best chips ever", jump: true }] },
+    { kind: "sign", addr: "Beaudesert Road at Mayfield Road", a: [-91.7, -214.1], b: [-84.9, -210.0], n: [-0.5163, 0.8564], kerb: 7.88, across: 18.18, eave: 51.7, wall: "#efeae0", shops: [{ n: "Rooka Acai", w: 7.9, c: ["#5b2a86", "#ffffff"], what: "Acai bowls", jump: true }] },
     // the servos: a tall sign on a pole by the kerb, a face each way along the road (where each is: its corner, or its number along
     // the road from Starbucks at 1115 Ipswich Road, so near enough rather than exact)
-    { kind: "pylon", addr: "345 Beaudesert Road (corner of Hamilton Road)", a: [-356.8, 534.2], b: [-359.2, 533.8], n: [0.2002, -0.9797], kerb: 10, across: 10, wall: "#d9dbde", shops: [{n:  "Ampol",  w:  2.4,  c:  ["#0a2f6b",  "#ffffff"],  stripe:  ["#e2231a"],  what:  "Petrol station",  jump:  true}] },
-    { kind: "pylon", addr: "345 Beaudesert Road (corner of Hamilton Road)", a: [-359.2, 533.8], b: [-356.8, 534.2], n: [-0.2002, 0.9797], kerb: 10, across: 10, wall: "#d9dbde", shops: [{n:  "Ampol",  w:  2.4,  c:  ["#0a2f6b",  "#ffffff"],  stripe:  ["#e2231a"]}] },
     { kind: "pylon", addr: "1129 Ipswich Road", a: [-1087.1, 24.3], b: [-1085.1, 25.5], n: [-0.5107, 0.8598], kerb: 10, across: 10, wall: "#d9dbde", shops: [{n:  "BP",  w:  2.4,  c:  ["#0d7a3a",  "#ffffff"],  stripe:  ["#f6d000"],  what:  "Petrol station",  jump:  true}] },
     { kind: "pylon", addr: "1129 Ipswich Road", a: [-1085.1, 25.5], b: [-1087.1, 24.3], n: [0.5107, -0.8598], kerb: 10, across: 10, wall: "#d9dbde", shops: [{n:  "BP",  w:  2.4,  c:  ["#0d7a3a",  "#ffffff"],  stripe:  ["#f6d000"]}] },
-    { kind: "pylon", addr: "841 Ipswich Road (corner of Black Street)", a: [-247.0, -1129.0], b: [-245.2, -1127.4], n: [-0.6311, 0.7757], kerb: 10, across: 10, wall: "#d9dbde", shops: [{n:  "7-Eleven",  w:  2.4,  c:  ["#ffffff",  "#008163"],  stripe:  ["#f58220",  "#ee2737",  "#008163"],  what:  "Petrol station",  jump:  true}] },
-    { kind: "pylon", addr: "841 Ipswich Road (corner of Black Street)", a: [-245.2, -1127.4], b: [-247.0, -1129.0], n: [0.6311, -0.7757], kerb: 10, across: 10, wall: "#d9dbde", shops: [{n:  "7-Eleven",  w:  2.4,  c:  ["#ffffff",  "#008163"],  stripe:  ["#f58220",  "#ee2737",  "#008163"]}] },
+    { kind: "pylon", addr: "345 Beaudesert Road (corner of Hamilton Road)", a: [-363.5,  555.0], b: [-365.7,  554.2], n: [0.3094, -0.9509], kerb: 10, across: 10, wall: "#d9dbde", shops: [{ n: "Ampol", w: 2.4, c: ["#0a2f6b",  "#ffffff"], stripe: ["#e2231a"], what: "Petrol station", jump: true }] },
+    { kind: "pylon", addr: "345 Beaudesert Road (corner of Hamilton Road)", a: [-365.7,  554.2], b: [-363.5,  555.0], n: [-0.3094, 0.9509], kerb: 10, across: 10, wall: "#d9dbde", shops: [{ n: "Ampol", w: 2.4, c: ["#0a2f6b",  "#ffffff"], stripe: ["#e2231a"] }] },
+    { kind: "pylon", addr: "841 Ipswich Road", a: [-219.9,  -1169.6], b: [-221.9,  -1171.0], n: [0.5896, -0.8077], kerb: 10, across: 10, wall: "#d9dbde", shops: [{ n: "7-Eleven", w: 2.4, c: ["#ffffff",  "#008163"], stripe: ["#f58220",  "#ee2737",  "#008163"], what: "Petrol station", jump: true }] },
+    { kind: "pylon", addr: "841 Ipswich Road", a: [-221.9,  -1171.0], b: [-219.9,  -1169.6], n: [-0.5896, 0.8077], kerb: 10, across: 10, wall: "#d9dbde", shops: [{ n: "7-Eleven", w: 2.4, c: ["#ffffff",  "#008163"], stripe: ["#f58220",  "#ee2737",  "#008163"] }] },
+    { kind: "pylon", addr: "1029 Ipswich Road", a: [-865.8,  -327.3], b: [-867.8,  -328.7], n: [0.5452, -0.8383], kerb: 10, across: 10, wall: "#d9dbde", shops: [{ n: "Coles Express", w: 2.4, c: ["#e01a22",  "#ffffff"], what: "Petrol station", jump: true }] },
+    { kind: "pylon", addr: "1029 Ipswich Road", a: [-867.8,  -328.7], b: [-865.8,  -327.3], n: [-0.5452, 0.8383], kerb: 10, across: 10, wall: "#d9dbde", shops: [{ n: "Coles Express", w: 2.4, c: ["#e01a22",  "#ffffff"] }] },
+    { kind: "pylon", addr: "930 Ipswich Road", a: [-491.6,  -788.6], b: [-489.6,  -787.2], n: [-0.5916, 0.8063], kerb: 10, across: 10, wall: "#d9dbde", shops: [{ n: "Pearl Energy", w: 2.4, c: ["#1d2b5c",  "#ffffff"], stripe: ["#c9a227"], what: "Petrol station", jump: true }] },
+    { kind: "pylon", addr: "930 Ipswich Road", a: [-489.6,  -787.2], b: [-491.6,  -788.6], n: [0.5916, -0.8063], kerb: 10, across: 10, wall: "#d9dbde", shops: [{ n: "Pearl Energy", w: 2.4, c: ["#1d2b5c",  "#ffffff"], stripe: ["#c9a227"] }] },
+    { kind: "pylon", addr: "485 Beaudesert Road", a: [-587.7,  1179.8], b: [-589.9,  1179.0], n: [0.3265, -0.9452], kerb: 10, across: 10, wall: "#d9dbde", shops: [{ n: "Moorooka Servo", w: 2.4, c: ["#ffd200",  "#1d1d1d"], what: "Petrol station", jump: true }] },
+    { kind: "pylon", addr: "485 Beaudesert Road", a: [-589.9,  1179.0], b: [-587.7,  1179.8], n: [-0.3265, 0.9452], kerb: 10, across: 10, wall: "#d9dbde", shops: [{ n: "Moorooka Servo", w: 2.4, c: ["#ffd200",  "#1d1d1d"] }] },
+    // more of Moorooka (Ash, 16 November 2026: "Add more real moorooka businesses. Not too high res", "Add the bowls club and other missing
+    // venues"): each placed by the Queensland address register (or the food list's point) on the wall of its building facing the street
+    { kind: "sign", addr: "193 Beaudesert Road", a: [-108.4, -182.9], b: [-118.1, -198.5], n: [0.8492, -0.528], kerb: 2.75, across: 13.45, eave: 51.8, wall: "#d7cfc0", shops: [{ n: "Roo Kitchen & Bar", w: 18.4, c: ["#1f1f1f", "#e8b84a"], what: "Cafe and bar", jump: true }] },
+    { kind: "sign", addr: "Beaudesert Road, by the Willow", a: [-87.4, -149.5], b: [-97.2, -165.2], n: [0.8483, -0.5295], kerb: 1.54, across: 12.54, eave: 50.2, wall: "#e9e4da", shops: [{ n: "Istanbul Kebabs", w: 18.5, c: ["#b5121b", "#ffffff"], what: "Kebabs", jump: true }] },
+    { kind: "sign", addr: "838 Ipswich Road", a: [-122.4, -1192.1], b: [-124.7, -1182.7], n: [-0.9713, -0.2377], kerb: 39.14, across: 48.74, eave: 24.1, wall: "#f1ece4", shops: [{ n: "Red Rooster", w: 9.7, c: ["#d71920", "#ffffff"], what: "Chicken", jump: true }] },
+    { kind: "row", addr: "1029 Ipswich Road", a: [-903.5, -321.9], b: [-875.0, -362.8], n: [0.8205, 0.5717], kerb: 29.14, across: 38.74, eave: 19.7, wall: "#ecebe6", shops: [{ n: "Coles Express", w: 20, c: ["#e01a22", "#ffffff"], what: "Servo shop" }, { n: "Gloria Jean's", w: 15, c: ["#5a2d1a", "#ffffff"], what: "Coffee", jump: true }, { n: "Subway", w: 15, c: ["#008c15", "#ffc600"], what: "Sandwiches", jump: true }] },
+    { kind: "sign", addr: "Beaudesert Road, south of Wharton Street", a: [-313.9, -799.1], b: [-320.3, -815.4], n: [0.9308, -0.3655], kerb: 0.44, across: 10.24, eave: 33.3, wall: "#f6efe2", shops: [{ n: "The Vanilla Lab", w: 17.5, c: ["#f6efe2", "#6b4a2b"], what: "Cafe", jump: true }] },
+    { kind: "sign", addr: "Keats Street", a: [-392.4, 279.7], b: [-371.1, 284.1], n: [-0.2023, 0.9793], kerb: 5.27, across: 15.87, eave: 34.2, wall: "#e6e2d8", shops: [{ n: "Star Seafood", w: 21.7, c: ["#0b4f8a", "#ffffff"], what: "Fish and chips", jump: true }] },
+    { kind: "sign", addr: "76 Koala Road", a: [205.6, -373.5], b: [224.0, -362.2], n: [-0.5233, 0.8521], kerb: 12.28, across: 21.88, eave: 33.3, wall: "#ece6d6", shops: [{ n: "The Clubhouse Moorooka", sub: "BOWLS \u00b7 BEAN ON THE GREEN", w: 21.6, c: ["#1f5c3a", "#ffffff"], what: "The old Moorooka Bowls Club, with Bean on the Green cafe", jump: true }] },
+    { kind: "sign", addr: "1 Sherley Street", a: [-189.6, 135.3], b: [-208.0, 132.2], n: [0.1661, -0.9861], kerb: 23.11, across: 33.71, eave: 40.5, wall: "#e9dcc4", shops: [{ n: "Moorooka State School", w: 18.7, c: ["#163e7a", "#ffffff"], what: "Primary school (heritage listed)", jump: true }] },
+    { kind: "sign", addr: "17 Hawtree Street", a: [-654.6, 331.9], b: [-647.5, 301.6], n: [0.9736, 0.2281], kerb: 10.82, across: 21.42, eave: 41.7, wall: "#e4d6c2", shops: [{ n: "St Brendan's School", w: 31.1, c: ["#7a1c2a", "#ffffff"], what: "Catholic primary school", jump: true }] },
   ];
   function townShops(T, m) {
     const THREE = BS.B.THREE, out = [], parts = [], I = new THREE.Matrix4().elements;
@@ -8931,6 +8954,9 @@ const handle = async (m, post) => {
         for (const px of [len / 2 - 3.4, len / 2 + 3.4]) box(px - 0.12, px + 0.12, 0, 4.2, 2.3, 2.54, "#f2f0ea");
         box(-2, len + 2, 0, 1.15, o, o + 0.2, f.wall);
         [["$20 MAIN MEALS", "#1f7a3d", "#ffffff"], ["OPEN TIL 4AM", "#1f7a3d", "#ffffff"], ["KARAOKE", "#1f7a3d", "#ffffff"]].forEach(([t, bg, fg], i) => { const bx = 1.5 + i * (len - 3) / 3; pic(bx, bx + (len - 3) / 3 - 1, 0.25, 0.95, o + 0.215, sign((len - 3) / 3 - 1, 0.7, { n: t, c: [bg, fg] })); });
+      } else if (f.kind === "row") {
+        // a row of businesses along one wall: each its own sign over its share of the front
+        shops.forEach((s, i) => { const [x0, x1] = where[i], w = Math.min(x1 - x0 - 0.5, Math.max(2.6, Math.min(8, s.n.length * 0.4))), cx = (x0 + x1) / 2; board(cx - w / 2, cx + w / 2, 2.55, 3.35, 0.14, s); });
       } else if (f.kind === "pylon") {
         // a servo's sign: a pole, the name up top in its colours, and FUEL under it (Ash, 16 November 2026: "and the petrol stations")
         const s = shops[0]; box(len / 2 - 0.16, len / 2 + 0.16, 0, 4.4, -0.16, 0.16, f.wall);
@@ -10164,6 +10190,14 @@ const handle = async (m, post) => {
     ["refill", "Quick refill", "Boost fills back up three times faster"], ["grip", "Sports tyres", "Turns a third sharper, with a quicker handbrake spin"]];
   const POSSUM_UPS = [["speedy", "Speedy paws", "Runs 30% faster"], ["springy", "Spring legs", "Jumps half as high again"], ["climber", "Climbing claws", "Climbs twice as fast"],
     ["glider", "Glider", "Falls gently, so it floats from roof to roof"], ["zoomies", "Zoomies", "Boost twice as strong"]];
+  // your look (Made in Africa's clothes, A La Mode's hairdos, and Sue's bread for a minute), carried to other players in your figure's kind
+  // as "walk~top.hair.colour" (".g" on the end: a giant); copies of the app from before take it as plain "walk"
+  const TOWN_OUTFITS = { kente: ["Kente cloth shirt", "#e3a21a", ["#1f7a3d", "#b5121b", "#111111"]], dashiki: ["Dashiki", "#b5121b", [], "#f2c230"], ankara: ["Ankara print shirt", "#1f4fa8", ["#f28c28", "#f2c230"]],
+    mudcloth: ["Mud cloth shirt", "#6b4a2b", ["#efe6cf", "#2b2016"]], agbada: ["White agbada", "#f2f0ea", ["#c9a227"]] };
+  const TOWN_HAIRS = { short: "Short back and sides", curly: "Curls", long: "Long", bun: "Top bun", afro: "Afro", mohawk: "Mohawk", bald: "Shaved" };
+  const TOWN_HAIRC = { brown: ["Brown", "#4a3222"], black: ["Black", "#15110f"], blonde: ["Blonde", "#d8bd78"], red: ["Red", "#a8432a"], grey: ["Grey", "#a7a39c"], blue: ["Blue", "#2f6fd6"], pink: ["Pink", "#e05a9a"] };
+  const townLookOf = code => { const [top, hair, hc, g] = String(code || "").split("."); return { top: TOWN_OUTFITS[top] ? top : null, hair: TOWN_HAIRS[hair] ? hair : null, hc: TOWN_HAIRC[hc] ? hc : null, giant: g === "g" }; };
+  const townLookCode = () => { const k = townPerks(), L = k.look || {}, g = BS.fly?.giant && performance.now() < BS.fly.giant.until; if (!L.top && !L.hair && !L.hc && !g) return ""; return [L.top || "-", L.hair || "-", L.hc || "-"].join(".") + (g ? ".g" : ""); };
   // the mechanic's and the vet's upgrades, on top of the numbers in Settings (one of each at a time)
   function townPerkRide(r) { const p = townPerks(), c = p.car, q = p.possum;
     if (c === "turbo") { r.carTop *= 1.25; r.carBoostTop *= 1.25; } else if (c === "launch") r.carAccel *= 1.9; else if (c === "nitro") { r.boostSecs *= 2; r.goldBoostSecs *= 2; }
@@ -10181,29 +10215,33 @@ const handle = async (m, post) => {
   // Yourself, seen from behind, while you walk as a construction worker: your figure (hi-vis and a hard hat) stands where you
   // are, arms swinging as you go, and the view sits about 5 m behind and just over head height, looking the same way (pulled
   // in closer when a building is behind you). Driving, flying the camera or exploring puts the view back in your eyes.
+  const TOWN_ME_TOP = "#2e86ab";  // your own top in third person, when your clothes are your own
   function townMe(T, m, F, ground) {
     const P = { frame() {}, dispose() {}, third: () => false }; if (!m.addParts) return P;
     const THREE = BS.B.THREE, M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), ONE = new THREE.Vector3(1, 1, 1), NONE = new THREE.Matrix4().makeScale(0, 0, 0).elements, R = new THREE.Matrix4();
     const SH = [new THREE.Matrix4().makeTranslation(-0.31, 1.42, 0), new THREE.Matrix4().makeTranslation(0.31, 1.42, 0)];
     let parts = null, shown = false, last = null, swing = 0, amp = 0, dist = 4.2, kind = null, perkAt = 0, chef = false;
     // (the pizza chef too, so you can see yourself: Big Boss Pizzas' best chips ever. Ash, 16 November 2026)
-    P.third = () => (townRole() === "builder" || chef) && T.walk && !T.tween && !F.drive && !T.car?.in;
-    P.frame = () => { const t0 = performance.now(); if (t0 - perkAt > 1000) { perkAt = t0; chef = !!townPerks().chef; }
+    // (and with new clothes or a new hairdo, or as a giant: you see yourself. Ash, 16 November 2026)
+    let lc = "";
+    P.third = () => (townRole() === "builder" || chef || !!lc) && T.walk && !T.tween && !F.drive && !T.car?.in;
+    P.frame = () => { const t0 = performance.now(); if (t0 - perkAt > 500) { perkAt = t0; chef = !!townPerks().chef; lc = townLookCode(); }
       if (!P.third()) { if (shown) { for (let i = 0; i < 3; i++) parts.setMatrix(i, NONE.slice()); shown = false; } last = null; return; }
-      const want = townRole() === "builder" ? "builder" : "chef"; if (parts && kind !== want) { try { parts.remove(); } catch {} parts = null; }
-      if (!parts) { kind = want; parts = m.addParts(townPlaneParts(want === "builder" ? "#ff7a12" : "#f6f5f0", want).map(q => ({ ...q, matrix: NONE.slice() }))); }
+      const role = townRole() === "builder" ? "builder" : chef ? "chef" : "person", want = role + "~" + lc; if (parts && kind !== want) { try { parts.remove(); } catch {} parts = null; }
+      if (!parts) { kind = want; parts = m.addParts(townPlaneParts(role === "builder" ? "#ff7a12" : role === "chef" ? "#f6f5f0" : TOWN_ME_TOP, role, lc).map(q => ({ ...q, matrix: NONE.slice() }))); }
+      const big = townLookOf(lc).giant ? 3 : 1;
       const now = performance.now(), x = F.pos.x, z = F.pos.z, y = ground(x, z), dt = last ? Math.min(0.1, (now - last[2]) / 1000) : 0, v = dt ? Math.hypot(x - last[0], z - last[1]) / dt : 0; last = [x, z, now];
       swing += v * dt * 2.4; amp += (Math.min(0.65, v * 0.22) - amp) * Math.min(1, dt * 8);
       let em = { up: 0, turn: 0, lean: 0, armR: 0, armL: 0, fwdR: 0, fwdL: 0 };  // an emote you've just done, if any
       if (P.emote) { const et = (now - P.emote.t0) / 1000, secs = P.emote.e[4]; if (et > secs) P.emote = null; else em = townEmotePose(P.emote.e[0], et, secs); }
-      M.compose(V.set(x, y + em.up, z), Q.setFromEuler(E.set(em.lean, F.yaw + Math.PI + em.turn, 0, "YXZ")), ONE); parts.setMatrix(0, M.elements.slice());
+      M.compose(V.set(x, y + em.up * big, z), Q.setFromEuler(E.set(em.lean, F.yaw + Math.PI + em.turn, 0, "YXZ")), big > 1 ? new THREE.Vector3(big, big, big) : ONE); parts.setMatrix(0, M.elements.slice());
       const a = Math.sin(swing) * amp; parts.setMatrix(1, M.clone().multiply(SH[0]).multiply(R.makeRotationZ(-em.armR)).multiply(new THREE.Matrix4().makeRotationX(a - em.fwdR)).elements);
       parts.setMatrix(2, M.clone().multiply(SH[1]).multiply(R.makeRotationZ(em.armL)).multiply(new THREE.Matrix4().makeRotationX(-a - em.fwdL)).elements); shown = true;
-      const fx = -Math.sin(F.yaw), fz = -Math.cos(F.yaw); let d = 4.8;
+      const fx = -Math.sin(F.yaw), fz = -Math.cos(F.yaw); let d = 4.8 * big;
       if (m.solidAt) for (; d > 1.2; d -= 0.4) if (!m.solidAt(x - fx * d, z - fz * d) && !T.solid?.(x - fx * d, z - fz * d)) break;
       dist += (d - dist) * Math.min(1, dt * 6 || 1);
       // a little over head height (higher if Up has raised your eyes), so you show in the middle of the screen, clear of the buttons
-      const cx = x - fx * dist, cz = z - fz * dist; m.setCamera(cx, Math.max(y + Math.max(2.4, (F.pos.y - y) * 0.8), ground(cx, cz) + 1.3), cz, F.yaw, F.pitch - 0.1); };
+      const cx = x - fx * dist, cz = z - fz * dist; m.setCamera(cx, Math.max(y + Math.max(2.4 * big, (F.pos.y - y) * 0.8), ground(cx, cz) + 1.3), cz, F.yaw, F.pitch - 0.1); };
     P.dispose = () => { try { parts?.remove(); } catch {} parts = null; };
     return P;
   }
@@ -10328,7 +10366,8 @@ const handle = async (m, post) => {
     if (!m.addParts || !m.getCamera) return P;
     const THREE = BS.B.THREE, M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), ONE = new THREE.Vector3(1, 1, 1), NONE = new THREE.Matrix4().makeScale(0, 0, 0).elements;
     const TOPS = ["#d1495b", "#2e86ab", "#3a9d5d", "#e08e2b", "#7b5ea7", "#1f9e9e", "#c2577a", "#5b7f2f"], wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
-    const SHAPES = { walk: c => townPlaneParts(c, "person"), builder: c => townPlaneParts(c, "builder"), chef: c => townPlaneParts(c, "chef"), car: c => townPlaneParts(c, true), gold: () => townPlaneParts("#e8b923", true), bus: () => townPlaneParts("#2f7fc4", "bus"),
+    const V2 = new THREE.Vector3();
+    const SHAPES = { walk: (c, lc) => townPlaneParts(c, "person", lc), builder: c => townPlaneParts(c, "builder"), chef: c => townPlaneParts(c, "chef"), car: c => townPlaneParts(c, true), gold: () => townPlaneParts("#e8b923", true), bus: () => townPlaneParts("#2f7fc4", "bus"),
       plane: () => townPlaneParts().slice(0, 1), goldplane: () => townPlaneParts("#e2ad1c").slice(0, 1), heli: () => townPlaneParts("#c8322b", "heli").slice(0, 2), goldheli: () => townPlaneParts("#e2ad1c", "heli").slice(0, 2),
       possum: () => townPlaneParts(undefined, "possum") };
     const peers = new Map(); let sendEmote = null, emoteAt = 0; const SH = [new THREE.Matrix4().makeTranslation(-0.31, 1.42, 0), new THREE.Matrix4().makeTranslation(0.31, 1.42, 0)], R1 = new THREE.Matrix4(), R2 = new THREE.Matrix4();
@@ -10402,7 +10441,7 @@ const handle = async (m, post) => {
     const drop = id => { riders?.delete(id); const q = peers.get(id); if (!q) return; try { q.parts?.remove(); } catch {} q.el.remove(); peers.delete(id); P.count = peers.size; };
     const got = (a, id) => { if (!Array.isArray(a) || a.length < 7 || !a.slice(0, 4).every(Number.isFinite)) return;
       let q = peers.get(id); if (!q) { if (peers.size >= 12) return; q = { el: label(id), name: "", kind: "", parts: null, a: null, b: null, colour: TOPS[[...String(id)].reduce((n, ch) => n + ch.charCodeAt(0), 0) % TOPS.length] }; peers.set(id, q); P.count = peers.size; }
-      const now = performance.now(), s = { x: a[0], y: a[1], z: a[2], h: a[3], p: +a[5] || 0, r: +a[6] || 0, k: SHAPES[a[4]] ? a[4] : a[4] === "none" ? "none" : "walk", t: now };
+      const now = performance.now(), s = { x: a[0], y: a[1], z: a[2], h: a[3], p: +a[5] || 0, r: +a[6] || 0, k: SHAPES[String(a[4]).split("~")[0]] ? String(a[4]).slice(0, 40) : a[4] === "none" ? "none" : "walk", t: now };
       q.a = q.b && now - q.b.t < 1500 ? (q.shown || q.b) : s; q.b = s; q.from = now; };
     const named = (raw, id) => { const n = Array.isArray(raw) ? raw[0] : raw, c = Array.isArray(raw) && TOPS[raw[1]]; if (c) { const q0 = peers.get(id); if (q0 && q0.colour !== c) { q0.colour = c; q0.kind = ""; } }
       const q = peers.get(id), name = String(n || "").replace(/[\u0000-\u001f<>]/g, "").trim().slice(0, 16) || "Player"; if (q) { if (!q.name) toast(`${name} is here.`, 2500); q.name = name; q.el.textContent = name; } else { got([0, -1e5, 0, 0, "none", 0, 0], id); const p2 = peers.get(id); if (p2) { p2.name = name; p2.el.textContent = name; if (c) p2.colour = c; toast(`${name} is here.`, 2500); } } };
@@ -10533,7 +10572,7 @@ const handle = async (m, post) => {
     const mine = () => { if (T.car?.riding?.()) return [0, 0, 0, 0, "none", 0, 0];  // riding with someone: they're what shows
       const v = T.car?.in && !off ? T.car.pose?.() : null; if (v) return [v.x, v.y, v.z, v.h, v.k, v.p, v.r];
       if (off) return [0, 0, 0, 0, "none", 0, 0];
-      if (T.walk) return [F.pos.x, ground(F.pos.x, F.pos.z), F.pos.z, F.yaw + Math.PI, townRole() === "builder" ? "builder" : townPerks().chef ? "chef" : "walk", 0, 0];
+      if (T.walk) { const role = townRole() === "builder" ? "builder" : townPerks().chef ? "chef" : "walk", lc = townLookCode(); return [F.pos.x, ground(F.pos.x, F.pos.z), F.pos.z, F.yaw + Math.PI, lc ? role + "~" + lc : role, 0, 0]; }
       // flying low (under 60 m), others see you up there where your eyes are, rather than not at all
       // higher up, nothing is drawn, but where you are still goes, so Jump to can take players to you (Ash, 15 November 2026: "The
       // jump to player doesn't feel like it's working properly. Someone joined but I can't jump to them": a new player starts up in
@@ -10575,8 +10614,8 @@ const handle = async (m, post) => {
           meEl.style.transform = `translate(${Math.round(w / 2 + (dx * rx + dz * rz) / depth * f * (h / 2))}px, ${Math.round(h / 2 - (dx * ux + dy * uy + dz * uz) / depth * f * (h / 2))}px) translate(-50%, -100%)`; } }
       for (const [id, q] of peers) { if (!q.b) continue;
         if (now - q.b.t > 12000) { drop(id); continue; }  // not heard from: gone
-        const kind = q.b.k;
-        if (kind !== q.kind) { try { q.parts?.remove(); } catch {} q.parts = null; q.kind = kind; if (SHAPES[kind]) q.parts = m.addParts(SHAPES[kind](q.colour).map(part => ({ ...part, matrix: NONE.slice() }))); q.a = q.b; }
+        const kind = q.b.k, [base, lc] = String(kind).split("~"), fig = base === "walk" || base === "builder" || base === "chef", big = fig && lc && townLookOf(lc).giant ? 3 : 1;
+        if (kind !== q.kind) { try { q.parts?.remove(); } catch {} q.parts = null; q.kind = kind; if (SHAPES[base]) q.parts = m.addParts(SHAPES[base](q.colour, lc).map(part => ({ ...part, matrix: NONE.slice() }))); q.a = q.b; }
         if (!q.parts) { q.el.hidden = true; continue; }
         // a fifth of a second behind, gliding from where they were shown to the newest word of them
         const t = Math.min(1, (now - q.from) / 220), a = q.a || q.b, b = q.b, far = Math.hypot(b.x - a.x, b.z - a.z) > 60, k = far ? 1 : t;
@@ -10588,10 +10627,10 @@ const handle = async (m, post) => {
           if (v) { const sh = Math.sin(v.h), chh = Math.cos(v.h); s.x = v.x + rc.along * sh + rc.side * chh; s.z = v.z + rc.along * chh - rc.side * sh; s.y = v.y + (CLING_TOP[v.k] ?? 1.95); s.h = v.h + rc.dh; s.p = v.p; s.r = v.r; } }
         // what they are doing: up and down, a turn, a lean, and each arm's swing out to the side and to the front
         let up = 0, turn = 0, lean = 0, armR = 0, armL = 0, fwdR = 0, fwdL = 0, sign = "";
-        if (q.emote && (kind === "walk" || kind === "builder")) { const et = (now - q.emote.t0) / 1000, [name, , sg, , secs] = q.emote.e, ease = Math.min(1, et * 5, (secs - et) * 5);
+        if (q.emote && fig) { const et = (now - q.emote.t0) / 1000, [name, , sg, , secs] = q.emote.e, ease = Math.min(1, et * 5, (secs - et) * 5);
           if (et > secs) q.emote = null; else { sign = sg; ({ up, turn, lean, armR, armL, fwdR, fwdL } = townEmotePose(name, et, secs)); } }
-        M.compose(V.set(s.x, s.y + up, s.z), Q.setFromEuler(E.set(lean - s.p, s.h + turn, s.r, "YXZ")), ONE); q.parts.setMatrix(0, M.elements.slice());
-        if (kind === "walk" || kind === "builder") { q.parts.setMatrix(1, M.clone().multiply(SH[0]).multiply(R1.makeRotationZ(-armR)).multiply(R2.makeRotationX(-fwdR)).elements); q.parts.setMatrix(2, M.clone().multiply(SH[1]).multiply(R1.makeRotationZ(armL)).multiply(R2.makeRotationX(-fwdL)).elements); }
+        M.compose(V.set(s.x, s.y + up * big, s.z), Q.setFromEuler(E.set(lean - s.p, s.h + turn, s.r, "YXZ")), big > 1 ? V2.set(big, big, big) : ONE); q.parts.setMatrix(0, M.elements.slice());
+        if (fig) { q.parts.setMatrix(1, M.clone().multiply(SH[0]).multiply(R1.makeRotationZ(-armR)).multiply(R2.makeRotationX(-fwdR)).elements); q.parts.setMatrix(2, M.clone().multiply(SH[1]).multiply(R1.makeRotationZ(armL)).multiply(R2.makeRotationX(-fwdL)).elements); }
         sayIn(q.el, q.name, q.chat, now, sign);
         if (kind === "heli" || kind === "goldheli") q.parts.setMatrix(1, M.clone().multiply(new THREE.Matrix4().makeTranslation(0, 2.45, 0.1)).multiply(new THREE.Matrix4().makeRotationY(now / 60)).elements);
         if (kind === "possum") q.parts.setMatrix(1, M.clone().multiply(new THREE.Matrix4().makeTranslation(0, 0, -0.27)).multiply(new THREE.Matrix4().makeRotationY(0.22 * Math.sin(now / 160))).elements);  // its tail, swaying
@@ -10779,12 +10818,21 @@ const handle = async (m, post) => {
   // - the postie (the post office): letters to other players (townMail)
   const MOO_LOCALS = [
     { id: "pandy", name: "Pandy", x: -284.3, z: -907.0, draw: false, r: 3.6 },
-    { id: "steve", name: "Cr Steve Griffiths", kind: "steve", top: "#eef1f5", x: -168.0, z: -354.3, yaw: -1.385 },
-    { id: "mech", name: "Mechanic", kind: "person", top: "#1e3a5f", x: -227.1, z: -519.3, yaw: 1.748, car: 10 },
+    { id: "steve", name: "Cr Steve Griffiths", kind: "steve", top: "#eef1f5", x: -157.7, z: -373.6, yaw: -1.402 },
+    { id: "mech", name: "Mechanic", kind: "person", top: "#1e3a5f", x: -243.4, z: -567.1, yaw: 1.750, car: 10 },
     { id: "vet", name: "Vet", kind: "person", top: "#2f8f6f", x: -226.2, z: -467.0, yaw: 1.401, possum: 6 },
     { id: "chem", name: "Pharmacist", kind: "person", top: "#f2f2f2", x: -165.1, z: -412.6, yaw: -1.377 },
     { id: "bar", name: "Bartender", kind: "person", top: "#1d1d1d", x: -90.6, z: -126.5, yaw: 1.461 },
-    { id: "pizza", name: "Big Boss Pizzas", kind: "chef", top: "#f6f5f0", x: -89.3, z: -210.3, yaw: -0.543 },
+    { id: "pizza", name: "Big Boss Pizzas", kind: "chef", top: "#f6f5f0", x: -109.3, z: -230.8, yaw: -0.976 },
+    // (Ash, 16 November 2026: "Make it so you can go to the dr near the Woolworths to remove drunk. Can't drive until you do", "Add a real
+    // shop on Beaudesert rd. An African store where I can get new clothes", "Add a hairdresser, a real one where I can change my hairdo",
+    // "add 'Venky' here. An Indian man 45 years old" (out the back of number 10), "Add sue walking up and down bohmain av. Female 55 blonde
+    // Straight hair. She offers you Bread that does something")
+    { id: "doc", name: "Doctor", kind: "person", top: "#cfe6f5", x: -205.3, z: -389.9, yaw: 1.838 },
+    { id: "cloth", name: "Made in Africa", kind: "person", top: "#e3a21a", look: "kente.short.black", x: -101.3, z: -174.6, yaw: 2.131 },
+    { id: "hair", name: "A La Mode Hair", kind: "person", top: "#8a2332", look: "-.bun.red", x: -153.5, z: -257.2, yaw: 2.133 },
+    { id: "venky", name: "Venky", kind: "venky", top: "#2f5d8a", x: -205.2, z: -975.9, yaw: 2.982 },
+    { id: "sue", name: "Sue", kind: "sue", top: "#7fb3d5", x: -233.0, z: -1022.0, yaw: 1.37, path: [[-233.0, -1022.0], [-131.6, -1001.0]] },
     { id: "gym", name: "Trainer", kind: "person", top: "#d71920", x: -57.5, z: -139.1, yaw: -1.471 },
     { id: "post", name: "Postie", kind: "person", top: "#d71920", x: -206.3, z: -323.3, yaw: 1.705 },
   ];
@@ -10822,48 +10870,86 @@ const handle = async (m, post) => {
       if (q.id === "vet") return show(q, "Bring your possum in? Pick one upgrade for it. One at a time.", [["Not today", () => {}]], pick(q, POSSUM_UPS, "possum", "possum"));
       if (q.id === "chem") { const n = k.potions | 0; return show(q, `Love potion? Give it to another player near you (Emotes, E) and they'll follow you around for 30 seconds.${n ? ` You've got ${n}.` : ""}`,
         [[n >= 3 ? "You've got plenty" : "Buy a love potion", () => { if (n >= 3) return; townPerkSet("potions", n + 1); toast(`💘 A love potion! You've got ${n + 1}. Use it from Emotes (E) near another player.`, 4000); }, "ok"], ["No thanks", () => {}]]); }
-      if (q.id === "bar") return show(q, "What'll it be?", [["A beer", () => drink(1), "ok"], ["A cocktail", () => drink(2), "ok"], ["Just a water", () => { if (BS.fly.drunk) { BS.fly.drunk = null; toast("Water. Much better: you're right as rain.", 2600); } else toast("Refreshing.", 1500); }]]);
+      if (q.id === "bar") return show(q, "What'll it be?", [["A beer", () => drink(1), "ok"], ["A cocktail", () => drink(2), "ok"], ["Just a water", () => toast(BS.fly.drunk ? "Water helps, but you'll still need the doctor at the Moorooka Medical Hub (by Woolworths) before you drive." : "Refreshing.", 3000)]]);
       if (q.id === "pizza") return show(q, k.chef ? "Back for more of the best chips ever?" : "What can I get you?",
         [["The best chips ever", () => { townPerkSet("chef", true); toast("🍟 Best chips ever! You're a pizza chef now: whites, the hat and a big moustache. Everyone can see.", 4500); }, "ok"], ...(k.chef ? [["Take off the chef's whites", () => { townPerkSet("chef", null); toast("Back to your old self.", 2000); }]] : []), ["Just looking", () => {}]]);
       if (q.id === "gym") return k.fit ? show(q, "Looking strong! You're already 10% quicker on your feet.", [["Thanks!", () => {}]])
         : show(q, "Fancy a quick workout? You'll walk 10% faster after.", [["Let's go", () => { workout(q); return "keep"; }, "ok"], ["Not today", () => {}]]);
-      if (q.id === "post") return T.mail ? T.mail.card(q, show, shut) : null; };
+      if (q.id === "post") return T.mail ? T.mail.card(q, show, shut) : null;
+      if (q.id === "doc") return BS.fly.drunk ? show(q, "Had a few at the Willow, have we? Here, this'll sort you out.", [["Sober me up", () => { sober(); toast("\ud83e\ude7a All better. You're right to drive again.", 3200); }, "ok"], ["Not yet", () => {}]])
+        : show(q, "Healthy as a horse! Come and see me if you've had a few at the Willow: you can't drive till I've checked you.", [["Thanks, doc", () => {}]]);
+      if (q.id === "cloth") { const L = k.look || {}, opts = document.createElement("div"); opts.className = "bs-opts";
+        for (const [id, [label, col]] of Object.entries(TOWN_OUTFITS)) { const b = document.createElement("button"); b.type = "button"; b.className = L.top === id ? "ok" : ""; b.style.borderLeft = `14px solid ${col}`; b.innerHTML = `${L.top === id ? "\u2713 " : ""}<b>${label}</b>`;
+          b.onclick = () => { townPerkSet("look", { ...(townPerks().look || {}), top: id }); townPerkSet("chef", null); toast(`Looking sharp in your ${label.toLowerCase()}! Everyone can see it.`, 3000); q.done = true; shut(); }; opts.append(b); }
+        return show(q, "Welcome! Try something on? Pick a shirt.", [...(L.top ? [["Back to my old clothes", () => { townPerkSet("look", { ...(townPerks().look || {}), top: null }); toast("Back in your own clothes.", 2000); }]] : []), ["Just looking", () => {}]], opts); }
+      if (q.id === "hair") { const L = k.look || {}, box2 = document.createElement("div"); box2.className = "bs-opts bs-hairs"; let st = L.hair || "short", hc = L.hc || "brown";
+        const row1 = document.createElement("div"), row2 = document.createElement("div"); row1.className = row2.className = "bs-chips";
+        const paint = () => { row1.querySelectorAll("button").forEach(b => b.className = b.dataset.v === st ? "ok" : ""); row2.querySelectorAll("button").forEach(b => b.className = b.dataset.v === hc ? "ok" : ""); };
+        for (const [id, label] of Object.entries(TOWN_HAIRS)) { const b = document.createElement("button"); b.type = "button"; b.dataset.v = id; b.textContent = label; b.onclick = () => { st = id; paint(); }; row1.append(b); }
+        for (const [id, [label, col]] of Object.entries(TOWN_HAIRC)) { const b = document.createElement("button"); b.type = "button"; b.dataset.v = id; b.textContent = label; b.style.borderBottom = `5px solid ${col}`; b.onclick = () => { hc = id; paint(); }; row2.append(b); }
+        const t1 = document.createElement("small"), t2 = document.createElement("small"); t1.textContent = "Style"; t2.textContent = "Colour"; box2.append(t1, row1, t2, row2); paint();
+        return show(q, "Take a seat, love. What are we doing today?", [["Do my hair", () => { townPerkSet("look", { ...(townPerks().look || {}), hair: st, hc }); townPerkSet("chef", null); toast(`\ud83d\udc87 ${TOWN_HAIRS[st]}, ${TOWN_HAIRC[hc][0].toLowerCase()}. Gorgeous!`, 3000); }, "ok"], ...(L.hair || L.hc ? [["Back to how it was", () => { townPerkSet("look", { ...(townPerks().look || {}), hair: null, hc: null }); toast("Back to your usual hair.", 2000); }]] : []), ["Not today", () => {}]], box2); }
+      if (q.id === "venky") return show(q, "Hello, hello! I'm Venky, from out the back of number 10. Lovely day for it. Would you like a chai?", [["Yes please", () => { toast("\u2615 Venky's masala chai: sweet, spicy and just right. You feel ready for anything.", 3500); }, "ok"], ["Another time", () => {}]]);
+      if (q.id === "sue") return show(q, "Hello there! I've just baked this loaf. Would you like a slice? It's a bit... special.", [["Yes please", () => { const F = BS.fly; F.giant = { until: performance.now() + 60000 }; toast("\ud83c\udf5e Sue's magic loaf! You've grown into a giant for a minute: you stride twice as fast, and everyone sees you towering over Moorooka.", 5000); }, "ok"], ["No thanks", () => {}]]); };
     // the workout: ten quick reps, then you're fitter
     const workout = q => { let n = 0; const p = card.querySelector("p"), row = card.querySelector("div"); row.hidden = true;
       const go = () => { if (open !== q) return; n++; p.innerHTML = `<b>${q.name}</b>: ${["Squats!", "Push-ups!", "Burpees!", "Lunges!", "Star jumps!"][n % 5]} ${n} of 10…`;
         if (n < 10) setTimeout(go, 450); else { townPerkSet("fit", true); BS.fly.fit = true; toast("💪 Workout done! You walk 10% faster now.", 3500); q.done = true; shut(); } }; go(); };
     // a drink at the Willow: wobbly on your feet and no driving for a couple of minutes (a cocktail, longer and wobblier)
-    const drink = lv => { const F = BS.fly, d = F.drunk, level = Math.min(3, (d ? d.level : 0) + lv); F.drunk = { level, until: performance.now() + 60000 + level * 40000, hic: 0 };
-      toast(level >= 3 ? "🍻 Whoa there. The room's spinning a bit. No driving till it wears off!" : "🍺 Cheers! You're a bit wobbly now. No driving till it wears off.", 3800); };
+    // (no wearing off: only the doctor at the Moorooka Medical Hub sorts you out, and it's kept on this device till then)
+    const drink = lv => { const F = BS.fly, d = F.drunk, level = Math.min(3, (d ? d.level : 0) + lv); F.drunk = { level, hic: 0 }; townPerkSet("drunk", level);
+      toast(level >= 3 ? "\ud83c\udf7b Whoa there. The room's spinning. No driving till the doctor at the Moorooka Medical Hub (by Woolworths) checks you!" : "\ud83c\udf7a Cheers! You're a bit wobbly now. No driving till you see the doctor at the Moorooka Medical Hub, by Woolworths.", 4500); };
+    const sober = () => { BS.fly.drunk = null; townPerkSet("drunk", null); };
     // Sprint on a phone (Pandy's cordial): held, like Boost
     const sprint = document.createElement("button"); sprint.type = "button"; sprint.className = "bs-fly-x bs-sprint"; sprint.textContent = "Sprint"; sprint.hidden = true; ($("bsFly") || box).append(sprint);
     const hold = on => e => { BS.fly.sprint = on; sprint.classList.toggle("on", on); e.preventDefault(); };
     sprint.addEventListener("pointerdown", hold(true)); for (const ev of ["pointerup", "pointercancel", "pointerleave"]) sprint.addEventListener(ev, hold(false));
     const touch = matchMedia("(pointer: coarse)").matches;
-    { const k = perks(); BS.fly.cordial = !!k.cordial; BS.fly.fit = !!k.fit; }
+    { const k = perks(); BS.fly.cordial = !!k.cordial; BS.fly.fit = !!k.fit; if (k.drunk && !BS.fly.drunk) BS.fly.drunk = { level: k.drunk, hic: 0 }; }
+    // the house out the back of number 10 (Venky's), tidied up: a front door on the side facing number 6, a little porch roof on posts,
+    // steps and a paved patio (Ash, 16 November 2026: "Fix up this house then add 'Venky' here"). One small piece, a few dozen triangles
+    { const Pp = [], Nn = [], Cc = [], lin = h => { const v = parseInt(h.slice(1), 16); return [(v >> 16) & 255, (v >> 8) & 255, v & 255].map(c => Math.pow(c / 255, 2.2)); };
+      const W = { x: -205.55, z: -973.2, ux: -0.988, uz: -0.159, nx: 0.159, nz: -0.988 }, y0 = g(W.x, W.z) + 0.02;
+      const at = (u, o, y) => [W.x + W.ux * u + W.nx * o, y0 + y, W.z + W.uz * u + W.nz * o];
+      const quad = (A, B, C, D, col) => { const ux = B[0] - A[0], uy = B[1] - A[1], uz = B[2] - A[2], vx = D[0] - A[0], vy = D[1] - A[1], vz = D[2] - A[2]; let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; const l = Math.hypot(nx, ny, nz) || 1;
+        for (const q of [A, B, C, A, C, D]) { Pp.push(...q); Nn.push(nx / l, ny / l, nz / l); Cc.push(...col); } };
+      const box = (u0, u1, o0, o1, y1, y2, hex) => { const c = lin(hex), p = (u, o, y) => at(u, o, y);
+        quad(p(u0, o1, y1), p(u1, o1, y1), p(u1, o1, y2), p(u0, o1, y2), c); quad(p(u1, o0, y1), p(u0, o0, y1), p(u0, o0, y2), p(u1, o0, y2), c); quad(p(u0, o0, y2), p(u0, o1, y2), p(u1, o1, y2), p(u1, o0, y2), c);
+        quad(p(u0, o0, y1), p(u0, o1, y1), p(u0, o1, y2), p(u0, o0, y2), c); quad(p(u1, o1, y1), p(u1, o0, y1), p(u1, o0, y2), p(u1, o1, y2), c); };
+      box(-3.2, 3.2, 0, 2.6, 0, 0.06, "#c9c3b6");  // the patio
+      box(-0.85, 0.85, 0, 0.5, 0.06, 0.32, "#bdb8ad"); box(-0.85, 0.85, 0.5, 0.95, 0.06, 0.18, "#bdb8ad");  // steps
+      box(-0.55, 0.55, 0.0, 0.05, 0.32, 2.45, "#f2f0ea"); box(-0.46, 0.46, 0.03, 0.07, 0.36, 2.38, "#4a3324");  // the door in its frame
+      box(-1.5, 1.5, 0, 1.9, 2.62, 2.72, "#9a8a76"); for (const u of [-1.4, 1.4]) box(u - 0.06, u + 0.06, 1.74, 1.86, 0.06, 2.62, "#f2f0ea");  // the porch roof on two posts
+      for (const u of [-2.7, 2.5]) box(u - 0.22, u + 0.22, 1.9, 2.3, 0.06, 0.5, "#8a5a3c");  // pot plants either side
+      for (const u of [-2.7, 2.5]) box(u - 0.18, u + 0.18, 1.95, 2.25, 0.5, 0.95, "#4f8a3a");
+      m.addParts([{ positions: new Float32Array(Pp), normals: new Float32Array(Nn), colors: new Float32Array(Cc), color: [1, 1, 1], roughness: 0.8, doubleSide: true, matrix: new THREE.Matrix4().elements }]); }
     let last = performance.now(), t = 0;
     P.frame = () => { const now = performance.now(), dt = Math.min(0.1, (now - last) / 1000); last = now; t += dt; const F = BS.fly; if (!F) return;
       const walking = !!T.walk && !T.car?.in, pose = T.car?.in ? T.car.pose?.() : null, me = pose || { k: walking ? "walk" : "fly", x: F.pos.x, z: F.pos.z }, up = F.pos.y - g(F.pos.x, F.pos.z);
       sprint.hidden = !(touch && walking && F.cordial);
       // tipsy: you sway as you walk, and it wears off
-      if (F.drunk) { const D = F.drunk; if (now > D.until) { F.drunk = null; toast("You've sobered up.", 2200); }
-        else if (walking) { const w = 0.5 + D.level * 0.5; F.yaw += Math.sin(t * 0.8) * 0.32 * w * dt; F.pitch = bsClamp(F.pitch + Math.sin(t * 1.3) * 0.12 * w * dt, -1.4, 1.4);
+      if (F.giant && now > F.giant.until) { F.giant = null; toast("You've shrunk back to your usual size.", 2400); }
+      if (F.drunk) { const D = F.drunk;
+        if (walking) { const w = 0.5 + D.level * 0.5; F.yaw += Math.sin(t * 0.8) * 0.32 * w * dt; F.pitch = bsClamp(F.pitch + Math.sin(t * 1.3) * 0.12 * w * dt, -1.4, 1.4);
           F.pos.x += Math.sin(t * 1.1) * 0.8 * w * dt * Math.cos(F.yaw); F.pos.z -= Math.sin(t * 1.1) * 0.8 * w * dt * Math.sin(F.yaw);
           if ((D.hic -= dt) < 0) { D.hic = 9 + Math.random() * 8; toast("*hic*", 1100); } } }
       for (const q of folk) { const dx = me.x - q.x, dz = me.z - q.z, d = Math.hypot(dx, dz);
         if (q.draw !== false) { if (d > 260 || up > 220) { if (q.shown) { for (let i = 0; i < 3; i++) q.parts.setMatrix(i, FAR.slice()); q.shown = false; } }
-          else { if (!q.parts) q.parts = m.addParts(townPlaneParts(q.top, q.kind).map(p => ({ ...p, matrix: FAR.slice() })));
+          else { if (!q.parts) q.parts = m.addParts(townPlaneParts(q.top, q.kind, q.look || null).map(p => ({ ...p, matrix: FAR.slice() })));
+            // Sue walks her stretch of Bohain Street, end to end and back, and stops to chat when you're near
+            let moved = false, sw = 0; if (q.path) { const [A, B] = q.path, L = Math.hypot(B[0] - A[0], B[1] - A[1]); q.s ??= 0; q.dir ??= 1;
+              if (d > 6) { q.s += q.dir * 1.25 * dt; if (q.s > L || q.s < 0) { q.s = bsClamp(q.s, 0, L); q.dir = -q.dir; } q.x = A[0] + (B[0] - A[0]) * q.s / L; q.z = A[1] + (B[1] - A[1]) * q.s / L; q.yaw = Math.atan2((B[0] - A[0]) * q.dir, (B[1] - A[1]) * q.dir); moved = true; q.st = (q.st || 0) + dt * 6.5; sw = Math.sin(q.st) * 0.35; } }
             const want = d < 14 ? Math.atan2(dx, dz) : q.yaw, turn = wrap(want - q.look);
-            if (!q.shown || Math.abs(turn) > 0.01) { q.look += turn * Math.min(1, dt * 3) + (q.shown ? 0 : turn); q.shown = true; const S = q.kind === "steve" ? SHA : SHP;
+            if (!q.shown || moved || Math.abs(turn) > 0.01) { q.look += turn * Math.min(1, dt * (moved ? 6 : 3)) + (q.shown ? 0 : turn); q.shown = true; const S = /^(steve|venky|sue)$/.test(q.kind) ? SHA : SHP;
               M.compose(V.set(q.x, g(q.x, q.z), q.z), Q.setFromEuler(E.set(0, q.look, 0, "YXZ")), ONE); q.parts.setMatrix(0, M.elements.slice());
-              q.parts.setMatrix(1, M.clone().multiply(S[0]).multiply(new THREE.Matrix4().makeRotationZ(-0.06)).elements); q.parts.setMatrix(2, M.clone().multiply(S[1]).multiply(new THREE.Matrix4().makeRotationZ(0.06)).elements); } } }
+              q.parts.setMatrix(1, M.clone().multiply(S[0]).multiply(new THREE.Matrix4().makeRotationZ(-0.06)).multiply(new THREE.Matrix4().makeRotationX(sw)).elements); q.parts.setMatrix(2, M.clone().multiply(S[1]).multiply(new THREE.Matrix4().makeRotationZ(0.06)).multiply(new THREE.Matrix4().makeRotationX(-sw)).elements); } } }
         // their name over their head while you're near enough to read it (Pandy's is townHome6's)
         if (q.id !== "pandy") { const s = d < 60 && up < 120 ? onScreen(q.x, g(q.x, q.z) + 2.15, q.z) : null; q.tag.hidden = !s; if (s) q.tag.style.transform = `translate(${s[0]}px, ${s[1]}px) translate(-50%, -100%)`; }
         // walk up (or drive up to the mechanic, or run up as the possum to the vet) and they talk to you, once a visit
         const r = me.k === "walk" ? (q.r || 3.4) : me.k === "possum" ? q.possum : /^(car|gold|bus)$/.test(me.k) ? q.car : 0;
         if (r && d < r) { if (!q.near && !q.done && !open) { q.near = true; talk(q); } }
         else if (d > (r || 4) + 5) { q.near = false; q.done = false; if (open === q) shut(); } } };
-    P.dispose = () => { card.remove(); sprint.remove(); for (const q of folk) { q.tag.remove(); try { q.parts?.remove(); } catch {} } const F = BS.fly; if (F) { F.drunk = null; F.sprint = false; } };
+    P.dispose = () => { card.remove(); sprint.remove(); for (const q of folk) { q.tag.remove(); try { q.parts?.remove(); } catch {} } const F = BS.fly; if (F) { F.drunk = null; F.sprint = false; F.giant = null; } };
     return P;
   }
   // ---- letters at the post office (Ash, 16 November 2026: "I want to be able to send mail at the post office. I type the player name, they
@@ -10905,7 +10991,7 @@ const handle = async (m, post) => {
     P.dispose = () => { dead = true; clearInterval(poll); };
     return P;
   }
-  function townPlaneParts(stripe = "#1f6fb2", car = false) {
+  function townPlaneParts(stripe = "#1f6fb2", car = false, look = null) {
     const lin = hex => { const v = parseInt(hex.slice(1), 16); return [((v >> 16) & 255) / 255, ((v >> 8) & 255) / 255, (v & 255) / 255].map(c => Math.pow(c, 2.2)); };
     const WHITE = lin("#f3f3ee"), BLUE = lin(stripe), GLASS = lin("#1c2a36"), DARK = lin("#2a2c30"), TYRE = lin("#17181a"), GREY = lin("#b9bcc0");
     const mesh = () => { const P = [], N = [], C = [];
@@ -10928,10 +11014,12 @@ const handle = async (m, post) => {
         R[j].push([cx + Math.sin(ph) * Math.sin(th) * rx * k, cy + Math.cos(ph) * ry * k, cz + Math.sin(ph) * Math.cos(th) * rz * k]); } }
       for (let j = 0; j < nr; j++) for (let i = 0; i < ns; i++) { const a = R[j][i], b2 = R[j][(i + 1) % ns], c = R[j + 1][(i + 1) % ns], d = R[j + 1][i], cl = Array.isArray(col[0]) ? col[(i + j) % col.length] : col;
         if (j === 0) B.tri(a, c, d, cl); else if (j === nr - 1) B.tri(a, b2, d, cl); else B.quad(a, b2, c, d, cl); } };
-    if (car === "ash" || car === "pandy" || car === "steve") {  // Ash (6 Beaudesert Road: short curly brown hair) or Pandy (24 Beaudesert Road: long brown hair), about 1.7 m, feet on y = 0, facing +Z, a top in the colour given
+    if (car === "ash" || car === "pandy" || car === "steve" || car === "venky" || car === "sue") {  // Ash (6 Beaudesert Road: short curly brown hair) or Pandy (24 Beaudesert Road: long brown hair), about 1.7 m, feet on y = 0, facing +Z, a top in the colour given
       // (or Cr Steve Griffiths, at his ward office: short grey hair, a shirt and tie, dark trousers. Ash, 16 November 2026)
-      const she = car === "pandy", st = car === "steve", TOP = lin(stripe), JEAN = lin(she ? "#33405a" : st ? "#2e3440" : "#3d5878"), SHOE = lin(she ? "#7a5236" : st ? "#1b1b1b" : "#ece9e2"), SOLE = lin("#9a948a"), SKIN = lin(she ? "#e8bd9e" : st ? "#e6b896" : "#e2b393"),
-        HAIR = she ? [lin("#5b3a26"), lin("#664330"), lin("#4e3222")] : st ? [lin("#a7a39c"), lin("#b6b2ab"), lin("#97938c")] : [lin("#5a3b24"), lin("#6b4529"), lin("#4c3220")], EYE = lin("#2a1f1a"), LIP = lin("#b06a64");
+      // (and Venky, out the back of number 10: short black hair and a moustache; and Sue on Bohain Street: straight blonde hair. Ash, 16 November 2026)
+      const su = car === "sue", she = car === "pandy" || su, st = car === "steve", vk = car === "venky", TOP = lin(stripe), JEAN = lin(su ? "#5d6b7a" : she ? "#33405a" : st ? "#2e3440" : vk ? "#7a6a52" : "#3d5878"), SHOE = lin(su ? "#d9d4ca" : she ? "#7a5236" : st ? "#1b1b1b" : vk ? "#3a2a1e" : "#ece9e2"), SOLE = lin("#9a948a"),
+        SKIN = lin(su ? "#ecc2a4" : she ? "#e8bd9e" : st ? "#e6b896" : vk ? "#9a6644" : "#e2b393"),
+        HAIR = su ? [lin("#d8bd78"), lin("#e4cc8c"), lin("#cbb06a")] : she ? [lin("#5b3a26"), lin("#664330"), lin("#4e3222")] : st ? [lin("#a7a39c"), lin("#b6b2ab"), lin("#97938c")] : vk ? [lin("#1a1512"), lin("#221b17"), lin("#141010")] : [lin("#5a3b24"), lin("#6b4529"), lin("#4c3220")], EYE = lin("#2a1f1a"), LIP = lin("#b06a64");
       for (const sx of [-1, 1]) { b.box(sx * 0.1 - 0.06, sx * 0.1 + 0.06, 0, 0.035, -0.09, 0.15, SOLE); b.box(sx * 0.1 - 0.055, sx * 0.1 + 0.055, 0.035, 0.09, -0.085, 0.14, SHOE);
         b.box(sx * 0.1 - 0.07, sx * 0.1 + 0.07, 0.09, 0.84, -0.075, 0.075, JEAN); }
       b.box(-0.19, 0.19, 0.8, 0.9, -0.11, 0.11, JEAN);  // hips
@@ -10944,6 +11032,7 @@ const handle = async (m, post) => {
         for (const sx of [-1, 1]) b.box(sx * 0.098 - 0.026, sx * 0.098 + 0.026, 1.3, 1.6, -0.06, 0.07, HAIR[2]);
         b.box(-0.022, 0.022, 1.51, 1.52, 0.1, 0.108, LIP); }
       else if (st) { ball(b, 0, 1.635, -0.014, 0.106, 0.072, 0.114, HAIR, 12, 8, 4, 0.05); b.box(-0.026, 0.026, 0.98, 1.37, 0.12, 0.132, lin("#7a1c2a")); }  // short grey hair, and his tie
+      else if (vk) { ball(b, 0, 1.64, -0.012, 0.106, 0.07, 0.114, HAIR, 14, 8, 4, 0.05); b.box(-0.048, 0.048, 1.532, 1.55, 0.098, 0.112, HAIR[0]); }  // short black hair, a moustache
       else for (const [x, y, z, r, sd] of [[0, 1.69, 0, 0.075, 1], [-0.055, 1.675, 0.045, 0.05, 2], [0.055, 1.675, 0.045, 0.05, 3], [-0.06, 1.68, -0.045, 0.055, 4], [0.06, 1.68, -0.045, 0.055, 5],
         [0, 1.685, 0.065, 0.048, 6], [-0.085, 1.63, -0.01, 0.042, 7], [0.085, 1.63, -0.01, 0.042, 8], [0, 1.66, -0.085, 0.05, 9], [-0.05, 1.62, -0.08, 0.042, 10], [0.05, 1.62, -0.08, 0.042, 11]])
         ball(b, x, y, z, r, r * 0.85, r, HAIR, sd, 6, 3, 0.35);  // short curly hair: tight little curls over the top, sides and back
@@ -11015,18 +11104,26 @@ const handle = async (m, post) => {
         for (const sx of [-1, 1]) { b.box(sx * 0.13 - 0.04, sx * 0.13 + 0.03, 0.42, 0.5, 0.48, 0.54, B); for (const z of [-0.3, 0.3]) b.box(sx * 0.2 - 0.06, sx * 0.2 + 0.06, 0, 0.12, z - 0.07, z + 0.07, B); } }
       return [b.part({ roughness: 0.85 })];
     }
-    if (car === "person" || car === "builder" || car === "chef") {  // someone walking: 1.75 m tall, feet on y = 0, facing +Z, their top in the colour given
+    if (car === "person" || car === "builder" || car === "chef") { const lk = look ? townLookOf(look) : null, OUT = lk && TOWN_OUTFITS[lk.top];  // someone walking: 1.75 m tall, feet on y = 0, facing +Z, their top in the colour given
       // (a construction worker: a hi-vis orange top with silver bands and a yellow hard hat, whatever colour is given)
       // (a pizza chef from Big Boss Pizzas' best chips ever: whites, a tall chef's hat, a red neckerchief and a big dark moustache.
       // Ash, 16 November 2026: "order the best chips ever that then turns your player into an Italian man")
-      const hv = car === "builder", ch = car === "chef", TOP = lin(hv ? "#ff7a12" : ch ? "#f6f5f0" : stripe), LEG = lin(ch ? "#2a2a2c" : "#2b3345"), SKIN = lin("#d9a887"), HAIR = lin(ch ? "#1c1511" : "#3a2a20");
+      const hv = car === "builder", ch = car === "chef", TOP = lin(hv ? "#ff7a12" : ch ? "#f6f5f0" : OUT ? OUT[1] : stripe), LEG = lin(ch ? "#2a2a2c" : "#2b3345"), SKIN = lin("#d9a887"), HAIR = lin(ch ? "#1c1511" : lk && TOWN_HAIRC[lk.hc] ? TOWN_HAIRC[lk.hc][1] : "#3a2a20");
+      // clothes from Made in Africa (bands across the top, or a bright panel over the chest) and a hairdo from A La Mode (Ash, 16 November
+      // 2026: "An African store where I can get new clothes", "a hairdresser, a real one where I can change my hairdo")
+      if (OUT && !hv && !ch) { (OUT[2] || []).forEach((cl, i) => b.box(-0.245, 0.245, 0.98 + i * 0.13, 1.04 + i * 0.13, -0.135, 0.135, lin(cl))); if (OUT[3]) b.box(-0.13, 0.13, 1.26, 1.46, 0.13, 0.142, lin(OUT[3])); }
+      const hs = !hv && !ch && lk ? lk.hair : null;
       if (ch) { const W = lin("#ffffff"), RED = lin("#c8202a"); b.box(-0.12, 0.12, 1.74, 1.96, -0.12, 0.12, W); b.box(-0.16, 0.16, 1.93, 2.06, -0.16, 0.16, W);  // the hat
         b.box(-0.075, 0.075, 1.565, 1.6, 0.12, 0.14, HAIR); b.box(-0.1, 0.1, 1.42, 1.5, 0.1, 0.15, RED);  // moustache, neckerchief
         for (const bx of [-0.08, 0.08]) for (const by of [1.1, 1.22, 1.34]) b.box(bx - 0.018, bx + 0.018, by, by + 0.036, 0.13, 0.14, lin("#3a3a3a")); }  // the jacket's two rows of buttons
       if (hv) { const BAND = lin("#d8dde2"), HAT = lin("#f5c518"); b.box(-0.245, 0.245, 1.0, 1.05, -0.135, 0.135, BAND); b.box(-0.245, 0.245, 1.18, 1.23, -0.135, 0.135, BAND);
         b.box(-0.15, 0.15, 1.74, 1.86, -0.15, 0.15, HAT); b.box(-0.17, 0.17, 1.72, 1.75, -0.17, 0.22, HAT); }
       for (const sx of [-1, 1]) b.box(sx * 0.13 - 0.09, sx * 0.13 + 0.09, 0, 0.86, -0.1, 0.1, LEG);
-      b.box(-0.24, 0.24, 0.84, 1.46, -0.13, 0.13, TOP); b.box(-0.07, 0.07, 1.46, 1.53, -0.06, 0.06, SKIN); b.box(-0.12, 0.12, 1.5, 1.74, -0.12, 0.12, SKIN); b.box(-0.125, 0.125, 1.66, 1.76, -0.125, 0.11, HAIR);
+      b.box(-0.24, 0.24, 0.84, 1.46, -0.13, 0.13, TOP); b.box(-0.07, 0.07, 1.46, 1.53, -0.06, 0.06, SKIN); b.box(-0.12, 0.12, 1.5, 1.74, -0.12, 0.12, SKIN);
+      if (hs === "bald") {} else if (hs === "afro") ball(b, 0, 1.71, -0.01, 0.2, 0.17, 0.2, HAIR, 21, 9, 5, 0.12);
+      else if (hs === "curly") for (const [x, y, z, r] of [[0, 1.76, 0, 0.08], [-0.08, 1.73, 0.04, 0.06], [0.08, 1.73, 0.04, 0.06], [-0.09, 1.72, -0.06, 0.065], [0.09, 1.72, -0.06, 0.065], [0, 1.72, -0.1, 0.07]]) ball(b, x, y, z, r, r * 0.85, r, HAIR, 22, 6, 3, 0.3);
+      else if (hs === "mohawk") b.box(-0.03, 0.03, 1.72, 1.92, -0.13, 0.11, HAIR);
+      else { b.box(-0.125, 0.125, 1.66, 1.76, -0.125, 0.11, HAIR); if (hs === "long") b.box(-0.13, 0.13, 1.3, 1.72, -0.135, -0.04, HAIR); if (hs === "bun") ball(b, 0, 1.81, -0.06, 0.07, 0.065, 0.07, HAIR, 23, 7, 4, 0.08); }
       // each arm is a part of its own, hanging from its shoulder at its own origin (the body's part is first, then right, then left)
       const arm = () => { const a = mesh(); a.box(-0.07, 0.07, -0.6, 0, -0.08, 0.08, TOP); a.box(-0.06, 0.06, -0.7, -0.6, -0.06, 0.06, SKIN); return a.part({}); };
       return [b.part({}), arm(), arm()];
@@ -11574,7 +11671,7 @@ const handle = async (m, post) => {
       RIDE_UP = { car: 1.5, gold: 1.5, bus: 3.4, plane: 2.4, goldplane: 2.4, heli: 2.4, goldheli: 2.4, possum: 0.9 };
     let ride = null, shownRide = null;  // the player you're riding with: { id, name, k, at: [x, y, z, t] }; who the button last offered
     const CLING = { plane: 1.95, goldplane: 1.95, heli: 2.05, goldheli: 2.05, car: 1.45, gold: 1.45, bus: 3.3 };  // (cars too: Ash, 15 November 2026, "let the possum also get ontop of cars")  // what the possum can hold on to, and how high its top is
-    C.enter = () => { if (!veh && F.drunk) { toast("You've had a few at the Willow. No driving: walk it off first (it wears off in a couple of minutes).", 3400); return true; }  // (Ash, 16 November 2026: "you can get drunk")
+    C.enter = () => { if (!veh && F.drunk) { toast("You've had a few at the Willow. No driving till the doctor at the Moorooka Medical Hub (by Woolworths) has checked you.", 3800); return true; }  // (Ash, 16 November 2026: "you can get drunk")
       if (veh) { if (veh === "plane" && plane.heli && plane.air) return toast(touch ? "Land first: hold Down until it is on the ground." : "Land first: hold the up arrow (or C) until it is on the ground."), true;
       if (veh === "plane" && (plane.air || plane.v > 6)) return toast(touch ? "Land and stop first: pull the left stick back to slow down, and it comes down as it slows (or hold Dive)." : "Land and stop first: S slows the plane, and it comes down as it slows (or hold the up arrow)."), true; return leave(true), true; }
       if (!T.walk || T.tween) return false;
