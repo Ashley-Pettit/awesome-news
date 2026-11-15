@@ -1154,3 +1154,19 @@ a car but then move around as a possum not a car. Add a teleport to kingwell str
 - **Other players** see you as the possum, tail swaying, with your name over it.
 - Tested in headless Chrome at 1280 by 800 and at phone size (390 by 844, touch): the climb up the light, sitting on top,
   running across number 16's roof and off its edge, jumping, hopping out, and the Jump to entry.
+
+## The possum handles like a possum, ride with other players, and chat (15 November 2026)
+
+- **Possum** (Ash: "handles a bit too much like a car ... Jump x 2.5 height, speed down by 20%, remove boost and put jump
+  there. Get rid of the other jump and let go btn"): the stick now points the way to run, seen from where you're looking;
+  it whips round (11 rad/s on the ground) and scampers off, quick to start and stop. Top speed 26.4 m/s (was 33),
+  jump 11.1 m/s up (2.5 times the height), Jump on the button where Boost was (over the right stick); no Up/Down
+  buttons. Pull back on a wall to let go, or Jump to spring off it.
+- **Ride with another player**: walk up to someone driving a car, bus, plane, helicopter or the possum (and not up in
+  the air) and the button says "Ride with <name>". You see from behind their vehicle as it goes; they get "<name> has
+  got in with you". While riding you don't show as a figure. Get out puts you beside them.
+- **Chat**: a Chat button under Emote (T on a keyboard). It opens a box at the top and the keyboard; Send (or Enter)
+  shows a white speech bubble over you for 30 s, for everyone in town, and a short line at the bottom for them too.
+  Up to 120 characters. Hidden players can't chat.
+- The worker view now sets its camera before names and bubbles are placed (they were placed from your eyes, not the
+  camera behind you).
