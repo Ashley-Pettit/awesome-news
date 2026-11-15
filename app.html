@@ -10931,11 +10931,10 @@ const handle = async (m, post) => {
           for (const p of [A, B2, C2, A, C2, D2]) { G.P.push(...p); G.N.push(a / l, b / l, e / l); G.C.push(...c); } };
         q(at(u0, y0, o1), at(u1, y0, o1), at(u1, y1, o1), at(u0, y1, o1)); q(at(u1, y0, o0), at(u0, y0, o0), at(u0, y1, o0), at(u1, y1, o0)); q(at(u0, y1, o0), at(u0, y1, o1), at(u1, y1, o1), at(u1, y1, o0));
         q(at(u0, y0, o0), at(u0, y0, o1), at(u0, y1, o1), at(u0, y1, o0)); q(at(u1, y0, o1), at(u1, y0, o0), at(u1, y1, o0), at(u1, y1, o1)); };
-      const back = geo(), gl = geo(), gr = geo(), fL = geo(), fR = geo(), H = 2.9, top = Math.max(H + 0.5, COUNCIL_GAP[4] - fl), w2 = dl / 2;
-      // the doorway: jambs either side of the doors, the head over the track, glass above it up to the wall, and its frame
+      const back = geo(), gl = geo(), gr = geo(), fL = geo(), fR = geo(), top = Math.max(3.2, COUNCIL_GAP[4] - fl), H = top - 0.24, w2 = dl / 2;  // the doors run up to the head (Ash: "Remove glass at top and stretch door up to there")
+      // the doorway: jambs either side of the doors, and the head over the track
       box(back, -w2, -half, -0.1, top, -0.05, 0.2, "#3b4046"); box(back, half, w2, -0.1, top, -0.05, 0.2, "#3b4046");
       box(back, -half - 0.05, half + 0.05, H, H + 0.22, 0.02, 0.2, "#4a4f55"); box(back, -w2, w2, top - 0.12, top + 0.1, -0.05, 0.2, "#3b4046");
-      box(gl, -half, half, H + 0.22, top - 0.12, 0.08, 0.1, "#9fc4d6");
       // the foyer, from Ash's "I can't walk in building": a room behind the doors (inside is -o), wider past the doorway, with a counter
       const ft = [[-w2, 0], [w2, 0], [4, -3.5], [4, -9], [-4, -9], [-4, -3.5]], wallC = "#e8e4db", fq = (G, A, B2, C2, D2, hex) => { const c = lin(hex), ux = B2[0] - A[0], uy = B2[1] - A[1], uz = B2[2] - A[2], vx = D2[0] - A[0], vy = D2[1] - A[1], vz = D2[2] - A[2]; let a = uy * vz - uz * vy, b = uz * vx - ux * vz, e = ux * vy - uy * vx; const l = Math.hypot(a, b, e) || 1;
         for (const p of [A, B2, C2, A, C2, D2]) { G.P.push(...p); G.N.push(a / l, b / l, e / l); G.C.push(...c); } };
