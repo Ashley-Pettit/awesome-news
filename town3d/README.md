@@ -1455,3 +1455,9 @@ its usual one (Logan's places run out to Jimboomba).
 - **People off the roads** (Ash: "The people in moorooka are a bit too dumb, always on roads"): Moorooka's walkers keep 1.1 m
   further out from the kerb (3.2 m where a street has no footpath of record), and are not drawn within half a road's width plus
   1.7 m of a street's centre line (was 0.6 m) (`moorooka-model.js`, `?v=33`, patched in the walkers' class `G1` and the skip test).
+
+## The possum handles like a car again (15 November 2026)
+
+Ash: "Make the possum turn another 20% slower", then "Actually make the possum car like again". It runs the way it faces
+again (slower while it is still turning round) and the view swings round behind it, as before #156. The turning stays slower:
+6.2 rad/s on the ground and 2.2 in the air (it was 11 and 4 before #156, 7.7 and 2.8 in #156).
