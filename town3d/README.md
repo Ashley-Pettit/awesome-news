@@ -1219,3 +1219,12 @@ a car but then move around as a possum not a car. Add a teleport to kingwell str
   automatically get one"): the first time someone opens Explore on a device, a box at the top asks "What should other
   players call you?" with Join and Skip. Skip keeps the automatic "Player 123" name. It doesn't ask again
   (`an-player-asked`), and the name can be changed in Settings.
+
+## Always daytime, and Explore parts back on (15 November 2026)
+
+- **Midday unless an admin changes it** (Ash: "Let's make the time stay daytime unless as an admin I change it"):
+  Explore opens at 12:00 pm whatever the real time, and Settings' Time of day slider shows only for admins.
+- **Explore parts all back on, once, on every device** (`an3d-off-reset-1`). Ash: "Why does it load a different
+  moorooka via awesome news". The home screen app keeps its own storage, and there the parts switched off while hunting
+  the stick bug were still off: no Settings gear (so the old Exit explore and time buttons showed), no place names, no
+  6 Beaudesert Road detail. They can still be switched off again in Settings.
