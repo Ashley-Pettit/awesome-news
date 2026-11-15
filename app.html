@@ -2344,7 +2344,12 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
   // News: …/moorooka/#explore, The Logan Wire: …/logan/#explore). #explore-logan, #explore-moorooka and #explore-inverloch
   // name the model, from any of the apps. Holds which model: "inv", "moo" or "logan", or "" for none.
   if (document.querySelector('meta[name="an-explore"]')) addEventListener("beforeinstallprompt", e => { e.preventDefault(); window.anInstall = e; });  // Settings > Make it an app
-  let pendingExplore = document.querySelector('meta[name="an-explore"]')?.content  // a suburb's 3D model page (/<suburb>/explore/)
+  // When the phone reloads the page in the middle of a game (iOS does when a tab runs out of memory), come back to the town you were
+  // in, not the one the address names: switching towns doesn't change the address (Ash, 16 November 2026: "Logan just crashed then
+  // reload as moorooka"). The town is kept for this tab only, from opening a town until you leave Explore.
+  const exReload = (() => { try { return performance.getEntriesByType("navigation")[0]?.type === "reload" ? sessionStorage.getItem("an-ex-town") || "" : ""; } catch { return ""; } })();
+  let pendingExplore = (exReload && ["moo", "logan", "inv"].includes(exReload) ? exReload : "")
+    || document.querySelector('meta[name="an-explore"]')?.content  // a suburb's 3D model page (/<suburb>/explore/)
     || (rawHash === "explore" ? exploreWhich() : rawHash === "explore-logan" ? "logan" : rawHash === "explore-moorooka" ? "moo" : rawHash === "explore-inverloch" ? "inv" : "");
   const exploreName = k => k === "moo" ? "Moorooka" : k === "logan" ? "Logan" : "Inverloch";
   // Opening Inverloch's 3D town (the #explore link, or the Explore button): a loading screen over everything until the town
@@ -8071,6 +8076,7 @@ const handle = async (m, post) => {
   }
   function bsFlyOff() {
     const F = BS.fly; if (!F) return;
+    try { sessionStorage.removeItem("an-ex-town"); } catch {}
     if (BS.town) townModelOff();
     if (BS.flyView) { BS.view = { ...BS.flyView, ms: BS.flyView.mode === "live" ? Date.now() : BS.flyView.ms }; BS.flyView = null; try { bsApply(true); } catch {} }
     document.body.classList.remove("flypeek");
@@ -8344,6 +8350,7 @@ const handle = async (m, post) => {
   // in the weather's own town instead. which: "inv" (the default), "moo" or "logan".
   function townModelOpen(viaExplore, which) {
     if (BS.town) return;
+    if (viaExplore) try { sessionStorage.setItem("an-ex-town", TOWNS[which] ? which : "inv"); } catch {}  // (for a reload mid-game: exReload)
     townAssetWatch();
     const cfg = TOWNS[which] || TOWNS.inv;
     // The weather's still on its way: show the loader straight away and carry on once it's here (no "try again" message)
@@ -12163,6 +12170,7 @@ const handle = async (m, post) => {
       if (k !== E.k) { E.k = k; E.h.setEmissive(E.i, e.r, e.g, e.b, E.mat.emissiveIntensity); } }
   }
   function townModelOff() {
+    try { sessionStorage.removeItem("an-ex-town"); } catch {}
     const T = BS.town; if (!T) return;
     BS.town = null; T.dead = true; T.on = false; T.ungest?.(); T.unlay?.(); T.unflood?.();
     T.streets?.dispose(); T.streets = null; $("bsNamesBtn").hidden = true;
