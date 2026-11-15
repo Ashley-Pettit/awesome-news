@@ -1199,3 +1199,6 @@ a car but then move around as a possum not a car. Add a teleport to kingwell str
   admins, the map's Settings has "Set the weather's view": it closes the model and opens the weather's own fly-around,
   where "Use this view for the weather" keeps the view.
 - **Other towns** in the map's Settings: plain links to the other two towns' Explore pages.
+- **Player name counts as Ash** (Ash: "I think player name is not giving me admin"): `isAsh()` is true when either the
+  news app's name or Explore's player name (shared by every town's app) is Ash or Ashley, and `isAdmin()` follows it.
+  Each town's app keeps its own news-app name, so on a town's Explore page the player name was the only one set.
