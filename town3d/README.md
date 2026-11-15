@@ -1545,3 +1545,14 @@ change my hairdo", Venky out the back of 10 Beaudesert Road ("Fix up this house"
 - **Your look** travels in your figure's kind as `walk~top.hair.colour` (`.g` for a giant); older copies of the app see "walk".
   With a look of your own you see yourself in third person on foot, as the chef and the construction worker do.
 - **Venky's house**: a front door, porch roof on posts, steps, patio and pot plants on the side facing number 6 (one small piece).
+
+## Moorooka's bus drives itself; Little Village yoga (16 November 2026)
+
+- Ash: "I want the bus to actually move by itself and stop every now again so I can get on. Drives without me moving it. I'm a
+  passenger." The drivable bus at the Beaudesert Road stop is gone; `townTraffic` runs one bus (`T.traffic.bus`) round the main
+  roads with the traffic, a little slower, stopping every 250 to 450 m (away from corners) for 12 seconds. Walk up while it's
+  stopped: Get on the bus. You ride as a passenger (the `ride` mode used for riding with other players, with `ride.local` the bus):
+  the view follows it, and Get off works at a stop, out of the kerb-side door. With you on, it never jumps elsewhere as the traffic
+  does when stuck or too far away.
+- Ash: "The rising sun is now little village. You can do yoga there and learn the yoga emote." 108 Beaudesert Road is Little
+  Village; its yoga teacher runs a short class and you learn the Yoga emote (perk `yoga`).

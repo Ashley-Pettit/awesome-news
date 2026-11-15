@@ -8794,7 +8794,7 @@ const handle = async (m, post) => {
         { n: "Ho Choi", w: 5.9, c: ["#b71c1c", "#ffd54f"], what: "Chinese restaurant", jump: true }, { plain: true, w: 6, posters: true }] },
     { kind: "pub", addr: "215 Beaudesert Road", a: [-94.9, -116.9], b: [-92.7, -136.9], n: [0.994, 0.1093], kerb: 11.08, across: 22.08, eave: 0, wall: "#f2f0ea",
       shops: [{ n: "The Willow Hotel", sub: "BAR \u00b7 BISTRO", w: 20.1, c: ["#7a1616", "#ffffff"], what: "Pub: have a few at the bar", jump: true }] },  // (it was the Red Lion: Ash, 16 November 2026, "Update this to be the willow hotel")
-    { kind: "sign", addr: "108 Beaudesert Road", a: [-180.7, -464.8], b: [-180.0, -457.0], n: [-0.996, 0.0894], kerb: 15.13, across: 25.93, shops: [{ n: "Rising Sun International Church", w: 7.8, c: ["#f4efe4", "#2c3d63"], what: "Church (once Moorooka Church of Christ)", jump: true }] },
+    { kind: "sign", addr: "108 Beaudesert Road", a: [-180.7, -464.8], b: [-180.0, -457.0], n: [-0.996, 0.0894], kerb: 15.13, across: 25.93, shops: [{ n: "Little Village", sub: "YOGA \u00b7 COMMUNITY", w: 7.8, c: ["#f4efe4", "#3d6b4f"], what: "Community space: do a yoga class and learn the yoga emote", jump: true }] },  // (it was the Rising Sun church: Ash, 16 November 2026, "The rising sun is now little village. You can do yoga there and learn the yoga emote")
     { kind: "sign", addr: "1115 Ipswich Road", a: [-1068.9, -40.9], b: [-1057.6, -46.7], n: [0.4566, 0.8897], kerb: 14.7, across: 24.3, shops: [{ n: "Starbucks", w: 12.7, c: ["#0f5c3e", "#ffffff"], what: "Coffee, drive-through", jump: true }] },
     { kind: "row", addr: "398 Tarragindi Road", a: [664.5, 85.7], b: [658.4, 137.6], n: [-0.9932, -0.1167], kerb: 8.96, across: 18.36, shops: [{ n: "Vizzeto Woodfire", w: 15, c: ["#1d1d1d", "#e8a33c"], what: "Woodfired pizza", jump: true }, { n: "Go Thai", w: 12, c: ["#6a1b9a", "#ffffff"], what: "Thai" }, { n: "Sheesh Mahal", w: 13, c: ["#8a1c1c", "#f2c230"], what: "Indian restaurant", jump: true }, { n: "Todd and Pup", w: 12.3, c: ["#f3efe6", "#2b2b2b"], what: "Cafe" }] },
     { kind: "sign", addr: "40 Gainsborough Street", a: [-481.6, 94.0], b: [-493.9, 91.5], n: [0.1992, -0.98], kerb: 10.67, across: 21.27, shops: [{ n: "Moorooka Community Centre", w: 12.6, c: ["#22466e", "#ffffff"] }] },
@@ -10094,7 +10094,7 @@ const handle = async (m, post) => {
   // (parks, ovals, a point) for the golden plane: it stands at one of them, a different one each visit, and is not in Jump to.
   const TOWN_RIDES = {
     moo: { planes: [...MOO_PLANES, { x: -464, z: -1533, h: 2.71, heli: true, name: "The helicopter", at: "on the field off School Road", what: "On the open grass off School Road, near Nathan Terrace. Walk up to it and get in" }],
-      cars: [MOO_RED6, MOO_GOLD_CAR, { x: -284.4, z: -959.4, h: -0.179, bus: true, name: "The bus", what: "At the bus stop on Beaudesert Road, just up from 6 Beaudesert Road. Slow, long and wide" }], possum: MOO_POSSUM },
+      cars: [MOO_RED6, MOO_GOLD_CAR], possum: MOO_POSSUM },  // (the bus drives itself now: townTraffic)
     inv: { planes: [{ x: -210, z: -377, h: 1.571, name: "The plane", at: "on the lawn by The Hub", what: "On the lawn by The Hub, off A'Beckett Street. Walk up to it and get in" }],
       cars: [{ x: -228.5, z: -375.5, h: Math.PI, spare: true, name: "The red car", what: "On the lawn by The Hub, beside the plane" }, { x: -232.5, z: -375.5, h: Math.PI, gold: true, name: "The golden car", what: "On the lawn by The Hub. A fifth faster than the red one" }],
       more: { planes: [{ x: -1602.1, z: 422, h: 2.6, heli: true, name: "The helicopter", at: "behind 11 Norman Road", what: "On the grass behind 11 Norman Road" }], cars: [{ x: -214, z: -359.6, h: -1.571, bus: true, name: "The bus", what: "In A'Beckett Street, out the front of The Hub" }] },
@@ -10135,6 +10135,8 @@ const handle = async (m, post) => {
       o.up = 1.7 * arc - (t < 0.18 ? 0.12 * Math.sin(Math.PI * t / 0.18) : 0); o.turn = Math.PI * 2 * (air * air * (3 - 2 * air)); o.lean = -0.55 * arc;
       o.armR = (1.2 + 1.4 * arc) * ease; o.armL = (0.6 + 1.9 * arc) * ease; o.fwdR = -0.8 * arc; o.fwdL = 0.9 * arc; }
     else if (name === "bow") o.lean = 0.75 * Math.sin(Math.PI * et / secs);
+    // yoga: arms rise slowly overhead, palms together, a deep breath in and out, a gentle lean to each side, and down again
+    else if (name === "yoga") { const t = et / secs, rise = Math.min(1, t * 4, (1 - t) * 4); o.armR = o.armL = 2.95 * rise; o.lean = 0.12 * Math.sin(et * 1.6) * rise; o.turn = 0.18 * Math.sin(et * 0.8) * rise; o.up = 0.04 * Math.sin(et * 2.2); }
     else if (name === "heart") { o.fwdR = o.fwdL = 1.3 * ease; o.armR = o.armL = 0.25 * ease; }
     return o; }
   // Explore's players meet through public MQTT brokers over secure websockets (port 443 first, so it gets through mobile data
@@ -10180,12 +10182,12 @@ const handle = async (m, post) => {
   }
   const TOWN_EMOTES = [["wave", "Wave", "\ud83d\udc4b", "wave", 2.6], ["dance", "Dance", "\ud83d\udd7a", "dance", 4.5], ["jump", "Jump", "\u2b06\ufe0f", "jump", 2], ["cheer", "Cheer", "\ud83d\ude4c", "cheer", 2.8],
     ["spin", "Spin", "\ud83c\udf00", "spin", 2], ["bow", "Bow", "\ud83d\ude47", "bow", 2.2], ["heart", "Heart", "\u2764\ufe0f", "send a heart", 3],
-    ["kick", "360 kick", "\ud83e\udd4b", "do a 360 kick", 1.7]];  // (the kick takes Spin's place once Cr Steve Griffiths has taught it to you)
+    ["kick", "360 kick", "\ud83e\udd4b", "do a 360 kick", 1.7], ["yoga", "Yoga", "\ud83e\uddd8", "do some yoga", 5]];  // (yoga once Little Village has taught it)  // (the kick takes Spin's place once Cr Steve Griffiths has taught it to you)
   // what you've picked up around Moorooka, kept on this device: car (the mechanic's upgrade), possum (the vet's), cordial (Pandy's: sprint),
   // fit (the gym: walk 10% faster), kick (Steve's 360 kick), potions (love potions from the pharmacy), chef (Big Boss Pizzas' outfit)
   const townPerks = () => { try { return JSON.parse(localStorage.getItem("an3d-perks") || "{}") || {}; } catch { return {}; } };
   const townPerkSet = (k, v) => { const o = townPerks(); if (v == null || v === false) delete o[k]; else o[k] = v; try { localStorage.setItem("an3d-perks", JSON.stringify(o)); } catch {} return o; };
-  const townEmoteList = () => { const k = !!townPerks().kick; return TOWN_EMOTES.filter(e => e[0] !== (k ? "spin" : "kick")); };
+  const townEmoteList = () => { const P = townPerks(), k = !!P.kick; return TOWN_EMOTES.filter(e => e[0] !== (k ? "spin" : "kick") && (e[0] !== "yoga" || P.yoga)); };
   const CAR_UPS = [["turbo", "Turbo", "A quarter more top speed"], ["launch", "Launch control", "Gets up to speed nearly twice as fast"], ["nitro", "Bigger nitro tank", "Boost lasts twice as long"],
     ["refill", "Quick refill", "Boost fills back up three times faster"], ["grip", "Sports tyres", "Turns a third sharper, with a quicker handbrake spin"]];
   const POSSUM_UPS = [["speedy", "Speedy paws", "Runs 30% faster"], ["springy", "Spring legs", "Jumps half as high again"], ["climber", "Climbing claws", "Climbs twice as fast"],
@@ -10295,6 +10297,11 @@ const handle = async (m, post) => {
       nodes = new Map(); for (const r of roads) for (let j = 0; j < r.n; j++) { const k = key(r.p[j * 2], r.p[j * 2 + 1]); let a = nodes.get(k); if (!a) nodes.set(k, a = []); a.push([r, j]); }
       for (let i = 0; i < N; i++) { const C = { col: COLS[i % COLS.length], top: 8 + Math.random() * 6 }; if (!start(C)) continue;
         C.parts = m.addParts(townPlaneParts(C.col, "sedan").map(q => ({ ...q, matrix: M.identity().elements.slice() }))); P.cars.push(C); }
+      // Moorooka's bus drives itself (Ash, 16 November 2026: "I want the bus to actually move by itself and stop every now again so I can
+      // get on. Drives without me moving it. I'm a passenger"): round the main roads like the traffic, a bit slower, stopping every few
+      // hundred metres for 12 seconds. Walk up while it's stopped and Get on; Get off at a stop
+      if (T.cfg?.place === "moo") { const C = { col: "#2f7fc4", top: 10.5, bus: true, stopIn: 120 + Math.random() * 120, stopT: 0 };
+        if (start(C)) { C.parts = m.addParts(townPlaneParts("#2f7fc4", "bus").map(q => ({ ...q, matrix: M.identity().elements.slice() }))); P.cars.push(C); P.bus = C; } }
       last = performance.now(); }, 4000);
     P.frame = () => { if (!P.cars.length) return; const now = performance.now(), dt = Math.min(0.1, (now - last) / 1000); last = now; if (!dt) return;
       // you: on foot, or in whatever you are driving
@@ -10307,7 +10314,10 @@ const handle = async (m, post) => {
         let want = C.top;
         // you: stop if you are in its way
         if (me && T.car?.carrying?.() !== C) { const dx = me.x - cx, dz = me.z - cz, ahead = dx * fx + dz * fz, side = Math.abs(dx * fz - dz * fx);
-          if (ahead > 0 && ahead < 15 && side < 2.4) want = 0; }
+          if (ahead > 0 && ahead < (C.bus ? 20 : 15) && side < (C.bus ? 3 : 2.4)) want = 0; }
+        // the bus: stops every few hundred metres, away from corners, for 12 seconds
+        if (C.bus) { if (C.stopT > 0) { C.stopT -= dt; want = 0; if (C.stopT <= 0) C.stopIn = 250 + Math.random() * 200; }
+          else if ((C.stopIn -= C.v * dt) <= 0 && Math.abs(wrap(h0 - fh)) < 0.2) { C.stopT = 12; want = 0; } }
         // another car ahead: follow it at a distance, or wait for one crossing (the one listed first goes first, so two never wait on each other)
         for (let di = 0; di < P.cars.length; di++) { const D = P.cars[di]; if (D === C || D.x == null) continue;
           const dx = D.x - cx, dz = D.z - cz, ahead = dx * fx + dz * fz, side = Math.abs(dx * fz - dz * fx); if (ahead <= 0 || ahead > 16 || side > 2.3) continue;
@@ -10317,11 +10327,11 @@ const handle = async (m, post) => {
         const rem = L - C.s, at = C.i + C.d, junction = (nodes.get(key(bx, bz)) || []).length > 1 || at === 0 || at === C.r.n - 1;
         if (Math.abs(wrap(h0 - fh)) > 0.3) want = Math.min(want, 6); else if (junction && rem < 16) want = Math.min(want, 5 + rem * 0.4);
         C.v += Math.max(-8 * dt, Math.min(3 * dt, want - C.v)); C.s += C.v * dt;
-        C.still = C.v < 0.2 ? (C.still || 0) + dt : 0; if (C.still > 10) { start(C); return; }  // stuck for 10 s: start again somewhere else
+        C.still = C.v < 0.2 && !(C.stopT > 0) ? (C.still || 0) + dt : 0; if (C.still > 10 && !C.rider) { start(C); return; }  // stuck for 10 s: start again somewhere else
         for (let k = 0; k < 6 && C.s >= L; k++) { C.s -= L; next(C); [ax, az, bx, bz] = seg(C); L = Math.hypot(bx - ax, bz - az) || 0.01; }
         const h = Math.atan2(bx - ax, bz - az); C.h = C.h == null ? h : C.h + wrap(h - C.h) * Math.min(1, dt * 5);
         const t = Math.min(1, C.s / L), lx = Math.cos(C.h), lz = -Math.sin(C.h), x = ax + (bx - ax) * t + lx * C.r.lane, z = az + (bz - az) * t + lz * C.r.lane;
-        if (Math.hypot(x - home[0], z - home[1]) > FAR) { start(C); return; }
+        if (Math.hypot(x - home[0], z - home[1]) > FAR && !C.rider) { start(C); return; }
         C.x = x; C.z = z;
         // on its four wheels, as the car you drive sits (the middle of the four, tipped to the slope), eased so it never jumps
         const sx = Math.sin(C.h), sz = Math.cos(C.h), g = (a, b) => ground(x + sx * a - sz * b, z + sz * a + sx * b), yf = g(1.3, 0), yb = g(-1.3, 0), yr = g(0, 0.8), yl = g(0, -0.8);
@@ -10831,6 +10841,7 @@ const handle = async (m, post) => {
     { id: "doc", name: "Doctor", kind: "person", top: "#cfe6f5", x: -205.3, z: -389.9, yaw: 1.838 },
     { id: "cloth", name: "Made in Africa", kind: "person", top: "#e3a21a", look: "kente.short.black", x: -101.3, z: -174.6, yaw: 2.131 },
     { id: "hair", name: "A La Mode Hair", kind: "person", top: "#8a2332", look: "-.bun.red", x: -153.5, z: -257.2, yaw: 2.133 },
+    { id: "yoga", name: "Yoga teacher", kind: "sue", top: "#8fc1a9", x: -183.3, z: -460.6, yaw: -1.481 },
     { id: "venky", name: "Venky", kind: "venky", top: "#2f5d8a", x: -205.2, z: -975.9, yaw: 2.982 },
     { id: "sue", name: "Sue", kind: "sue", top: "#7fb3d5", x: -233.0, z: -1022.0, yaw: 1.37, path: [[-233.0, -1022.0], [-131.6, -1001.0]] },
     { id: "gym", name: "Trainer", kind: "person", top: "#d71920", x: -57.5, z: -139.1, yaw: -1.471 },
@@ -10889,12 +10900,18 @@ const handle = async (m, post) => {
         for (const [id, [label, col]] of Object.entries(TOWN_HAIRC)) { const b = document.createElement("button"); b.type = "button"; b.dataset.v = id; b.textContent = label; b.style.borderBottom = `5px solid ${col}`; b.onclick = () => { hc = id; paint(); }; row2.append(b); }
         const t1 = document.createElement("small"), t2 = document.createElement("small"); t1.textContent = "Style"; t2.textContent = "Colour"; box2.append(t1, row1, t2, row2); paint();
         return show(q, "Take a seat, love. What are we doing today?", [["Do my hair", () => { townPerkSet("look", { ...(townPerks().look || {}), hair: st, hc }); townPerkSet("chef", null); toast(`\ud83d\udc87 ${TOWN_HAIRS[st]}, ${TOWN_HAIRC[hc][0].toLowerCase()}. Gorgeous!`, 3000); }, "ok"], ...(L.hair || L.hc ? [["Back to how it was", () => { townPerkSet("look", { ...(townPerks().look || {}), hair: null, hc: null }); toast("Back to your usual hair.", 2000); }]] : []), ["Not today", () => {}]], box2); }
+      if (q.id === "yoga") return k.yoga ? show(q, "Namaste! Lovely to see you again. Breathe in\u2026 and out. Your yoga's in Emotes.", [["Namaste", () => {}]])
+        : show(q, "Welcome to Little Village! Join the yoga class? You'll learn the moves.", [["Join the class", () => { yogaClass(q); return "keep"; }, "ok"], ["Another time", () => {}]]);
       if (q.id === "venky") return show(q, "Hello, hello! I'm Venky, from out the back of number 10. Lovely day for it. Would you like a chai?", [["Yes please", () => { toast("\u2615 Venky's masala chai: sweet, spicy and just right. You feel ready for anything.", 3500); }, "ok"], ["Another time", () => {}]]);
       if (q.id === "sue") return show(q, "Hello there! I've just baked this loaf. Would you like a slice? It's a bit... special.", [["Yes please", () => { const F = BS.fly; F.giant = { until: performance.now() + 60000 }; toast("\ud83c\udf5e Sue's magic loaf! You've grown into a giant for a minute: you stride twice as fast, and everyone sees you towering over Moorooka.", 5000); }, "ok"], ["No thanks", () => {}]]); };
     // the workout: ten quick reps, then you're fitter
     const workout = q => { let n = 0; const p = card.querySelector("p"), row = card.querySelector("div"); row.hidden = true;
       const go = () => { if (open !== q) return; n++; p.innerHTML = `<b>${q.name}</b>: ${["Squats!", "Push-ups!", "Burpees!", "Lunges!", "Star jumps!"][n % 5]} ${n} of 10…`;
         if (n < 10) setTimeout(go, 450); else { townPerkSet("fit", true); BS.fly.fit = true; toast("💪 Workout done! You walk 10% faster now.", 3500); q.done = true; shut(); } }; go(); };
+    // a yoga class: a few slow poses, then the yoga emote is yours
+    const yogaClass = q => { let n = 0; const p = card.querySelector("p"), row = card.querySelector("div"); row.hidden = true; T.me && (T.me.emote = { e: TOWN_EMOTES.find(e => e[0] === "yoga"), t0: performance.now() });
+      const go = () => { if (open !== q) return; n++; p.innerHTML = `<b>${q.name}</b>: ${["Mountain pose\u2026", "Arms up, breathe in\u2026", "Tree pose\u2026", "Warrior one\u2026", "Downward dog\u2026", "And rest."][n - 1]}`;
+        if (n < 6) setTimeout(go, 900); else { townPerkSet("yoga", true); toast("\ud83e\uddd8 You learnt yoga! It's in Emotes (E).", 3500); q.done = true; shut(); } }; go(); };
     // a drink at the Willow: wobbly on your feet and no driving for a couple of minutes (a cocktail, longer and wobblier)
     // (no wearing off: only the doctor at the Moorooka Medical Hub sorts you out, and it's kept on this device till then)
     const drink = lv => { const F = BS.fly, d = F.drunk, level = Math.min(3, (d ? d.level : 0) + lv); F.drunk = { level, hic: 0 }; townPerkSet("drunk", level);
@@ -11412,8 +11429,9 @@ const handle = async (m, post) => {
       for (let i = 0; i <= RING; i++) { const show = !!on && !!car && (i === 0 || i <= full); if (show || lit[i]) { ring.setMatrix(i, show ? M.elements.slice() : NONE); lit[i] = show; } }
       const pc = Math.round(charge * 100) + "%"; if (boostBtn.style.getPropertyValue("--charge") !== pc) boostBtn.style.setProperty("--charge", pc); };
     const leave = step => { if (!veh) return; const was = veh; if (was !== "possum" && was !== "ride") snd.door(); snd.stop();
-      if (was === "ride") { const q = ride.q; T.peers?.ride?.(ride.id, false);
-        if (step && q) { const back = RIDE_UP[q.k] > 1 ? 2.4 : 1.2; F.pos.x = q.x - Math.cos(q.h) * back; F.pos.z = q.z + Math.sin(q.h) * back; F.yaw = q.h + Math.PI; F.pitch = -0.04; }
+      if (was === "ride") { const q = ride.q; if (ride.local) { ride.local.rider = false; snd.door(); } else T.peers?.ride?.(ride.id, false);
+        if (step && q && ride.local) { F.pos.x = q.x + Math.cos(q.h) * 2.6; F.pos.z = q.z - Math.sin(q.h) * 2.6; F.yaw = q.h + Math.PI / 2; F.pitch = -0.04; }  // off the bus's kerb-side door
+        else if (step && q) { const back = RIDE_UP[q.k] > 1 ? 2.4 : 1.2; F.pos.x = q.x - Math.cos(q.h) * back; F.pos.z = q.z + Math.sin(q.h) * back; F.yaw = q.h + Math.PI; F.pitch = -0.04; }
         ride = null; }
       else if (was === "possum") { const P = pos; P.v = 0; P.grip = null; if (mission) { endMission(); toast("The possum mission's off. Hop back in the pool to start again.", 2600); }
         if (!step) possumHome();  // flying off, a jump to a place or starting again: it goes home to number 16
@@ -11441,12 +11459,12 @@ const handle = async (m, post) => {
       const fly = veh === "plane", thr = bsClamp((has("KeyW") || (!fly && has("ArrowUp")) ? 1 : 0) - (has("KeyS") || (!fly && has("ArrowDown")) ? 1 : 0) + F.stick.y, -1, 1), str = bsClamp((has("KeyD", "ArrowRight") ? 1 : 0) - (has("KeyA", "ArrowLeft") ? 1 : 0) + F.stick.x, -1, 1);
       const boost = has("ShiftLeft", "ShiftRight") || !!F.boost;
       let o, D, text;  // what the view follows, how far back, and what the chip says
-      if (veh === "ride") { const q = (T.peers?.list?.() || []).find(v => v.id === ride.id);
-        if (!q || !RIDE_REACH[q.k]) { toast(q ? `${ride.name} has got out.` : `${ride.name} has gone.`, 2600); return leave(true); }
+      if (veh === "ride") { const L = ride.local, q = L ? (T.traffic?.cars || []).includes(L) && L.x != null ? { x: L.x, y: L.y, z: L.z, h: L.h ?? 0, p: L.p || 0, r: L.rl || 0, k: "bus" } : null : (T.peers?.list?.() || []).find(v => v.id === ride.id);
+        if (!q || !RIDE_REACH[q.k]) { toast(L ? "The bus has gone." : q ? `${ride.name} has got out.` : `${ride.name} has gone.`, 2600); return leave(true); }
         const now = performance.now(), [x0, , z0, t0] = ride.at, sp = now - t0 > 0 ? Math.hypot(q.x - x0, q.z - z0) / ((now - t0) / 1000) : 0;
         ride.v += (sp - ride.v) * Math.min(1, dt * 3); ride.at = [q.x, q.y, q.z, now]; ride.k = q.k; ride.q = q;
         o = { x: q.x, y: q.y, z: q.z, h: q.h, v: ride.v, air: q.y - ground(q.x, q.z) > 3 }; D = RIDE_BACK[q.k] + Math.min(10, ride.v / 8);
-        text = `With ${ride.name} \u00b7 ${Math.round(ride.v * 3.6)} km/h`; hint("");
+        text = L ? (L.stopT > 0 ? "Bus stop \u00b7 Get off here, or stay on" : `On the bus \u00b7 ${Math.round(ride.v * 3.6)} km/h`) : `With ${ride.name} \u00b7 ${Math.round(ride.v * 3.6)} km/h`; hint("");
       } else if (veh === "car") { let v = car.v; const brake = has("Space") || !!F.hand;
         // the boost runs on a charge: about four seconds' worth, back in ten. Run right out, it waits until a fifth is back
         // Boost goes at full push forward whatever the stick says, unless the stick is pulled back (its lower half): then it boosts
@@ -11659,19 +11677,22 @@ const handle = async (m, post) => {
     // what is in reach of where you stand: a plane within 11 m, a parked car within 8 m, whichever is nearer
     const nearPlane = () => { let best = null, far = Infinity; for (const P of planes) { const d = Math.hypot(P.x - F.pos.x, P.z - F.pos.z); if (d < far) { far = d; best = P; } } return [best, far]; };
     // (the moving cars count too: getting into one takes it out of the traffic)
-    const nearOwn = () => { let best = null, far = Infinity; for (const G of [...owns, ...(T.traffic?.cars || []).filter(D => D.x != null && !D.away)]) { const d = Math.hypot(G.x - F.pos.x, G.z - F.pos.z); if (d < far) { far = d; best = G; } } return [best, far]; };
+    const nearOwn = () => { let best = null, far = Infinity; for (const G of [...owns, ...(T.traffic?.cars || []).filter(D => D.x != null && !D.away && !D.bus)]) { const d = Math.hypot(G.x - F.pos.x, G.z - F.pos.z); if (d < far) { far = d; best = G; } } return [best, far]; };
     const reach = () => { const c0 = parked(F.pos.x, F.pos.z, 8), [G, dg] = nearOwn(), c = G && dg < (G.bus ? 15 : 8) && (!c0 || dg < c0.distance) ? { own: G, gold: G.gold, distance: dg } : c0, [P, d] = nearPlane(), r = d < 11 && (!c || d - 2 < c.distance) ? { plane: P } : c;
       const dp = possumMesh ? Math.hypot(pos.x - F.pos.x, pos.z - F.pos.z) : Infinity, r2 = dp < 6 && (!r || r.plane || dp < r.distance) ? { possum: pos, distance: dp } : r;  // the possum, within 6 m
       // another player's car, bus, plane, helicopter or possum, near enough, and not up in the air (Ash, 15 November 2026: "Make it so
       // I can get into a car or plane or possum that another player is driving")
       let best = null; for (const q of T.peers?.list?.() || []) { if (!RIDE_REACH[q.k]) continue; const d = Math.hypot(q.x - F.pos.x, q.z - F.pos.z);
         if (d < RIDE_REACH[q.k] && q.y - ground(q.x, q.z) < 3 && (!best || d < best.distance)) best = { ride: q, distance: d }; }
-      return best && (!r2 || best.distance < (r2.distance ?? 11) + 4) ? best : r2; };  // (someone in it wins over an empty one beside it, such as your own copy of the golden car they drove off in)
+      const pick = best && (!r2 || best.distance < (r2.distance ?? 11) + 4) ? best : r2;
+      const B = T.traffic?.bus, db = B && B.x != null && !B.away ? Math.hypot(B.x - F.pos.x, B.z - F.pos.z) : Infinity;  // the bus that drives itself, within 9 m
+      return db < 9 && (!pick || db < (pick.distance ?? 11) + 3) ? { bus: B, distance: db } : pick; };  // (someone in it wins over an empty one beside it, such as your own copy of the golden car they drove off in)
     const RIDE_REACH = { car: 8, gold: 8, bus: 15, plane: 11, goldplane: 11, heli: 11, goldheli: 11, possum: 6 }, RIDE_BACK = { car: 7, gold: 7, bus: 13, plane: 15, goldplane: 15, heli: 14, goldheli: 14, possum: 3.6 },
       RIDE_UP = { car: 1.5, gold: 1.5, bus: 3.4, plane: 2.4, goldplane: 2.4, heli: 2.4, goldheli: 2.4, possum: 0.9 };
     let ride = null, shownRide = null;  // the player you're riding with: { id, name, k, at: [x, y, z, t] }; who the button last offered
     const CLING = { plane: 1.95, goldplane: 1.95, heli: 2.05, goldheli: 2.05, car: 1.45, gold: 1.45, bus: 3.3 };  // (cars too: Ash, 15 November 2026, "let the possum also get ontop of cars")  // what the possum can hold on to, and how high its top is
     C.enter = () => { if (!veh && F.drunk) { toast("You've had a few at the Willow. No driving till the doctor at the Moorooka Medical Hub (by Woolworths) has checked you.", 3800); return true; }  // (Ash, 16 November 2026: "you can get drunk")
+      if (veh === "ride" && ride?.local && ride.local.v > 1.5) { toast("Wait for the next stop: the bus stops every few hundred metres.", 2600); return true; }
       if (veh) { if (veh === "plane" && plane.heli && plane.air) return toast(touch ? "Land first: hold Down until it is on the ground." : "Land first: hold the up arrow (or C) until it is on the ground."), true;
       if (veh === "plane" && (plane.air || plane.v > 6)) return toast(touch ? "Land and stop first: pull the left stick back to slow down, and it comes down as it slows (or hold Dive)." : "Land and stop first: S slows the plane, and it comes down as it slows (or hold the up arrow)."), true; return leave(true), true; }
       if (!T.walk || T.tween) return false;
@@ -11680,7 +11701,10 @@ const handle = async (m, post) => {
         if (q && RIDE_REACH[q.k] && Math.hypot(q.x - F.pos.x, q.z - F.pos.z) < RIDE_REACH[q.k] * 2.5) c = { ride: q, distance: 0 }; }
       if (!c) { const far = parked(F.pos.x, F.pos.z, 5000) || (owns.length ? { distance: nearOwn()[1] } : null), [P, d] = nearPlane(), home = P && Math.hypot(P.x - P.home.x, P.z - P.home.z) < 30;
         toast(`Nothing close enough to get into. ${far ? `The nearest car is ${Math.round(far.distance)} m away` : ""}${far && P ? ", and t" : P ? "T" : "."}${P ? `he nearest plane is ${Math.round(d)} m away${home && P.home.at ? ", " + P.home.at : ""}.` : ""}`, 4500); return true; }
-      if (c.ride) { const q = c.ride; ride = { id: q.id, name: q.name, k: q.k, at: [q.x, q.y, q.z, performance.now()], v: 0 }; veh = "ride"; camYaw = q.h + Math.PI;
+      if (c.bus) { const B = c.bus; if (B.v > 1.5) { toast("Wait for the bus to stop, then hop on.", 2600); return true; }
+        ride = { local: B, id: null, name: "the bus", k: "bus", at: [B.x, B.y, B.z, performance.now()], v: 0 }; B.rider = true; veh = "ride"; camYaw = B.h + Math.PI;
+        document.body.classList.add("bsdrive", "bsride"); snd.door(); toast("All aboard! The bus drives itself and stops every few hundred metres. Get off at a stop.", 4500); }
+      else if (c.ride) { const q = c.ride; ride = { id: q.id, name: q.name, k: q.k, at: [q.x, q.y, q.z, performance.now()], v: 0 }; veh = "ride"; camYaw = q.h + Math.PI;
         document.body.classList.add("bsdrive", "bsride"); T.peers?.ride?.(q.id, true); toast(`You're riding with ${q.name}. Look around with the right stick.`, 3000); }
       else if (c.possum) { veh = "possum"; pos.v = 0; pos.jumped = true; camYaw = pos.h + Math.PI; document.body.classList.add("bsdrive", "bspossum");
         loadTrees(); const wait = loadRoofs(); if (wait) { toast("Loading the roofs the possum can climb\u2026", 8000); wait.then(() => { if (veh === "possum") toast("Ready. Run at a wall or a street light to climb it.", 2500); }); } }  // (no Up and Down: Jump sits where Boost does, over the right stick)
@@ -11691,7 +11715,7 @@ const handle = async (m, post) => {
         veh = "car"; camYaw = car.h + Math.PI; document.body.classList.add("bsdrive"); showRing(charge < 0.999); }
       C.in = true; camOff = null; off = [wrap(F.yaw - camYaw), bsClamp(F.pitch + 0.2, -1, 0.55)]; idle = 0; last = [F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch];
       F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.vert = 0; F.boost = false; F.keys.clear(); F.drive = tick;
-      btn.textContent = veh === "possum" ? "Hop out" : "Get out"; btn.hidden = false; handBtn.hidden = veh !== "car" && veh !== "possum"; handBtn.textContent = veh === "possum" ? "Boost" : "Handbrake"; handBtn.dataset.key = veh === "possum" ? "Shift" : "Space"; flipBtn.hidden = !(veh === "car" && car?.gold); plantBtn.hidden = !(veh === "possum" && T.admin?.plant); gripBtn.hidden = veh !== "possum"; boostBtn.hidden = veh === "ride" || (veh === "plane" && !canBoost(plane));
+      btn.textContent = veh === "possum" ? "Hop out" : veh === "ride" && ride?.local ? "Get off" : "Get out"; btn.hidden = false; handBtn.hidden = veh !== "car" && veh !== "possum"; handBtn.textContent = veh === "possum" ? "Boost" : "Handbrake"; handBtn.dataset.key = veh === "possum" ? "Shift" : "Space"; flipBtn.hidden = !(veh === "car" && car?.gold); plantBtn.hidden = !(veh === "possum" && T.admin?.plant); gripBtn.hidden = veh !== "possum"; boostBtn.hidden = veh === "ride" || (veh === "plane" && !canBoost(plane));
       boostBtn.textContent = veh === "possum" ? "Jump" : "Boost"; boostBtn.dataset.key = veh === "possum" ? "Space" : "Shift";
       if (veh === "ride") { if (RIDE_UP[ride.k] > 1) snd.door(); } else if (veh !== "possum") { snd.door(); snd.start(veh === "plane" && plane.heli ? "heli" : veh); } showKeys(veh === "plane" && plane.heli ? "heli" : veh === "ride" ? null : veh === "car" && car.gold ? "gold" : veh);
       // on a phone, a word about the sticks (on a desktop the list of keys has just come up, bottom left)
@@ -11702,7 +11726,7 @@ const handle = async (m, post) => {
       if (pos) { const d = Math.hypot(pos.x - F.pos.x, pos.z - F.pos.z), dh = Math.hypot(PS.x - F.pos.x, PS.z - F.pos.z);
         if (!possumMesh && Math.min(d, dh) < 400) wake(); if (d < 80) { loadRoofs(); loadTrees(); }
         if ((pos.x !== PS.x || pos.z !== PS.z) && d > 150) possumHome(); }  // left behind, the possum goes home to number 16
-      const near = T.walk && !T.tween ? reach() : null; shownRide = near?.ride ? { id: near.ride.id, t: now } : null; const say = near?.ride ? `Ride with ${near.ride.name}` : near?.possum ? "Be the possum" : near?.plane ? (near.plane.heli ? (near.plane.gold ? "Get in the golden helicopter" : "Get in the helicopter") : "Get in the plane") : near?.own?.bus || near?.bus ? "Get in the bus" : near?.gold ? "Get in the golden car" : "Get in the car";
+      const near = T.walk && !T.tween ? reach() : null; shownRide = near?.ride ? { id: near.ride.id, t: now } : null; const say = near?.ride ? `Ride with ${near.ride.name}` : near?.possum ? "Be the possum" : near?.plane ? (near.plane.heli ? (near.plane.gold ? "Get in the golden helicopter" : "Get in the helicopter") : "Get in the plane") : near?.bus?.x != null ? (near.bus.v > 1.5 ? "Bus coming: wait for it to stop" : "Get on the bus") : near?.own?.bus || near?.bus ? "Get in the bus" : near?.gold ? "Get in the golden car" : "Get in the car";
       if (btn.hidden !== !near) btn.hidden = !near; if (near && btn.textContent !== say) btn.textContent = say; };
     btn.onclick = () => { C.enter(); btn.blur(); };
     const hold = on => e => { F.boost = on && !!veh; boostBtn.classList.toggle("on", F.boost); e.preventDefault(); };
