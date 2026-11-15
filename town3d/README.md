@@ -1235,3 +1235,9 @@ Ash: "09 still has the joystick bug. We need to revert back to 130". 12b2509 (#1
 #132 undid #131 exactly. So the cause is earlier than #130. The best lead: the bug first went away the morning the app's
 moving cars were taken out (#114), and the four moving cars came back in #119. They're off again (`townTraffic` N = 0).
 Also `isAsh()`, asked every frame, reads the player name from storage at most once a second.
+
+## Back to #130 (15 November 2026)
+
+Ash: "That didn't fix it. Go back to 130". `app.html` is put back to 1fd5ce6 (#130, car turning). This takes out, for
+now: Chat in the Emote menu and the name prompt (#133), midday and the Explore parts reset (#134), and the moving cars
+off again (#135). The models are as at #130 too.

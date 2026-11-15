@@ -1354,8 +1354,6 @@ body.bspossum .bs-fly-x.bs-boost.on { background: #ffd166; }
 .bs-fly-x.bs-chat[hidden] { display: none; }
 .bs-chatbar { pointer-events: auto; position: absolute; z-index: 5; left: 50%; top: calc(62px + env(safe-area-inset-top)); transform: translateX(-50%); width: min(440px, calc(100% - 32px)); display: flex; gap: 6px; padding: 6px; box-sizing: border-box; border-radius: 16px; background: rgba(22, 24, 34, 0.9); }
 .bs-chatbar[hidden] { display: none; }
-.bs-askname { flex-wrap: wrap; } .bs-askname p { flex: 1 0 100%; margin: 2px 4px 2px; color: #fff; font: 700 0.86rem var(--ui); }
-.bs-askname .skip { background: rgba(255, 255, 255, 0.16); color: #fff; }
 .bs-chatbar input { flex: 1; min-width: 0; height: 40px; padding: 0 12px; border: 0; border-radius: 11px; background: #fff; color: #1b1830; font: 500 16px var(--ui); user-select: text; -webkit-user-select: text; }
 .bs-chatbar button { height: 40px; padding: 0 14px; border: 0; border-radius: 11px; background: #ffd166; color: #1b1830; font: 700 0.86rem var(--ui); cursor: pointer; }
 /* my player: a button on the right edge, above Emote, and the small panel it opens */
@@ -1442,7 +1440,6 @@ body.bsme .bs-height, body.bstown.bsme .bs-height { left: 16px; top: calc(62px +
 .bs-share p { margin: 2px 4px 4px; font-weight: 700; font-size: 0.86rem; }
 .bs-share a, .bs-share button { display: block; min-height: 38px; box-sizing: border-box; padding: 10px 12px; border: 0; border-radius: 10px; background: rgba(255, 255, 255, 0.16); color: inherit; font: 650 0.8rem/1.2 var(--ui); text-align: left; text-decoration: none; cursor: pointer; }
 .bs-share :focus-visible { outline: 2px solid #ffd36b; outline-offset: 2px; }
-.bs-emotes .bs-emote-chat { grid-column: 1 / -1; text-align: center; background: #fff; color: #1b1830; }
 .bs-emotes button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 @media (max-height: 560px) { .bs-emotes { grid-template-columns: repeat(4, auto); } }
 .bs-keys-now { margin: 0; font-weight: 700; }
@@ -7826,9 +7823,8 @@ const handle = async (m, post) => {
     const start = kd ? { pos: new B.THREE.Vector3(...kept.b), yaw: Math.atan2(-kd.x, -kd.z), pitch: Math.asin(bsClamp(kd.y, -1, 1)) }
       : inv && BS.W.invSpot ? { pos: new B.THREE.Vector3(...BS.W.invSpot.pos), yaw: BS.W.invSpot.yaw, pitch: BS.W.invSpot.pitch }
       : { pos: cam.position.clone(), yaw: Math.atan2(-dir.x, -dir.z), pitch: Math.asin(bsClamp(dir.y, -1, 1)) };
-    // The time stands still while exploring, at midday: always daytime unless an admin changes it in Settings (Ash, 15 November 2026:
-    // "Let's make the time stay daytime unless as an admin I change it")
-    BS.flyView = BS.view; { const v = BS.view, day = v.day || bsKey(v.ms), m2 = 12 * 60;
+    // The time stands still while exploring: now if it's daylight, otherwise midday. The slider above the sticks changes it.
+    BS.flyView = BS.view; { const v = BS.view, day = v.day || bsKey(v.ms), mins = bsMins(v.ms), m2 = mins >= 7 * 60 && mins <= 17 * 60 ? mins : 12 * 60;
       BS.view = { mode: "day", day, ms: bsMidnight(day) + m2 * 60000, play: false }; bsApply(true);
       const ti = $("bsFlyTime"), to = $("bsFlyTimeOut"); ti.value = m2; to.textContent = bsTime(BS.view.ms);
       const tb = $("bsTimeBtn"), tbox = $("bsFlyTimeBox"); $("bsTimeBtnT").textContent = bsTime(BS.view.ms); tbox.hidden = true; tb.setAttribute("aria-expanded", "false");
@@ -9904,8 +9900,7 @@ const handle = async (m, post) => {
     // none for a while (Ash, 15 November 2026: "Reduce traffic through the apps, they are a bit dumb and run into each other"), then
     // four, the models' own moving cars being off (Ash: "Add back a few cars but not many. I want to be able to get into a moving
     // car"): walk out in front of one and it stops for you; Get in the car takes it over (P.take) and it is yours from then on.
-    // (off again, Ash, 15 November 2026: the stick letting go came back; it first went away when these were taken out in #114)
-    const home = T.spawn || [F.pos.x, F.pos.z], N = 0, NEAR = 300, FAR = 800, NONE = new THREE.Matrix4().makeScale(0, 0, 0).elements;
+    const home = T.spawn || [F.pos.x, F.pos.z], N = 4, NEAR = 300, FAR = 800, NONE = new THREE.Matrix4().makeScale(0, 0, 0).elements;
     if (!N) return P;  // nothing to load or draw
     let roads = null, nodes = null, dead = false, last = 0;
     const key = (x, z) => Math.round(x / 2) + "," + Math.round(z / 2);
@@ -10011,7 +10006,7 @@ const handle = async (m, post) => {
     // character for aprox 30 secs"): one line, up to 120 characters, to everyone in town; it shows over you for 30 s
     let sendChat = null, myChat = null; const CHAT_MS = 30000, meEl = document.createElement("div"); meEl.className = "bs-peer said"; meEl.hidden = true; box.appendChild(meEl);
     const clean = t => String(t || "").replace(/[\u0000-\u001f<>]/g, "").replace(/\s+/g, " ").trim().slice(0, 120);
-    P.chat = () => { if (emoteBtn.hidden) return false; chatBar.hidden = false; emoteBox.hidden = true; chatIn.value = ""; chatIn.focus(); return true; };
+    P.chat = () => { if (chatBtn.hidden) return false; chatBar.hidden = false; emoteBox.hidden = true; chatIn.value = ""; chatIn.focus(); return true; };
     const chatClose = () => { chatBar.hidden = true; chatIn.blur(); };
     chatBtn.onclick = () => { if (chatBar.hidden) P.chat(); else chatClose(); };
     chatIn.onkeydown = e => { e.stopPropagation(); if (e.key === "Escape") chatClose(); else if (e.key === "Enter") { e.preventDefault(); chatSend(); } }; chatIn.onkeyup = e => e.stopPropagation();
@@ -10031,23 +10026,9 @@ const handle = async (m, post) => {
     P.emote = n => { const e = typeof n === "number" ? TOWN_EMOTES[n] : TOWN_EMOTES.find(v => v[0] === n), now = performance.now(); if (!e || now - emoteAt < 1200) return false;  // (it used to do nothing with no one else about)
       emoteAt = now; if (sendEmote && peers.size) try { sendEmote(e[0]); } catch {} if (T.me) T.me.emote = { e, t0: now }; toast(`${e[2]} You ${e[3]}.`, 1800); emoteBox.hidden = true; emoteBtn.setAttribute("aria-expanded", "false"); return true; };
     P.menu = () => { if (emoteBtn.hidden) return false; emoteBox.hidden = !emoteBox.hidden; emoteBtn.setAttribute("aria-expanded", String(!emoteBox.hidden)); return true; };
-    // Chat is the first thing in it (Ash, 15 November 2026: "Move chat into emotes"), then the emotes
-    const chatItem = document.createElement("button"); chatItem.type = "button"; chatItem.className = "bs-emote-chat"; chatItem.textContent = "\ud83d\udcac Chat"; chatItem.dataset.key = "T";
-    chatItem.onclick = () => { emoteBox.hidden = true; emoteBtn.setAttribute("aria-expanded", "false"); P.chat(); };
-    emoteBox.replaceChildren(chatItem, ...TOWN_EMOTES.map(([id, label, sign], i) => { const bn = document.createElement("button"); bn.type = "button"; bn.textContent = `${sign} ${label}`; bn.dataset.key = String(i + 1); bn.onclick = () => { P.emote(id); bn.blur(); }; return bn; }));
+    emoteBox.replaceChildren(...TOWN_EMOTES.map(([id, label, sign], i) => { const bn = document.createElement("button"); bn.type = "button"; bn.textContent = `${sign} ${label}`; bn.dataset.key = String(i + 1); bn.onclick = () => { P.emote(id); bn.blur(); }; return bn; }));
     emoteBtn.onclick = () => { P.menu(); emoteBtn.blur(); };
     let room = null, sendPose = null, sendName = null, dead = false, lastSent = null, lastAt = 0, tick = 0;
-    let asked = true; try { asked = !!(localStorage.getItem("an-player") || localStorage.getItem("an-player-asked")); } catch {}
-    let askBox = null;
-    if (!asked) setTimeout(() => { if (dead) return; askBox = document.createElement("form"); askBox.className = "bs-chatbar bs-askname";
-      const q = document.createElement("p"), inp = document.createElement("input"), go = document.createElement("button"), skip = document.createElement("button");
-      q.textContent = "What should other players call you?"; inp.type = "text"; inp.maxLength = 16; inp.autocomplete = "off"; inp.placeholder = "Your player name"; inp.setAttribute("aria-label", "Your player name");
-      go.type = "submit"; go.textContent = "Join"; skip.type = "button"; skip.className = "skip"; skip.textContent = "Skip";
-      const done = name => { try { if (name) localStorage.setItem("an-player", name); localStorage.setItem("an-player-asked", "1"); } catch {} askBox.remove(); askBox = null; tell(); toast(`You're ${playerName()}. Change it any time in Settings.`, 2800); };
-      askBox.onsubmit = e => { e.preventDefault(); done(inp.value.replace(/[<>]/g, "").trim().slice(0, 16)); };
-      skip.onclick = () => done("");
-      inp.onkeydown = e => e.stopPropagation(); inp.onkeyup = e => e.stopPropagation();
-      askBox.append(q, inp, go, skip); chatBar.parentElement.appendChild(askBox); }, 1800);
     const label = id => { const el = document.createElement("div"); el.className = "bs-peer"; el.hidden = true; box.appendChild(el); return el; };
     const drop = id => { const q = peers.get(id); if (!q) return; try { q.parts?.remove(); } catch {} q.el.remove(); peers.delete(id); P.count = peers.size; };
     const got = (a, id) => { if (!Array.isArray(a) || a.length < 7 || !a.slice(0, 4).every(Number.isFinite)) return;
@@ -10091,7 +10072,7 @@ const handle = async (m, post) => {
       const tm = el("div", "bs-me-sec"), th = el("div", "bs-me-time"), tl = el("label", "bs-me-lbl", "Time of day"), tout = el("output", "", $("bsFlyTimeOut")?.textContent || ""), tr = el("input");
       tr.type = "range"; tr.id = "bsMeTime"; tl.htmlFor = "bsMeTime"; tr.min = "0"; tr.max = "1439"; tr.step = "5"; tr.value = $("bsFlyTime")?.value || "720";
       tr.oninput = () => { const ti = $("bsFlyTime"); if (!ti) return; ti.value = tr.value; ti.dispatchEvent(new Event("input")); tout.textContent = $("bsFlyTimeOut").textContent; };
-      th.append(tl, tout); tm.append(th, tr); if (!isAdmin()) tm.hidden = true;  // (admins only: for everyone else it stays midday)
+      th.append(tl, tout); tm.append(th, tr);
       // make the 3D model an app on the phone's home screen, from its own page (/<suburb>/explore/), which has its own manifest
       const app = el("div", "bs-me-sec"); app.append(el("span", "bs-me-lbl", "Make it an app"));
       // (Ash, 15 November 2026: "The make it an app instructions don't work". On an iPhone it has to be added from Safari itself,
@@ -10166,7 +10147,7 @@ const handle = async (m, post) => {
         const moved = !lastSent || a[4] !== lastSent[4] || Math.hypot(a[0] - lastSent[0], a[1] - lastSent[1], a[2] - lastSent[2]) > 0.04 || Math.abs(wrap(a[3] - lastSent[3])) > 0.02;
         if (moved || now - lastAt > 3000) { lastSent = a; lastAt = now; try { sendPose(a); } catch {} } }
       const can = !!T.walk && !T.car?.in && (peers.size > 0 || isAsh()); if (emoteBtn.hidden === can) { emoteBtn.hidden = !can; if (!can) emoteBox.hidden = true; }
-      if (!chatBtn.hidden) chatBtn.hidden = true;  // (Chat is in the Emote menu now)
+      const canChat = (!!T.walk || !!T.car?.in) && (peers.size > 0 || isAsh()); if (chatBtn.hidden === canChat) { chatBtn.hidden = !canChat; if (!canChat) chatBar.hidden = true; }
       // what you just said: over you when you can see yourself (the worker view), otherwise at the top of the screen, for 30 s
       // (Ash, 15 November 2026: "The speech bubble didn't work": in your own eyes' view there was no you to put it over)
       const saying = myChat && now - myChat.t < CHAT_MS, mine3 = saying && T.me?.third?.();
@@ -10202,7 +10183,7 @@ const handle = async (m, post) => {
         const sx = w / 2 + (dx * rx + dz * rz) / depth * f * (h / 2), sy = h / 2 - (dx * ux + dy * uy + dz * uz) / depth * f * (h / 2);
         if (sx < -40 || sx > w + 40 || sy < 0 || sy > h) { q.el.hidden = true; continue; }
         q.el.hidden = false; q.el.style.transform = `translate(${Math.round(sx)}px, ${Math.round(sy)}px) translate(-50%, -100%)`; } };
-    P.dispose = () => { document.removeEventListener("pointerdown", meOut, true); document.body.classList.remove("bsme"); meBtn.hidden = true; meBox.hidden = true; meBtn.onclick = null; clearTimeout(joining); emoteBtn.hidden = true; emoteBox.hidden = true; emoteBtn.onclick = null; chatBtn.hidden = true; chatBar.hidden = true; chatBtn.onclick = null; chatBar.onsubmit = null; meEl.remove(); askBox?.remove(); dead = true; for (const id of [...peers.keys()]) drop(id); try { room?.leave(); } catch {} room = null; sendPose = null; };
+    P.dispose = () => { document.removeEventListener("pointerdown", meOut, true); document.body.classList.remove("bsme"); meBtn.hidden = true; meBox.hidden = true; meBtn.onclick = null; clearTimeout(joining); emoteBtn.hidden = true; emoteBox.hidden = true; emoteBtn.onclick = null; chatBtn.hidden = true; chatBar.hidden = true; chatBtn.onclick = null; chatBar.onsubmit = null; meEl.remove(); dead = true; for (const id of [...peers.keys()]) drop(id); try { room?.leave(); } catch {} room = null; sendPose = null; };
     return P;
   }
   // The numbers behind the cars and planes, which Ash can change in Settings > Admin (14 November 2026: "Allow me to edit all these
@@ -11266,8 +11247,7 @@ const handle = async (m, post) => {
     work: { q: "Inverloch", label: "Inverloch town centre", sign: "Inverloch", lat: -38.63316, lon: 145.72795 }, leave: "07:45", toName: "Drive into Inverloch", toWord: "into Inverloch" };
   // Ash: by the news app's name, or by the player name in Explore's Settings (Ash, 15 November 2026: "I think player name is not giving
   // me admin": each town's app keeps its own news name, but the player name is the same in all of them)
-  function isAsh() { if (/^ash(ley)?$/i.test((S.name || "").trim())) return true; const now = Date.now();
-    if (now - (isAsh.at || 0) > 1000) { isAsh.at = now; try { isAsh.p = /^ash(ley)?$/i.test((localStorage.getItem("an-player") || "").trim()); } catch { isAsh.p = false; } } return isAsh.p; }
+  function isAsh() { if (/^ash(ley)?$/i.test((S.name || "").trim())) return true; try { return /^ash(ley)?$/i.test((localStorage.getItem("an-player") || "").trim()); } catch { return false; } }
   const isRod = () => /^rod(ney)?$/i.test((S.name || "").trim());
   const commuteOK = () => !!DEFAULT_COMMUTE || !!A.unlocked || isAsh() || isRod();
   // What the drive is called: "Drive to work" (or Rod's "Drive into Inverloch"), "Drive home".
@@ -11572,7 +11552,6 @@ const handle = async (m, post) => {
   // stick, 15 November 2026). Read when a town opens.
   const EX_PARTS = [["traffic", "A few moving cars"], ["animal", "The animal by Norman Road's helicopter"], ["rides", "Cars, planes, helicopter and bus to drive"], ["admin", "Map editing (the pencil)"],
     ["players", "Other players and the Settings gear"], ["me", "Construction worker view"], ["no6", "6 Beaudesert Road's street detail"], ["home6", "Ash, Arlo and Pandy on Beaudesert Road"], ["streets", "Street names"], ["places", "Place names on the model"]];
-  try { if (!localStorage.getItem("an3d-off-reset-1")) { localStorage.removeItem("an3d-off"); localStorage.setItem("an3d-off-reset-1", "1"); } } catch {}
   const exOff = () => { try { return new Set(JSON.parse(localStorage.getItem("an3d-off") || "[]")); } catch { return new Set(); } };
   // Ash's own Explore settings, in Explore's Settings panel (Ash, 15 November 2026: "Move the settings for explore into the
   // settings for explore rather than in the main awesome news"): the cars and planes numbers (RIDE_DEF) and Explore's parts.
