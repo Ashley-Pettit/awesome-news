@@ -1290,3 +1290,24 @@ arms of Bohain Street go round one landscaped island, kerbed on all sides, with 
 at the point where the north arm meets Beaudesert Road. The model had most of that island as road. `edits.json` now paints it
 back (16 strokes): the island as lawn, inset half a stroke from each kerb and filled along its length, the refuge and the path
 as concrete. It shows where the sharper ground is drawn (close up), like every map edit.
+
+## Jump to players, the golden car's 180, boost either way, a red car at number 6, sounds (15 November 2026)
+
+- **Jump to players** (Ash: "Someone joined but I can't jump to them"): a player flying more than 60 m up was sent as nowhere, and
+  new players start up in the air. Now they send where they are (still drawn as no one, so copies from before are unchanged) and
+  are listed as "Flying, 300 m away"; picking one flies you in beside them. "Just for you" is at the bottom of the list.
+- **Boost** (Ash: "If I hit boost without the control forward still go at max forward accel, unless the control stick is in 180
+  of a downwards position, in that can boost backwards"): in a car, Boost pushes forward at full whatever the stick does, and
+  backwards (as hard, as fast) when the stick is in its lower half.
+- **Number 6 and the golden car** (Ash: "Move the golden car to a random position that makes sense every time. Put a red car in
+  the 6 Beaudesert driveway instead"): a red car is backed into number 6's drive. The golden car takes the place of one of the
+  model's parked cars near one of the town's places, a different one each visit, and that parked car goes (`T.hideCars`, laid
+  in with the map edits' take-outs).
+- **The golden car's 180** (Ash: "a 180 spin ... that quickly jumps up and heads perfectly in the opposite direction keeping
+  momentum"): the gold 180 button over Boost (X on a keyboard). It hops a metre up, swings round half a turn in 0.42 s while
+  carrying on the way it was going, and lands facing back, going back at the same speed. Stick left at the press spins it the
+  other way.
+- **Sounds** (Ash: "Add sounds to the heli and plane and animal"): the helicopter has its own (a low turbine, a whine, the rotor's
+  whop-whop four to seven times a second), the plane's propeller buzz and rush of air are louder; the possum patters as it runs,
+  scratches as it climbs and squeaks as it jumps; Inverloch's animal thumps (kangaroo), grunts (wombat) or drums (emu) when
+  you're within 30 m.

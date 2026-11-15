@@ -1322,6 +1322,10 @@ body.bsdrive:not(.bsplane) .bs-fly-x.bs-car { bottom: calc(68px + env(safe-area-
 /* touch only: the handbrake sits above the Look stick while you drive a car, and Boost moves up to make room */
 .bs-fly-x.bs-hand { top: auto; left: auto; right: 34px; bottom: calc(192px + env(safe-area-inset-bottom)); z-index: 2; touch-action: none; user-select: none; -webkit-user-select: none; }
 .bs-fly-x.bs-hand[hidden] { display: none; }
+/* the golden car's 180: over Boost on a phone, beside it on a desktop (X) */
+.bs-fly-x.bs-flip { top: auto; left: auto; right: 34px; bottom: calc(288px + env(safe-area-inset-bottom)); min-width: 58px; z-index: 2; touch-action: none; user-select: none; -webkit-user-select: none; background: #e8b923; color: #1b1830; }
+.bs-fly-x.bs-flip[hidden] { display: none; }
+@media (hover: hover) and (pointer: fine) { .bs-fly-x.bs-flip { right: auto; left: calc(50% + 190px); bottom: calc(68px + env(safe-area-inset-bottom)); } }
 /* the map-editing pencil: where the handbrake shows in a car, over the Look stick (Ash, 15 November 2026), and away while you drive or fly one */
 .bs-fly-x.bs-edit { top: auto; left: auto; right: 34px; bottom: calc(192px + env(safe-area-inset-bottom)); width: 46px; height: 46px; padding: 0; display: inline-flex; align-items: center; justify-content: center; z-index: 2; }
 .bs-fly-x.bs-edit svg { width: 20px; height: 20px; }
@@ -2059,6 +2063,7 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <button class="bs-fly-x bs-car" type="button" id="bsCarBtn" data-key="Enter" hidden>Get in the car</button>
     <button class="bs-fly-x bs-boost" type="button" id="bsBoostBtn" data-key="Shift" hidden>Boost</button>
     <button class="bs-fly-x bs-hand" type="button" id="bsHandBtn" hidden>Handbrake</button>
+    <button class="bs-fly-x bs-flip" type="button" id="bsFlipBtn" aria-label="Spin round (X)" hidden>180</button>
     <button class="bs-fly-x bs-edit" type="button" id="bsEditBtn" aria-pressed="false" aria-controls="bsAdmin" aria-label="Edit the map" title="Edit the map" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg></button>
     <div class="bs-keys" id="bsKeys" hidden><p class="bs-keys-now" id="bsKeysNow"></p><dl id="bsKeysList"></dl><p class="bs-keys-q">? to hide this list</p></div>
     <button class="bs-fly-x bs-fly-lock" type="button" id="bsFlyLock" hidden>Use this view for the weather</button>
@@ -8489,12 +8494,13 @@ const handle = async (m, post) => {
           const goldEls = golds.length ? [(() => { const h = document.createElement("p"); h.className = "bs-town-group bs-town-players"; h.setAttribute("role", "presentation"); h.textContent = "Just for you"; return h; })(),
             ...golds.map((g, i) => { const b = document.createElement("button"); b.type = "button"; b.setAttribute("role", "menuitem"); b.className = "bs-town-players"; b.dataset.townGold = i;
               const sm = document.createElement("small"); sm.textContent = g.what; b.append(g.name, sm); return b; })] : [];
-          const who = T.peers?.list?.() || []; if (!who.length) { list.prepend(...goldEls); return; }
+          list.append(...goldEls);  // at the bottom of the list (Ash, 15 November 2026: "move just for you to the bottom")
+          const who = T.peers?.list?.() || []; if (!who.length) return;
           const near = who.map(q => ({ ...q, d: Math.hypot(q.x - F.pos.x, q.z - F.pos.z) })).sort((a, b) => a.d - b.d);
           const head = document.createElement("p"); head.className = "bs-town-group bs-town-players"; head.setAttribute("role", "presentation"); head.textContent = "Players in town";
           const btns = near.map(q => { const b = document.createElement("button"); b.type = "button"; b.setAttribute("role", "menuitem"); b.className = "bs-town-players"; b.dataset.townPlayer = q.id;
-            const sm = document.createElement("small"); sm.textContent = q.d < 1000 ? `${Math.round(q.d)} m away` : `${(q.d / 1000).toFixed(1)} km away`; b.append(q.name, sm); return b; });
-          list.prepend(...goldEls, head, ...btns); };
+            const sm = document.createElement("small"); sm.textContent = (q.high ? "Flying, " : "") + (q.d < 1000 ? `${Math.round(q.d)} m away` : `${(q.d / 1000).toFixed(1)} km away`); b.append(q.name, sm); return b; });
+          list.prepend(head, ...btns); };
         const goldOnes = () => { const C = T.car, out = []; if (!C) return out;
           if (C.gold?.gold) out.push({ name: "The golden car", what: "A fifth faster than the others", G: C.gold, k: "car" });
           for (const P of C.planes || []) if (P.gold) out.push(P.heli ? { name: "The golden helicopter", what: "40% faster. Somewhere different each visit", G: P, k: "heli" } : { name: "The golden plane", what: "Faster, and the only plane with a boost", G: P, k: "plane" });
@@ -8504,7 +8510,10 @@ const handle = async (m, post) => {
           if (g.k === "car") { dx = s * 5.5; dz = c * 5.5; } else if (g.k === "plane") { dx = s * 7 - c * 5; dz = c * 7 + s * 5; } else { dx = c * 9; dz = -s * 9; }  // in front of a car's nose; ahead of a plane and clear of its wing; beside a helicopter
           const x = G.x + dx, z = G.z + dz; F.pos.set(x, ground(x, z) + F.eye, z); F.yaw = Math.atan2(-(G.x - x), -(G.z - z)); F.pitch = -0.15; };
         const toPlayer = id => { const q = (T.peers?.list?.() || []).find(v => v.id === id); if (!q) return toast("They've just left.", 2200);
-          T.tween = null; if (!T.walk) setMode(true); const sx = Math.sin(q.h), sz = Math.cos(q.h); let x = q.x + sx * 6, z = q.z + sz * 6;
+          T.tween = null;
+          if (q.high) { if (T.walk) setMode(false); const x = q.x + Math.sin(q.h) * 30, z = q.z + Math.cos(q.h) * 30;  // up in the air: fly in beside them, looking at them
+            F.pos.set(x, Math.max(q.y, ground(x, z) + 20), z); F.yaw = Math.atan2(-(q.x - x), -(q.z - z)); F.pitch = -0.1; return toast(`You're with ${q.name}. They're flying.`, 2200); }
+          if (!T.walk) setMode(true); const sx = Math.sin(q.h), sz = Math.cos(q.h); let x = q.x + sx * 6, z = q.z + sz * 6;
           if (T.solid?.(x, z) || m.solidAt?.(x, z)) { x = q.x - sx * 6; z = q.z - sz * 6; }
           F.pos.set(x, ground(x, z) + F.eye, z); F.yaw = Math.atan2(-(q.x - x), -(q.z - z)); F.pitch = -0.2; toast(`You're with ${q.name}.`, 2000); };
         const openList = on => { if (on) players(); list.hidden = !on; jump.setAttribute("aria-expanded", String(on)); if (on) { fl.hidden = true; fb.setAttribute("aria-expanded", "false"); list.querySelector("button")?.focus({ preventScroll: true }); } };
@@ -9563,8 +9572,8 @@ const handle = async (m, post) => {
     let fresh = blank();  // what players have sent in the last 3 hours: shown to everyone until then (or until Ash dismisses it, on his device)
     const layers = () => [pub, sent, fresh, asked, mine, ...(look ? [look] : [])];
     const apply = () => { const L = layers(); m.setGroundEdits([...L.flatMap(e => e.paint), ...(draft ? [draft] : [])]);
-      m.setRemoved({ cars: L.flatMap(e => e.gone.cars), trees: L.flatMap(e => e.gone.trees), people: L.flatMap(e => e.gone.people) }); };
-    apply();
+      m.setRemoved({ cars: [...L.flatMap(e => e.gone.cars), ...(T.hideCars || [])], trees: L.flatMap(e => e.gone.trees), people: L.flatMap(e => e.gone.people) }); };
+    apply(); A.apply = apply;  // (also when the golden car takes a parked car's place: T.hideCars)
     // what has been published for everyone; anything of mine that is in it now comes off my own list
     fetch(cfg.assets + "edits.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(j => { if (!j || T.dead) return; pub = tidy(j);
       const same = (a, b) => { const has = new Set(b.map(x => JSON.stringify(x))); return a.filter(x => !has.has(JSON.stringify(x))); };
@@ -9812,7 +9821,12 @@ const handle = async (m, post) => {
     { x: -253.9, z: 462.3, h: 1.571, name: "The plane in Alexander Park", at: "in Alexander Park", what: "On the big lawn in Alexander Park, pointing down the length of it. Walk up to it and get in" },
     { x: -14.4, z: -1551.6, h: Math.PI, gold: true, name: "The golden plane", at: "in the park by Ipswich Road", what: "On the open grass in the park beside Ipswich Road at Aubigny Street, Annerley. A fifth faster and quicker to turn, and the only plane with a boost" },
   ];
-  const MOO_GOLD_CAR = { x: -250.8, z: -987.5, h: -1.718, gold: true, name: "The golden car", what: "In the driveway at 6 Beaudesert Road, backed in. A fifth faster than the others" };
+  // (Ash, 15 November 2026: "Move the golden car to a random position that makes sense every time. Put a red car in the 6 Beaudesert
+  // driveway instead"): a red car backed into number 6's drive; the golden car takes the place of one of the model's parked cars
+  // near one of the town's places, a different one each visit (`park`), with that parked car taken away. Its x and z here are
+  // only for when no parked car can be found
+  const MOO_RED6 = { x: -250.8, z: -987.5, h: -1.718, name: "The red car", what: "In the driveway at 6 Beaudesert Road, backed in" };
+  const MOO_GOLD_CAR = { x: -236.5, z: -414.75, h: 5.754, gold: true, park: true, name: "The golden car", what: "Parked somewhere different each visit. A fifth faster than the others" };
   // The possum, Moorooka only (Ash, 15 November 2026: "add a possum. The possum should be 3x faster than walking. It should
   // travel up objects like light poles and buildings ... Add the possum at 16 kingwell street moorooka. You enter into the
   // possum just like a car but then move around as a possum not a car. Add a teleport to kingwell street near this", "A
@@ -9830,7 +9844,7 @@ const handle = async (m, post) => {
   // (parks, ovals, a point) for the golden plane: it stands at one of them, a different one each visit, and is not in Jump to.
   const TOWN_RIDES = {
     moo: { planes: [...MOO_PLANES, { x: -464, z: -1533, h: 2.71, heli: true, name: "The helicopter", at: "on the field off School Road", what: "On the open grass off School Road, near Nathan Terrace. Walk up to it and get in" }],
-      cars: [MOO_GOLD_CAR, { x: -284.4, z: -959.4, h: -0.179, bus: true, name: "The bus", what: "At the bus stop on Beaudesert Road, just up from 6 Beaudesert Road. Slow, long and wide" }], possum: MOO_POSSUM },
+      cars: [MOO_RED6, MOO_GOLD_CAR, { x: -284.4, z: -959.4, h: -0.179, bus: true, name: "The bus", what: "At the bus stop on Beaudesert Road, just up from 6 Beaudesert Road. Slow, long and wide" }], possum: MOO_POSSUM },
     inv: { planes: [{ x: -210, z: -377, h: 1.571, name: "The plane", at: "on the lawn by The Hub", what: "On the lawn by The Hub, off A'Beckett Street. Walk up to it and get in" }],
       cars: [{ x: -228.5, z: -375.5, h: Math.PI, spare: true, name: "The red car", what: "On the lawn by The Hub, beside the plane" }, { x: -232.5, z: -375.5, h: Math.PI, gold: true, name: "The golden car", what: "On the lawn by The Hub. A fifth faster than the red one" }],
       more: { planes: [{ x: -1602.1, z: 422, h: 2.6, heli: true, name: "The helicopter", at: "behind 11 Norman Road", what: "On the grass behind 11 Norman Road" }], cars: [{ x: -214, z: -357, h: -1.571, bus: true, name: "The bus", what: "In A'Beckett Street, out the front of The Hub" }] },
@@ -10052,6 +10066,11 @@ const handle = async (m, post) => {
       else { const dx = A.tx - A.x, dz = A.tz - A.z, d = Math.hypot(dx, dz), want = Math.atan2(dx, dz), turn = Math.atan2(Math.sin(want - A.h), Math.cos(want - A.h));
         A.h += turn * Math.min(1, dt * 4); if (d < 0.3) A.wait = 1.5 + Math.random() * 4; else if (Math.abs(turn) < 0.6) { const st = Math.min(d, speed * dt); A.x += Math.sin(A.h) * st; A.z += Math.cos(A.h) * st; } }
       const moving = A.wait <= 0, y = ground(A.x, A.z);
+      // its sound, when you're within 30 m on the ground: a kangaroo thumps as each hop lands, a wombat grunts now and then, an emu drums
+      const F = BS.fly, near = F && T.walk ? Math.hypot(F.pos.x - A.x, F.pos.z - A.z) : 1e9;
+      if (near < 30 && T.snd) { const k = 1 - near / 30, hop = Math.floor(A.t * 5.2 / Math.PI);
+        if (kind === "roo") { if (moving && hop !== A.hop) T.snd.animal("roo", k); A.hop = hop; }
+        else if ((A.call = (A.call ?? 3) - dt) <= 0) { A.call = kind === "emu" ? 7 + Math.random() * 6 : 3 + Math.random() * 5; T.snd.animal(kind, k); } }
       const up = kind === "roo" && moving ? 0.42 * Math.abs(Math.sin(A.t * 5.2)) : 0, roll = kind === "wombat" && moving ? 0.07 * Math.sin(A.t * 9) : 0, pitch = kind === "emu" && !moving ? 0.12 * Math.max(0, Math.sin(A.t * 1.3)) : 0;
       M.compose(V.set(A.x, y + up, A.z), Q.setFromEuler(E.set(pitch, A.h, roll, "YXZ")), ONE); parts.setMatrix(0, M.elements.slice()); };
     P.dispose = () => { try { parts.remove(); } catch {} };
@@ -10085,7 +10104,11 @@ const handle = async (m, post) => {
     const sayIn = (el, name, chat, now, sign = "") => { const on = chat && now - chat.t < CHAT_MS, key = on ? name + "\u0000" + chat.text : name + sign;
       if (el.dataset.k === key) return; el.dataset.k = key; el.classList.toggle("said", !!on);
       if (on) { const b = document.createElement("b"); b.textContent = name; el.replaceChildren(b, chat.text); } else el.textContent = sign ? `${name} ${sign}` : name; };
-    P.list = () => [...peers].filter(([, q]) => q.shown && q.b && q.b.k !== "none").map(([id, q]) => ({ id, name: q.name || "A player", k: q.b.k, x: q.shown.x, y: q.shown.y, z: q.shown.z, h: q.shown.h, p: q.shown.p, r: q.shown.r }));
+    // everyone whose whereabouts are known: drawn, or flying high (sent as "none" with where they are; none at 0, 0 or far below is
+    // someone riding with another player, hidden, or only named so far)
+    const known = b => b && b.k === "none" && b.y > -1e4 && (b.x || b.z);
+    P.list = () => [...peers].filter(([, q]) => q.b && ((q.shown && q.b.k !== "none") || known(q.b))).map(([id, q]) => { const s = q.b.k === "none" ? q.b : q.shown;
+      return { id, name: q.name || "A player", k: q.b.k, high: q.b.k === "none", x: s.x, y: s.y, z: s.z, h: s.h, p: s.p, r: s.r }; });
     let sendRide = null; P.ride = (id, on) => { try { sendRide?.(on === 2 ? 2 : on ? 1 : 0, id); } catch {} };  // tell a driver you've got in with them, or out
     const emoted = (name, id) => { const q = peers.get(id), e = TOWN_EMOTES.find(v => v[0] === name); if (q && e) q.emote = { e, t0: performance.now() }; };
     P.emote = n => { const e = typeof n === "number" ? TOWN_EMOTES[n] : TOWN_EMOTES.find(v => v[0] === n), now = performance.now(); if (!e || now - emoteAt < 1200) return false;  // (it used to do nothing with no one else about)
@@ -10223,7 +10246,10 @@ const handle = async (m, post) => {
       if (off) return [0, 0, 0, 0, "none", 0, 0];
       if (T.walk) return [F.pos.x, ground(F.pos.x, F.pos.z), F.pos.z, F.yaw + Math.PI, townRole() === "builder" ? "builder" : "walk", 0, 0];
       // flying low (under 60 m), others see you up there where your eyes are, rather than not at all
-      const gy = ground(F.pos.x, F.pos.z); return F.pos.y - gy < 60 ? [F.pos.x, F.pos.y - 1.6, F.pos.z, F.yaw + Math.PI, "walk", 0, 0] : [0, 0, 0, 0, "none", 0, 0]; };
+      // higher up, nothing is drawn, but where you are still goes, so Jump to can take players to you (Ash, 15 November 2026: "The
+      // jump to player doesn't feel like it's working properly. Someone joined but I can't jump to them": a new player starts up in
+      // the air, and was sent as nowhere). Copies of the app from before this draw no one for "none", as before
+      const gy = ground(F.pos.x, F.pos.z); return F.pos.y - gy < 60 ? [F.pos.x, F.pos.y - 1.6, F.pos.z, F.yaw + Math.PI, "walk", 0, 0] : [F.pos.x, F.pos.y, F.pos.z, F.yaw + Math.PI, "none", 0, 0]; };
     // the Emote button: while you walk, when another player is about, or for Ash (Ash, 15 November 2026: "hide them unless name is ash or another player is near")
     P.frame = () => { const now = performance.now();
       if (sendPose && now - tick > 200) { tick = now; const a = mine().map(v => typeof v === "number" ? Math.round(v * 100) / 100 : v);
@@ -10294,25 +10320,39 @@ const handle = async (m, post) => {
       if (note) { const o = a.createOscillator(), og = a.createGain(); o.type = "sine"; o.frequency.setValueAtTime(note, t); o.frequency.exponentialRampToValueAtTime(note * 0.55, t + len);
         og.gain.setValueAtTime(loud * 1.4, t); og.gain.exponentialRampToValueAtTime(0.001, t + len); o.connect(og); og.connect(master); o.start(t); o.stop(t + len + 0.02); } };
     return {
-      start(kind) { const a = ctx(); if (!a) return; this.stop(); const t = a.currentTime, plane = kind === "plane";
-        const o1 = a.createOscillator(), o2 = a.createOscillator(), mix = a.createGain(), lp = a.createBiquadFilter(), out = a.createGain();
-        o1.type = "sawtooth"; o2.type = plane ? "sawtooth" : "square"; mix.gain.value = 0.5; lp.type = "lowpass"; lp.frequency.value = 300; out.gain.value = 0;
-        o1.connect(mix); o2.connect(mix); mix.connect(lp); lp.connect(out); out.connect(master);
-        let beat = null; if (plane) { beat = a.createOscillator(); const bg = a.createGain(); beat.frequency.value = 16; bg.gain.value = 0.3; beat.connect(bg); bg.connect(mix.gain); beat.start(t); }  // the propeller's beat
-        const wn = noise(), wf = a.createBiquadFilter(), wg = a.createGain(); wf.type = "bandpass"; wf.frequency.value = 700; wf.Q.value = 0.6; wg.gain.value = 0; wn.connect(wf); wf.connect(wg); wg.connect(master);  // wind and road
+      // (the helicopter and the plane each have their own sound: Ash, 15 November 2026: "Add sounds to the heli and plane and animal".
+      // A helicopter: a low turbine, a whine over it, and the rotor's whop-whop chopping the lot and the air it pushes, four to
+      // seven times a second. A plane: a propeller's buzz on its engine, and its rush of air, louder than a car's)
+      start(kind) { const a = ctx(); if (!a) return; this.stop(); const t = a.currentTime, heli = kind === "heli", plane = kind === "plane" || heli;
+        const o1 = a.createOscillator(), o2 = a.createOscillator(), mix = a.createGain(), lp = a.createBiquadFilter(), out = a.createGain(), chop = a.createGain();
+        o1.type = "sawtooth"; o2.type = heli ? "triangle" : plane ? "sawtooth" : "square"; mix.gain.value = 0.5; lp.type = "lowpass"; lp.frequency.value = 300; out.gain.value = 0;
+        o1.connect(mix); o2.connect(mix); mix.connect(lp); lp.connect(chop); chop.connect(out); out.connect(master);
+        let beat = null; if (plane) { beat = a.createOscillator(); beat.type = heli ? "sawtooth" : "sine"; const bg = a.createGain(); beat.frequency.value = heli ? 4.5 : 16; bg.gain.value = heli ? 0.45 : 0.3; chop.gain.value = heli ? 0.55 : 0.8; beat.connect(bg); bg.connect(chop.gain); beat.start(t); }  // the rotor's whop, the propeller's beat
+        const wn = noise(), wf = a.createBiquadFilter(), wg = a.createGain(); wf.type = "bandpass"; wf.frequency.value = heli ? 420 : 700; wf.Q.value = 0.6; wg.gain.value = 0; wn.connect(wf); wf.connect(wg); wg.connect(plane ? chop : master);  // wind and road (chopped by the rotor or propeller)
         const sn = noise(), sf = a.createBiquadFilter(), sg = a.createGain(); sf.type = "bandpass"; sf.frequency.value = 2300; sf.Q.value = 3; sg.gain.value = 0; sn.connect(sf); sf.connect(sg); sg.connect(master);  // tyres
         for (const n of [o1, o2, wn, sn]) n.start(t);
-        eng = { plane, o1, o2, lp, out, wf, wg, sg, beat, all: [o1, o2, wn, sn, beat].filter(Boolean) }; },
+        eng = { plane, heli, o1, o2, lp, out, wf, wg, sg, beat, all: [o1, o2, wn, sn, beat].filter(Boolean) }; },
       // every frame: how fast the engine turns (0 to 1), how hard it works (0 to 1), the speed (m/s), the boost, and tyres sliding (0 to 1)
       set(rev, load, speed, boost, skid) { if (!eng || !ac) return; const t = ac.currentTime, to = (p, v, k = 0.07) => p.setTargetAtTime(v, t, k);
-        const f = (eng.plane ? 50 + 62 * rev : 36 + 150 * rev) * (boost ? 1.3 : 1);
-        to(eng.o1.frequency, f); to(eng.o2.frequency, f * (eng.plane ? 1.5 : 0.5)); if (eng.beat) to(eng.beat.frequency, 11 + 24 * rev);
-        to(eng.lp.frequency, 240 + 1500 * load + (boost ? 1500 : 0)); to(eng.out.gain, 0.042 + 0.1 * load + (boost ? 0.06 : 0));  // (turned down by about two fifths: Ash, "the engine sounds are slightly too loud")
-        to(eng.wf.frequency, 450 + 1500 * Math.min(1, speed / 70)); to(eng.wg.gain, Math.min(0.19, (speed / 45) ** 2 * 0.065) + (boost ? 0.055 : 0));
+        const f = (eng.heli ? 38 + 34 * rev : eng.plane ? 50 + 62 * rev : 36 + 150 * rev) * (boost ? 1.3 : 1), up = eng.plane ? 1.6 : 1;
+        to(eng.o1.frequency, f); to(eng.o2.frequency, f * (eng.heli ? 22 : eng.plane ? 1.5 : 0.5)); if (eng.beat) to(eng.beat.frequency, eng.heli ? 4.2 + 3 * rev : 11 + 24 * rev);
+        to(eng.lp.frequency, (eng.heli ? 700 : 240) + 1500 * load + (boost ? 1500 : 0)); to(eng.out.gain, (0.042 + 0.1 * load + (boost ? 0.06 : 0)) * up);  // (turned down by about two fifths: Ash, "the engine sounds are slightly too loud")
+        to(eng.wf.frequency, (eng.heli ? 350 : 450) + 1500 * Math.min(1, speed / 70)); to(eng.wg.gain, eng.heli ? 0.05 + 0.08 * rev : Math.min(0.19, (speed / 45) ** 2 * 0.065) * (eng.plane ? 1.4 : 1) + (boost ? 0.055 : 0));
         to(eng.sg.gain, skid * 0.1, 0.03); },
       level(v) { vol = v; if (master) master.gain.value = 0.9 * v; },
       thud(k = 1) { hit(0.28, 320, 0.5 * k, 74); },
       door() { hit(0.09, 1100, 0.3, 120); },
+      // the possum: little feet, claws on a wall or a pole, and a squeak as it jumps; and the animal by Norman Road
+      step(k = 1) { hit(0.03, 2600, 0.07 * k, 0); },
+      scratch(k = 1) { hit(0.05, 5200, 0.06 * k, 0); },
+      squeak(k = 1) { const a = ctx(); if (!a) return; const t = a.currentTime, o = a.createOscillator(), g = a.createGain(); o.type = "sine";
+        o.frequency.setValueAtTime(1500, t); o.frequency.exponentialRampToValueAtTime(2700, t + 0.07); o.frequency.exponentialRampToValueAtTime(1900, t + 0.13);
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.06 * k, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.15); o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.17); },
+      animal(kind, k = 1) { if (kind === "roo") hit(0.16, 260, 0.3 * k, 58);  // a kangaroo's thump as it lands
+        else if (kind === "wombat") hit(0.22, 520, 0.16 * k, 105);  // a wombat's grunt
+        else { const a = ctx(); if (!a) return; const t = a.currentTime;  // an emu's low drumming: a few soft booms
+          for (let i = 0; i < 3; i++) { const o = a.createOscillator(), g = a.createGain(), t0 = t + i * 0.32; o.type = "sine"; o.frequency.setValueAtTime(82, t0); o.frequency.exponentialRampToValueAtTime(64, t0 + 0.26);
+            g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.22 * k, t0 + 0.04); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.28); o.connect(g); g.connect(master); o.start(t0); o.stop(t0 + 0.3); } } },
       stop() { if (!eng || !ac) return; const e = eng, t = ac.currentTime; eng = null; for (const g of [e.out, e.wg, e.sg]) g.gain.setTargetAtTime(0, t, 0.06);
         setTimeout(() => e.all.forEach(n => { try { n.stop(); } catch {} }), 500); },
       quiet(on) { if (ac) (on ? ac.suspend() : ac.resume()).catch(() => {}); },
@@ -10553,7 +10593,7 @@ const handle = async (m, post) => {
     const PS = RIDES.possum, POLE_TOP = 8.24, poles = (PS?.poles || []).map(([x, z]) => ({ x, z, y: m.groundAt(x, z) })), poleAt = (x, z, r = 0.45) => poles.find(q => Math.hypot(q.x - x, q.z - z) < r);
     const solid = (x, z) => (m.solidAt ? m.solidAt(x, z) : false) || !!T.solid?.(x, z) || !!poleAt(x, z, 0.3), parked = (x, z, r) => m.nearestCar && m.driveCar ? m.nearestCar(x, z, r) : null;
     const THREE = BS.B.THREE, btn = $("bsCarBtn"), boostBtn = $("bsBoostBtn"), chip = $("bsHeight"), wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
-    const R = rideSettings(), GOLD = 1 + R.gold / 100, VMAX = R.carTop / 3.6, VREV = 5.5, VBOOST = Math.max(R.carBoostTop, R.carTop) / 3.6, LIFT = R.planeLift / 3.6, CRUISE = Math.max(R.planeTop, R.planeLift * 1.4) / 3.6, JET = Math.max(R.planeBoostTop, R.planeTop) / 3.6, canBoost = P => !P.heli && (P.gold || !!R.planeBoost), touch = matchMedia("(pointer: coarse)").matches, snd = townSound();
+    const R = rideSettings(), GOLD = 1 + R.gold / 100, VMAX = R.carTop / 3.6, VREV = 5.5, VBOOST = Math.max(R.carBoostTop, R.carTop) / 3.6, LIFT = R.planeLift / 3.6, CRUISE = Math.max(R.planeTop, R.planeLift * 1.4) / 3.6, JET = Math.max(R.planeBoostTop, R.planeTop) / 3.6, canBoost = P => !P.heli && (P.gold || !!R.planeBoost), touch = matchMedia("(pointer: coarse)").matches, snd = townSound(); T.snd = snd;
     snd.level(R.volume / 100);
     let veh = null, car = null, last = null, off = null, camYaw = 0, idle = 0, at = 0, charge = 1, spent = false;
     // whether something fits there: points along and across it (metres from its middle) clear of buildings, and out of deep water
@@ -10565,7 +10605,7 @@ const handle = async (m, post) => {
     // how the ground lies under something: its height, and how far the nose is up and the right side down
     const lie = (o, half, wide) => { const s = Math.sin(o.h), c = Math.cos(o.h), g = (a, b) => ground(o.x + s * a - c * b, o.z + c * a + s * b), yf = g(half, 0), yb = g(-half, 0), yr = g(0, wide), yl = g(0, -wide);
       return [(yf + yb + yr + yl) / 4, Math.atan2(yf - yb, half * 2), Math.atan2(yl - yr, wide * 2)]; };
-    const sit = dt => { const [y, p, r] = car.bus ? lie(car, 3.6, 1.1) : lie(car, 1.3, 0.8), e = dt ? Math.min(1, dt * 12) : 1; car.y += (y + 0.05 - car.y) * e; car.p += (p - car.p) * e; car.r += (r - car.r) * e;
+    const sit = dt => { const [y, p, r] = car.bus ? lie(car, 3.6, 1.1) : lie(car, 1.3, 0.8), e = dt ? Math.min(1, dt * 12) : 1; car.y += (y + 0.05 + (car.hop || 0) - car.y) * (car.flip ? 1 : e); car.p += (p - car.p) * e; car.r += (r - car.r) * e;
       if (car.own) { Object.assign(car.own, { x: car.x, y: car.y, z: car.z, h: car.h, p: car.p, r: car.r }); showOwn(car.own); } else m.driveCar(car.id[0], car.id[1], car.x, car.y, car.z, car.h, car.p, car.r); };
     // ---- the planes, each stood in the model as the app's own mesh where it lives (MOO_PLANES); `plane` is the one you are in
     const M = new THREE.Matrix4(), M2 = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), ONE = new THREE.Vector3(1, 1, 1);
@@ -10591,7 +10631,14 @@ const handle = async (m, post) => {
       P.parts = m.addParts((P.heli ? townPlaneParts(P.gold ? "#e2ad1c" : "#c8322b", "heli") : townPlaneParts(P.gold ? "#e2ad1c" : undefined)).map(q => ({ ...q, matrix: M.identity().elements.slice() }))); showPlane(P); return P; });
     // ---- the golden car, the app's own mesh too: twice the top speed and the acceleration of a parked car
     const showOwn = G => { M.compose(V.set(G.x, G.y, G.z), Q.setFromEuler(E.set(-G.p, G.h, G.r, "YXZ")), ONE); G.parts.setMatrix(0, M.elements.slice()); };
-    const owns = RIDES.cars.filter(home => !home.spare || !m.nearestCar).map(home => { const G = { x: home.x, z: home.z, h: home.h, y: 0, p: 0, r: 0, gold: !!home.gold, bus: !!home.bus };
+    // a golden car that parks somewhere different each visit: in the place of a parked car near one of the town's places
+    const parkAt = home => { if (!home.park || !m.nearestCar || !m.spots) return home; const spots = m.spots().filter(s => s.kind !== "water");
+      for (let t = 0; t < 24 && spots.length; t++) { const s = spots[Math.floor(Math.random() * spots.length)], c = m.nearestCar(s.tx, s.tz, 120);
+        if (!c || RIDES.cars.some(o => o !== home && Math.hypot(o.x - c.x, o.z - c.z) < 30)) continue;
+        T.hideCars = [c.id]; if (T.admin?.apply) T.admin.apply(); else m.setRemoved?.({ cars: T.hideCars, trees: [], people: [] });
+        return { ...home, x: c.x, z: c.z, h: c.heading }; }
+      T.hideCars = [[home.x, home.z]]; return home; };  // (where it stands then is a parked car of the model's: that one goes)
+    const owns = RIDES.cars.filter(home => !home.spare || !m.nearestCar).map(parkAt).map(home => { const G = { x: home.x, z: home.z, h: home.h, y: 0, p: 0, r: 0, gold: !!home.gold, bus: !!home.bus };
       const [y, p, r] = G.bus ? lie(G, 3.6, 1.1) : lie(G, 1.3, 0.8); G.y = y; G.p = p; G.r = r;
       G.parts = m.addParts((G.bus ? townPlaneParts("#2f7fc4", "bus") : townPlaneParts(G.gold ? "#e8b923" : "#c8322b", true)).map(q => ({ ...q, matrix: M.identity().elements.slice() }))); showOwn(G); return G; });
     const gold = owns.find(G => G.gold) || owns[0];
@@ -10688,13 +10735,13 @@ const handle = async (m, post) => {
           // you stand where the view was (behind it, clear of the building it is on); facing it
           if (solid(F.pos.x, F.pos.z) || !inside(F.pos.x, F.pos.z)) { F.pos.x = PS.stand.x; F.pos.z = PS.stand.z; }
           F.yaw = Math.atan2(F.pos.x - P.x, F.pos.z - P.z); F.pitch = -0.08; } }
-      else if (was === "car") { car.v = 0; sit(0); showRing(false); if (step) { F.pos.x = car.x - Math.cos(car.h) * (car.bus ? 2.6 : 1.8); F.pos.z = car.z + Math.sin(car.h) * (car.bus ? 2.6 : 1.8); F.yaw = car.h + Math.PI; F.pitch = -0.04; } }  // out of the driver's door, on the right, facing the way the car does
+      else if (was === "car") { car.v = 0; car.flip = null; car.hop = 0; sit(0); showRing(false); if (step) { F.pos.x = car.x - Math.cos(car.h) * (car.bus ? 2.6 : 1.8); F.pos.z = car.z + Math.sin(car.h) * (car.bus ? 2.6 : 1.8); F.yaw = car.h + Math.PI; F.pitch = -0.04; } }  // out of the driver's door, on the right, facing the way the car does
       else { const P = plane; if (P.air) { P.x = P.home.x; P.z = P.home.z; P.h = P.home.h; P.air = false; }  // left in the air (you flew off as the camera, or jumped somewhere): it is back where it lives
         P.v = 0; P.spin = 0; const [y, p, r] = lie(P, 2, 1.2); P.y = y; P.p = p; P.r = r;
         if (step) { F.pos.x = P.x + Math.cos(P.h) * 1.9; F.pos.z = P.z - Math.sin(P.h) * 1.9; F.yaw = P.h + Math.PI; F.pitch = -0.04; }  // out of the left door
         plane = null; showPlane(P); }
       veh = null; car = null; plane = null; showKeys(null); C.in = false; F.drive = null; F.boost = false; F.hText = ""; F.vert = 0; F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.keys.clear();
-      document.body.classList.remove("bsdrive", "bsplane", "bspossum", "bsride"); boostBtn.hidden = true; boostBtn.textContent = "Boost"; handBtn.hidden = true; handBtn.classList.remove("on"); F.hand = false; at = 0; C.frame(); };
+      document.body.classList.remove("bsdrive", "bsplane", "bspossum", "bsride"); boostBtn.hidden = true; boostBtn.textContent = "Boost"; handBtn.hidden = true; flipBtn.hidden = true; F.flip = false; handBtn.classList.remove("on"); F.hand = false; at = 0; C.frame(); };
     const tick = dt0 => { const dt = Math.min(dt0, 0.1), k = F.keys, has = (...c) => c.some(x => k.has(x));
       // flying the camera, a jump to a place or starting again has moved the view: that is getting out
       if (!T.walk || T.tween || BS.town !== T || Math.abs(F.pos.x - last[0]) + Math.abs(F.pos.y - last[1]) + Math.abs(F.pos.z - last[2]) > 1e-3) return leave(false);
@@ -10714,8 +10761,13 @@ const handle = async (m, post) => {
         text = `With ${ride.name} \u00b7 ${Math.round(ride.v * 3.6)} km/h`; hint("");
       } else if (veh === "car") { let v = car.v; const brake = has("Space") || !!F.hand;
         // the boost runs on a charge: about four seconds' worth, back in ten. Run right out, it waits until a fifth is back
-        const boosting = boost && thr > 0.05 && !brake && charge > 0 && !spent;
+        // Boost goes at full push forward whatever the stick says, unless the stick is pulled back (its lower half): then it boosts
+        // backwards (Ash, 15 November 2026: "If I hit boost without the control forward still go at max forward accel, unless the
+        // control stick is in 180 of a downwards position, in that can boost backwards")
+        const boosting = boost && !brake && charge > 0 && !spent, back = boosting && thr < -0.05, go = boosting ? (back ? -1 : 1) : thr;
         // (the golden car has its own boost, handbrake spin and handbrake drag: Settings > Admin > Cars and planes)
+        const xk = has("KeyX"), xNew = xk && !C.xWas; C.xWas = xk;
+        if ((xNew || F.flip) && car.gold && !car.flip) { F.flip = false; car.flip = { t: 0, h0: car.h, d0: car.dir, way: str < -0.1 ? -1 : 1 }; snd.thud?.(0.3); }
         const gc = car.gold, bSecs = gc ? R.goldBoostSecs : R.boostSecs, bBack = gc ? R.goldBoostBack : R.boostBack, sTurn = gc ? R.goldSlideTurn : R.slideTurn, sSlow = gc ? R.goldSlideSlow : R.slideSlow;
         if (boosting) { charge = Math.max(0, charge - dt / bSecs); if (!charge) spent = true; } else { charge = Math.min(1, charge + dt / bBack); if (charge >= 0.2) spent = false; }
         const K = car.gold ? GOLD : car.bus ? 0.7 : 1, vmax = VMAX * K, vboost = VBOOST * K, SHAPE = car.bus ? BUS : CAR;  // (a bus: seven tenths of a car's speed and push, and a long way between its axles)  // the golden car: a fifth more top speed, push and boost
@@ -10723,15 +10775,25 @@ const handle = async (m, post) => {
         // drastically increases turning for burnouts"): it swings the car round fast while it carries on the way it was going
         const slide = brake && Math.abs(v) > 3;
         if (brake) v -= Math.sign(v) * Math.min(Math.abs(v), sSlow / 3.6 * dt);
-        if (thr > 0.05) v += (v < -0.2 ? 10 : boosting ? R.carAccel * 4 * K * (1 - Math.max(0, v) / vboost) : R.carAccel * K * (1 - Math.max(0, v) / vmax)) * thr * dt * (brake ? 0.5 : 1);
-        else if (thr < -0.05) v += (v > 0.2 ? -11 : -3 * (1 + Math.min(0, v) / VREV)) * -thr * dt;
+        if (go > 0.05) v += (v < -0.2 && !boosting ? 10 : boosting ? R.carAccel * 4 * K * (1 - Math.max(0, v) / vboost) : R.carAccel * K * (1 - Math.max(0, v) / vmax)) * go * dt * (brake ? 0.5 : 1);
+        else if (back) v -= R.carAccel * 4 * K * (1 + Math.min(0, v) / vboost) * dt;  // boosting backwards: as hard as forwards
+        else if (go < -0.05) v += (v > 0.2 ? -11 : -3 * (1 + Math.min(0, v) / VREV)) * -go * dt;
         else if (!brake) v -= Math.sign(v) * Math.min(Math.abs(v), (0.6 + Math.abs(v) * 0.08) * dt);
         if (v > vmax && !boosting) v = Math.max(vmax, v - 9 * K * dt);  // off the boost, it eases back to its own top speed
-        v = bsClamp(v, -VREV, vboost);
+        if (v < -VREV && !back) v = Math.min(-VREV, v + 9 * K * dt);  // and from boosting backwards, back to its own reversing speed
+        v = bsClamp(v, -vboost, vboost);
         car.steer += (str * 0.55 / (1 + (Math.abs(v) / (8 * K)) ** 2 * 1.2) - car.steer) * Math.min(1, dt * 7);  // less lock the faster it goes
         car.v = v; let bump = 0;
         for (let n = Math.max(1, Math.ceil(Math.abs(v) * dt / 1.2)), i = 0, st = dt / n; i < n; i++) {  // in steps of a metre or so, so it cannot skip through a wall
           // (how fast it turns: Settings > Cars and planes > Car turning, and Golden car turning: Ash, 15 November 2026)
+          // the golden car's 180 (Ash, 15 November 2026: "Add a 180 spin to the golden car that quickly jumps up and heads perfectly in
+          // the opposite direction keeping momentum"): up off the road, round half a turn in under half a second, still carrying on
+          // the way it was going; it lands facing back and going back at the same speed
+          if (car.flip) { const Fp = car.flip; Fp.t += st; const f = Math.min(1, Fp.t / 0.42), ease = f * f * (3 - 2 * f); car.hop = 1.1 * Math.sin(Math.PI * f);
+            const h = Fp.h0 + Math.PI * ease * Fp.way, x = car.x + Math.sin(Fp.d0) * car.v * st, z = car.z + Math.cos(Fp.d0) * car.v * st;
+            if (inside(x, z) && fits(SHAPE, x, z, h)) { car.x = x; car.z = z; } car.h = h; car.dir = Fp.d0;
+            if (f >= 1) { car.h = wrap(Fp.h0 + Math.PI); car.dir = wrap(Fp.d0 + Math.PI); car.hop = 0; car.flip = null; snd.thud(0.5); }
+            continue; }
           const h = car.h - (slide ? str * sTurn * Math.PI / 180 * Math.sign(car.v) : (car.v / (car.bus ? 6.4 : 2.6)) * Math.tan(car.steer) * (gc ? R.goldTurn : R.carTurn) / 100) * st;
           const d = car.dir + wrap(h - car.dir) * Math.min(1, st * (slide ? 1.5 : 10));  // the way it travels comes round to the way it points: slowly while it slides
           const x = car.x + Math.sin(d) * car.v * st, z = car.z + Math.cos(d) * car.v * st;
@@ -10778,6 +10840,10 @@ const handle = async (m, post) => {
           if (P.mode === "air") { P.vy -= 22 * dt; P.y += P.vy * dt; const s = surf(P.x, P.z);
             if (P.y <= s) { if (P.vy < -9) snd.thud(Math.min(1.2, -P.vy / 18)); P.y = s; P.vy = 0; P.mode = "ground"; } }
           else if (P.mode === "ground") { P.y += (surf(P.x, P.z) - P.y) * Math.min(1, dt * 20); if (jump && !P.jumped) { P.mode = "air"; P.vy = 11.1; } } }  // two and a half times as high as it was (Ash, 15 November 2026)
+        // its sounds: a patter of feet as it runs, claws as it climbs, a squeak as it jumps
+        P.pat = (P.pat || 0) + (P.mode === "ground" ? Math.abs(P.v) * dt / 0.55 : P.mode === "climb" ? Math.abs(P.y - (P.lastY ?? P.y)) / 0.3 : 0); P.lastY = P.y;
+        if (P.pat >= 1) { P.pat %= 1; if (P.mode === "climb") snd.scratch(); else snd.step(0.6 + Math.random() * 0.5); }
+        if (jump && !P.jumped && P.mode === "air" && P.vy > 10) snd.squeak();
         P.jumped = jump;  // (one jump a press)
         // touching a plane or helicopter someone's flying (running into it, or landing on it): it grabs on
         if (!P.cling && P.mode !== "climb") for (const q of T.peers?.list?.() || []) { if (!CLING[q.k]) continue;
@@ -10884,9 +10950,9 @@ const handle = async (m, post) => {
         veh = "car"; camYaw = car.h + Math.PI; document.body.classList.add("bsdrive"); showRing(charge < 0.999); }
       C.in = true; off = [wrap(F.yaw - camYaw), bsClamp(F.pitch + 0.2, -1, 0.55)]; idle = 0; last = [F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch];
       F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.vert = 0; F.boost = false; F.keys.clear(); F.drive = tick;
-      btn.textContent = veh === "possum" ? "Hop out" : "Get out"; btn.hidden = false; handBtn.hidden = veh !== "car"; boostBtn.hidden = veh === "ride" || (veh === "plane" && !canBoost(plane));
+      btn.textContent = veh === "possum" ? "Hop out" : "Get out"; btn.hidden = false; handBtn.hidden = veh !== "car"; flipBtn.hidden = !(veh === "car" && car?.gold); boostBtn.hidden = veh === "ride" || (veh === "plane" && !canBoost(plane));
       boostBtn.textContent = veh === "possum" ? "Jump" : "Boost";
-      if (veh === "ride") { if (RIDE_UP[ride.k] > 1) snd.door(); } else if (veh !== "possum") { snd.door(); snd.start(veh); } showKeys(veh === "plane" && plane.heli ? "heli" : veh === "ride" ? null : veh);
+      if (veh === "ride") { if (RIDE_UP[ride.k] > 1) snd.door(); } else if (veh !== "possum") { snd.door(); snd.start(veh === "plane" && plane.heli ? "heli" : veh); } showKeys(veh === "plane" && plane.heli ? "heli" : veh === "ride" ? null : veh);
       // on a phone, a word about the sticks (on a desktop the list of keys has just come up, bottom left)
       if (touch && veh !== "ride" && !(veh === "possum" && roofsIn)) toast(veh === "possum" ? "You're the possum. Push the left stick the way to run. Run at a street light or a wall to climb it, pull back to let go. Jump springs up." : veh === "plane" && plane.heli ? "Hold Up to lift off. Left stick: forward to go, sideways to turn. Down lands it." : veh === "plane" ? "Left stick: forward for power, sideways to turn. Climb lifts the nose once you are fast." : "Left stick to drive, right stick to look around. Hold Boost for the mega boost.", 5500);
       return true; };
@@ -10904,6 +10970,7 @@ const handle = async (m, post) => {
     const handBtn = $("bsHandBtn"), pull = on => e => { F.hand = on && veh === "car"; handBtn.classList.toggle("on", !!F.hand); e.preventDefault(); };
     const handPress = { pointerdown: pull(true), pointerup: pull(false), pointercancel: pull(false), pointerleave: pull(false), contextmenu: e => e.preventDefault() };
     Object.entries(handPress).forEach(([k, f]) => handBtn.addEventListener(k, f));
+    const flipBtn = $("bsFlipBtn"), flipPress = e => { e.preventDefault(); if (veh === "car" && car?.gold) F.flip = true; }; flipBtn.addEventListener("pointerdown", flipPress);
     const hidden = () => snd.quiet(document.hidden); document.addEventListener("visibilitychange", hidden);
     C.riding = () => veh === "ride";
     C.pose = () => veh === "ride" ? null : veh === "possum" ? { k: "possum", x: pos.x, y: pos.y, z: pos.z, h: pos.h, p: pos.p, r: 0 } : veh === "car" ? { k: car.bus ? "bus" : car.gold ? "gold" : "car", x: car.x, y: car.y, z: car.z, h: car.h, p: car.p, r: car.r }
@@ -10915,7 +10982,7 @@ const handle = async (m, post) => {
     C.toGold = () => { const G = planes.find(P => P.gold); if (!G) return false; if (veh) leave(false);
       const sn = Math.sin(G.h), cs = Math.cos(G.h), dx = sn * 7 - cs * 5, dz = cs * 7 + sn * 5; T.tween = null;
       F.pos.x = G.x + dx; F.pos.z = G.z + dz; F.pos.y = ground(F.pos.x, F.pos.z) + (T.walk ? F.eye : 14); F.yaw = Math.atan2(dx, dz); F.pitch = T.walk ? -0.06 : -0.6; at = 0; return true; };
-    C.dispose = () => { if (veh) leave(false); btn.onclick = null; btn.hidden = boostBtn.hidden = handBtn.hidden = true; F.hand = false; Object.entries(press).forEach(([k, f]) => boostBtn.removeEventListener(k, f)); Object.entries(handPress).forEach(([k, f]) => handBtn.removeEventListener(k, f));
+    C.dispose = () => { if (veh) leave(false); btn.onclick = null; btn.hidden = boostBtn.hidden = handBtn.hidden = flipBtn.hidden = true; flipBtn.removeEventListener("pointerdown", flipPress); F.hand = false; Object.entries(press).forEach(([k, f]) => boostBtn.removeEventListener(k, f)); Object.entries(handPress).forEach(([k, f]) => handBtn.removeEventListener(k, f));
       document.removeEventListener("visibilitychange", hidden); document.body.classList.remove("bsdrive", "bsplane"); snd.dispose(); showKeys(null); try { for (const P of planes) P.parts.remove(); for (const G of owns) G.parts.remove(); ring.remove(); possumMesh?.remove(); poleMesh?.remove(); } catch {} };
     return C;
   }
