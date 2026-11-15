@@ -1496,3 +1496,29 @@ don't pop in. It started 70% of the way out, so on Low (1 km) every house from 7
 roofs lying on the grass, everywhere you looked from a plane or a hill. The rise now happens only in the last 6% of the range
 (`smoothstep(uRange * 0.94, uRange, ...)`), so almost every house you can see stands full height. Bundle patch only;
 `logan-model.js?v=39`. The ai-forge source (`src/features/logan3d/buildings.ts`) should get the same change.
+
+## Moorooka's shops, servos, locals, perks, letters and the possum mission (16 November 2026)
+
+Ash, in a run of messages with Street View photos: more well-known businesses and the petrol stations; the mechanic (one of five car
+upgrades), the vet (one of five possum upgrades, a corny joke sign out front), Pandy's lime cordial (sprint), Cr Steve Griffiths
+(the 360 kick), the pharmacy (a love potion), Big Boss Pizzas (the best chips ever: a pizza chef outfit), the Willow Hotel (it was
+the Red Lion; you can get drunk), the gym (+10% speed on foot), letters at the post office, and the possum mission.
+
+- **Fronts** (`MOO_FRONTS`): Advance Mechanical Centre (93), Greencross Vets (111, with its joke board), TerryWhite Chemmart,
+  the Moorooka Ward Office (122), Woolworths, Big Boss Pizzas (180), Snap Fitness, and the Willow Hotel (215: red pergola, green
+  banners). Walls found from the survey as `tools/ground/shops.py` does; addresses from the web and the photos.
+- **Servos**: kind `pylon`, a pole sign by the kerb facing each way: Ampol (345 Beaudesert Rd, Hamilton Rd corner), BP (1129 Ipswich
+  Rd, beside Starbucks), 7-Eleven (841 Ipswich Rd, Black St corner). Placed by corner or by street number, so near enough, not exact.
+- **Locals** (`MOO_LOCALS`, `townLocals`): each has a name tag; walk up (drive up to the mechanic, run up as the possum to the vet)
+  and a card offers what they do. Pandy gets her tag in `townHome6`. Ash at number 6 now cycles through his lines while you're near.
+- **Perks** (`townPerks`, localStorage `an3d-perks`, this device only): `car` and `possum` (one upgrade each, applied over Settings
+  by `townPerkRide`), `cordial` (Shift or the Sprint button: 1.5x on foot), `fit` (1.1x on foot), `kick` (the 360 kick replaces
+  Spin), `potions` (up to 3), `chef` (others see you as the chef; you see yourself in third person). A drink at the Willow sways you
+  for a minute or two and stops you driving.
+- **Love potion**: Emotes gives it to the nearest player on foot within 40 m (relay action `potion`); their app walks them after you
+  for 30 s.
+- **Letters** (`townMail`): posted to ntfy topic `awesome-news-town-mail-k4p9`, kept 30 days in `chat/mail.json` by `tools/mail.py`
+  (hourly chat job). Three per 5 minutes. Online players get it within ~25 s; others are told on opening Explore that a letter is
+  waiting at the Moorooka Post Office. Not private.
+- **Possum mission**: number 6's pool starts it (no more instant gold): gold rings over up to six roofs nearby, a minute to get
+  through them all; win and you're the golden possum.
