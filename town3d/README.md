@@ -977,6 +977,46 @@ Ash sent ten photos of the street around number 6 (where Moorooka's Explore star
   number 10's green gate being its own (its two cars are parked inside the wall), the doors' positions under number 10,
   and that the corner lot's fence matches number 6's all along Beaudesert Road.
 
+## Number 6's driveway past the gate (15 November 2026)
+
+Ash, with a photo from just inside the sliding gate: "Fix the driveway past the gate". The photo shows one wide exposed
+aggregate slab from the gate to the house, widening across the front of the house (a car parks there) and carrying on
+past the house along the south fence (another car parks there), with a strip of long grass by a plain chainwire fence.
+
+- **Painted, not built:** number 6's lot now has its ground drawn by the plan, as the neighbours' lots do (`ground:!1` in
+  the model's data, `?v=25`), so the slab is painted in `edits.json` like the crossover outside the gate and shows with
+  the same concrete. No new geometry, no draw calls, nothing more to download, and cars stand on it at ground height.
+  The strokes: the plan's old path from where the gate used to be and the strip by the fence painted back to lawn, then
+  a 1 m stroke along each edge of the slab (square edges) and 1.8 m strokes filling the middle.
+- **Taken out of the model's data:** the two tyre strips that were the driveway, the three shrubs that stood on it, and
+  the 1.2 m palings down that side (the app lays a galvanised chainwire fence there instead; the backyard's palings stay).
+- The slab and the striped lawn it replaces show where the plan's ground is drawn (every quality setting, except a
+  device reporting under 4 GB or asking to save data), the same as every other driveway in Moorooka.
+
+**Polished (15 November 2026, Ash: "Needs minor polish"):** the slab's edges are 0.6 m strokes and the filling 1.8 m strokes
+kept 0.9 m inside the outline (with two rows along the slanting north edge), so the edges are straight, the corners tight and
+nothing bulges past them; the front of the slab stops at the foot of the stairs. The path from the white gate to the stairs is
+painted in the same concrete, and the model's lighter path ribbon over it is gone (`?v=26`). A small model tree that stood on
+the drive in front of the stairs is taken out (`edits.json`). The first round's drive strokes were swapped out, not added to.
+
+## Fly to Walk taken out again, fewer cars, clues for dropped fingers (15 November 2026)
+
+- The automatic switch from Fly to Walk (zooming into the ground, or holding Down at the lowest height) is gone, and zoom is
+  back to its old limits (Ash, 15 November 2026: "try removing the thing that goes from fly to walk for now").
+- Traffic: 5 cars in Moorooka (its model has cars of its own on Beaudesert Road) and 8 elsewhere, never started within 40 m
+  of another, to cut lag and overlap.
+- For Ash, the "phone took your finger off" message now also gives the slowest frame in the last 3 seconds, how many other
+  fingers were down, and what had just happened (for example the sharper model being swapped in).
+
+## Fly to Walk back; place names clipped, not faded; more clues for dropped fingers (15 November 2026)
+
+- Fly to Walk is back (it wasn't the cause of the dropped fingers): zoom comes down to about 6 m from the ground you look at,
+  and squeezing on in there, under 6 m up, puts you on foot; holding Down at the lowest height for 1.2 s does too.
+- Place names in Moorooka and Inverloch are kept off the top buttons and the sticks by a fixed `clip-path` on their layer,
+  instead of a check that changed each name's opacity and pointer-events a few times a second (now ruled out as a cause of
+  the iPhone cancelling fingers).
+- For Ash, the "phone took your finger off" message also covers Boost and the Handbrake, and lists what on the controls or the
+  page's classes changed in the 1.5 s before (a `MutationObserver` on `#bsFly` and `body`).
 ## Inverloch put back together: the town centre and the drivable cars in one model (15 November 2026)
 
 Ash: "When we introduced multiplayer or cars into Inverloch explore we've lost tonnes of great work in design. I want
