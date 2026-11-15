@@ -197,7 +197,7 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
 .lb-fresh[hidden] { display: none; }
 .vid { position: relative; aspect-ratio: 16 / 9; margin: 14px 0 6px; border-radius: 16px; overflow: hidden; background: #000; }
 .vid iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-/* Bureau weather warnings: a line under the forecast, and in Listen after the weather */
+/* Bureau weather warnings: a line under Food in the area (the last of the area buttons), and in Listen after the weather */
 .wxwarn { display: flex; align-items: center; gap: 8px; margin-top: 8px; padding: 9px 12px; border-radius: 12px; font-size: 0.84rem; font-weight: 650; line-height: 1.3;
   color: #8a1c1c; background: #fde8e8; box-shadow: inset 0 0 0 1px #f5c2c2; text-decoration: none; }
 .wxwarn[hidden] { display: none; }
@@ -1846,7 +1846,6 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
         <button class="wx" type="button" id="wx" data-open-weather aria-label="Open the full forecast" hidden></button>
       </div>
       <button class="week" type="button" id="wxWeek" data-open-weather aria-label="Open the full forecast" hidden></button>
-      <a class="wxwarn" id="wxWarn" target="_blank" rel="noopener" hidden></a>
       <div class="listenbar">
         <button class="lb-listen" type="button" data-listen="drive" id="lbListen"><img class="lb-bg" id="lbBg" alt="" referrerpolicy="no-referrer" hidden><span class="lb-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg></span><span><b>Listen to the news <i class="beta-tag" aria-label="Beta">Beta</i></b><small>About an hour, top stories first</small></span></button>
         <button class="lb-fresh" type="button" data-listen="fresh" id="lbFresh" aria-label="Listen from the start, as if new" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3.5 4v5h5"/></svg>From the start</button>
@@ -1858,6 +1857,8 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
       <a class="lb-logan lb-home" id="lbHome" href="https://ashley-pettit.github.io/awesome-news/" hidden><span class="lb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5.5 9.5V20h13V9.5"/></svg></span><span><b>Back to Awesome&#32;News</b><small>All the news, not just the local</small></span></a>
       <button class="lb-logan lb-explore" type="button" id="lbExplore" hidden><span class="lb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg></span><span><b id="lbExploreName">Virtually explore Inverloch</b><small>Walk around the town centre in 3D</small></span></button>
       <button class="lb-logan lb-food" type="button" id="lbFood" hidden><span class="lb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3v8M4.5 3v5a2.5 2.5 0 0 0 5 0V3M7 11v10M17 21V3c-2.2 1.2-3.5 3.6-3.5 7v3H17"/></svg></span><span><b>Food in the area</b><small>Places to eat or drink near the Moorooka shops</small></span></button>
+      <!-- a Bureau warning for your area: under Food in the area (Ash, 15 November 2026: "Render the storm alert under the food in the area") -->
+      <a class="wxwarn" id="wxWarn" target="_blank" rel="noopener" hidden></a>
       <button class="topsearch" type="button" data-open-search aria-label="Search all news">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
         <span id="topSearchHint">Search all news</span><kbd>/</kbd></button>
@@ -3578,7 +3579,7 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
   }
   function listenArt() {
     const img = $("lbBg"); if (!img || !state.loaded) return;
-    // A Bureau warning for your area, under the forecast (links to the Bureau's page).
+    // A Bureau warning for your area, under Food in the area (links to the Bureau's page).
     const ww = $("wxWarn"), w0 = Date.now() - Date.parse(state.status?.updatedAt || 0) < 6 * 3600000 ? state.status?.warnings?.[S.region]?.[0] : null;
     if (ww) { ww.hidden = !w0; if (w0) { ww.href = w0.url; ww.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17.5v.5"/></svg><span>${esc(w0.title)}</span>`; } }
     if (commuteSet() && !L.on) afterPics("commute", () => commuteNow().then(driveLine));  // your drive, ready before Listen is tapped (kept 5 minutes)
