@@ -1072,3 +1072,19 @@ driving it, other players starting, and the ordinary weather view. Not checked o
 - **The app's own traffic is off** (`townTraffic`, `N = 0`; Ash, 15 November 2026: "Reduce traffic through the apps, they are
   a bit dumb and run into each other"). Nothing is loaded for it. The models' own moving cars carry on. Set `N` above 0 to
   bring the app's cars back.
+
+## Calmer streets, and Explore's own settings (15 November 2026)
+
+- **No moving traffic in Moorooka or Inverloch** (Ash: "the cars are a bit dumb ... less is okay"). Both bundles are
+  patched: `moorooka-model.js?v=27` no longer calls `addTraffic` (parked cars and trains stay), and
+  `inverloch-model.js?v=19` makes its traffic with 0 cars (`s=0` in `addTraffic`; parked cars stay). When either model
+  is rebuilt from ai-forge, make the same change in the source (Moorooka `addTraffic` in the life class; Inverloch's
+  car count `Math.min(82, ...)`), or the moving cars come back.
+- **No people on Moorooka's roads** (Ash: "no people on roads"): the walkers' skip test also checks the road index
+  (`p.index.near`), and a walker is not drawn while within half a road's width (plus 0.6 m) of any street's centre
+  line, so they no longer show on a carriageway where a footpath meets a junction. Inverloch's people already keep
+  6.4 m clear of roads; Logan's people are fixed in its data.
+- **App:** the "phone took your finger off" message and its page watcher are gone (the stick is fixed). Share sits
+  just right of the Settings gear. Ash's cars-and-planes numbers and Explore parts moved from the news app's
+  Settings into Explore's Settings panel. The Emote button shows whenever you walk, on your own too. The weather
+  screen's Explore button opens the same town model as the town's own Explore.
