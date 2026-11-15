@@ -1571,3 +1571,16 @@ change my hairdo", Venky out the back of 10 Beaudesert Road ("Fix up this house"
 - **Post office**: after sending, it offers to share the app with the person.
 - **Traffic follows you**: it used to stay within 800 m of where Explore started (number 6), so away from there no cars moved. Now,
   450 m on, it re-centres on you and brings the out-of-sight cars round (the bus too, unless you're on it).
+
+## Logan council: cars out of the walls, solid walls, sliding doors, golden car on the ground; left-hand traffic and more (16 November 2026)
+
+- **Logan map data** (`town3d/logan/map.json`, precinct cars): the red and the blue car touching the administration centre's wall
+  moved 1.2 to 1.6 m clear, one by the annex nudged out, and four parked inside another building (6076 to 6095, -13375) removed.
+- **The precinct's ground** is laid 25 cm over the terrain (`precinct.ts` GROUND): Logan's config has `lift` (the precinct box and
+  0.25), added by the app's ground function, so the golden car, the other cars you drive and people stand on it, not in it.
+- **Council building** (`townCouncil`): the precinct's buildings are solid to walk into too (`T.solid`, `T.solidWalk`; on foot you slide
+  along a wall), and the entrance has two glass doors that slide apart as you come within 6 m, with the dark of the foyer behind.
+  The model's own static glass there is taken out (bundle patch, `logan-model.js?v=40`).
+- **Traffic drives on the left** (it was on the right); the bus lets you off on the kerb side.
+- **The construction worker's button** sits above Sprint and Jump, twice the size, with ON/OFF on it.
+- **Pandy's cordial** lasts 10 minutes (she tops you up); **new clothes, hair and the chef no longer switch you to third person**.

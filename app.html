@@ -1327,8 +1327,11 @@ body.bsdrive:not(.bsplane) .bs-fly-x.bs-car { bottom: calc(68px + env(safe-area-
 .bs-fly-x.bs-flip[hidden] { display: none; }
 @media (hover: hover) and (pointer: fine) { .bs-fly-x.bs-flip { right: auto; left: calc(50% + 190px); bottom: calc(68px + env(safe-area-inset-bottom)); } }
 /* the map-editing pencil: where the handbrake shows in a car, over the Look stick (Ash, 15 November 2026), and away while you drive or fly one */
-.bs-fly-x.bs-edit { top: auto; left: auto; right: 34px; bottom: calc(192px + env(safe-area-inset-bottom)); width: 46px; height: 46px; padding: 0; display: inline-flex; align-items: center; justify-content: center; z-index: 2; }
-.bs-fly-x.bs-edit svg { width: 20px; height: 20px; }
+/* the construction worker's button: above Sprint and Jump, twice the size it was, saying whether building is on (Ash, 16 November 2026) */
+.bs-fly-x.bs-edit { top: auto; left: auto; right: 30px; bottom: calc(318px + env(safe-area-inset-bottom)); width: 84px; height: 84px; padding: 0 0 14px; border-radius: 22px; display: inline-flex; align-items: center; justify-content: center; z-index: 2; position: absolute; }
+.bs-fly-x.bs-edit svg { width: 34px; height: 34px; }
+.bs-fly-x.bs-edit::after { content: "OFF"; position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); padding: 1px 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.18); font: 800 0.66rem var(--ui); letter-spacing: 0.04em; }
+.bs-fly-x.bs-edit[aria-pressed="true"]::after { content: "ON"; background: #3fb950; color: #fff; }
 .bs-fly-x.bs-edit[hidden], body.bsdrive .bs-fly-x.bs-edit, body.flypeek .bs-fly-x.bs-edit { display: none; }
 .bs-fly-x.bs-edit[aria-pressed="true"] { background: #fff; color: #1b1830; }
 .bs-fly-x.bs-hand.on { background: #fff; color: #1b1830; }
@@ -8106,6 +8109,9 @@ const handle = async (m, post) => {
     const rv = document.querySelector(".bs-review:not([hidden]) .x"); if (rv) { rv.click(); return true; }
     if (open("bsAdmin")) { $("bsEditBtn")?.click(); return true; }
     return false; }
+  // on foot where a town makes its walls solid (Logan's council precinct): a step into one slides along it instead
+  function bsBlock(F, ox, oz) { const T = BS.town; if (!T?.solidWalk || !T.solid || !T.solid(F.pos.x, F.pos.z) || T.solid(ox, oz)) return;
+    if (!T.solid(F.pos.x, oz)) F.pos.z = oz; else if (!T.solid(ox, F.pos.z)) F.pos.x = ox; else { F.pos.x = ox; F.pos.z = oz; } if (F.wv) F.wv = [0, 0]; }
   function bsFlyTick(dt) {
     const F = BS.fly, k = F.keys, has = (...c) => c.some(x => k.has(x));
     if (F.drive) return F.drive(dt);  // driving a car in a town model (townCar): the car moves, and the view follows it
@@ -8125,9 +8131,9 @@ const handle = async (m, post) => {
     if (F.walk && (kb || F.wv?.some(Math.abs))) { const run = has("ShiftLeft", "ShiftRight"), n = Math.hypot(f, r) || 1, want = kb ? (run ? 12 : 5.5) * legs : 0;
       const tx = (-sy * f + cy * r) / n * want, tz = (-cy * f - sy * r) / n * want; F.wv ||= [0, 0]; const ease = Math.min(1, lk * (want ? 9 : 12));
       F.wv[0] += (tx - F.wv[0]) * ease; F.wv[1] += (tz - F.wv[1]) * ease; if (Math.hypot(...F.wv) < 0.05 && !want) F.wv = [0, 0];
-      F.pos.x = bsClamp(F.pos.x + F.wv[0] * lk, lim[0], lim[1]); F.pos.z = bsClamp(F.pos.z + F.wv[1] * lk, lim[2], lim[3]); F.bob = (F.bob || 0) + Math.hypot(...F.wv) * lk * 1.9; }
-    else { F.pos.x = bsClamp(F.pos.x + (-sy * f + cy * r) * sp, lim[0], lim[1]);
-      F.pos.z = bsClamp(F.pos.z + (-cy * f - sy * r) * sp, lim[2], lim[3]); }
+      const ox = F.pos.x, oz = F.pos.z; F.pos.x = bsClamp(F.pos.x + F.wv[0] * lk, lim[0], lim[1]); F.pos.z = bsClamp(F.pos.z + F.wv[1] * lk, lim[2], lim[3]); bsBlock(F, ox, oz); F.bob = (F.bob || 0) + Math.hypot(...F.wv) * lk * 1.9; }
+    else { const ox = F.pos.x, oz = F.pos.z; F.pos.x = bsClamp(F.pos.x + (-sy * f + cy * r) * sp, lim[0], lim[1]);
+      F.pos.z = bsClamp(F.pos.z + (-cy * f - sy * r) * sp, lim[2], lim[3]); if (F.walk) bsBlock(F, ox, oz); }
     // Sue's bread: on foot, Space (or Jump) jumps, rather than raising your eyes (Ash, 16 November 2026: "Make sues bread give me the
     // ability to jump rather than be big"); C and Down still lower them
     if (F.walk && F.canJump) { const want = has("Space") || F.jumpBtn; if (want && !F.jumpWas && !(F.jumpH > 0.01)) { F.jumpV = 7.2; F.jumpH = 0.001; } F.jumpWas = want;
@@ -8315,7 +8321,7 @@ const handle = async (m, post) => {
       floodLook: [-27.5375, 153.0115, 1100, 40, 100], floodOf: "this map", noFloodSlider: true,  // Ash: no water level slider ("At the peak") in Moorooka: a flood just rises to its peak
       floodWarn: { council: "Brisbane City Council", short: "BCC", how: "our own computer simulation of rain running over the ground and the creeks rising (and, in big river floods, Oxley Creek backing up), on a 5 m model of the terrain", map: "Brisbane City Council's Flood Awareness Map and FloodWise Property Report" },
       floodNote: "A guide only: our own simulation, from the terrain, the buildings and the Bureau's design rainfall for Moorooka. It includes water running over the ground to the creeks. No council flood mapping is used. For property, insurance or planning decisions, use Brisbane City Council's Flood Awareness Map and FloodWise Property Report." },
-    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=39", assets: TOWN3D + "logan/", place: "logan", pre: ["map.json", "height.png", "roads.bin", "buildings.bin", "ground.webp", "relief.webp", "lights.webp", "cover.png"], up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
+    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=40", assets: TOWN3D + "logan/", place: "logan", lift: [5320, -13743.6, 6320, -12743.6, 0.25], pre: ["map.json", "height.png", "roads.bin", "buildings.bin", "ground.webp", "relief.webp", "lights.webp", "cover.png"], up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
       start: "council", onFoot: true, noFloodSlider: true, flyTo: { id: "brownsplains", label: "Fly to Browns Plains" }, wait: 90000, ceil: 110000, fast: 600, far: 150000, out: 130000, stride: 0.02, pad: 80000, stand: [0.45, 400], floodLook: [-27.69, 153.17, 12000, 55, -35],
       // the same not-official notice and banner as Moorooka's (Ash, 12 November 2026)
       floodWarn: { council: "Logan City Council", short: "LCC", how: "the 2017 flood as mapped, and the others worked out from river gauge heights and rainfall over a terrain model", map: "Logan City Council's flood maps" } },  // shown small in the bottom right corner the whole time the model is open
@@ -8477,7 +8483,10 @@ const handle = async (m, post) => {
         // the ground, or the water over it: the sea and the inlet (Inverloch), or a flood that's on the map (Logan)
         // the ground: the model's, the water's, or a flat pad the app has laid (11 Norman Road's lot sits on one, a little above the
         // model's ground, so the helicopter behind it, you and anything else there stand on the lawn rather than sink into it)
-        const b = m.bounds(), ground = (x = F.pos.x, z = F.pos.z) => { let g = Math.max(m.groundAt(x, z), m.waterAt ? m.waterAt(x, z) : m.waterLevel());
+        // (Logan's council precinct lays its ground 25 cm over the terrain (precinct.ts GROUND): cars and people stand on that, not in it.
+        // Ash, 16 November 2026: "The golden car is still too low in Logan, sitting inside the road")
+        const LIFT = cfg.lift, b = m.bounds(), ground = (x = F.pos.x, z = F.pos.z) => { let g = Math.max(m.groundAt(x, z), m.waterAt ? m.waterAt(x, z) : m.waterLevel());
+          if (LIFT && x > LIFT[0] && x < LIFT[2] && z > LIFT[1] && z < LIFT[3]) g += LIFT[4];
           if (T.pads) for (const P of T.pads) { const dx = x - P.x, dz = z - P.z; if (Math.abs(dx * P.c - dz * P.s) <= P.hw && Math.abs(dx * P.s + dz * P.c) <= P.hd && P.top > g) g = P.top; }
           return g; };
         const { ceil = 4000, fast = 30, far = 7000, out = 9000, stride = 0, pad = 0, stand = [1, 30] } = cfg;  // a town's limits, unless the model is bigger (Logan)
@@ -8719,6 +8728,7 @@ const handle = async (m, post) => {
         if (!OFF.has("me")) try { T.me = townMe(T, m, F, ground); } catch (e) { console.warn("Town model: the construction worker couldn't start", e); }
         if (!OFF.has("traffic")) try { T.traffic = townTraffic(T, m, F, ground, cfg); } catch (e) { console.warn("Town model: the traffic couldn't start", e); }
         if (cfg.place === "logan") try { T.mayor = townMayor(T, m); } catch (e) { console.warn("Town model: the Mayor couldn't start", e); }
+        if (cfg.place === "logan") try { T.council = townCouncil(T, m, ground); } catch (e) { console.warn("Town model: the council's doors couldn't start", e); }
         if (cfg.place === "moo" && !OFF.has("home6")) try { T.home6 = townHome6(T, m); } catch (e) { console.warn("Town model: Ash and Arlo couldn't start", e); }
         if (cfg.place === "moo" && !OFF.has("locals")) try { T.locals = townLocals(T, m); } catch (e) { console.warn("Town model: the locals couldn't start", e); }
         if (!OFF.has("mail")) try { T.mail = townMail(T); } catch (e) { console.warn("Town model: the post couldn't start", e); }
@@ -10233,7 +10243,7 @@ const handle = async (m, post) => {
     // (the pizza chef too, so you can see yourself: Big Boss Pizzas' best chips ever. Ash, 16 November 2026)
     // (and with new clothes or a new hairdo, or as a giant: you see yourself. Ash, 16 November 2026)
     let lc = "";
-    P.third = () => (townRole() === "builder" || chef || !!lc) && T.walk && !T.tween && !F.drive && !T.car?.in;
+    P.third = () => (townRole() === "builder" || (lc && townLookOf(lc).giant)) && T.walk && !T.tween && !F.drive && !T.car?.in;  // (not for new clothes, a hairdo or the chef: Ash, 16 November 2026, "Even if I change my clothes or outfit don't go into 3rd person")
     P.frame = () => { const t0 = performance.now(); if (t0 - perkAt > 500) { perkAt = t0; chef = !!townPerks().chef; lc = townLookCode(); }
       if (!P.third()) { if (shown) { for (let i = 0; i < 3; i++) parts.setMatrix(i, NONE.slice()); shown = false; } last = null; return; }
       const role = townRole() === "builder" ? "builder" : chef ? "chef" : "person", want = role + "~" + lc; if (parts && kind !== want) { try { parts.remove(); } catch {} parts = null; }
@@ -10342,7 +10352,7 @@ const handle = async (m, post) => {
         C.still = C.v < 0.2 && !(C.stopT > 0) ? (C.still || 0) + dt : 0; if (C.still > 10 && !C.rider) { start(C); return; }  // stuck for 10 s: start again somewhere else
         for (let k = 0; k < 6 && C.s >= L; k++) { C.s -= L; next(C); [ax, az, bx, bz] = seg(C); L = Math.hypot(bx - ax, bz - az) || 0.01; }
         const h = Math.atan2(bx - ax, bz - az); C.h = C.h == null ? h : C.h + wrap(h - C.h) * Math.min(1, dt * 5);
-        const t = Math.min(1, C.s / L), lx = Math.cos(C.h), lz = -Math.sin(C.h), x = ax + (bx - ax) * t + lx * C.r.lane, z = az + (bz - az) * t + lz * C.r.lane;
+        const t = Math.min(1, C.s / L), lx = -Math.cos(C.h), lz = Math.sin(C.h)  /* (on the left of the road, as in Australia: Ash, 16 November 2026, "The cars should drive on the left side of the road") */, x = ax + (bx - ax) * t + lx * C.r.lane, z = az + (bz - az) * t + lz * C.r.lane;
         if (Math.hypot(x - home[0], z - home[1]) > FAR && !C.rider) { start(C); return; }
         C.x = x; C.z = z;
         // on its four wheels, as the car you drive sits (the middle of the four, tipped to the slope), eased so it never jumps
@@ -10749,6 +10759,45 @@ const handle = async (m, post) => {
   // Two small pieces (about 900 triangles in all), only drawn within 260 m, and only moved while something is actually happening.
   // Logan: the Mayor, Jon Raven, standing beside Democracy (the ballot box ball) on the council's lawn, in a dark suit, with his
   // name over him; he turns to you as you walk up (Ash, 15 November 2026: "Add a person mayor raven near the democracy ball")
+  // Logan City Council's administration centre (Ash, 15 November 2026: "make it have collision but add an automatic door at the front that
+  // opens sideways"): the precinct's buildings are solid, to walk into as well as to drive into (T.solid, T.solidWalk), and the glass
+  // doors under the covered entry are two panels that slide apart as you come up to them (the model's own glass there is taken out:
+  // logan-model.js ?v=40), with the dark of the foyer behind
+  function townCouncil(T, m, ground) {
+    const P = { frame() {}, dispose() {} }; if (!m.addParts || !m.groundAt) return P;
+    const THREE = BS.B.THREE, M = new THREE.Matrix4(); let dead = false, parts = null, D = null, open = 0, last = performance.now();
+    fetch(TOWN3D + "logan/map.json").then(r => r.json()).then(d => { if (dead || !d.precinct) return; const pc = d.precinct;
+      const polys = pc.buildings.map(b => { const q = b.p.map(v => v / 10); if (q.length < 6) return null; let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
+        for (let i = 0; i < q.length; i += 2) { x0 = Math.min(x0, q[i]); x1 = Math.max(x1, q[i]); z0 = Math.min(z0, q[i + 1]); z1 = Math.max(z1, q[i + 1]); }
+        return { q, holes: (b.h || []).map(h => h.map(v => v / 10)), x0, x1, z0, z1, council: /Administration Centre/.test(b.n || "") }; }).filter(Boolean);
+      const inPoly = (q, x, z) => { let c = false; for (let a = 0, b = q.length - 2; a < q.length; b = a, a += 2) if ((q[a + 1] > z) !== (q[b + 1] > z) && x < (q[b] - q[a]) * (z - q[a + 1]) / (q[b + 1] - q[a + 1]) + q[a]) c = !c; return c; };
+      T.solid = (x, z) => polys.some(B => x >= B.x0 && x <= B.x1 && z >= B.z0 && z <= B.z1 && inPoly(B.q, x, z) && !B.holes.some(h => inPoly(h, x, z))); T.solidWalk = true;
+      // the doors
+      const C = polys.find(B => B.council), E = pc.entry; if (!C || !E?.doors) return;
+      let fl = 0; for (let i = 0; i < C.q.length; i += 2) fl += m.groundAt(C.q[i], C.q[i + 1]); fl /= C.q.length / 2;
+      const [dx0, dz0, dx1, dz1] = E.doors, dl = Math.hypot(dx1 - dx0, dz1 - dz0), tx = (dx1 - dx0) / dl, tz = (dz1 - dz0) / dl, mx = (dx0 + dx1) / 2, mz = (dz0 + dz1) / 2, half = Math.min(dl / 2 - 0.3, 1.9);
+      let rx = 0, rz = 0; const nR = E.roof.length / 2; for (let i = 0; i < nR; i++) { rx += E.roof[i * 2] / nR; rz += E.roof[i * 2 + 1] / nR; }
+      const out = (rx - mx) * -tz + (rz - mz) * tx > 0 ? 1 : -1, nx = -tz * out, nz = tx * out;
+      const lin = h => { const v = parseInt(h.slice(1), 16); return [(v >> 16) & 255, (v >> 8) & 255, v & 255].map(c => Math.pow(c / 255, 2.2)); };
+      const geo = () => ({ P: [], N: [], C: [] }), at = (u, y, o) => [mx + tx * u + nx * o, fl + y, mz + tz * u + nz * o];
+      const box = (G, u0, u1, y0, y1, o0, o1, hex) => { const c = lin(hex), q = (A, B2, C2, D2) => { const ux = B2[0] - A[0], uy = B2[1] - A[1], uz = B2[2] - A[2], vx = D2[0] - A[0], vy = D2[1] - A[1], vz = D2[2] - A[2]; let a = uy * vz - uz * vy, b = uz * vx - ux * vz, e = ux * vy - uy * vx; const l = Math.hypot(a, b, e) || 1;
+          for (const p of [A, B2, C2, A, C2, D2]) { G.P.push(...p); G.N.push(a / l, b / l, e / l); G.C.push(...c); } };
+        q(at(u0, y0, o1), at(u1, y0, o1), at(u1, y1, o1), at(u0, y1, o1)); q(at(u1, y0, o0), at(u0, y0, o0), at(u0, y1, o0), at(u1, y1, o0)); q(at(u0, y1, o0), at(u0, y1, o1), at(u1, y1, o1), at(u1, y1, o0));
+        q(at(u0, y0, o0), at(u0, y0, o1), at(u0, y1, o1), at(u0, y1, o0)); q(at(u1, y0, o1), at(u1, y0, o0), at(u1, y1, o0), at(u1, y1, o1)); };
+      const back = geo(), gl = geo(), gr = geo(), fL = geo(), fR = geo(), H = 2.6;
+      box(back, -half, half, -0.3, H, -0.6, -0.5, "#12161a"); box(back, -half - 0.12, half + 0.12, H, H + 0.22, 0.02, 0.2, "#4a4f55");  // the foyer's dark, and the door head over the track
+      box(gl, -half + 0.06, -0.03, 0.06, H - 0.06, 0.1, 0.13, "#9fc4d6"); box(gr, 0.03, half - 0.06, 0.06, H - 0.06, 0.1, 0.13, "#9fc4d6");  // the glass
+      for (const [G, a, b2] of [[fL, -half, 0], [fR, 0, half]]) { box(G, a, a + 0.07, 0, H, 0.08, 0.15, "#3b4046"); box(G, b2 - 0.07, b2, 0, H, 0.08, 0.15, "#3b4046"); box(G, a, b2, 0, 0.08, 0.08, 0.15, "#3b4046"); box(G, a, b2, H - 0.08, H, 0.08, 0.15, "#3b4046"); box(G, (a + b2) / 2 - 0.02 + (a < 0 ? 0.35 : -0.35), (a + b2) / 2 + 0.02 + (a < 0 ? 0.35 : -0.35), 0.9, 1.3, 0.15, 0.18, "#c9ccd0"); }
+      const part = (G, extra) => ({ positions: new Float32Array(G.P), normals: new Float32Array(G.N), colors: new Float32Array(G.C), color: [1, 1, 1], roughness: 0.3, doubleSide: true, matrix: new THREE.Matrix4().elements, ...extra });
+      parts = m.addParts([part(back, { roughness: 0.9 }), part(gl, { opacity: 0.45 }), part(fL), part(gr, { opacity: 0.45 }), part(fR)]); D = { mx, mz, tx, tz, half }; }).catch(() => {});
+    P.frame = () => { const now = performance.now(), dt = Math.min(0.1, (now - last) / 1000); last = now; if (!parts || !D) return; const F = BS.fly;
+      const v = T.car?.in ? T.car.pose?.() : F.pos, near = v && Math.hypot(v.x - D.mx, v.z - D.mz) < 6, want = near ? 1 : 0;
+      if (Math.abs(want - open) < 0.002) return; open += Math.sign(want - open) * Math.min(Math.abs(want - open), dt * 1.6); const s = D.half * 0.96 * (open * open * (3 - 2 * open));
+      M.makeTranslation(-D.tx * s, 0, -D.tz * s); parts.setMatrix(1, M.elements.slice()); parts.setMatrix(2, M.elements.slice());
+      M.makeTranslation(D.tx * s, 0, D.tz * s); parts.setMatrix(3, M.elements.slice()); parts.setMatrix(4, M.elements.slice()); };
+    P.dispose = () => { dead = true; try { parts?.remove(); } catch {} if (T.solidWalk) { T.solid = null; T.solidWalk = false; } };
+    return P;
+  }
   function townMayor(T, m) {
     const P = { frame() {}, dispose() {} }; if (!m.addParts || !m.groundAt || !m.spots) return P;
     const s = m.spots().find(q => /democracy/i.test(q.name || "")); if (!s) return P;
@@ -10893,8 +10942,9 @@ const handle = async (m, post) => {
         b.onclick = () => { townPerkSet(key, id); reread(); toast(`${label} fitted to your ${what}. One at a time: come back any time to swap.`, 3200); q.done = true; shut(); }; opts.append(b); }
       return opts; };
     const talk = q => { const k = perks();
-      if (q.id === "pandy") return k.cordial ? show(q, "Back for another? Hold Shift (or Sprint) and off you go!", [["Cheers, Pandy", () => {}]])
-        : show(q, "Hello love! Would you like a nice glass of lime cordial?", [["Yes please", () => { townPerkSet("cordial", true); BS.fly.cordial = true; toast("Ahh, refreshing! You can sprint on foot now: hold Shift, or the Sprint button, for half as fast again.", 4500); }, "ok"], ["No thanks", () => {}]]);
+      // (the cordial lasts 10 minutes: Ash, 16 November 2026, "Make pandy's potion only last 10 mins")
+      if (q.id === "pandy") { const left = cordialLeft(); return show(q, left ? `Back for another? You've ${Math.ceil(left / 60000)} minutes of sprint left. Top you up?` : "Hello love! Would you like a nice glass of lime cordial?",
+        [["Yes please", () => { townPerkSet("cordial", Date.now() + 600000); BS.fly.cordial = true; cordialSaid = false; toast("Ahh, refreshing! Sprint for the next 10 minutes: hold Shift, or the Sprint button, for half as fast again.", 4500); }, "ok"], ["No thanks", () => {}]]); }
       if (q.id === "steve") return k.kick ? show(q, "Good to see you again! How's the 360 kick coming along?", [["Show me again", () => { T.peers?.emote?.("kick") || T.me && (T.me.emote = { e: TOWN_EMOTES.find(e => e[0] === "kick"), t0: performance.now() }); }, "ok"], ["See you, Steve", () => {}]])
         : show(q, "G'day, welcome to Moorooka! Want to learn a move? I'll teach you my 360 kick.", [["Teach me", () => { townPerkSet("kick", true); T.me && (T.me.emote = { e: TOWN_EMOTES.find(e => e[0] === "kick"), t0: performance.now() }); toast("🥋 You learnt the 360 kick! It's in Emotes (E), in place of Spin.", 4500); }, "ok"], ["Maybe later", () => {}]]);
       if (q.id === "mech") return show(q, "Pick one upgrade for your car. One at a time: swap whenever you like.", [["Not today", () => {}]], pick(q, CAR_UPS, "car", "car"));
@@ -10948,7 +10998,8 @@ const handle = async (m, post) => {
     const ptr = document.createElement("div"); ptr.className = "bs-ptr"; ptr.hidden = true; ptr.innerHTML = '<span class="bs-ptr-a" aria-hidden="true">\u27a4</span> <span class="bs-ptr-t"></span>'; box.appendChild(ptr);
     const DOC = MOO_LOCALS.find(q => q.id === "doc");
     const touch = matchMedia("(pointer: coarse)").matches;
-    { const k = perks(); BS.fly.cordial = !!k.cordial; BS.fly.fit = !!k.fit; BS.fly.canJump = !!k.jump; if (k.drunk && !BS.fly.drunk) BS.fly.drunk = { level: k.drunk, hic: 0 }; }
+    const cordialLeft = () => { const c = perks().cordial; return typeof c === "number" ? Math.max(0, c - Date.now()) : 0; }; let cordialSaid = false, cordialAt = 0;
+    { const k = perks(); BS.fly.cordial = cordialLeft() > 0; BS.fly.fit = !!k.fit; BS.fly.canJump = !!k.jump; if (k.drunk && !BS.fly.drunk) BS.fly.drunk = { level: k.drunk, hic: 0 }; }
     // the house out the back of number 10 (Venky's), tidied up: a front door on the side facing number 6, a little porch roof on posts,
     // steps and a paved patio (Ash, 16 November 2026: "Fix up this house then add 'Venky' here"). One small piece, a few dozen triangles
     { const Pp = [], Nn = [], Cc = [], lin = h => { const v = parseInt(h.slice(1), 16); return [(v >> 16) & 255, (v >> 8) & 255, v & 255].map(c => Math.pow(c / 255, 2.2)); };
@@ -10969,6 +11020,7 @@ const handle = async (m, post) => {
     let last = performance.now(), t = 0;
     P.frame = () => { const now = performance.now(), dt = Math.min(0.1, (now - last) / 1000); last = now; t += dt; const F = BS.fly; if (!F) return;
       const walking = !!T.walk && !T.car?.in, pose = T.car?.in ? T.car.pose?.() : null, me = pose || { k: walking ? "walk" : "fly", x: F.pos.x, z: F.pos.z }, up = F.pos.y - g(F.pos.x, F.pos.z);
+      if (now - cordialAt > 1000) { cordialAt = now; const on = cordialLeft() > 0; if (F.cordial && !on && !cordialSaid) { cordialSaid = true; toast("Pandy's lime cordial has worn off. She'll top you up.", 3200); } F.cordial = on; }
       sprint.hidden = !(touch && walking && F.cordial); jumpB.hidden = !(touch && walking && F.canJump);
       // tipsy: you sway as you walk, and it wears off
       if (F.drunk && DOC) { const dx = DOC.x - me.x, dz = DOC.z - me.z, d = Math.hypot(dx, dz), yaw = pose ? (m.getCamera?.()?.yaw ?? F.yaw) : F.yaw, fx = -Math.sin(yaw), fz = -Math.cos(yaw), rx = Math.cos(yaw), rz = -Math.sin(yaw);
@@ -11502,7 +11554,7 @@ const handle = async (m, post) => {
       const pc = Math.round(charge * 100) + "%"; if (boostBtn.style.getPropertyValue("--charge") !== pc) boostBtn.style.setProperty("--charge", pc); };
     const leave = step => { if (!veh) return; const was = veh; if (was !== "possum" && was !== "ride") snd.door(); snd.stop();
       if (was === "ride") { const q = ride.q; if (ride.local) { ride.local.rider = false; snd.door(); } else T.peers?.ride?.(ride.id, false);
-        if (step && q && ride.local) { F.pos.x = q.x + Math.cos(q.h) * 2.6; F.pos.z = q.z - Math.sin(q.h) * 2.6; F.yaw = q.h + Math.PI / 2; F.pitch = -0.04; }  // off the bus's kerb-side door
+        if (step && q && ride.local) { F.pos.x = q.x - Math.cos(q.h) * 2.6; F.pos.z = q.z + Math.sin(q.h) * 2.6; F.yaw = q.h - Math.PI / 2; F.pitch = -0.04; }  // off the bus's kerb-side door
         else if (step && q) { const back = RIDE_UP[q.k] > 1 ? 2.4 : 1.2; F.pos.x = q.x - Math.cos(q.h) * back; F.pos.z = q.z + Math.sin(q.h) * back; F.yaw = q.h + Math.PI; F.pitch = -0.04; }
         ride = null; }
       else if (was === "possum") { const P = pos; P.v = 0; if (mission) { endMission(); toast("The possum mission's off. Hop back in the pool to start again.", 2600); }
@@ -11935,7 +11987,7 @@ const handle = async (m, post) => {
     // (the worker view sets the camera first, so names and bubbles are placed from where you really look; the traffic, the animal,
     // number 6 and the people out the front had been left out of every frame by a note on the same line, from #128 to 15 November 2026)
     T.car?.frame(); T.me?.frame(); T.peers?.frame();
-    T.traffic?.frame(); T.critter?.frame(); T.no6?.frame(); T.home6?.frame(); T.mayor?.frame(); T.locals?.frame();
+    T.traffic?.frame(); T.critter?.frame(); T.no6?.frame(); T.home6?.frame(); T.mayor?.frame(); T.council?.frame(); T.locals?.frame();
     // flying: held down at the lowest you can fly (Down, or C) for a moment, and you are on foot there
     if (!T.walk && !T.tween && !F.drive && F.floor && F.hot?.f) { const low = F.pos.y <= F.floor() + 0.1, down = F.vert < -0.3 || F.keys.has("KeyC"), now = performance.now();
       if (!(low && down)) T.downAt = 0; else if (!T.downAt) T.downAt = now; else if (now - T.downAt > 1200) { T.downAt = 0; F.hot.f(); } }
@@ -11953,7 +12005,7 @@ const handle = async (m, post) => {
     BS.town = null; T.dead = true; T.on = false; T.ungest?.(); T.unlay?.(); T.unflood?.();
     T.streets?.dispose(); T.streets = null; $("bsNamesBtn").hidden = true;
     T.admin?.dispose(); T.admin = null;
-    T.car?.dispose(); T.car = null; T.peers?.dispose(); T.peers = null; T.me?.dispose(); T.me = null; T.traffic?.dispose(); T.traffic = null; T.mayor?.dispose(); T.mayor = null; T.critter?.dispose(); T.critter = null; T.home6?.dispose(); T.home6 = null; T.locals?.dispose(); T.locals = null; T.mail?.dispose(); T.mail = null;
+    T.car?.dispose(); T.car = null; T.peers?.dispose(); T.peers = null; T.me?.dispose(); T.me = null; T.traffic?.dispose(); T.traffic = null; T.mayor?.dispose(); T.mayor = null; T.council?.dispose(); T.council = null; T.critter?.dispose(); T.critter = null; T.home6?.dispose(); T.home6 = null; T.locals?.dispose(); T.locals = null; T.mail?.dispose(); T.mail = null;
     T.unbar?.();
     if (BS.fly) { const F = BS.fly; F.walk = F.speed = F.floor = F.hot = F.drive = null; F.ceil = 0; F.lim = null; }  // Explore, if it carries on, is its old self
     try { T.model?.dispose(); } catch {}
