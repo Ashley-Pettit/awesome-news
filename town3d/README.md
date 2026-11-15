@@ -1584,3 +1584,15 @@ change my hairdo", Venky out the back of 10 Beaudesert Road ("Fix up this house"
 - **Traffic drives on the left** (it was on the right); the bus lets you off on the kerb side.
 - **The construction worker's button** sits above Sprint and Jump, twice the size, with ON/OFF on it.
 - **Pandy's cordial** lasts 10 minutes (she tops you up); **new clothes, hair and the chef no longer switch you to third person**.
+
+## Builder: Move tool and fuller suggestion reviews; Moorooka's footpaths joined up (16 November 2026)
+
+- **Move** (builder toolbar, between Light and Delete): tap a thing to pick it up, tap where it goes. Your own strokes (path or
+  concrete, grass, road) keep their shape and move; something put in moves (one published by someone else is taken out and put in
+  again where you tap); a parked car or a tree of the model's is taken out where it was and put in where you tap.
+- **Reviewing a suggestion** now lists what it does: strokes by kind with total length and average width, what was put in, what was
+  taken out, and the street it's on or near (from the town's street data).
+- **Footpaths joined up** (`town3d/moorooka/town.json`, `footpaths`): where one stretch of a street had no footpath on a side between
+  two stretches that do (under 150 m long, the street running straight on), that side now has one too, at the average of its
+  neighbours' distance from the kerb: 50 gaps (Ash: "need to fix up some paths so they are connected"). Data only; a rebuild of the
+  surface from ai-forge would bring the gaps back unless the same rule goes into `build_surface.py`.
