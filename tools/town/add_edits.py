@@ -29,7 +29,11 @@ if not town or not str(town).isalnum() or not os.path.isfile(path):
 cur = json.load(open(path, encoding="utf-8"))
 num = lambda v: isinstance(v, (int, float)) and not isinstance(v, bool) and abs(v) < 1e6
 r2 = lambda v: round(float(v), 2)
-added = {"paint": 0, "cars": 0, "trees": 0, "people": 0}
+# what can be taken out, and (since 15 November 2026) put in: trees, parked cars and street lights, and published ones taken back out
+KINDS = (("cars", 2), ("trees", 2), ("people", 3), ("addTree", 2), ("addCar", 3), ("addLight", 3), ("noAdd", 2))
+for kind, _ in KINDS:
+    cur["gone"].setdefault(kind, [])
+added = {"paint": 0, **{k: 0 for k, _ in KINDS}}
 skipped = 0
 for s in new.get("paint") or []:
     ok = isinstance(s, dict) and s.get("k") in (1, 2, 3) and num(s.get("w")) and 0 < s["w"] <= 40 and isinstance(s.get("p"), list) and len(s["p"]) >= 2 and len(s["p"]) % 2 == 0 and all(num(v) for v in s["p"])
@@ -40,7 +44,7 @@ for s in new.get("paint") or []:
     if s not in cur["paint"]:
         cur["paint"].append(s)
         added["paint"] += 1
-for kind, n in (("cars", 2), ("trees", 2), ("people", 3)):
+for kind, n in KINDS:
     for g in (new.get("gone") or {}).get(kind) or []:
         if not (isinstance(g, list) and len(g) == n and all(num(v) for v in g)):
             skipped += 1
@@ -51,7 +55,7 @@ for kind, n in (("cars", 2), ("trees", 2), ("people", 3)):
             added[kind] += 1
 # one edit to a line, so a pull request shows exactly what was added and one can be taken out by hand
 rows = lambda items: "[" + ",".join("\n    " + json.dumps(i, separators=(",", ":")) for i in items) + ("\n  ]" if items else "]")
-out = '{\n  "v": 1,\n  "paint": ' + rows(cur["paint"]) + ',\n  "gone": {' + ",".join(f'\n  "{k}": ' + rows(cur["gone"][k]) for k in ("cars", "trees", "people")) + "\n  }\n}\n"
+out = '{\n  "v": 1,\n  "paint": ' + rows(cur["paint"]) + ',\n  "gone": {' + ",".join(f'\n  "{k}": ' + rows(cur["gone"][k]) for k, _ in KINDS if k in ("cars", "trees", "people") or cur["gone"][k]) + "\n  }\n}\n"
 json.loads(out)
 open(path, "w", encoding="utf-8").write(out)
-print(f"{town}: added {added['paint']} strokes, {added['cars']} parked cars, {added['trees']} trees and {added['people']} no-walking circles" + (f"; skipped {skipped} that were not well formed" if skipped else "") + f". Now {len(cur['paint'])} strokes and {sum(len(v) for v in cur['gone'].values())} things taken out in {os.path.normpath(path)}.")
+print(f"{town}: added {added['paint']} strokes, {added['cars']} parked cars, {added['trees']} trees and {added['people']} no-walking circles taken out, {added['addTree']} trees, {added['addCar']} cars and {added['addLight']} street lights put in, {added['noAdd']} taken back out" + (f"; skipped {skipped} that were not well formed" if skipped else "") + f". Now {len(cur['paint'])} strokes and {sum(len(v) for v in cur['gone'].values())} things taken out in {os.path.normpath(path)}.")

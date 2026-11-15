@@ -1360,6 +1360,17 @@ body.bspossum .bs-fly-x.bs-boost.on { background: #ffd166; }
 .bs-fly-x.bs-chat[hidden] { display: none; }
 .bs-chatbar { pointer-events: auto; position: absolute; z-index: 5; left: 50%; top: calc(62px + env(safe-area-inset-top)); transform: translateX(-50%); width: min(440px, calc(100% - 32px)); display: flex; gap: 6px; padding: 6px; box-sizing: border-box; border-radius: 16px; background: rgba(22, 24, 34, 0.9); }
 .bs-chatbar[hidden] { display: none; }
+/* who is riding with you (or holding on), while you drive or fly: a card under the top buttons and their names over your car or plane */
+.bs-ridecard { pointer-events: none; position: absolute; z-index: 5; left: 50%; top: calc(62px + env(safe-area-inset-top)); transform: translateX(-50%); max-width: calc(100% - 32px); box-sizing: border-box; padding: 8px 14px 8px 34px; border-radius: 999px; background: #ffd166; color: #1b1830; font: 700 0.86rem/1.2 var(--ui); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35); }
+.bs-ridecard::before { content: ""; position: absolute; left: 12px; top: 50%; width: 12px; height: 12px; margin-top: -6px; border-radius: 50%; background: #1b1830; box-shadow: 0 0 0 3px rgba(27, 24, 48, 0.25); }
+.bs-ridecard[hidden] { display: none; }
+.bs-peer.bs-ridetag { background: #ffd166; color: #1b1830; font-weight: 700; }
+/* the mouse looking around (desktop): a small line at the bottom saying how to get it back, then it fades */
+.bs-locktip { position: absolute; z-index: 4; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); transform: translateX(-50%); margin: 0; padding: 6px 12px; border-radius: 999px; background: rgba(20, 22, 34, 0.78); color: #fff; font: 600 0.78rem/1.4 var(--ui); white-space: nowrap; pointer-events: none; animation: bsLockTip 6s forwards; }
+.bs-locktip[hidden] { display: none; }
+.bs-locktip kbd { display: inline-block; margin: 0 2px 0 6px; padding: 0 5px; border-radius: 4px; background: #fff; color: #1b1830; font: 700 0.7rem/1.5 var(--ui); }
+@keyframes bsLockTip { 0%, 75% { opacity: 1; } 100% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) { .bs-locktip { animation: none; } }
 /* a suggested map change being reviewed (Ash, from Settings): who sent it, then Approve, Deny, Next */
 .bs-review { pointer-events: auto; position: absolute; z-index: 6; left: 50%; top: calc(124px + env(safe-area-inset-top)); transform: translateX(-50%); width: min(400px, calc(100% - 32px)); box-sizing: border-box; padding: 12px 14px; border-radius: 16px; background: rgba(22, 24, 34, 0.92); color: #fff; font: 500 0.86rem/1.35 var(--ui); }
 .bs-review[hidden] { display: none; }
@@ -1451,6 +1462,7 @@ body.bsme .bs-height, body.bstown.bsme .bs-height { left: 16px; top: calc(62px +
 .bs-me .bs-me-num input { flex: none; width: 5.2em; height: 36px; padding: 0 8px; text-align: right; }
 .bs-me-key { display: flex; gap: 6px; } .bs-me-key input { flex: 1; min-width: 0; } .bs-me-key .bs-me-go { flex: none; padding: 0 14px; }
 .bs-me-towns a { color: #ffd36b; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+.bs-me .bs-me-for { margin: 2px 0 0; font: 700 0.76rem var(--ui); color: #ffd166; }
 .bs-me .bs-me-ver { font: 600 0.7rem var(--ui); color: #8fb4ff; text-align: right; }
 .bs-me-h { display: flex; justify-content: space-between; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.14); font-weight: 650; }
 .bs-me-exit { width: 100%; min-height: 42px; border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 12px; background: none; color: #fff; font: 700 0.86rem var(--ui); cursor: pointer; }
@@ -2036,9 +2048,9 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <div class="bs-town-mode" id="bsTownMode" role="group" aria-label="Walk or fly" data-key="F" hidden><button type="button" data-town-mode="walk" aria-pressed="true">Walk</button><button type="button" data-town-mode="fly" aria-pressed="false">Fly</button></div>
     <div class="bs-town-list" id="bsTownList" role="menu" aria-label="Places to jump to" hidden></div>
     <div class="bs-town-list bs-town-floods" id="bsTownFloods" role="menu" aria-label="Floods to show on the map" hidden></div>
-    <div class="bs-slides" role="group" aria-label="Street names, tide, time and flood"><button class="bs-fly-x bs-ic" type="button" id="bsNamesBtn" data-key="N" aria-pressed="false" aria-label="Street names" title="Show street names (N)" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M9 21h6"/><path d="M5 5h11l3 2.5L16 10H5z"/><path d="M19 12H8l-3 2.5L8 17h11z"/></svg></button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false" aria-label="Time of day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span id="bsTimeBtnT">Time</span></button><button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button></div>
+    <div class="bs-slides" role="group" aria-label="Street names, tide, time and flood"><button class="bs-fly-x bs-ic" type="button" id="bsNamesBtn" data-key="N" aria-pressed="false" aria-label="Street names" title="Show street names (N)" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M9 21h6"/><path d="M5 5h11l3 2.5L16 10H5z"/><path d="M19 12H8l-3 2.5L8 17h11z"/></svg></button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false" aria-label="Time of day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span id="bsTimeBtnT">Time</span></button><button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" data-key="L" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button></div>
     <div class="bs-admin" id="bsAdmin" role="toolbar" aria-label="Edit the map" hidden>
-      <div class="bs-admin-row" role="group" aria-label="Tool"><button type="button" data-tool="path" aria-pressed="false"><i style="background:#cfcabd"></i>Path</button><button type="button" data-tool="grass" aria-pressed="false"><i style="background:#6fa64b"></i>Grass</button><button type="button" data-tool="road" aria-pressed="false"><i style="background:#4a4d52"></i>Road</button><button type="button" data-tool="delete" aria-pressed="false">Delete</button></div>
+      <div class="bs-admin-row" role="group" aria-label="Tool"><button type="button" data-tool="path" aria-pressed="false"><i style="background:#cfcabd"></i>Path</button><button type="button" data-tool="grass" aria-pressed="false"><i style="background:#6fa64b"></i>Grass</button><button type="button" data-tool="road" aria-pressed="false"><i style="background:#4a4d52"></i>Road</button><button type="button" data-tool="tree" aria-pressed="false"><i style="background:#4c7a33;border-radius:50%"></i>Tree</button><button type="button" data-tool="car" aria-pressed="false"><i style="background:#2d5ea8;border-radius:3px"></i>Car</button><button type="button" data-tool="light" aria-pressed="false"><i style="background:#8e9396;width:4px"></i>Light</button><button type="button" data-tool="delete" aria-pressed="false">Delete</button></div>
       <div class="bs-admin-row"><span class="bs-admin-w" id="bsAdminW" role="group" aria-label="Width" hidden><button type="button" data-w="-1" aria-label="Narrower">&minus;</button><output id="bsAdminWOut"></output><button type="button" data-w="1" aria-label="Wider">+</button></span><button type="button" id="bsAdminLine" aria-pressed="true" hidden>Straight</button><button type="button" class="bs-admin-ic" id="bsAdminUndo" aria-label="Undo" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5 4 9l4 4"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button><button type="button" id="bsAdminSave" aria-label="Save my edits for everyone">Save</button><button type="button" id="bsAdminCopy" aria-label="Copy edits">Copy</button><button type="button" class="bs-admin-ic" id="bsAdminClear" aria-label="Clear all my edits" title="Clear all my edits"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 7V4h4v3M6 7l1 13h10l1-13"/></svg></button></div>
       <p class="bs-admin-note" id="bsAdminNote" role="status"></p>
     </div>
@@ -2054,8 +2066,8 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <div class="bs-town-ask" id="bsTownAsk" role="alertdialog" aria-labelledby="bsTownAskText" hidden><p id="bsTownAskText"></p><div><button type="button" data-ask="yes">Yes</button><button type="button" data-ask="no">No</button></div></div>
     <div class="bs-fly-time bs-town-tide bs-town-rise" id="bsTownRise" hidden><span>Water</span><input type="range" id="bsTownRiseIn" min="0" max="1" step="0.01" value="1" aria-label="Flood water level"><output id="bsTownRiseOut" for="bsTownRiseIn"></output></div>
     <button class="bs-fly-x bs-fly-jump" type="button" id="bsFlyJump" data-key="J" hidden>Jump to Norman Rd</button>
-    <button class="bs-fly-x bs-me-btn" type="button" id="bsMeBtn" aria-expanded="false" aria-controls="bsMe" aria-label="Settings" title="Settings" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
-    <button class="bs-fly-x bs-share-btn" type="button" id="bsShareBtn" aria-label="Share a link to this 3D model" title="Share" aria-expanded="false" aria-controls="bsShareBox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button>
+    <button class="bs-fly-x bs-me-btn" type="button" id="bsMeBtn" data-key="M" aria-expanded="false" aria-controls="bsMe" aria-label="Settings" title="Settings" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+    <button class="bs-fly-x bs-share-btn" type="button" id="bsShareBtn" data-key="P" aria-label="Share a link to this 3D model" title="Share" aria-expanded="false" aria-controls="bsShareBox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button>
     <div class="bs-me" id="bsMe" hidden></div>
     <button class="bs-fly-x bs-emote" type="button" id="bsEmoteBtn" data-key="E" aria-expanded="false" aria-controls="bsEmotes" hidden>Emote</button>
     <div class="bs-emotes" id="bsEmotes" hidden></div>
@@ -2065,6 +2077,7 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <button class="bs-fly-x bs-car" type="button" id="bsCarBtn" data-key="Enter" hidden>Get in the car</button>
     <button class="bs-fly-x bs-boost" type="button" id="bsBoostBtn" data-key="Shift" hidden>Boost</button>
     <button class="bs-fly-x bs-hand" type="button" id="bsHandBtn" data-key="Space" hidden>Handbrake</button>
+    <p class="bs-locktip" id="bsLockTip" hidden>The mouse looks around. <kbd>Esc</kbd> gives it back. <kbd>M</kbd> Settings <kbd>J</kbd> Jump to <kbd>P</kbd> Share <kbd>L</kbd> Flood</p>
     <button class="bs-fly-x bs-flip" type="button" id="bsFlipBtn" data-key="X" aria-label="Spin round (X)" hidden>180</button>
     <button class="bs-fly-x bs-edit" type="button" id="bsEditBtn" aria-pressed="false" aria-controls="bsAdmin" aria-label="Edit the map" title="Edit the map" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg></button>
     <div class="bs-keys" id="bsKeys" hidden><p class="bs-keys-now" id="bsKeysNow"></p><dl id="bsKeysList"></dl><p class="bs-keys-q">? to hide this list</p></div>
@@ -3677,7 +3690,8 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
       else if (me && !me.hidden) { me.hidden = true; $("bsMeBtn").setAttribute("aria-expanded", "false"); e.stopPropagation(); }
       else if (BS.fly.hot?.esc?.()) e.stopPropagation();
       else if (!$("bsTownAsk").hidden && $("bsTownAsk").dataset.exit) { bsExitAsk(); e.stopPropagation(); }
-      return; }
+      else exEscMore();
+      e.anEsc = true; return; }
     if (e.key === "Escape" && !$("tvs").hidden) { closeTV(); return; }
     if (e.key === "Escape" && openSheet) hideSheet(openSheet);
     if (e.key === "Enter" && e.target.matches?.("a.link[data-open]:not([href])")) e.target.click();
@@ -7856,13 +7870,15 @@ const handle = async (m, post) => {
       : { pos: cam.position.clone(), yaw: Math.atan2(-dir.x, -dir.z), pitch: Math.asin(bsClamp(dir.y, -1, 1)) };
     // The time stands still while exploring, at midday: always daytime unless an admin changes it in Settings (Ash, 15 November 2026:
     // "Let's make the time stay daytime unless as an admin I change it")
-    BS.flyView = BS.view; { const v = BS.view, day = v.day || bsKey(v.ms), m2 = 12 * 60;
+    // (an admin's own time, once moved, is kept for next time: Ash, 15 November 2026, "When I adjust a setting, make that the default
+    // for next time the app opens")
+    BS.flyView = BS.view; { const v = BS.view, day = v.day || bsKey(v.ms), mine = exTimeSaved(), m2 = mine ?? 12 * 60; BS.exTimeSet = mine != null;
       BS.view = { mode: "day", day, ms: bsMidnight(day) + m2 * 60000, play: false }; bsApply(true);
       const ti = $("bsFlyTime"), to = $("bsFlyTimeOut"); ti.value = m2; to.textContent = bsTime(BS.view.ms);
       const tb = $("bsTimeBtn"), tbox = $("bsFlyTimeBox"); $("bsTimeBtnT").textContent = bsTime(BS.view.ms); tbox.hidden = true; tb.setAttribute("aria-expanded", "false");
       $("bsShareBtn").onclick = exploreShare;
       tb.onclick = () => { tbox.hidden = !tbox.hidden; tb.setAttribute("aria-expanded", String(!tbox.hidden)); };
-      ti.oninput = () => { BS.exTimeSet = true; BS.view.ms = bsMidnight(BS.view.day) + (+ti.value) * 60000; to.textContent = bsTime(BS.view.ms); $("bsTimeBtnT").textContent = to.textContent; bsApply(true); }; }
+      ti.oninput = () => { BS.exTimeSet = true; if (isAdmin()) try { localStorage.setItem("an3d-time", String(+ti.value)); } catch {} BS.view.ms = bsMidnight(BS.view.day) + (+ti.value) * 60000; to.textContent = bsTime(BS.view.ms); $("bsTimeBtnT").textContent = to.textContent; bsApply(true); }; }
     const F = BS.fly = { ...start, pos: start.pos.clone(), start, keys: new Set(), stick: { x: 0, y: 0 }, lookStick: { x: 0, y: 0 }, vert: 0, touches: new Map(), drag: null };
     const canvas = $("bsGl"), touch = matchMedia("(pointer: coarse)").matches;
     document.body.classList.add("bsfly"); $("bsFly").hidden = false;
@@ -7944,8 +7960,14 @@ const handle = async (m, post) => {
     const typing = e => /^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName || "");
     F.on = {
       keydown: e => { if (typing(e)) return;
-        if (e.code === "Escape" && document.pointerLockElement !== canvas) { if (document.body.classList.contains("wxlisten")) bsFlyOff(); else bsExitAsk(); return; }
+        // Esc closes whatever menu is open (above), and never leaves Explore (Ash, 15 November 2026: "ESC should not close the app, it
+        // should close the menu the person is in"); the weather's Listen view still closes with it
+        if (e.code === "Escape" && document.pointerLockElement !== canvas) { if (document.body.classList.contains("wxlisten")) bsFlyOff(); return; }
         if (e.ctrlKey && e.code === "F9" && F.hot?.gold?.()) { e.preventDefault(); return; }
+        // Settings, Share and Flood on a keyboard (Ash, 15 November 2026: "Needs a btn to get into settings or share or flood"): M, P and
+        // L, which free the mouse first when it is looking around
+        if (!e.ctrlKey && !e.metaKey && !e.altKey && /^Key[MPL]$/.test(e.code)) { const b = $({ KeyM: "bsMeBtn", KeyP: "bsShareBtn", KeyL: "bsTownFlood" }[e.code]);
+          if (b && !b.hidden && b.getClientRects().length) { if (document.pointerLockElement) document.exitPointerLock?.(); b.click(); e.preventDefault(); return; } }
         if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.code === "KeyZ" && F.hot?.undo?.()) { e.preventDefault(); return; }  // admin mode, with its bar open: undo the last edit
         F.keys.add(e.code); if (/^(Space|Arrow)/.test(e.code)) e.preventDefault();
         if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -7978,6 +8000,15 @@ const handle = async (m, post) => {
       pointerup: e => { F.drag = null; canvas.style.cursor = ""; const t = F.touches.get(e.pointerId); if (t?.move) { F.stick.x = 0; F.stick.y = 0; } F.touches.delete(e.pointerId); },
     };
     F.on.pointercancel = e => F.on.pointerup(e);
+    // the mouse looks around on a computer (Ash, 15 November 2026: "On pc make the game feel more natural when walking. Mouse able to
+    // control viewpoint"): walking or driving in a town, a click on the view hands the mouse to the view; Esc gives it back, and
+    // M, P and L still open Settings, Share and Flood. Not with a map-editing tool in hand, and never on a phone
+    const desk = matchMedia("(hover: hover) and (pointer: fine)").matches;
+    F.on.lock = e => { const T = BS.town; if (!desk || !T?.on || !T.walk || T.admin?.tool || e.pointerType !== "mouse" || e.button !== 0 || document.pointerLockElement) return;
+      if (e.target.closest?.("button, a, input, select, textarea, label, [role=menu], [role=dialog], [role=toolbar], .bs-me, .bs-review, .bs-chatbar, .bs-keys, #bsTownList, #bsShareBox")) return;
+      try { const r = canvas.requestPointerLock?.({ unadjustedMovement: true }); r?.catch?.(() => { try { canvas.requestPointerLock(); } catch {} }); } catch {} };
+    F.on.lockChange = () => { const on = document.pointerLockElement === canvas; document.body.classList.toggle("bslocked", on); $("bsLockTip").hidden = !on; };
+    document.addEventListener("pointerdown", F.on.lock, true); document.addEventListener("pointerlockchange", F.on.lockChange);
     addEventListener("keydown", F.on.keydown); addEventListener("keyup", F.on.keyup); addEventListener("blur", F.on.blur);
     document.addEventListener("mousemove", F.on.mousemove);
     ["pointerdown", "pointermove", "pointerup", "pointercancel"].forEach(k => canvas.addEventListener(k, F.on[k]));
@@ -7991,7 +8022,8 @@ const handle = async (m, post) => {
     document.body.classList.remove("flypeek");
     const canvas = $("bsGl");
     removeEventListener("keydown", F.on.keydown); removeEventListener("keyup", F.on.keyup); removeEventListener("blur", F.on.blur);
-    document.removeEventListener("mousemove", F.on.mousemove);
+    document.removeEventListener("mousemove", F.on.mousemove); document.removeEventListener("pointerdown", F.on.lock, true); document.removeEventListener("pointerlockchange", F.on.lockChange);
+    document.body.classList.remove("bslocked"); $("bsLockTip").hidden = true;
     ["pointerdown", "pointermove", "pointerup", "pointercancel"].forEach(k => canvas.removeEventListener(k, F.on[k]));
     if (document.pointerLockElement === canvas) document.exitPointerLock?.();
     for (const j of [...(F.joys || []), ...(F.uds || [])]) { j.end(); Object.entries(j.h).forEach(([k, f]) => j.el.removeEventListener(k, f)); }
@@ -8014,6 +8046,18 @@ const handle = async (m, post) => {
   // If the page ever gets something selected while exploring (a long press), clear it straight away, so no Copy bar comes up.
   document.addEventListener("selectionchange", () => { if (!BS.fly) return; try { const sel = getSelection(); if (sel && !sel.isCollapsed && !/^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName || "")) { sel.removeAllRanges(); } } catch {} });
   const bsNote = what => { const n = (BS.notes ||= []), now = performance.now(); if (n.length && n[n.length - 1][1] === what && now - n[n.length - 1][0] < 1000) { n[n.length - 1][0] = now; return; } n.push([now, what]); if (n.length > 20) n.shift(); };
+  // Esc in Explore, after Settings, sharing, Jump to, the flood list and the ask card: emotes, chat, the time, a suggestion being
+  // looked at, then the map-editing bar
+  // the time of day an admin last set in Explore (kept on the device), or nothing: midday
+  function exTimeSaved() { if (!isAdmin()) return null; let v = null; try { v = localStorage.getItem("an3d-time"); } catch {} const n = v == null ? NaN : +v; return Number.isFinite(n) && n >= 0 && n < 1440 ? n : null; }
+  function exEscMore() {
+    const open = id => { const el = $(id); return el && !el.hidden ? el : null; };
+    const em = open("bsEmotes"); if (em) { em.hidden = true; return true; }
+    const ch = open("bsChatBar"); if (ch) { ch.hidden = true; $("bsChatIn")?.blur(); return true; }
+    const tb = open("bsFlyTimeBox"); if (tb) { tb.hidden = true; $("bsTimeBtn")?.setAttribute("aria-expanded", "false"); return true; }
+    const rv = document.querySelector(".bs-review:not([hidden]) .x"); if (rv) { rv.click(); return true; }
+    if (open("bsAdmin")) { $("bsEditBtn")?.click(); return true; }
+    return false; }
   function bsFlyTick(dt) {
     const F = BS.fly, k = F.keys, has = (...c) => c.some(x => k.has(x));
     if (F.drive) return F.drive(dt);  // driving a car in a town model (townCar): the car moves, and the view follows it
@@ -8025,10 +8069,18 @@ const handle = async (m, post) => {
     F.yaw -= F.lookStick.x * Math.abs(F.lookStick.x) * 2.4 * lk; F.pitch = bsClamp(F.pitch + F.lookStick.y * Math.abs(F.lookStick.y) * 1.6 * lk, -1.45, 1.45);
     const sy = Math.sin(F.yaw), cy = Math.cos(F.yaw);
     const lim = F.lim || [-420, 420, -420, 200];  // the area you can fly in (Norman Road has its own)
-    F.pos.x = bsClamp(F.pos.x + (-sy * f + cy * r) * sp, lim[0], lim[1]);
-    F.pos.z = bsClamp(F.pos.z + (-cy * f - sy * r) * sp, lim[2], lim[3]);
+    // on foot with the keys (a computer): a walk, Shift to run, easing in and out, and a little bob of the head (Ash, 15 November 2026:
+    // "On pc make the game feel more natural when walking"); on a phone, the stick, as before
+    const kb = F.walk && !F.stick.x && !F.stick.y && has("KeyW", "KeyA", "KeyS", "KeyD", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight");
+    if (F.walk && (kb || F.wv?.some(Math.abs))) { const run = has("ShiftLeft", "ShiftRight"), n = Math.hypot(f, r) || 1, want = kb ? (run ? 12 : 5.5) : 0;
+      const tx = (-sy * f + cy * r) / n * want, tz = (-cy * f - sy * r) / n * want; F.wv ||= [0, 0]; const ease = Math.min(1, lk * (want ? 9 : 12));
+      F.wv[0] += (tx - F.wv[0]) * ease; F.wv[1] += (tz - F.wv[1]) * ease; if (Math.hypot(...F.wv) < 0.05 && !want) F.wv = [0, 0];
+      F.pos.x = bsClamp(F.pos.x + F.wv[0] * lk, lim[0], lim[1]); F.pos.z = bsClamp(F.pos.z + F.wv[1] * lk, lim[2], lim[3]); F.bob = (F.bob || 0) + Math.hypot(...F.wv) * lk * 1.9; }
+    else { F.pos.x = bsClamp(F.pos.x + (-sy * f + cy * r) * sp, lim[0], lim[1]);
+      F.pos.z = bsClamp(F.pos.z + (-cy * f - sy * r) * sp, lim[2], lim[3]); }
     if (F.walk) { if (u) F.eye = bsClamp((F.eye || 3) + u * 3 * lk, 1.5, 30);  // Up and Down: eyes higher or lower above the ground
-      F.pos.y += (F.walk() - F.pos.y) * Math.min(1, lk * 10); }  // walking in the whole-town model: your eyes follow the ground, up hill and down
+      const bob = F.wv && !(F.calm ??= matchMedia("(prefers-reduced-motion: reduce)").matches) ? Math.min(1, Math.hypot(...F.wv) / 5) * 0.045 * Math.sin(F.bob || 0) : 0;
+      F.pos.y += (F.walk() + bob - F.pos.y) * Math.min(1, lk * 10); }  // walking in the whole-town model: your eyes follow the ground, up hill and down
     else F.pos.y = bsClamp(F.pos.y + u * sp, F.floor ? F.floor() : 1.4, F.ceil || 180);
     if (F.heightAt) { const h = Math.max(0, F.heightAt()), t = h < 10 ? `${h.toFixed(1)} m` : h < 10000 ? `${Math.round(h)} m` : `${(h / 1000).toFixed(1)} km`; if (t !== F.hText) { F.hText = t; $("bsHeight").textContent = t; } const mh = $("bsMeH"); if (mh && mh.textContent !== t) mh.textContent = t; }
   }
@@ -8202,7 +8254,7 @@ const handle = async (m, post) => {
   // of: "Logan"), floodNote (the line under the list) and floodWarn (show the not-official notice first, and a banner while a flood is on).
   const TOWNS = {
     inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=20", assets: TOWN3D, place: "inv", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
-    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=29", assets: TOWN3D + "moorooka/", place: "moo", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
+    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=30", assets: TOWN3D + "moorooka/", place: "moo", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
       walkStart: { x: -269.8, z: -991.4, yaw: -1.623 },  // Ash's pick for where Moorooka starts: the Beaudesert Road footpath, looking at the house he chose
       // its floods: widest over the Oxley Creek flats along the model's western edge, seen from the east. floodWarn: the not-official notice has to be accepted
       // before the list opens, and a banner says the same while a flood is showing (Ash asked for both).
@@ -8235,7 +8287,9 @@ const handle = async (m, post) => {
       BS.wxWait(); return; }
     openWeather(); if ($("weather").hidden) return;
     BS.invBeach = false; BS.mooAlt = false; BS.exploreOnly = cfg.place; if (BS.B) bsPlace();  // Inverloch's town, not its beach; Moorooka's streets, not its bowls club
-    const T = BS.town = { on: false, model: null, dead: false, keep: !!viaExplore, cfg }; BS.exTimeSet = false;  // (each town opens at midday)
+    const T = BS.town = { on: false, model: null, dead: false, keep: !!viaExplore, cfg };
+    { const mine = exTimeSaved(); BS.exTimeSet = mine != null;  // (each town opens at midday, or at an admin's own time)
+      if (mine != null && BS.view) { BS.view.ms = bsMidnight(BS.view.day || bsKey(BS.view.ms)) + mine * 60000; const ti = $("bsFlyTime"); if (ti) ti.value = mine; } }
     exLoadShow(exploreName(cfg.place));
     // the loading screen goes once the town's up, the view has held still for a moment and (where the model can say so, as
     // Logan's does) everything around you is in, so nothing pops in as it lifts (or if it didn't start)
@@ -9615,13 +9669,17 @@ const handle = async (m, post) => {
     const A = { tool: null, down: () => false, move: () => false, up: () => false, dispose() {} };
     if (!m.setGroundEdits) return A;
     const key = "an3d-edits-" + cfg.place, r2 = v => Math.round(v * 100) / 100;
-    const blank = () => ({ v: 1, paint: [], gone: { cars: [], trees: [], people: [] } });
+    // what can be taken out (cars, trees, people) and, since 15 November 2026, put in: trees, parked cars and street lights, and
+    // published ones taken back out (noAdd) (Ash: "Add more features to be able to add or remove etc to the construction worker").
+    // Each is a list of points: [x, z], or [x, z, heading]
+    const GONE_N = { cars: 2, trees: 2, people: 3, addTree: 2, addCar: 3, addLight: 3, noAdd: 2 };
+    const blank = () => ({ v: 1, paint: [], gone: Object.fromEntries(Object.keys(GONE_N).map(k => [k, []])) });
     const tidy = o => { const b = blank(); if (!o || typeof o !== "object") return b;
       for (const s of Array.isArray(o.paint) ? o.paint : []) if (s && [1, 2, 3].includes(s.k) && s.w > 0 && s.w <= 40 && Array.isArray(s.p) && s.p.length >= 2 && s.p.length % 2 === 0 && s.p.every(Number.isFinite)) b.paint.push({ k: s.k, w: +s.w, p: s.p.map(r2) });
-      for (const [kind, n] of [["cars", 2], ["trees", 2], ["people", 3]]) for (const g of Array.isArray(o.gone?.[kind]) ? o.gone[kind] : []) if (Array.isArray(g) && g.length === n && g.every(Number.isFinite)) b.gone[kind].push(g.map(r2));
+      for (const [kind, n] of Object.entries(GONE_N)) for (const g of Array.isArray(o.gone?.[kind]) ? o.gone[kind] : []) if (Array.isArray(g) && g.length === n && g.every(Number.isFinite)) b.gone[kind].push(g.map(r2));
       return b; };
     let mine = blank(), pub = blank(), sent = blank(), sentAt = 0, draft = null, asked = blank(), askedAt = 0, look = null;  // asked: sent to the town planner. look: a suggestion Ash is looking at  // mine: waiting on this device. sent: saved, on its way to everyone
-    const sentKey = "an3d-sent-" + cfg.place, KINDS = ["cars", "trees", "people"], all = e => e.paint.length + e.gone.cars.length + e.gone.trees.length + e.gone.people.length;
+    const sentKey = "an3d-sent-" + cfg.place, KINDS = Object.keys(GONE_N), all = e => e.paint.length + KINDS.reduce((n, k) => n + e.gone[k].length, 0);
     try { mine = tidy(JSON.parse(localStorage.getItem(key))); } catch {}
     try { const j = JSON.parse(localStorage.getItem(sentKey)); sent = tidy(j); sentAt = +j?.at || 0; } catch {}
     const askedKey = "an3d-asked-" + cfg.place;  // what a construction worker sent the town planner stays drawn on their device for 3 hours, as for everyone else
@@ -9630,7 +9688,17 @@ const handle = async (m, post) => {
       if (all(asked)) localStorage.setItem(askedKey, JSON.stringify({ ...asked, at: askedAt })); else localStorage.removeItem(askedKey); } catch {} };
     let fresh = blank();  // what players have sent in the last 3 hours: shown to everyone until then (or until Ash dismisses it, on his device)
     const layers = () => [pub, sent, fresh, asked, mine, ...(look ? [look] : [])];
-    const apply = () => { const L = layers(); m.setGroundEdits([...L.flatMap(e => e.paint), ...(draft ? [draft] : [])]);
+    // the trees, parked cars and street lights put in, drawn by the app (each its own small mesh; at most 300), redrawn when they change
+    let addMesh = [], addKey = "";
+    const drawAdds = L => { const no = L.flatMap(e => e.gone.noAdd), keep = g => !no.some(q => Math.hypot(q[0] - g[0], q[1] - g[1]) < 1.2);
+      const items = [...L.flatMap(e => e.gone.addTree).filter(keep).map(g => ["tree", g]), ...L.flatMap(e => e.gone.addCar).filter(keep).map(g => ["car", g]), ...L.flatMap(e => e.gone.addLight).filter(keep).map(g => ["light", g])].slice(0, 300);
+      const k = JSON.stringify(items); if (k === addKey) return; addKey = k; addMesh.forEach(h => { try { h.remove(); } catch {} }); addMesh = [];
+      const THREE = BS.B.THREE, M4 = new THREE.Matrix4(), Q4 = new THREE.Quaternion(), E4 = new THREE.Euler(), V4 = new THREE.Vector3(), ONE4 = new THREE.Vector3(1, 1, 1), COLS = ["#f2f2ee", "#b8bcc2", "#2d5ea8", "#a8262c", "#5c6670", "#3f6b4a"];
+      for (const [kind, g] of items) { const y = m.groundAt(g[0], g[1]), parts = kind === "tree" ? townPlaneParts(undefined, "tree") : kind === "car" ? townPlaneParts(COLS[Math.abs(Math.round(g[0] * 7 + g[1] * 3)) % COLS.length], "sedan") : townPlaneParts(undefined, "lightpole");
+        const mx = M4.compose(V4.set(g[0], y, g[1]), Q4.setFromEuler(E4.set(0, g[2] || 0, 0, "YXZ")), ONE4).elements.slice();
+        try { addMesh.push(m.addParts(parts.map(q => ({ ...q, matrix: mx })))); } catch {} } };
+    A.adds = () => layers().flatMap(e => [...e.gone.addTree, ...e.gone.addCar]);  // (the possum and the cars could use them later)
+    const apply = () => { const L = layers(); drawAdds(L); m.setGroundEdits([...L.flatMap(e => e.paint), ...(draft ? [draft] : [])]);
       m.setRemoved({ cars: [...L.flatMap(e => e.gone.cars), ...(T.hideCars || [])], trees: L.flatMap(e => e.gone.trees), people: L.flatMap(e => e.gone.people) }); };
     apply(); A.apply = apply;  // (also when the golden car takes a parked car's place: T.hideCars)
     // what has been published for everyone; anything of mine that is in it now comes off my own list
@@ -9653,7 +9721,9 @@ const handle = async (m, post) => {
     const TOOLS = { path: { k: 3, w: 1.3, min: 0.6, max: 5, step: 0.1, straight: true, col: "#e8e3d6", say: "Drag to lay a footpath." },
       grass: { k: 1, w: 2.5, min: 0.6, max: 14, step: 0.5, straight: false, col: "#8fd06a", say: "Drag to paint grass." },
       road: { k: 2, w: 6, min: 2, max: 16, step: 0.5, straight: true, col: "#9aa0a8", say: "Drag to lay a road." },
-      delete: { say: "Tap a parked car, a tree, a person or one of your own strokes." } };
+      tree: { put: "addTree", say: "Tap the ground to plant a tree." }, car: { put: "addCar", say: "Tap the ground to park a car, facing the way you're looking." },
+      light: { put: "addLight", say: "Tap the ground to stand a street light, its arm reaching the way you're looking." },
+      delete: { say: "Tap a parked car, a tree, a person, a street light you put in, or one of your own strokes." } };
     let pref = {}; try { pref = JSON.parse(localStorage.getItem("an3d-admin") || "{}") || {}; } catch {}
     const keep = () => { try { localStorage.setItem("an3d-admin", JSON.stringify(pref)); } catch {} };
     const width = () => { const t = TOOLS[A.tool]; return bsClamp(pref[A.tool + "W"] ?? t.w, t.min, t.max); };
@@ -9668,7 +9738,7 @@ const handle = async (m, post) => {
         : !boss ? (n ? "Your changes are on this device. Send shows them to everyone for 3 hours and gives them to the town planner." : all(asked) ? "Sent! Everyone sees it for 3 hours, and the town planner can make it permanent." : "Pick a tool to change the ground. Help us build and shape this model!")
         : n ? "Your edits are on this device only. Save puts them in everyone's app." : all(sent) ? "Saved. Your edits will be in everyone's app in about 5 minutes." : "Pick a tool. Edits stay on this device until you save them."; };
     const show = () => { for (const b of bar.querySelectorAll("[data-tool]")) b.setAttribute("aria-pressed", String(b.dataset.tool === A.tool));
-      const paint = !!A.tool && A.tool !== "delete"; $("bsAdminW").hidden = line.hidden = !paint;
+      const paint = !!A.tool && A.tool !== "delete" && !TOOLS[A.tool].put; $("bsAdminW").hidden = line.hidden = !paint;
       if (paint) { wOut.textContent = width().toFixed(1) + " m"; line.textContent = straight() ? "Straight" : "Freehand"; line.setAttribute("aria-pressed", String(straight())); }
       document.body.classList.toggle("bsadmin-tool", !!A.tool); count(); };
     // the line being drawn, over the view: instant, while the ground itself catches up a few times a second
@@ -9688,7 +9758,13 @@ const handle = async (m, post) => {
         for (let a = 0; a < Math.max(1, p.length / 2 - 1); a++) { const b = Math.min(a + 1, p.length / 2 - 1), ax = p[a * 2], az = p[a * 2 + 1], dx = p[b * 2] - ax, dz = p[b * 2 + 1] - az, L = dx * dx + dz * dz;
           const t = L ? bsClamp(((x - ax) * dx + (z - az) * dz) / L, 0, 1) : 0; if (Math.hypot(x - ax - dx * t, z - az - dz * t) <= s.w / 2) return i; } }
       return -1; };
-    const takeOut = (cx, cy) => { const th = m.pickThing(cx, cy), g = m.groundUnder(cx, cy);
+    const takeOut = (cx, cy) => { const g0 = m.groundUnder(cx, cy);
+      // something put in (a tree, car or street light): one of yours goes; a published one is taken back out
+      if (g0) { for (const kind of ["addTree", "addCar", "addLight"]) { const r = kind === "addCar" ? 2.6 : kind === "addTree" ? 1.8 : 1.2;
+          const i = mine.gone[kind].findIndex(q => Math.hypot(q[0] - g0.x, q[1] - g0.z) < r); if (i >= 0) { mine.gone[kind].splice(i, 1); save(); apply(); count(); return say("Taken out.", 2000); }
+          const o = layers().filter(e => e !== mine).flatMap(e => e.gone[kind]).find(q => Math.hypot(q[0] - g0.x, q[1] - g0.z) < r);
+          if (o) { mine.gone.noAdd.push([o[0], o[1]]); ops.push({ gone: "noAdd" }); save(); apply(); count(); return say("Taken out.", 2000); } } }
+      const th = m.pickThing(cx, cy), g = g0;
       if (th?.type === "car") { mine.gone.cars.push([r2(th.x), r2(th.z)]); ops.push({ gone: "cars" }); say("Parked car taken out.", 2500); }
       else if (th?.type === "tree") { mine.gone.trees.push([r2(th.x), r2(th.z)]); ops.push({ gone: "trees" }); say("Tree taken out.", 2500); }
       else if (th?.type === "person") { mine.gone.people.push([r2(th.x), r2(th.z), 12]); ops.push({ gone: "people" }); say("No one walks within 12 m of there now.", 3000); }
@@ -9700,7 +9776,7 @@ const handle = async (m, post) => {
       if (ptr) { nav.ptrs.set(ptr.id, { x: ptr.x, y: ptr.y }); done(); return false; }  // a second finger: stop drawing, and both fingers move the map
       if (nav.ptrs.size) return false;
       const g = m.groundUnder(e.clientX, e.clientY);
-      ptr = { id: e.pointerId, x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, pts: g && A.tool !== "delete" ? [g.x, g.z] : null, scr: [e.clientX, e.clientY] };
+      ptr = { id: e.pointerId, x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, pts: g && A.tool !== "delete" && !TOOLS[A.tool].put ? [g.x, g.z] : null, scr: [e.clientX, e.clientY] };
       trail.setAttribute("stroke", TOOLS[A.tool].col || "#fff");
       try { box.setPointerCapture(e.pointerId); } catch {} e.preventDefault(); return true; };
     A.move = e => { if (!ptr || e.pointerId !== ptr.id) return false; ptr.x = e.clientX; ptr.y = e.clientY; e.preventDefault();
@@ -9713,6 +9789,10 @@ const handle = async (m, post) => {
     A.up = e => { if (!ptr || e.pointerId !== ptr.id) return false; const p = ptr; ptr = null; trail.setAttribute("points", "");
       if (e.type === "pointercancel") { draft = null; apply(); return true; }
       if (A.tool === "delete") { if (Math.hypot(e.clientX - p.sx, e.clientY - p.sy) < 12) takeOut(e.clientX, e.clientY); return true; }
+      if (TOOLS[A.tool].put) { if (Math.hypot(e.clientX - p.sx, e.clientY - p.sy) >= 12) return true;  // a tap puts one in; a drag moves the view
+        const g = m.groundUnder(e.clientX, e.clientY); if (!g) { say("That missed the ground.", 2000); return true; }
+        const kind = TOOLS[A.tool].put, h = r2(BS.fly.yaw + Math.PI); mine.gone[kind].push(kind === "addTree" ? [r2(g.x), r2(g.z)] : [r2(g.x), r2(g.z), h]); ops.push({ gone: kind });
+        save(); apply(); count(); say({ addTree: "Tree planted.", addCar: "Car parked.", addLight: "Street light up." }[kind] + " Undo takes it back.", 2500); return true; }
       draft = null; let pts = p.pts ? (straight() ? p.pts : thin(p.pts)).map(r2) : null;
       if (pts && length(pts) < 0.4) pts = A.tool === "grass" ? pts.slice(0, 2) : null;  // a tap: a dot of grass, or nothing
       if (pts) { mine.paint.push({ k: TOOLS[A.tool].k, w: width(), p: pts }); ops.push({ paint: 1 }); save(); count(); }
@@ -9808,7 +9888,7 @@ const handle = async (m, post) => {
     const send = async () => { if (!admin()) return suggest(); if (saving) return; if (!all(mine)) return say("Nothing to save yet.", 2500);
       const tok = store.get("brief.ghToken", "");
       if (!tok) return say("To save for everyone, first save the GitHub key in Admin (in Settings), then tap Save again. Or Copy, and paste to Claude.", 9000);
-      const town = cfg.assets.replace(/\/$/, "").split("/").pop(), gone = { cars: [...mine.gone.cars], trees: [...mine.gone.trees], people: [...mine.gone.people] }, lots = [[]];
+      const town = cfg.assets.replace(/\/$/, "").split("/").pop(), gone = Object.fromEntries(KINDS.map(k => [k, [...mine.gone[k]]])), lots = [[]];
       let size = JSON.stringify(gone).length;
       for (const st of mine.paint) { const n = JSON.stringify(st).length + 1; if (size + n > 50000 && lots[lots.length - 1].length) { lots.push([]); size = 0; } lots[lots.length - 1].push(st); size += n; }
       saving = true; saveBtn.disabled = true; say("Saving\u2026");
@@ -9848,7 +9928,7 @@ const handle = async (m, post) => {
         clearTimeout(clear.t); unsure(); mine = blank(); ops.length = 0; save(); apply(); count(); say("All your edits on this device are cleared.", 3000); } });
     A.refresh = () => { if (!can()) { bar.hidden = true; A.tool = null; done(); btn.setAttribute("aria-pressed", "false"); document.body.classList.remove("bsadmin", "bsadmin-tool"); look = null; apply(); } btn.hidden = !can(); show(); };
     A.refresh();
-    A.dispose = () => { clearTimeout(revT); revBox.remove(); clearTimeout(freshT[0]); clearInterval(freshT[1]); plansBtn.remove(); plansBox.remove(); on.forEach(([el, f]) => el.removeEventListener("click", f)); ink.remove(); bar.hidden = true; btn.hidden = true; btn.setAttribute("aria-pressed", "false"); document.body.classList.remove("bsadmin", "bsadmin-tool"); clearTimeout(say.t); clearTimeout(clear.t); clear.dataset.sure = ""; clear.classList.add("bs-admin-ic"); clear.innerHTML = bin; };
+    A.dispose = () => { addMesh.forEach(h => { try { h.remove(); } catch {} }); addMesh = []; clearTimeout(revT); revBox.remove(); clearTimeout(freshT[0]); clearInterval(freshT[1]); plansBtn.remove(); plansBox.remove(); on.forEach(([el, f]) => el.removeEventListener("click", f)); ink.remove(); bar.hidden = true; btn.hidden = true; btn.setAttribute("aria-pressed", "false"); document.body.classList.remove("bsadmin", "bsadmin-tool"); clearTimeout(say.t); clearTimeout(clear.t); clear.dataset.sure = ""; clear.classList.add("bs-admin-ic"); clear.innerHTML = bin; };
     return A;
   }
   // Driving and flying (Ash, 14 November 2026: "if i press enter when walking i get into the car", then "needs sounds, shift for
@@ -10168,7 +10248,14 @@ const handle = async (m, post) => {
     const known = b => b && b.k === "none" && b.y > -1e4 && (b.x || b.z);
     P.list = () => [...peers].filter(([, q]) => q.b && ((q.shown && q.b.k !== "none") || known(q.b))).map(([id, q]) => { const s = q.b.k === "none" ? q.b : q.shown;
       return { id, name: q.name || "A player", k: q.b.k, high: q.b.k === "none", x: s.x, y: s.y, z: s.z, h: s.h, p: s.p, r: s.r }; });
-    let sendRide = null; P.ride = (id, on) => { try { sendRide?.(on === 2 ? 2 : on ? 1 : 0, id); } catch {} };  // tell a driver you've got in with them, or out
+    // (holding on, the possum also says where on top it is: [2, along, side, turn], so the driver can draw it there, riding along
+    // exactly; copies of the app from before take that as getting in)
+    let sendRide = null; P.ride = (id, on, at) => { try { sendRide?.(on === 2 ? (at ? [2, ...at] : 2) : on ? 1 : 0, id); } catch {} };
+    // who is riding with you or holding on to you: a card at the top and their names over what you're in, while you drive or fly
+    // (Ash, 15 November 2026: "Make it more obvious when a player is riding with you")
+    const riders = new Map(), rideCard = document.createElement("div"), rideTag = document.createElement("div");
+    rideCard.className = "bs-ridecard"; rideCard.hidden = true; rideCard.setAttribute("role", "status"); rideTag.className = "bs-peer bs-ridetag"; rideTag.hidden = true; box.append(rideCard, rideTag);
+    const CLING_TOP = { plane: 1.95, goldplane: 1.95, heli: 2.05, goldheli: 2.05, car: 1.45, gold: 1.45, bus: 3.3 };  // tell a driver you've got in with them, or out
     const emoted = (name, id) => { const q = peers.get(id), e = TOWN_EMOTES.find(v => v[0] === name); if (q && e) q.emote = { e, t0: performance.now() }; };
     P.emote = n => { const e = typeof n === "number" ? TOWN_EMOTES[n] : TOWN_EMOTES.find(v => v[0] === n), now = performance.now(); if (!e || now - emoteAt < 1200) return false;  // (it used to do nothing with no one else about)
       emoteAt = now; if (sendEmote && peers.size) try { sendEmote(e[0]); } catch {} if (T.me) T.me.emote = { e, t0: now }; toast(`${e[2]} You ${e[3]}.`, 1800); emoteBox.hidden = true; emoteBtn.setAttribute("aria-expanded", "false"); return true; };
@@ -10191,7 +10278,7 @@ const handle = async (m, post) => {
       inp.onkeydown = e => e.stopPropagation(); inp.onkeyup = e => e.stopPropagation();
       askBox.append(q, inp, go, skip); chatBar.parentElement.appendChild(askBox); }, 1800);
     const label = id => { const el = document.createElement("div"); el.className = "bs-peer"; el.hidden = true; box.appendChild(el); return el; };
-    const drop = id => { const q = peers.get(id); if (!q) return; try { q.parts?.remove(); } catch {} q.el.remove(); peers.delete(id); P.count = peers.size; };
+    const drop = id => { riders?.delete(id); const q = peers.get(id); if (!q) return; try { q.parts?.remove(); } catch {} q.el.remove(); peers.delete(id); P.count = peers.size; };
     const got = (a, id) => { if (!Array.isArray(a) || a.length < 7 || !a.slice(0, 4).every(Number.isFinite)) return;
       let q = peers.get(id); if (!q) { if (peers.size >= 12) return; q = { el: label(id), name: "", kind: "", parts: null, a: null, b: null, colour: TOPS[[...String(id)].reduce((n, ch) => n + ch.charCodeAt(0), 0) % TOPS.length] }; peers.set(id, q); P.count = peers.size; }
       const now = performance.now(), s = { x: a[0], y: a[1], z: a[2], h: a[3], p: +a[5] || 0, r: +a[6] || 0, k: SHAPES[a[4]] ? a[4] : a[4] === "none" ? "none" : "walk", t: now };
@@ -10247,21 +10334,40 @@ const handle = async (m, post) => {
           b.textContent = ok ? "Copied" : url; setTimeout(() => { b.textContent = "Copy the link"; }, 2500); }; return b; };
       const steps = list => { const ol = el("ol"); list.filter(Boolean).forEach(t => ol.append(el("li", "", t))); return ol; };
       const after = el("p", "", "It goes on your home screen as its own app, and opens straight into the 3D model.");
+      // tailored to the browser it's open in (Ash, 15 November 2026: "try to read browser so make it an app is tailored")
+      const iosB = alone ? "app" : /CriOS/.test(ua) ? "Chrome" : /EdgiOS/.test(ua) ? "Edge" : /FxiOS/.test(ua) ? "Firefox" : /GSA\/|FBAN|FBAV|Instagram|Line\/|OPiOS/.test(ua) ? "app" : "Safari";
+      const andB = /SamsungBrowser/.test(ua) ? "Samsung Internet" : /EdgA\//.test(ua) ? "Edge" : /Firefox\//.test(ua) ? "Firefox" : /OPR\/|Opera/.test(ua) ? "Opera" : /; wv\)|FBAN|FBAV|Instagram/.test(ua) ? "app" : "Chrome";
+      const deskB = /Edg\//.test(ua) ? "Edge" : /OPR\//.test(ua) ? "Opera" : /Firefox\//.test(ua) ? "Firefox" : /Chrome\//.test(ua) ? "Chrome" : /Macintosh/.test(ua) && /Safari\//.test(ua) ? "Safari" : "";
+      const forWhat = t => el("p", "bs-me-for", t), openPage = what => { if (!onEx) { const a = el("a", "bs-me-go", "Open the 3D model's page"); a.href = url; app.append(a); } };
+      const first = !onEx && "Tap Open the 3D model's page (below).";
       if (alone && onEx) app.append(el("p", "", "You're using it as an app already."));
       else if (onEx && window.anInstall) { const b = el("button", "bs-me-go", "Install the app"); b.type = "button"; b.onclick = async () => { try { await window.anInstall.prompt(); } catch {} window.anInstall = null; meDraw(); }; app.append(b, after); }
-      else if (ios && (alone || !safari)) {  // inside the news app, or another browser: it has to be done in Safari
-        app.append(steps(["Copy the link (below).", "Open Safari, paste it in the address bar and go.", "Tap \u2022\u2022\u2022 (bottom right), then Share. (On older iPhones, Share is the square with an arrow.)", "Scroll down, tap Add to Home Screen, then Add."]), copyBtn(), after); }
       else if (ios) {
-        app.append(steps([!onEx && "Tap Open the 3D model's page (below).", "Tap \u2022\u2022\u2022 (bottom right), then Share. (On older iPhones, Share is the square with an arrow.)", "Scroll down, tap Add to Home Screen, then Add."]));
-        if (!onEx) { const a = el("a", "bs-me-go", "Open the 3D model's page"); a.href = url; app.append(a); }
+        const S = { Safari: ["Tap \u2022\u2022\u2022 (bottom right), then Share. (On older iPhones, Share is the square with an arrow.)", "Scroll down, tap Add to Home Screen, then Add."],
+          Chrome: ["Tap Share (the square with an arrow) at the right of the address bar.", "Tap Add to Home Screen, then Add."],
+          Edge: ["Tap \u2022\u2022\u2022 at the bottom, then Share.", "Tap Add to Home Screen, then Add."],
+          Firefox: ["Tap \u2630 (bottom right), then Share.", "Tap Add to Home Screen, then Add."] }[iosB];
+        if (S) { app.append(forWhat(`For ${iosB} on ${/iPad/.test(ua) ? "iPad" : "iPhone"}`), steps([first, ...S])); openPage(); }
+        else app.append(forWhat(iosB === "app" && alone ? "From inside the news app" : "From inside another app"), steps(["Copy the link (below).", "Open Safari, paste it in the address bar and go.", "Tap \u2022\u2022\u2022 (bottom right), then Share. (On older iPhones, Share is the square with an arrow.)", "Scroll down, tap Add to Home Screen, then Add."]), copyBtn());
         app.append(after); }
       else if (android) {
-        app.append(steps([!onEx && "Tap Open the 3D model's page (below), in Chrome.", "Tap the \u22ee menu, top right.", "Tap Add to Home screen (or Install app), then Install."]));
-        if (!onEx) { const a = el("a", "bs-me-go", "Open the 3D model's page"); a.href = url; app.append(a); }
+        const S = { Chrome: ["Tap the \u22ee menu, top right.", "Tap Add to Home screen (or Install app), then Install."],
+          "Samsung Internet": ["Tap \u2630 (bottom right).", "Tap Add page to, then Home screen."],
+          Firefox: ["Tap the \u22ee menu.", "Tap Add app to Home screen (or Install)."],
+          Edge: ["Tap \u2026 at the bottom.", "Tap Add to phone, then Install."],
+          Opera: ["Tap the \u22ee menu.", "Tap Add to, then Home screen."] }[andB];
+        if (S) { app.append(forWhat(`For ${andB} on Android`), steps([first, ...S])); openPage(); }
+        else app.append(forWhat("From inside another app"), steps(["Copy the link (below).", "Open Chrome, paste it in the address bar and go.", "Tap the \u22ee menu, then Add to Home screen (or Install app)."]), copyBtn());
         app.append(after); }
-      else { app.append(steps([!onEx && "Open the 3D model's page (below) in Chrome or Edge.", "Click the install icon at the right of the address bar.", "Or on your phone, open the same page and add it to your home screen."]));
-        if (!onEx) { const a = el("a", "bs-me-go", "Open the 3D model's page"); a.href = url; app.append(a); }
-        app.append(after); }
+      else {
+        const open = !onEx && "Open the 3D model's page (below).";
+        const S = { Chrome: [open, "Click the install icon at the right of the address bar. (Or the \u22ee menu, then Cast, save and share, then Install page as app.)"],
+          Edge: [open, "Click the \u2026 menu, then Apps, then Install this site as an app."],
+          Safari: [open, "Click File in the menu bar, then Add to Dock. (macOS Sonoma or later.)"],
+          Opera: [open, "Click the install icon in the address bar, if there is one. If not, open the page in Chrome or Edge."],
+          Firefox: ["Firefox can't make apps from web pages. Open the 3D model's page in Chrome or Edge and install it from there, or add it to your phone's home screen."] }[deskB]
+          || [open, "In Chrome or Edge, click the install icon at the right of the address bar.", "Or on your phone, open the same page and add it to your home screen."];
+        if (deskB) app.append(forWhat(`For ${deskB} on a computer`)); app.append(steps(S)); openPage(); app.append(deskB === "Firefox" ? copyBtn() : after); }
       const hi = el("div", "bs-me-h"), ho = el("span", "", F.hText || ""); ho.id = "bsMeH"; hi.append(el("span", "", "Height above the ground"), ho);
       // the other towns, plain links (Ash, 15 November 2026: "In settings I want to be able to change from Logan to Inverloch and
       // moorooka. Nothing fancy. Just a hyperlink"): each opens that town's Explore page
@@ -10293,7 +10399,9 @@ const handle = async (m, post) => {
         room = townRelay("awesome-news-explore-1/town-" + place);
         const [sp, gp] = room.makeAction("pose"), [sn, gn] = room.makeAction("name"), [se, ge] = room.makeAction("emote"); sendPose = sp; sendName = sn; sendEmote = se; gp(got); gn(named); ge(emoted);
         const [sc, gc] = room.makeAction("chat"); sendChat = sc; gc(chatted);
-        const [sr, gr] = room.makeAction("ride"); sendRide = sr; gr((on, id) => { const q = peers.get(id); if (q?.name) toast(on === 2 ? `${q.name}, the possum, is holding on to you!` : on ? `${q.name} has got in with you.` : `${q.name} has got out.`, 2600); });
+        const [sr, gr] = room.makeAction("ride"); sendRide = sr; gr((raw, id) => { const q = peers.get(id), on = Array.isArray(raw) ? raw[0] : raw, at = Array.isArray(raw) && raw.slice(1, 4).every(Number.isFinite) ? { along: raw[1], side: raw[2], dh: raw[3] } : null;
+          if (on) riders.set(id, { possum: on === 2, at }); else riders.delete(id);
+          if (q?.name && (!on || !riders.get(id)?.told)) { toast(on === 2 ? `${q.name}, the possum, is holding on to you!` : on ? `${q.name} has got in with you.` : `${q.name} has got out.`, 3500); if (on) riders.get(id).told = true; } });
         room.onPeerJoin(id => { try { tell(id); if (lastSent) sendPose(lastSent, id); } catch {} }); room.onPeerLeave(drop);
       } catch (e) { console.warn("Town model: other players couldn't connect", e); } }, wait); };
     // always in the room, so you see the others even while they can't see you (Ash, 15 November 2026: "I can't see the person
@@ -10321,9 +10429,17 @@ const handle = async (m, post) => {
       const saying = myChat && now - myChat.t < CHAT_MS, mine3 = saying && T.me?.third?.();
       if (saying && !mine3) { sayIn(meEl, "You said", myChat, now); meEl.hidden = false; meEl.classList.add("top"); meEl.style.transform = ""; }
       else { meEl.classList.remove("top"); if (!mine3 && !meEl.hidden) meEl.hidden = true; }
+      // who is riding with you: the card at the top, and their names over what you're in
+      const withMe = T.car?.in ? [...riders].map(([id, r]) => ({ q: peers.get(id), r })).filter(o => o.q) : [];
+      { const txt = withMe.length ? withMe.map(o => o.q.name || "A player").join(" and ") + (withMe.length > 1 ? " are" : " is") + (withMe.every(o => o.r.possum) ? " holding on to you" : " riding with you") : "";
+        if (rideCard.dataset.t !== txt) { rideCard.dataset.t = txt; rideCard.textContent = txt; rideCard.hidden = !txt; }
+        if (!txt) rideTag.hidden = true; }
       if (!peers.size && !mine3) return;
       const cam = m.getCamera(), w = box.clientWidth, h = box.clientHeight, f = 1 / Math.tan(((m.fov ? m.fov() : 50) * Math.PI) / 360);
       const cp = Math.cos(cam.pitch), fx = -Math.sin(cam.yaw) * cp, fy = Math.sin(cam.pitch), fz = -Math.cos(cam.yaw) * cp, rx = Math.cos(cam.yaw), rz = -Math.sin(cam.yaw), ux = -fy * rz, uy = rz * fx - rx * fz, uz = fy * rx;  // up = right × forward (uy had its sign the wrong way round, so names sat mirrored above or below the player)
+      if (withMe.length) { const v = T.car.pose?.(); if (v) { const dx = v.x - cam.x, dy = v.y + (CLING_TOP[v.k] ?? 1.6) + 1.2 - cam.y, dz = v.z - cam.z, depth = dx * fx + dy * fy + dz * fz;
+          if (depth > 1) { const t2 = withMe.map(o => o.q.name || "A player").join(", "); if (rideTag.textContent !== t2) rideTag.textContent = t2; rideTag.hidden = false;
+            rideTag.style.transform = `translate(${Math.round(w / 2 + (dx * rx + dz * rz) / depth * f * (h / 2))}px, ${Math.round(h / 2 - (dx * ux + dy * uy + dz * uz) / depth * f * (h / 2))}px) translate(-50%, -100%)`; } else rideTag.hidden = true; } }
       // what you just said, over you when you can see yourself (as a construction worker, from behind)
       if (mine3) { const dx = F.pos.x - cam.x, dy = ground(F.pos.x, F.pos.z) + 2.35 - cam.y, dz = F.pos.z - cam.z, depth = dx * fx + dy * fy + dz * fz;
         if (depth > 1) { sayIn(meEl, playerName(), myChat, now); meEl.hidden = false;
@@ -10336,6 +10452,11 @@ const handle = async (m, post) => {
         // a fifth of a second behind, gliding from where they were shown to the newest word of them
         const t = Math.min(1, (now - q.from) / 220), a = q.a || q.b, b = q.b, far = Math.hypot(b.x - a.x, b.z - a.z) > 60, k = far ? 1 : t;
         const s = q.shown = { x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k, z: a.z + (b.z - a.z) * k, h: a.h + wrap(b.h - a.h) * k, p: a.p + (b.p - a.p) * k, r: a.r + (b.r - a.r) * k, t: now };
+        // a possum holding on to what you're driving or flying: drawn right where it holds on (its own word of where it is comes a
+        // moment late, and at a plane's speed that was well behind the plane: Ash, 15 November 2026, "When flying the plane and the
+        // possum is on I can't see the possum")
+        { const rc = riders.get(id)?.at, v = rc && kind === "possum" && T.car?.in ? T.car.pose?.() : null;
+          if (v) { const sh = Math.sin(v.h), chh = Math.cos(v.h); s.x = v.x + rc.along * sh + rc.side * chh; s.z = v.z + rc.along * chh - rc.side * sh; s.y = v.y + (CLING_TOP[v.k] ?? 1.95); s.h = v.h + rc.dh; s.p = v.p; s.r = v.r; } }
         // what they are doing: up and down, a turn, a lean, and each arm's swing out to the side and to the front
         let up = 0, turn = 0, lean = 0, armR = 0, armL = 0, fwdR = 0, fwdL = 0, sign = "";
         if (q.emote && (kind === "walk" || kind === "builder")) { const et = (now - q.emote.t0) / 1000, [name, , sg, , secs] = q.emote.e, ease = Math.min(1, et * 5, (secs - et) * 5);
@@ -10611,6 +10732,10 @@ const handle = async (m, post) => {
       b.quad([-1.264, 0.5, 3.0], [-1.264, 0.5, 4.3], [-1.264, 2.6, 4.3], [-1.264, 2.6, 3.0], DARK);  // the door
       return [b.part({ roughness: 0.45 })];
     }
+    if (car === "tree") {  // a tree a construction worker plants: a trunk and a stepped, leafy crown. Trunk on y = 0
+      const BARK = lin("#7a5b3f"), L1 = lin("#4c7a33"), L2 = lin("#5b8d3e"), L3 = lin("#6a9f48");
+      b.box(-0.15, 0.15, 0, 2.3, -0.15, 0.15, BARK); b.box(-1.6, 1.6, 2.0, 3.3, -1.6, 1.6, L1); b.box(-1.25, 1.25, 3.3, 4.3, -1.25, 1.25, L2); b.box(-0.7, 0.7, 4.3, 5.0, -0.7, 0.7, L3);
+      return [b.part({ roughness: 0.9 })]; }
     if (car === "sedan") {  // an everyday car for the traffic: a plain sedan in the colour given. Nose to +Z, wheels on y = 0
       const BODY = lin(stripe);
       b.hull([2.2, 0.82, 0.3, 0.7], [1.25, 0.88, 0.28, 0.86], BODY); b.hull([1.25, 0.88, 0.28, 0.86], [-1.7, 0.88, 0.28, 0.9], BODY); b.hull([-1.7, 0.88, 0.28, 0.9], [-2.2, 0.84, 0.32, 0.84], BODY);
@@ -10738,7 +10863,15 @@ const handle = async (m, post) => {
         return R.top + Math.min(Math.max(0, R.ridge - R.top), edge * 0.55); }
       return null; };
     // what the possum stands on there: the ground, the top of a street light, or a roof
+    // the roofs of the cars near the possum, found once a frame: the nearest parked car, the app's own cars and the traffic
+    // (Ash, 15 November 2026: "let the possum also get ontop of cars"): it runs up on to one like a low wall, and drops off the edge
+    let carTops = [];
+    const findCarTops = (x, z) => { const out = [], add = (cx, cz, h, bus) => { if (cx == null || h == null || Math.hypot(cx - x, cz - z) > 14) return; out.push({ x: cx, z: cz, s: Math.sin(h), c: Math.cos(h), hl: bus ? 6 : 2.25, hw: bus ? 1.25 : 0.95, top: ground(cx, cz) + (bus ? 3.3 : 1.45) }); };
+      const pc = m.nearestCar?.(x, z, 14); if (pc) add(pc.x, pc.z, pc.heading, false);
+      for (const G of owns) add(G.x, G.z, G.h, G.bus); for (const D of T.traffic?.cars || []) add(D.x, D.z, D.h, false);
+      carTops = out; };
     const surf = (x, z) => { let y = ground(x, z); const q = poleAt(x, z); if (q) y = Math.max(y, q.y + POLE_TOP);
+      for (const t of carTops) { const dx = x - t.x, dz = z - t.z; if (Math.abs(dx * t.s + dz * t.c) < t.hl && Math.abs(dx * t.c - dz * t.s) < t.hw) y = Math.max(y, t.top); }
       if (m.solidAt?.(x, z) || T.solid?.(x, z)) y = Math.max(y, roofAt(x, z) ?? m.groundAt(x, z) + 4.5);
       return y; };
     const pos = PS ? { x: PS.x, z: PS.z, h: PS.h, y: 0, p: 0, r: 0, v: 0, vy: 0, t: 0, mode: "ground", wall: null, jumped: false } : null;
@@ -10805,9 +10938,10 @@ const handle = async (m, post) => {
         P.v = 0; P.spin = 0; const [y, p, r] = lie(P, 2, 1.2); P.y = y; P.p = p; P.r = r;
         if (step) { F.pos.x = P.x + Math.cos(P.h) * 1.9; F.pos.z = P.z - Math.sin(P.h) * 1.9; F.yaw = P.h + Math.PI; F.pitch = -0.04; }  // out of the left door
         plane = null; showPlane(P); }
-      veh = null; car = null; plane = null; showKeys(null); C.in = false; F.drive = null; F.boost = false; F.hText = ""; F.vert = 0; F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.keys.clear();
+      veh = null; car = null; plane = null; window.anFast = false; showKeys(null); C.in = false; F.drive = null; F.boost = false; F.hText = ""; F.vert = 0; F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.keys.clear();
       document.body.classList.remove("bsdrive", "bsplane", "bspossum", "bsride"); boostBtn.hidden = true; boostBtn.textContent = "Boost"; handBtn.hidden = true; flipBtn.hidden = true; F.flip = false; handBtn.classList.remove("on"); F.hand = false; at = 0; C.frame(); };
-    const tick = dt0 => { const dt = Math.min(dt0, 0.1), k = F.keys, has = (...c) => c.some(x => k.has(x));
+    let camOff = null;  // where the view is from what you're in
+    const tick = dt0 => { window.anFast = veh === "plane" && !!plane?.air;  // up in a plane: Moorooka's model stops fetching its sharpest ground and building backyards (moorooka-model.js, patched) const dt = Math.min(dt0, 0.1), k = F.keys, has = (...c) => c.some(x => k.has(x));
       // flying the camera, a jump to a place or starting again has moved the view: that is getting out
       if (!T.walk || T.tween || BS.town !== T || Math.abs(F.pos.x - last[0]) + Math.abs(F.pos.y - last[1]) + Math.abs(F.pos.z - last[2]) > 1e-3) return leave(false);
       // looking round: the right stick, or a drag (which has already turned the view)
@@ -10870,7 +11004,7 @@ const handle = async (m, post) => {
         snd.set(0.18 + 0.82 * bsClamp((a - G[g]) / (top - G[g]), 0, 1), Math.abs(thr) > 0.05 && !brake ? 0.35 + 0.65 * Math.abs(thr) : 0.08, a, boosting, slide ? 1 : Math.min(1, Math.abs(wrap(car.h - car.dir)) * 2.5));
         showRing(boosting || charge < 0.999, boosting);
         o = car; D = (car.bus ? 15 : 7.5) + Math.min(5, a / 9); text = Math.round(a * 3.6) + " km/h";
-      } else if (veh === "possum") { const P = pos, run = has("ShiftLeft", "ShiftRight") || !!F.hand, top = R.possumTop / 3.6 * (run ? 1 + R.possumBoost / 100 : 1), jump = has("Space") || !!F.boost, drop = has("KeyC");  // (Boost: the button over Jump, or Shift)  // walking is 11 m/s: three times that, less a fifth (Ash, 15 November 2026: "speed down by 20%"); no boost, the button is Jump
+      } else if (veh === "possum") { findCarTops(pos.x, pos.z); const P = pos, run = has("ShiftLeft", "ShiftRight") || !!F.hand, top = R.possumTop / 3.6 * (run ? 1 + R.possumBoost / 100 : 1), jump = has("Space") || !!F.boost, drop = has("KeyC");  // (Boost: the button over Jump, or Shift)  // walking is 11 m/s: three times that, less a fifth (Ash, 15 November 2026: "speed down by 20%"); no boost, the button is Jump
         P.t += dt;
         // holding on to another player's plane or helicopter (Ash, 15 November 2026: "when a player is in the possum and a player is in
         // the plane that the possum can hold onto the plane"): it rides on top where it grabbed, until Jump springs it off
@@ -10915,7 +11049,7 @@ const handle = async (m, post) => {
           const dx = P.x - q.x, dz = P.z - q.z, along = dx * Math.sin(q.h) + dz * Math.cos(q.h), side = dx * Math.cos(q.h) - dz * Math.sin(q.h);
           if (Math.abs(along) < 3.4 && Math.abs(side) < 1.7 && P.y > q.y - 0.6 && P.y < q.y + CLING[q.k] + 1.5) {
             P.cling = { id: q.id, name: q.name, along: bsClamp(along, -2.4, 2.4), side: bsClamp(side, -0.5, 0.5), dh: wrap(P.h - q.h) }; P.v = 0;
-            T.peers?.ride?.(q.id, 2); toast(`Holding on to ${q.name}! Jump to let go.`, 2600); break; } }
+            T.peers?.ride?.(q.id, 2, [P.cling.along, P.cling.side, P.cling.dh].map(v => Math.round(v * 100) / 100)); toast(`Holding on to ${q.name}! Jump to let go.`, 2600); break; } }
         P.p += ((P.mode === "climb" ? 1.45 : P.mode === "air" ? bsClamp(P.vy * 0.03, -0.35, 0.35) : 0) - P.p) * Math.min(1, dt * 12); showPossum();
         const up = P.y - ground(P.x, P.z);
         hint(P.mode === "climb" ? (touch ? "Climbing. Stick forward to go up, back to let go" : "Climbing. W goes up, S lets go") : "");
@@ -10978,8 +11112,13 @@ const handle = async (m, post) => {
       const critter = veh === "possum" || (veh === "ride" && ride.k === "possum"), high = critter && o.y - ground(o.x, o.z) > 1.2;  // (the possum: close behind it, looking up a wall it is climbing)
       const yaw = camYaw + off[0], pitch = bsClamp((veh === "possum" && pos.mode === "climb" ? 0.3 : -0.2) + off[1], -1.2, 0.35), cp = Math.cos(pitch), sx = Math.sin(yaw) * cp, sz = Math.cos(yaw) * cp;
       if (!o.air && !high) while (D > 2.5 && (solid(o.x + sx * D, o.z + sz * D) || solid(o.x + sx * D * 0.55, o.z + sz * D * 0.55))) D -= 1.25;
-      const px = o.x + sx * D, pz = o.z + sz * D, py = Math.max(o.y + (veh === "ride" ? RIDE_UP[ride.k] : veh === "car" ? (car.bus ? 3.4 : 1.5) : critter ? 0.9 : 2.4) - Math.sin(pitch) * D, critter ? surf(px, pz) + 0.5 : ground(px, pz) + 0.7), e = Math.min(1, dt * (9 + Math.abs(o.v) / 6));
-      F.pos.x += (px - F.pos.x) * e; F.pos.y += (py - F.pos.y) * e; F.pos.z += (pz - F.pos.z) * e; F.yaw = yaw; F.pitch = pitch;
+      const px = o.x + sx * D, pz = o.z + sz * D, py = Math.max(o.y + (veh === "ride" ? RIDE_UP[ride.k] : veh === "car" ? (car.bus ? 3.4 : 1.5) : critter ? 0.9 : 2.4) - Math.sin(pitch) * D, critter ? surf(px, pz) + 0.5 : ground(px, pz) + 0.7);
+      // the view rides with what you're in and only eases its place round it (Ash, 15 November 2026: "When flying the plane it's a bit
+      // laggy/choppy": it used to ease after the plane itself, so at speed it fell back further on a slow frame than a quick one and
+      // the plane jumped about on the screen)
+      const e = 1 - Math.exp(-dt * 9), to = [px - o.x, py - o.y, pz - o.z];
+      if (!camOff || Math.hypot(F.pos.x - o.x - camOff[0], F.pos.z - o.z - camOff[2]) > 60) camOff = to; else for (let i = 0; i < 3; i++) camOff[i] += (to[i] - camOff[i]) * e;
+      F.pos.x = o.x + camOff[0]; F.pos.y = Math.max(o.y + camOff[1], (critter ? surf(F.pos.x, F.pos.z) + 0.5 : ground(F.pos.x, F.pos.z) + 0.7)); F.pos.z = o.z + camOff[2]; F.yaw = yaw; F.pitch = pitch;
       last = [F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch]; };
     // what is in reach of where you stand: a plane within 11 m, a parked car within 8 m, whichever is nearer
     const nearPlane = () => { let best = null, far = Infinity; for (const P of planes) { const d = Math.hypot(P.x - F.pos.x, P.z - F.pos.z); if (d < far) { far = d; best = P; } } return [best, far]; };
@@ -10995,7 +11134,7 @@ const handle = async (m, post) => {
     const RIDE_REACH = { car: 8, gold: 8, bus: 15, plane: 11, goldplane: 11, heli: 11, goldheli: 11, possum: 6 }, RIDE_BACK = { car: 7, gold: 7, bus: 13, plane: 15, goldplane: 15, heli: 14, goldheli: 14, possum: 3.6 },
       RIDE_UP = { car: 1.5, gold: 1.5, bus: 3.4, plane: 2.4, goldplane: 2.4, heli: 2.4, goldheli: 2.4, possum: 0.9 };
     let ride = null, shownRide = null;  // the player you're riding with: { id, name, k, at: [x, y, z, t] }; who the button last offered
-    const CLING = { plane: 1.95, goldplane: 1.95, heli: 2.05, goldheli: 2.05 };  // what the possum can hold on to, and how high its top is
+    const CLING = { plane: 1.95, goldplane: 1.95, heli: 2.05, goldheli: 2.05, car: 1.45, gold: 1.45, bus: 3.3 };  // (cars too: Ash, 15 November 2026, "let the possum also get ontop of cars")  // what the possum can hold on to, and how high its top is
     C.enter = () => { if (veh) { if (veh === "plane" && plane.heli && plane.air) return toast(touch ? "Land first: hold Down until it is on the ground." : "Land first: hold the up arrow (or C) until it is on the ground."), true;
       if (veh === "plane" && (plane.air || plane.v > 6)) return toast(touch ? "Land and stop first: pull the left stick back to slow down, and it comes down as it slows (or hold Dive)." : "Land and stop first: S slows the plane, and it comes down as it slows (or hold the up arrow)."), true; return leave(true), true; }
       if (!T.walk || T.tween) return false;
@@ -11013,7 +11152,7 @@ const handle = async (m, post) => {
         car = c.own ? { own: c.own, gold: c.own.gold, bus: c.own.bus, x: c.own.x, z: c.own.z, h: c.own.h, dir: c.own.h, y: c.own.y, p: c.own.p, r: c.own.r, v: 0, steer: 0 } : { id: c.id, bus: !!c.bus, x: c.x, z: c.z, h: c.heading, dir: c.heading, y: ground(c.x, c.z) + 0.05, p: 0, r: 0, v: 0, steer: 0 };
         if (!car.own && !m.driveCar(c.id[0], c.id[1], car.x, car.y, car.z, car.h, 0, 0)) { car = null; toast("That car won't start. Try another one."); return true; }
         veh = "car"; camYaw = car.h + Math.PI; document.body.classList.add("bsdrive"); showRing(charge < 0.999); }
-      C.in = true; off = [wrap(F.yaw - camYaw), bsClamp(F.pitch + 0.2, -1, 0.55)]; idle = 0; last = [F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch];
+      C.in = true; camOff = null; off = [wrap(F.yaw - camYaw), bsClamp(F.pitch + 0.2, -1, 0.55)]; idle = 0; last = [F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch];
       F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.vert = 0; F.boost = false; F.keys.clear(); F.drive = tick;
       btn.textContent = veh === "possum" ? "Hop out" : "Get out"; btn.hidden = false; handBtn.hidden = veh !== "car" && veh !== "possum"; handBtn.textContent = veh === "possum" ? "Boost" : "Handbrake"; handBtn.dataset.key = veh === "possum" ? "Shift" : "Space"; flipBtn.hidden = !(veh === "car" && car?.gold); boostBtn.hidden = veh === "ride" || (veh === "plane" && !canBoost(plane));
       boostBtn.textContent = veh === "possum" ? "Jump" : "Boost"; boostBtn.dataset.key = veh === "possum" ? "Space" : "Shift";
