@@ -1210,3 +1210,12 @@ a car but then move around as a possum not a car. Add a teleport to kingwell str
   golden car turns"): in the map's Settings > Cars and planes, as a % of the usual (20 to 400). They multiply how fast
   the car swings round for its speed and steering, apply straight away (`C.reread`), and leave the handbrake spin to its
   own settings.
+
+## Chat in the Emote menu, and a name for new players (15 November 2026)
+
+- **Chat is in the Emote menu** (Ash: "Move chat into emotes"): first, as "💬 Chat", across the top of it. The
+  separate Chat button is gone. T on a keyboard still opens it.
+- **New players are asked their name** (Ash: "When a player joins ask them their name or they can press skip to
+  automatically get one"): the first time someone opens Explore on a device, a box at the top asks "What should other
+  players call you?" with Join and Skip. Skip keeps the automatic "Player 123" name. It doesn't ask again
+  (`an-player-asked`), and the name can be changed in Settings.
