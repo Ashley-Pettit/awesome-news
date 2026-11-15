@@ -30,7 +30,7 @@ cur = json.load(open(path, encoding="utf-8"))
 num = lambda v: isinstance(v, (int, float)) and not isinstance(v, bool) and abs(v) < 1e6
 r2 = lambda v: round(float(v), 2)
 # what can be taken out, and (since 15 November 2026) put in: trees, parked cars and street lights, and published ones taken back out
-KINDS = (("cars", 2), ("trees", 2), ("people", 3), ("addTree", 2), ("addCar", 3), ("addLight", 3), ("noAdd", 2))
+KINDS = (("cars", 2), ("trees", 2), ("people", 3), ("addTree", 2), ("addCar", 3), ("addLight", 3), ("noAdd", 2), ("addSmallTree", 2), ("addBush", 2), ("addFlower", 2))
 for kind, _ in KINDS:
     cur["gone"].setdefault(kind, [])
 added = {"paint": 0, **{k: 0 for k, _ in KINDS}}

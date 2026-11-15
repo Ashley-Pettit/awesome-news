@@ -1431,3 +1431,27 @@ its usual one (Logan's places run out to Jimboomba).
   its floor; a low-set one keeps its door, step and small roof. Every house window has a hood in the roof's colour over its white
   frame, as Moorooka's older houses do (`moorooka-model.js`, `?v=32`). On foot in Bohain Street, sharpest setting: 1,849,106
   triangles before any of this, 1,960,030 with the stairs, 1,905,010 now (+3%).
+
+## Ash says hello, the possum (golden possum, walking, planting, roofs, tree tops), more to plant, people off the roads (15 November 2026)
+
+- **Ash at number 6** (Ash: "Make ash at 6 Beaudesert talk to the person"): the first time you walk up, a speech bubble over him
+  for 16 seconds: "Welcome to 3D Moorooka! If you like, send me a photo of your house on Facebook and I'll update it to look like
+  the real thing. Other players can join you as you explore Moorooka."
+- **The possum walks** (Ash: "Decrease how fast the possum turns by 30, make him walk more like a human and less like a car"): it
+  turns 30% slower, goes the way the stick points straight away while it turns to face it (`P.mh`), and the view no longer
+  swings round behind it (only while it climbs).
+- **The golden possum** (Ash: "If the possum goes in the pool at 6 Beaudesert Rd turn him into the golden possum who is faster
+  and can jump higher and also can do a 360 in the air"): into number 6's pool and out it comes gold, 40% faster, jumping half as
+  high again, and Jump again in the air does a somersault with a little more lift (`POOL6`, `goldPossum`, the possum's parts in
+  gold).
+- **Roofs** (Ash: "The possum falls through lots of roofs"): the possum's roofs now rise at the pitch the model draws them (each
+  roof's rise over the distance from its middle to its nearest wall), not a fixed shallow slope, so it is on the roof, not in it.
+- **Tree tops** (Ash: "Make the possum able to be ontop of the green part of the tree"): up the trunk it comes out on top of the
+  crown, and can run about up there across the crown's width before it drops off.
+- **Planting** (Ash: "more options of things to plant like flowers or small trees or bushes", and for the possum "also plant
+  trees or bushes or flowers"): Small tree, Bush and Flowers tools beside Tree for construction workers (`addSmallTree`, `addBush`,
+  `addFlower` in `edits.json`; `tools/town/add_edits.py` takes them), and the possum has a Plant button (G) with Flowers, A bush,
+  A small tree and A tree, planted just in front of it into your map edits.
+- **People off the roads** (Ash: "The people in moorooka are a bit too dumb, always on roads"): Moorooka's walkers keep 1.1 m
+  further out from the kerb (3.2 m where a street has no footpath of record), and are not drawn within half a road's width plus
+  1.7 m of a street's centre line (was 0.6 m) (`moorooka-model.js`, `?v=33`, patched in the walkers' class `G1` and the skip test).

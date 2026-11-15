@@ -1351,6 +1351,7 @@ body.bspossum .bs-fly-x.bs-boost.on { background: #ffd166; }
 .bs-peer[hidden] { display: none; }
 /* what a player has just said: a white speech bubble over them, their name small on top, for about 30 s */
 .bs-peer.said { max-width: 220px; padding: 7px 11px 8px; border-radius: 14px; background: #fff; color: #1b1830; font: 600 0.82rem/1.3 var(--ui); white-space: normal; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25); }
+.bs-peer.said.bs-ashsay { max-width: 250px; }
 .bs-peer.said.top { left: 50%; top: calc(112px + env(safe-area-inset-top)); transform: translateX(-50%) !important; max-width: min(320px, calc(100% - 32px)); }
 .bs-peer.said.top::after { display: none; }
 .bs-peer.said b { display: block; font-size: 0.66rem; font-weight: 700; color: #5b6070; }
@@ -1373,6 +1374,12 @@ body.bspossum .bs-fly-x.bs-boost.on { background: #ffd166; }
 @media (prefers-reduced-motion: reduce) { .bs-locktip { animation: none; } }
 /* the controls list says what the keys do on foot, so the older tip line is not shown under it */
 body.bstown:has(#bsKeys:not([hidden])) #bsFlyTip { display: none !important; }
+/* the possum's Plant button and its four choices, above the stick's row, in the middle */
+.bs-fly-x.bs-plant { position: absolute; left: 50%; right: auto; top: auto; bottom: calc(116px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: #4f8a3a; color: #fff; }
+.bs-fly-x.bs-plant[hidden], .bs-plantmenu[hidden] { display: none; }
+.bs-plantmenu { pointer-events: auto; position: absolute; z-index: 5; left: 50%; bottom: calc(166px + env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; width: min(340px, calc(100% - 32px)); }
+.bs-plantmenu button { min-height: 44px; padding: 0 14px; border: 0; border-radius: 999px; background: rgba(22, 24, 34, 0.86); color: #fff; font: 700 0.84rem var(--ui); cursor: pointer; }
+.bs-plantmenu button:focus-visible { outline: 2px solid #ffd166; outline-offset: 2px; }
 /* camera mode (?, on a computer): every button hidden for a clean view, and a line saying how to bring them back */
 body.bscam #bsFly > *:not(#bsTown):not(#bsCamTip):not(canvas) { visibility: hidden !important; }
 body.bscam #bsTown .bs-review, body.bscam #bsTown .bs-ridecard { visibility: hidden !important; }
@@ -2061,7 +2068,7 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <div class="bs-town-list bs-town-floods" id="bsTownFloods" role="menu" aria-label="Floods to show on the map" hidden></div>
     <div class="bs-slides" role="group" aria-label="Street names, tide, time and flood"><button class="bs-fly-x bs-ic" type="button" id="bsNamesBtn" data-key="N" aria-pressed="false" aria-label="Street names" title="Show street names (N)" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M9 21h6"/><path d="M5 5h11l3 2.5L16 10H5z"/><path d="M19 12H8l-3 2.5L8 17h11z"/></svg></button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false" aria-label="Time of day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span id="bsTimeBtnT">Time</span></button><button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" data-key="L" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button></div>
     <div class="bs-admin" id="bsAdmin" role="toolbar" aria-label="Edit the map" hidden>
-      <div class="bs-admin-row" role="group" aria-label="Tool"><button type="button" data-tool="path" aria-pressed="false"><i style="background:#cfcabd"></i>Path</button><button type="button" data-tool="grass" aria-pressed="false"><i style="background:#6fa64b"></i>Grass</button><button type="button" data-tool="road" aria-pressed="false"><i style="background:#4a4d52"></i>Road</button><button type="button" data-tool="tree" aria-pressed="false"><i style="background:#4c7a33;border-radius:50%"></i>Tree</button><button type="button" data-tool="car" aria-pressed="false"><i style="background:#2d5ea8;border-radius:3px"></i>Car</button><button type="button" data-tool="light" aria-pressed="false"><i style="background:#8e9396;width:4px"></i>Light</button><button type="button" data-tool="delete" aria-pressed="false">Delete</button></div>
+      <div class="bs-admin-row" role="group" aria-label="Tool"><button type="button" data-tool="path" aria-pressed="false"><i style="background:#cfcabd"></i>Path</button><button type="button" data-tool="grass" aria-pressed="false"><i style="background:#6fa64b"></i>Grass</button><button type="button" data-tool="road" aria-pressed="false"><i style="background:#4a4d52"></i>Road</button><button type="button" data-tool="tree" aria-pressed="false"><i style="background:#4c7a33;border-radius:50%"></i>Tree</button><button type="button" data-tool="small" aria-pressed="false"><i style="background:#6a9f48;border-radius:50%;transform:scale(.7)"></i>Small tree</button><button type="button" data-tool="bush" aria-pressed="false"><i style="background:#3f7a3a;border-radius:40%"></i>Bush</button><button type="button" data-tool="flowers" aria-pressed="false"><i style="background:#e0567a;border-radius:50%"></i>Flowers</button><button type="button" data-tool="car" aria-pressed="false"><i style="background:#2d5ea8;border-radius:3px"></i>Car</button><button type="button" data-tool="light" aria-pressed="false"><i style="background:#8e9396;width:4px"></i>Light</button><button type="button" data-tool="delete" aria-pressed="false">Delete</button></div>
       <div class="bs-admin-row"><span class="bs-admin-w" id="bsAdminW" role="group" aria-label="Width" hidden><button type="button" data-w="-1" aria-label="Narrower">&minus;</button><output id="bsAdminWOut"></output><button type="button" data-w="1" aria-label="Wider">+</button></span><button type="button" id="bsAdminLine" aria-pressed="true" hidden>Straight</button><button type="button" class="bs-admin-ic" id="bsAdminUndo" aria-label="Undo" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5 4 9l4 4"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button><button type="button" id="bsAdminSave" aria-label="Save my edits for everyone">Save</button><button type="button" id="bsAdminCopy" aria-label="Copy edits">Copy</button><button type="button" class="bs-admin-ic" id="bsAdminClear" aria-label="Clear all my edits" title="Clear all my edits"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 7V4h4v3M6 7l1 13h10l1-13"/></svg></button></div>
       <p class="bs-admin-note" id="bsAdminNote" role="status"></p>
     </div>
@@ -7978,6 +7985,7 @@ const handle = async (m, post) => {
         if (e.ctrlKey && e.code === "F9" && F.hot?.gold?.()) { e.preventDefault(); return; }
         // Settings, Share and Flood on a keyboard (Ash, 15 November 2026: "Needs a btn to get into settings or share or flood"): M, P and
         // L, which free the mouse first when it is looking around
+        if (e.code === "KeyG" && !e.ctrlKey && !e.metaKey && BS.town?.car?.plantMenu?.()) { e.preventDefault(); return; }  // the possum's Plant
         if (!e.ctrlKey && !e.metaKey && !e.altKey && /^Key[MPL]$/.test(e.code)) { const b = $({ KeyM: "bsMeBtn", KeyP: "bsShareBtn", KeyL: "bsTownFlood" }[e.code]);
           if (b && !b.hidden && b.getClientRects().length) { if (document.pointerLockElement) document.exitPointerLock?.(); b.click(); e.preventDefault(); return; } }
         if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.code === "KeyZ" && F.hot?.undo?.()) { e.preventDefault(); return; }  // admin mode, with its bar open: undo the last edit
@@ -8271,7 +8279,7 @@ const handle = async (m, post) => {
   // of: "Logan"), floodNote (the line under the list) and floodWarn (show the not-official notice first, and a banner while a flood is on).
   const TOWNS = {
     inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=20", assets: TOWN3D, place: "inv", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
-    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=32", assets: TOWN3D + "moorooka/", place: "moo", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
+    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=33", assets: TOWN3D + "moorooka/", place: "moo", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
       walkStart: { x: -269.8, z: -991.4, yaw: -1.623 },  // Ash's pick for where Moorooka starts: the Beaudesert Road footpath, looking at the house he chose
       // its floods: widest over the Oxley Creek flats along the model's western edge, seen from the east. floodWarn: the not-official notice has to be accepted
       // before the list opens, and a banner says the same while a flood is showing (Ash asked for both).
@@ -9690,7 +9698,9 @@ const handle = async (m, post) => {
     // what can be taken out (cars, trees, people) and, since 15 November 2026, put in: trees, parked cars and street lights, and
     // published ones taken back out (noAdd) (Ash: "Add more features to be able to add or remove etc to the construction worker").
     // Each is a list of points: [x, z], or [x, z, heading]
-    const GONE_N = { cars: 2, trees: 2, people: 3, addTree: 2, addCar: 3, addLight: 3, noAdd: 2 };
+    // (and since later on 15 November 2026, small trees, bushes and flowers: Ash, "more options of things to plant like flowers or
+    // small trees or bushes")
+    const GONE_N = { cars: 2, trees: 2, people: 3, addTree: 2, addCar: 3, addLight: 3, noAdd: 2, addSmallTree: 2, addBush: 2, addFlower: 2 };
     const blank = () => ({ v: 1, paint: [], gone: Object.fromEntries(Object.keys(GONE_N).map(k => [k, []])) });
     const tidy = o => { const b = blank(); if (!o || typeof o !== "object") return b;
       for (const s of Array.isArray(o.paint) ? o.paint : []) if (s && [1, 2, 3].includes(s.k) && s.w > 0 && s.w <= 40 && Array.isArray(s.p) && s.p.length >= 2 && s.p.length % 2 === 0 && s.p.every(Number.isFinite)) b.paint.push({ k: s.k, w: +s.w, p: s.p.map(r2) });
@@ -9709,12 +9719,15 @@ const handle = async (m, post) => {
     // the trees, parked cars and street lights put in, drawn by the app (each its own small mesh; at most 300), redrawn when they change
     let addMesh = [], addKey = "";
     const drawAdds = L => { const no = L.flatMap(e => e.gone.noAdd), keep = g => !no.some(q => Math.hypot(q[0] - g[0], q[1] - g[1]) < 1.2);
-      const items = [...L.flatMap(e => e.gone.addTree).filter(keep).map(g => ["tree", g]), ...L.flatMap(e => e.gone.addCar).filter(keep).map(g => ["car", g]), ...L.flatMap(e => e.gone.addLight).filter(keep).map(g => ["light", g])].slice(0, 300);
+      const items = [...L.flatMap(e => e.gone.addTree).filter(keep).map(g => ["tree", g]), ...L.flatMap(e => e.gone.addCar).filter(keep).map(g => ["car", g]), ...L.flatMap(e => e.gone.addLight).filter(keep).map(g => ["light", g]),
+        ...L.flatMap(e => e.gone.addSmallTree).filter(keep).map(g => ["small", g]), ...L.flatMap(e => e.gone.addBush).filter(keep).map(g => ["bush", g]), ...L.flatMap(e => e.gone.addFlower).filter(keep).map(g => ["flowers", g])].slice(0, 400);
       const k = JSON.stringify(items); if (k === addKey) return; addKey = k; addMesh.forEach(h => { try { h.remove(); } catch {} }); addMesh = [];
-      const THREE = BS.B.THREE, M4 = new THREE.Matrix4(), Q4 = new THREE.Quaternion(), E4 = new THREE.Euler(), V4 = new THREE.Vector3(), ONE4 = new THREE.Vector3(1, 1, 1), COLS = ["#f2f2ee", "#b8bcc2", "#2d5ea8", "#a8262c", "#5c6670", "#3f6b4a"];
-      for (const [kind, g] of items) { const y = m.groundAt(g[0], g[1]), parts = kind === "tree" ? townPlaneParts(undefined, "tree") : kind === "car" ? townPlaneParts(COLS[Math.abs(Math.round(g[0] * 7 + g[1] * 3)) % COLS.length], "sedan") : townPlaneParts(undefined, "lightpole");
-        const mx = M4.compose(V4.set(g[0], y, g[1]), Q4.setFromEuler(E4.set(0, g[2] || 0, 0, "YXZ")), ONE4).elements.slice();
+      const THREE = BS.B.THREE, M4 = new THREE.Matrix4(), Q4 = new THREE.Quaternion(), E4 = new THREE.Euler(), V4 = new THREE.Vector3(), ONE4 = new THREE.Vector3(1, 1, 1), V4b = new THREE.Vector3(), COLS = ["#f2f2ee", "#b8bcc2", "#2d5ea8", "#a8262c", "#5c6670", "#3f6b4a"];
+      for (const [kind, g] of items) { const y = m.groundAt(g[0], g[1]), parts = kind === "tree" || kind === "small" ? townPlaneParts(undefined, "tree") : kind === "car" ? townPlaneParts(COLS[Math.abs(Math.round(g[0] * 7 + g[1] * 3)) % COLS.length], "sedan") : kind === "bush" || kind === "flowers" ? townPlaneParts("m" + Math.abs(Math.round(g[0] * 13 + g[1] * 7)) % 5, kind) : townPlaneParts(undefined, "lightpole");
+        const sc = kind === "small" ? 0.55 : 1, mx = M4.compose(V4.set(g[0], y, g[1]), Q4.setFromEuler(E4.set(0, g[2] ?? (g[0] * 3.1 + g[1]) % 6.28, 0, "YXZ")), V4b.set(sc, sc, sc)).elements.slice();
         try { addMesh.push(m.addParts(parts.map(q => ({ ...q, matrix: mx })))); } catch {} } };
+    // planting from outside the tools (the possum): into your own edits, as if tapped with the tool
+    A.plant = (kind, x, z) => { if (!GONE_N[kind]) return false; mine.gone[kind].push([r2(x), r2(z)]); ops.push({ gone: kind }); save(); apply(); count(); return true; };
     A.adds = () => layers().flatMap(e => [...e.gone.addTree, ...e.gone.addCar]);  // (the possum and the cars could use them later)
     const apply = () => { const L = layers(); drawAdds(L); m.setGroundEdits([...L.flatMap(e => e.paint), ...(draft ? [draft] : [])]);
       m.setRemoved({ cars: [...L.flatMap(e => e.gone.cars), ...(T.hideCars || [])], trees: L.flatMap(e => e.gone.trees), people: L.flatMap(e => e.gone.people) }); };
@@ -9739,7 +9752,8 @@ const handle = async (m, post) => {
     const TOOLS = { path: { k: 3, w: 1.3, min: 0.6, max: 5, step: 0.1, straight: true, col: "#e8e3d6", say: "Drag to lay a footpath." },
       grass: { k: 1, w: 2.5, min: 0.6, max: 14, step: 0.5, straight: false, col: "#8fd06a", say: "Drag to paint grass." },
       road: { k: 2, w: 6, min: 2, max: 16, step: 0.5, straight: true, col: "#9aa0a8", say: "Drag to lay a road." },
-      tree: { put: "addTree", say: "Tap the ground to plant a tree." }, car: { put: "addCar", say: "Tap the ground to park a car, facing the way you're looking." },
+      tree: { put: "addTree", say: "Tap the ground to plant a tree." }, small: { put: "addSmallTree", say: "Tap the ground to plant a small tree." },
+      bush: { put: "addBush", say: "Tap the ground to plant a bush." }, flowers: { put: "addFlower", say: "Tap the ground to plant a bed of flowers." }, car: { put: "addCar", say: "Tap the ground to park a car, facing the way you're looking." },
       light: { put: "addLight", say: "Tap the ground to stand a street light, its arm reaching the way you're looking." },
       delete: { say: "Tap a parked car, a tree, a person, a street light you put in, or one of your own strokes." } };
     let pref = {}; try { pref = JSON.parse(localStorage.getItem("an3d-admin") || "{}") || {}; } catch {}
@@ -9778,7 +9792,7 @@ const handle = async (m, post) => {
       return -1; };
     const takeOut = (cx, cy) => { const g0 = m.groundUnder(cx, cy);
       // something put in (a tree, car or street light): one of yours goes; a published one is taken back out
-      if (g0) { for (const kind of ["addTree", "addCar", "addLight"]) { const r = kind === "addCar" ? 2.6 : kind === "addTree" ? 1.8 : 1.2;
+      if (g0) { for (const kind of ["addTree", "addCar", "addLight", "addSmallTree", "addBush", "addFlower"]) { const r = kind === "addCar" ? 2.6 : kind === "addTree" ? 1.8 : 1.2;
           const i = mine.gone[kind].findIndex(q => Math.hypot(q[0] - g0.x, q[1] - g0.z) < r); if (i >= 0) { mine.gone[kind].splice(i, 1); save(); apply(); count(); return say("Taken out.", 2000); }
           const o = layers().filter(e => e !== mine).flatMap(e => e.gone[kind]).find(q => Math.hypot(q[0] - g0.x, q[1] - g0.z) < r);
           if (o) { mine.gone.noAdd.push([o[0], o[1]]); ops.push({ gone: "noAdd" }); save(); apply(); count(); return say("Taken out.", 2000); } } }
@@ -9810,7 +9824,7 @@ const handle = async (m, post) => {
       if (TOOLS[A.tool].put) { if (Math.hypot(e.clientX - p.sx, e.clientY - p.sy) >= 12) return true;  // a tap puts one in; a drag moves the view
         const g = m.groundUnder(e.clientX, e.clientY); if (!g) { say("That missed the ground.", 2000); return true; }
         const kind = TOOLS[A.tool].put, h = r2(BS.fly.yaw + Math.PI); mine.gone[kind].push(kind === "addTree" ? [r2(g.x), r2(g.z)] : [r2(g.x), r2(g.z), h]); ops.push({ gone: kind });
-        save(); apply(); count(); say({ addTree: "Tree planted.", addCar: "Car parked.", addLight: "Street light up." }[kind] + " Undo takes it back.", 2500); return true; }
+        save(); apply(); count(); say({ addTree: "Tree planted.", addSmallTree: "Small tree planted.", addBush: "Bush planted.", addFlower: "Flowers planted.", addCar: "Car parked.", addLight: "Street light up." }[kind] + " Undo takes it back.", 2500); return true; }
       draft = null; let pts = p.pts ? (straight() ? p.pts : thin(p.pts)).map(r2) : null;
       if (pts && length(pts) < 0.4) pts = A.tool === "grass" ? pts.slice(0, 2) : null;  // a tap: a dot of grass, or nothing
       if (pts) { mine.paint.push({ k: TOOLS[A.tool].k, w: width(), p: pts }); ops.push({ paint: 1 }); save(); count(); }
@@ -10607,6 +10621,15 @@ const handle = async (m, post) => {
     const LAWN = { x: -252.6, z: -997.2, r: 1.7 };  // Arlo's bit of number 6's front lawn
     const ap = m.addParts(townPlaneParts("#e2b47c", "arlo").map(q => ({ ...q, matrix: FAR.slice() })));
     let dogShown = false, last = performance.now(), t = 0;
+    // Ash says hello the first time you walk up to number 6 (Ash, 15 November 2026: "Make ash at 6 Beaudesert talk to the person"):
+    // a speech bubble over him for 16 seconds
+    const say = document.createElement("div"); say.className = "bs-peer said bs-ashsay"; say.hidden = true; ($("bsTown") || document.body).appendChild(say);
+    say.innerHTML = "<b>Welcome to 3D Moorooka!</b><br>If you like, send me a photo of your house on Facebook and I'll update it to look like the real thing.<br>Other players can join you as you explore Moorooka.";
+    let sayT = -1, said = false;
+    const sayAt = q => { const cam = m.getCamera?.(), box = $("bsTown"); if (!cam || !box) return say.hidden = true;
+      const w = box.clientWidth, h = box.clientHeight, f = 1 / Math.tan(((m.fov ? m.fov() : 50) * Math.PI) / 360), cp = Math.cos(cam.pitch), fx = -Math.sin(cam.yaw) * cp, fy = Math.sin(cam.pitch), fz = -Math.cos(cam.yaw) * cp, rx = Math.cos(cam.yaw), rz = -Math.sin(cam.yaw), ux = -fy * rz, uy = rz * fx - rx * fz, uz = fy * rx;
+      const ax = q.x - cam.x, ay = g(q.x, q.z) + 2.1 - cam.y, az = q.z - cam.z, depth = ax * fx + ay * fy + az * fz; if (depth < 1) return say.hidden = true;
+      say.hidden = false; say.style.transform = `translate(${Math.round(w / 2 + (ax * rx + az * rz) / depth * f * (h / 2))}px, ${Math.round(h / 2 - (ax * ux + ay * uy + az * uz) / depth * f * (h / 2))}px) translate(-50%, -100%)`; };
     const dog = { x: LAWN.x + LAWN.r, z: LAWN.z, h: 0, to: null, rest: 1.5, wag: 0 };
     const draw = (q, arm) => { M.compose(V.set(q.x, g(q.x, q.z), q.z), Q.setFromEuler(E.set(0, q.look, 0, "YXZ")), ONE); q.parts.setMatrix(0, M.elements.slice());
       q.parts.setMatrix(1, M.clone().multiply(SH[0]).multiply(R.makeRotationZ(-arm)).elements); q.parts.setMatrix(2, M.clone().multiply(SH[1]).multiply(R.makeRotationZ(0.06)).elements); };
@@ -10620,7 +10643,8 @@ const handle = async (m, post) => {
         // turns to you as you come up (within 14 m, on foot), and waves the first time
         const want = d < 14 && T.walk ? Math.atan2(dx, dz) : q.yaw, turn = wrap(want - q.look);
         if (Math.abs(turn) > 0.01) { q.look += turn * Math.min(1, dt * 3); me = true; }
-        if (d < 12 && T.walk && !q.waved) { q.waved = true; q.waveT = 0; } else if (d > 25) q.waved = false;
+        if (d < 12 && T.walk && !q.waved) { q.waved = true; q.waveT = 0; if (q.kind === "ash" && !said) { said = true; sayT = 0; } } else if (d > 25) q.waved = false;
+        if (q.kind === "ash") { if (sayT >= 0 && (sayT += dt) < 16 && d < 40) sayAt(q); else { if (sayT >= 16) sayT = -1; say.hidden = true; } }
         let arm = 0.06; if (q.waveT >= 0) { q.waveT += dt; const k = Math.min(1, q.waveT * 4, (2.4 - q.waveT) * 4); arm = 0.06 + k * (2.5 + 0.35 * Math.sin(q.waveT * 11)); me = true; if (q.waveT > 2.4) q.waveT = -1; }
         if (me) draw(q, arm); }
       // Arlo: a few steps across the lawn, a sniff, then off again (only moved while he moves); his tail goes when you're near
@@ -10634,7 +10658,7 @@ const handle = async (m, post) => {
       else if (d < 7 && T.walk) { const hw = wrap(Math.atan2(F.pos.x - dog.x, F.pos.z - dog.z) - dog.h); if (Math.abs(hw) > 0.02) { dog.h += hw * Math.min(1, dt * 4); pet = true; } }
       const wag = d < 9 ? 0.5 * Math.sin(t * 16) : 0; if (wag || dog.wag) pet = true; dog.wag = wag;
       if (pet) drawDog(wag); };
-    P.dispose = () => { for (const q of folk) try { q.parts.remove(); } catch {} try { ap.remove(); } catch {} };
+    P.dispose = () => { say.remove(); for (const q of folk) try { q.parts.remove(); } catch {} try { ap.remove(); } catch {} };
     return P;
   }
   function townPlaneParts(stripe = "#1f6fb2", car = false) {
@@ -10684,8 +10708,9 @@ const handle = async (m, post) => {
     }
     if (car === "possum") {  // a common brushtail possum: silver-grey, cream underneath, big dark eyes, tall rounded ears, a bushy tail
       // black for most of its length; about 0.45 m nose to rump and 0.4 m of tail, drawn a third bigger so it reads from behind. Feet on y = 0, facing +Z
-      const FUR = [lin("#86827e"), lin("#77736f"), lin("#918d88")], BACK = [lin("#6a6662"), lin("#5d5955")], CREAM = [lin("#e9dfcf"), lin("#ddd0bb")], FACE = [lin("#9a9691"), lin("#8b8782")],
-        BLACK = [lin("#1d1b1a"), lin("#282524"), lin("#151413")], DARK = lin("#3a3633"), PINK = lin("#d99a95"), EAR = lin("#c98d88"), EYE = lin("#0d0c0c");
+      const G = stripe === "gold";  // the golden possum (out of number 6's pool)
+      const FUR = G ? [lin("#e8b923"), lin("#d9a520"), lin("#f0c63a")] : [lin("#86827e"), lin("#77736f"), lin("#918d88")], BACK = G ? [lin("#c9961a"), lin("#b88a17")] : [lin("#6a6662"), lin("#5d5955")], CREAM = G ? [lin("#fff1c4"), lin("#f5e2a8")] : [lin("#e9dfcf"), lin("#ddd0bb")], FACE = G ? [lin("#efc23a"), lin("#e0b02a")] : [lin("#9a9691"), lin("#8b8782")],
+        BLACK = G ? [lin("#a8790f"), lin("#b8860b"), lin("#946a0c")] : [lin("#1d1b1a"), lin("#282524"), lin("#151413")], DARK = lin("#3a3633"), PINK = lin("#d99a95"), EAR = lin("#c98d88"), EYE = lin("#0d0c0c");
       ball(b, 0, 0.17, -0.03, 0.11, 0.095, 0.2, FUR, 31, 8, 5, 0.12);  // body
       ball(b, 0, 0.215, -0.05, 0.08, 0.05, 0.16, BACK, 32, 7, 3, 0.1);  // the darker back
       ball(b, 0, 0.125, 0.0, 0.08, 0.055, 0.15, CREAM, 33, 7, 3, 0.08);  // belly
@@ -10778,6 +10803,15 @@ const handle = async (m, post) => {
       b.quad([-1.264, 0.5, 3.0], [-1.264, 0.5, 4.3], [-1.264, 2.6, 4.3], [-1.264, 2.6, 3.0], DARK);  // the door
       return [b.part({ roughness: 0.45 })];
     }
+    if (car === "bush") {  // a bush a construction worker (or the possum) plants: a rounded lump of leaves about 1 m tall. stripe: which green
+      const L = [["#3f7a3a", "#4f8d45"], ["#557f2f", "#6a9640"], ["#2f6a45", "#3f7d55"], ["#4d7f3a", "#5f9448"], ["#6a8a3a", "#7d9f4a"]][(+String(stripe).slice(1) || 0) % 5];
+      b.box(-0.55, 0, -0.5, 0.55, 0.7, 0.5, lin(L[0])); b.box(-0.42, 0.7, -0.4, 0.42, 1.0, 0.4, lin(L[1])); b.box(-0.35, 0.25, -0.62, 0.3, 0.75, 0.62, lin(L[1]));
+      return [b.part({ roughness: 0.95 })]; }
+    if (car === "flowers") {  // a small bed of flowers: dark soil, green leaves and a dozen flower heads in one of five mixes. stripe: which mix
+      const MIX = [["#e0567a", "#f2d14b", "#ffffff"], ["#7a4fc9", "#e98bd0", "#ffffff"], ["#e8452e", "#f29a2e", "#f2d14b"], ["#3f7fe0", "#ffffff", "#f2d14b"], ["#d6336c", "#ff8fb1", "#f6c8d8"]][(+String(stripe).slice(1) || 0) % 5].map(lin);
+      b.box(-0.6, 0, -0.45, 0.6, 0.08, 0.45, lin("#4a3626")); b.box(-0.55, 0.08, -0.4, 0.55, 0.26, 0.4, lin("#4f8a3a"));
+      for (let i = 0; i < 12; i++) { const x = -0.45 + (i % 4) * 0.3 + (i % 2 ? 0.05 : -0.04), z = -0.28 + Math.floor(i / 4) * 0.28, h = 0.32 + ((i * 7) % 5) * 0.03; b.box(x - 0.06, h, z - 0.06, x + 0.06, h + 0.1, z + 0.06, MIX[i % 3]); }
+      return [b.part({ roughness: 0.8 })]; }
     if (car === "tree") {  // a tree a construction worker plants: a trunk and a stepped, leafy crown. Trunk on y = 0
       const BARK = lin("#7a5b3f"), L1 = lin("#4c7a33"), L2 = lin("#5b8d3e"), L3 = lin("#6a9f48");
       b.box(-0.15, 0.15, 0, 2.3, -0.15, 0.15, BARK); b.box(-1.6, 1.6, 2.0, 3.3, -1.6, 1.6, L1); b.box(-1.25, 1.25, 3.3, 4.3, -1.25, 1.25, L2); b.box(-0.7, 0.7, 4.3, 5.0, -0.7, 0.7, L3);
@@ -10905,8 +10939,12 @@ const handle = async (m, post) => {
           const ex = ax - bx, ez = az - bz, t = bsClamp(((x - bx) * ex + (z - bz) * ez) / (ex * ex + ez * ez || 1), 0, 1); edge = Math.min(edge, Math.hypot(x - bx - ex * t, z - bz - ez * t)); }
         if (!inn) continue;
         if (R.top == null) { let lo = Infinity, hi = -Infinity, cx = 0, cz = 0; for (let i = 0; i < n; i++) { const g = m.groundAt(p[i * 2], p[i * 2 + 1]); lo = Math.min(lo, g); hi = Math.max(hi, g); cx += p[i * 2] / n; cz += p[i * 2 + 1] / n; }
-          const g = Math.min(hi, Math.max(lo, m.groundAt(cx, cz))) + 0.1; R.top = Math.max(R.eave, g + 2.4, hi + 1.5); }  // the walls' height, as the model raises them
-        return R.top + Math.min(Math.max(0, R.ridge - R.top), edge * 0.55); }
+          const g = Math.min(hi, Math.max(lo, m.groundAt(cx, cz))) + 0.1; R.top = Math.max(R.eave, g + 2.4, hi + 1.5);  // the walls' height, as the model raises them
+          // and the roof's pitch as the model draws it: its rise over half its width (the middle's distance to the nearest wall), so the
+          // possum stands on the roof and not inside it (Ash, 15 November 2026: "The possum falls through lots of roofs")
+          let ec = Infinity; for (let i = 0, j = n - 1; i < n; j = i++) { const ax = p[j * 2], az = p[j * 2 + 1], bx = p[i * 2], bz = p[i * 2 + 1], ex = ax - bx, ez = az - bz, t = bsClamp(((cx - bx) * ex + (cz - bz) * ez) / (ex * ex + ez * ez || 1), 0, 1); ec = Math.min(ec, Math.hypot(cx - bx - ex * t, cz - bz - ez * t)); }
+          const rise = R.ridge - R.top < 0.7 ? 0 : Math.min(Math.max(R.ridge - R.top, 0.6), ec * 0.95); R.rise = rise; R.k = ec > 0.3 ? rise / ec : 0; }
+        return R.top + 0.05 + Math.min(R.rise, edge * R.k); }
       return null; };
     // the trees, for the possum to climb (Ash, 15 November 2026: "Make the trees climbable"): every tree of 3 m or more from
     // town.json (x, z in quarter metres, height in decimetres), in 20 m squares, loaded with the roofs. It goes up the trunk like a
@@ -10916,9 +10954,12 @@ const handle = async (m, post) => {
       townStreetData(T.cfg).then(d => { const s = d.town?.trees; if (typeof s !== "string") return; const b = atob(s), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i);
         const A = new Int16Array(u.buffer, 0, u.length >> 1);
         for (let i = 0; i + 2 < A.length; i += 3) { const x = A[i] / 4, z = A[i + 1] / 4, h = (A[i + 2] & 255) / 10; if (h < 3) continue; const key = Math.floor(x / 20) * 65536 + Math.floor(z / 20);
-          let L = treeCells.get(key); if (!L) treeCells.set(key, L = []); L.push({ x, z, y: null, top: h * 0.8 }); } }).catch(() => {}); };
-    const treeAt = (x, z, r = 0.55) => { if (!treeCells) return null; const cx = Math.floor(x / 20), cz = Math.floor(z / 20);
-      for (let a = -1; a <= 1; a++) for (let c = -1; c <= 1; c++) for (const t of treeCells.get((cx + a) * 65536 + cz + c) || []) if (Math.abs(t.x - x) < r && Math.abs(t.z - z) < r && Math.hypot(t.x - x, t.z - z) < r) { if (t.y == null) t.y = m.groundAt(t.x, t.z); return t; }
+          let L = treeCells.get(key); if (!L) treeCells.set(key, L = []); L.push({ x, z, y: null, top: h * 0.97, cr: Math.max(1.3, h * 0.3) }); } }).catch(() => {}); };
+    // (up on top, the whole crown is somewhere to stand: Ash, 15 November 2026, "Make the possum able to be ontop of the green part
+    // of the tree". From the ground only the trunk counts, so it climbs the trunk rather than the air beside it)
+    const treeAt = (x, z, r = 0.55, high = null) => { if (!treeCells) return null; const cx = Math.floor(x / 20), cz = Math.floor(z / 20);
+      for (let a = -1; a <= 1; a++) for (let c = -1; c <= 1; c++) for (const t of treeCells.get((cx + a) * 65536 + cz + c) || []) { const rr = high == null ? r : t.cr;
+        if (Math.abs(t.x - x) < rr && Math.abs(t.z - z) < rr && Math.hypot(t.x - x, t.z - z) < rr) { if (t.y == null) t.y = m.groundAt(t.x, t.z); if (high == null || high > t.y + t.top - 1.2) return t; } }
       return null; };
     // what the possum stands on there: the ground, the top of a street light or a tree, or a roof
     // the roofs of the cars near the possum, found once a frame: the nearest parked car, the app's own cars and the traffic
@@ -10928,16 +10969,20 @@ const handle = async (m, post) => {
       const pc = m.nearestCar?.(x, z, 14); if (pc) add(pc.x, pc.z, pc.heading, false);
       for (const G of owns) add(G.x, G.z, G.h, G.bus); for (const D of T.traffic?.cars || []) add(D.x, D.z, D.h, false);
       carTops = out; };
-    const surf = (x, z) => { let y = ground(x, z); const q = poleAt(x, z); if (q) y = Math.max(y, q.y + POLE_TOP); const tr = treeAt(x, z); if (tr) y = Math.max(y, tr.y + tr.top);
+    const surf = (x, z) => { let y = ground(x, z); const q = poleAt(x, z); if (q) y = Math.max(y, q.y + POLE_TOP); const tr = treeAt(x, z) || (pos ? treeAt(x, z, 0, pos.y) : null); if (tr) y = Math.max(y, tr.y + tr.top);
       for (const t of carTops) { const dx = x - t.x, dz = z - t.z; if (Math.abs(dx * t.s + dz * t.c) < t.hl && Math.abs(dx * t.c - dz * t.s) < t.hw) y = Math.max(y, t.top); }
       if (m.solidAt?.(x, z) || T.solid?.(x, z)) y = Math.max(y, roofAt(x, z) ?? m.groundAt(x, z) + 4.5);
       return y; };
     const pos = PS ? { x: PS.x, z: PS.z, h: PS.h, y: 0, p: 0, r: 0, v: 0, vy: 0, t: 0, mode: "ground", wall: null, jumped: false } : null;
     const TAIL = new THREE.Matrix4(), TURN = new THREE.Matrix4();
     const showPossum = () => { if (!possumMesh) return; const bob = pos.mode === "ground" ? Math.min(0.06, Math.abs(pos.v) / 400) * Math.abs(Math.sin(pos.t * 16)) : 0;
-      M.compose(V.set(pos.x, pos.y + bob, pos.z), Q.setFromEuler(E.set(-pos.p, pos.h, pos.r, "YXZ")), ONE); possumMesh.setMatrix(0, M.elements.slice());
+      M.compose(V.set(pos.x, pos.y + bob + (pos.flip != null ? 0.25 : 0), pos.z), Q.setFromEuler(E.set(-pos.p - (pos.flip != null ? pos.flip * Math.PI * 2 : 0), pos.h, pos.r, "YXZ")), ONE); possumMesh.setMatrix(0, M.elements.slice());
       const sway = pos.mode === "climb" ? 0.18 * Math.sin(pos.t * 4) : Math.min(0.45, Math.abs(pos.v) / 50) * Math.sin(pos.t * 13) + 0.1 * Math.sin(pos.t * 1.7);
       possumMesh.setMatrix(1, M.clone().multiply(TAIL.makeTranslation(0, 0, -0.27)).multiply(TURN.makeRotationY(sway)).elements.slice()); };
+    // number 6's pool (the same frame as its builder, townNo6): from the middle of the house's back wall, a along, w across
+    const POOL6 = (() => { const k = MOO_NO6?.sixHouse; if (!k || T.cfg?.place !== "moo") return null; const fx = k.b[0] - k.a[0], fz = k.b[1] - k.a[1], fl = Math.hypot(fx, fz), ux = -fz / fl, uz = fx / fl;
+      return { ux, uz, bx: (k.a[0] + k.b[0]) / 2 + ux * k.depth, bz: (k.a[1] + k.b[1]) / 2 + uz * k.depth }; })();
+    const goldPossum = () => { if (!possumMesh) return; try { possumMesh.remove(); } catch {} possumMesh = m.addParts(townPlaneParts("gold", "possum").map(q => ({ ...q, matrix: M.identity().elements.slice() }))); showPossum(); };
     const possumHome = () => { Object.assign(pos, { x: PS.x, z: PS.z, h: PS.h, p: 0, r: 0, v: 0, vy: 0, mode: "ground", wall: null, sit: false }); pos.y = surf(pos.x, pos.z); showPossum(); };
     if (pos) possumHome();
     const wake = () => { if (possumMesh || !pos) return;  // the possum and the lights, built the first time you come near
@@ -10962,6 +11007,7 @@ const handle = async (m, post) => {
       // the stick and the Up and Down buttons say what they do in it
       if (joyName) joyName.textContent = kind === "plane" ? "Power and turn" : kind === "heli" ? "Go and turn" : kind === "car" ? "Drive" : kind === "possum" ? "Run and turn" : "Move";
       if (udName.length === 2) { udName[0].textContent = kind === "plane" ? "Climb" : kind === "possum" ? "Jump" : "Up"; udName[1].textContent = kind === "plane" ? "Dive" : kind === "possum" ? "Let go" : "Down"; } };
+    C.probe = () => ({ pos, surf, roofAt, solid, loadRoofs, treeAt, loadTrees });  // (for checking the possum's footing in tests)
     C.walkKeys = on => { if (!veh) showKeys(on ? "walk" : null); }; if (T.walk) showKeys("walk");
     C.keys = () => { if (!veh) return false; keysOff(!keysBox.classList.contains("off")); return true; };  // "?" hides the list and brings it back
     // ---- the boost's charge: a fine ring of 48 slanted ticks on the ground round the car, lit as far round as there is charge
@@ -11001,7 +11047,7 @@ const handle = async (m, post) => {
         if (step) { F.pos.x = P.x + Math.cos(P.h) * 1.9; F.pos.z = P.z - Math.sin(P.h) * 1.9; F.yaw = P.h + Math.PI; F.pitch = -0.04; }  // out of the left door
         plane = null; showPlane(P); }
       veh = null; car = null; plane = null; window.anFast = false; showKeys(T.walk ? "walk" : null); C.in = false; F.drive = null; F.boost = false; F.hText = ""; F.vert = 0; F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.keys.clear();
-      document.body.classList.remove("bsdrive", "bsplane", "bspossum", "bsride"); boostBtn.hidden = true; boostBtn.textContent = "Boost"; handBtn.hidden = true; flipBtn.hidden = true; F.flip = false; handBtn.classList.remove("on"); F.hand = false; at = 0; C.frame(); };
+      document.body.classList.remove("bsdrive", "bsplane", "bspossum", "bsride"); boostBtn.hidden = true; boostBtn.textContent = "Boost"; handBtn.hidden = true; flipBtn.hidden = true; F.flip = false; plantBtn.hidden = plantMenu.hidden = true; handBtn.classList.remove("on"); F.hand = false; at = 0; C.frame(); };
     let camOff = null;  // where the view is from what you're in
     // (up in a plane, Moorooka's model stops fetching its sharpest ground and building backyards: window.anFast, moorooka-model.js patched)
     const tick = dt0 => { window.anFast = veh === "plane" && !!plane?.air; const dt = Math.min(dt0, 0.1), k = F.keys, has = (...c) => c.some(x => k.has(x));
@@ -11080,28 +11126,37 @@ const handle = async (m, post) => {
           if (thr < -0.1 || drop || (jump && !P.jumped)) { P.mode = "air"; P.vy = jump ? 6 : 0; P.h += Math.PI; P.wall = null; }  // lets go (stick back, or Jump to spring off), turning round as it drops
           else if (thr > 0.1 || jump) { P.y += R.possumClimb * dt * Math.max(thr, jump ? 1 : 0);
             if (P.y >= W.top - 0.05) { P.mode = "ground"; P.wall = null;  // over the top: on to the light, or a step on to the roof
-              if (W.pole) { P.x = W.pole.x; P.z = W.pole.z; P.sit = true; } else { P.x += Math.sin(P.h) * 0.7; P.z += Math.cos(P.h) * 0.7; }
+              if (W.pole) { P.x = W.pole.x; P.z = W.pole.z; P.sit = true; } else { P.x += Math.sin(P.h) * 0.7; P.z += Math.cos(P.h) * 0.7; } P.mh = P.h;
               P.y = surf(P.x, P.z); } } }
         else {
           if (P.sit && thr < 0.1) P.sit = false;  // on top of a light it sits until W (or the stick) is let go and pushed again
           // the stick points the way to run, seen from where you're looking (not steered like a car: Ash, 15 November 2026: "The
           // possum handles a bit too much like a car"): it whips round to face that way and scampers off, quick to start and stop
           const mag = Math.min(1, Math.hypot(str, thr)), goH = mag > 0.15 ? F.yaw + Math.PI + Math.atan2(-str, thr) : P.h, turn = wrap(goH - P.h);
-          if (mag > 0.15) P.h += Math.sign(turn) * Math.min(Math.abs(turn), (P.mode === "air" ? 4 : 11) * dt);
-          const want = P.sit || mag <= 0.15 ? 0 : top * mag * Math.max(0.2, Math.cos(turn)); P.v += (want - P.v) * Math.min(1, dt * (want > P.v ? 10 : 14));
+          // (turning 30% slower, and it goes the way the stick points straight away while it turns to face it, as someone walking does,
+          // rather than running only the way it faces like a car: Ash, 15 November 2026, "make him walk more like a human")
+          if (mag > 0.15) { P.h += Math.sign(turn) * Math.min(Math.abs(turn), (P.mode === "air" ? 2.8 : 7.7) * dt); P.mh = goH; } else if (P.mh == null) P.mh = P.h;
+          const want = P.sit || mag <= 0.15 ? 0 : top * mag * (P.gold ? 1.4 : 1); P.v += (want - P.v) * Math.min(1, dt * (want > P.v ? 10 : 14));
           for (let n = Math.max(1, Math.ceil(Math.abs(P.v) * dt / 0.4)), i = 0, st = dt / n; i < n; i++) {  // in steps of 40 cm, so it cannot skip through a wall or past a light
-            const x = P.x + Math.sin(P.h) * P.v * st, z = P.z + Math.cos(P.h) * P.v * st;
+            const x = P.x + Math.sin(P.mh) * P.v * st, z = P.z + Math.cos(P.mh) * P.v * st;
             if (!inside(x, z)) { P.v = 0; break; }
             const s = surf(x, z);
             if (s > P.y + 0.6) {  // a street light or a wall in the way: running at it, it starts up it (a wall met in the air too: it grabs on)
-              if (P.v > 0) { const q = poleAt(x, z) || treeAt(x, z); P.mode = "climb"; P.vy = 0; P.wall = { top: s, pole: q };
+              if (P.v > 0) { const q = poleAt(x, z) || treeAt(x, z); P.mode = "climb"; P.vy = 0; P.wall = { top: s, pole: q }; P.h = P.mh;
                 if (q) { P.h = Math.atan2(q.x - P.x, q.z - P.z); P.x = q.x - Math.sin(P.h) * 0.32; P.z = q.z - Math.cos(P.h) * 0.32; } }
               P.v = 0; break; }
             P.x = x; P.z = z;
             if (P.mode === "ground" && s < P.y - 0.6) { P.mode = "air"; P.vy = 0; } }  // off the edge of a roof or the top of a light: it drops
           if (P.mode === "air") { P.vy -= 22 * dt; P.y += P.vy * dt; const s = surf(P.x, P.z);
             if (P.y <= s) { if (P.vy < -9) snd.thud(Math.min(1.2, -P.vy / 18)); P.y = s; P.vy = 0; P.mode = "ground"; } }
-          else if (P.mode === "ground") { P.y += (surf(P.x, P.z) - P.y) * Math.min(1, dt * 20); if (jump && !P.jumped) { P.mode = "air"; P.vy = R.possumJump; } } }  // two and a half times as high as it was (Ash, 15 November 2026)
+          else if (P.mode === "ground") { P.y += (surf(P.x, P.z) - P.y) * Math.min(1, dt * 20); P.spun = false; if (jump && !P.jumped) { P.mode = "air"; P.vy = R.possumJump * (P.gold ? 1.5 : 1); } }
+          // the golden possum: Jump again in the air for a 360, a somersault with a little more lift
+          if (P.mode === "air" && P.gold && jump && !P.jumped && !P.spun && P.vy < R.possumJump * 1.3) { P.spun = true; P.flip = 0; P.vy = Math.max(P.vy, 0) + 6; snd.squeak(1.3); }
+          if (P.flip != null) { P.flip += dt / 0.55; if (P.flip >= 1 || P.mode !== "air") P.flip = null; }
+          // into number 6's pool: out it comes golden (Ash, 15 November 2026: "If the possum goes in the pool at 6 Beaudesert Rd turn him
+          // into the golden possum who is faster and can jump higher and also can do a 360 in the air")
+          if (!P.gold && POOL6 && P.mode === "ground" && P.y < ground(P.x, P.z) + 0.6) { const dx = P.x - POOL6.bx, dz = P.z - POOL6.bz, a = dx * POOL6.ux + dz * POOL6.uz, w = -dx * POOL6.uz + dz * POOL6.ux;
+            if (a > 2.4 && a < 6 && w > -3.6 && w < 4.2) { P.gold = true; goldPossum(); snd.squeak(1.5); toast("Splash! You're the golden possum: faster, jumps higher, and Jump again in the air for a 360.", 6000); } } }  // two and a half times as high as it was (Ash, 15 November 2026)
         // its sounds: a patter of feet as it runs, claws as it climbs, a squeak as it jumps
         P.pat = (P.pat || 0) + (P.mode === "ground" ? Math.abs(P.v) * dt / 0.55 : P.mode === "climb" ? Math.abs(P.y - (P.lastY ?? P.y)) / 0.3 : 0); P.lastY = P.y;
         if (P.pat >= 1) { P.pat %= 1; if (P.mode === "climb") snd.scratch(); else snd.step(0.6 + Math.random() * 0.5); }
@@ -11171,9 +11226,9 @@ const handle = async (m, post) => {
         o = P; D = 13 + Math.min(16, P.v / 7); text = Math.round(P.v * 3.6) + " km/h" + (P.air ? " · " + Math.round(alt) + " m" : ""); }
       }
       if (chip.textContent !== text) chip.textContent = text;
-      if (idle > 1.2 && o.v > 1) { const e = Math.min(1, dt * 2.5); off[0] -= off[0] * e; off[1] -= off[1] * e; }  // left alone, the view settles back behind
+      if (idle > 1.2 && o.v > 1 && veh !== "possum") { const e = Math.min(1, dt * 2.5); off[0] -= off[0] * e; off[1] -= off[1] * e; }  // left alone, the view settles back behind
       // the view: behind and above, swinging round after it; closer in where a building is behind, so it is not from inside one
-      camYaw += wrap(o.h + Math.PI - camYaw) * Math.min(1, dt * 3.5);
+      if (veh !== "possum" || pos.mode === "climb") camYaw += wrap(o.h + Math.PI - camYaw) * Math.min(1, dt * 3.5);  /* (the possum's view stays where you look, unless it is climbing) */
       const critter = veh === "possum" || (veh === "ride" && ride.k === "possum"), high = critter && o.y - ground(o.x, o.z) > 1.2;  // (the possum: close behind it, looking up a wall it is climbing)
       const yaw = camYaw + off[0], pitch = bsClamp((veh === "possum" && pos.mode === "climb" ? 0.3 : -0.2) + off[1], -1.2, 0.35), cp = Math.cos(pitch), sx = Math.sin(yaw) * cp, sz = Math.cos(yaw) * cp;
       if (!o.air && !high) while (D > 2.5 && (solid(o.x + sx * D, o.z + sz * D) || solid(o.x + sx * D * 0.55, o.z + sz * D * 0.55))) D -= 1.25;
@@ -11219,7 +11274,7 @@ const handle = async (m, post) => {
         veh = "car"; camYaw = car.h + Math.PI; document.body.classList.add("bsdrive"); showRing(charge < 0.999); }
       C.in = true; camOff = null; off = [wrap(F.yaw - camYaw), bsClamp(F.pitch + 0.2, -1, 0.55)]; idle = 0; last = [F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch];
       F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.vert = 0; F.boost = false; F.keys.clear(); F.drive = tick;
-      btn.textContent = veh === "possum" ? "Hop out" : "Get out"; btn.hidden = false; handBtn.hidden = veh !== "car" && veh !== "possum"; handBtn.textContent = veh === "possum" ? "Boost" : "Handbrake"; handBtn.dataset.key = veh === "possum" ? "Shift" : "Space"; flipBtn.hidden = !(veh === "car" && car?.gold); boostBtn.hidden = veh === "ride" || (veh === "plane" && !canBoost(plane));
+      btn.textContent = veh === "possum" ? "Hop out" : "Get out"; btn.hidden = false; handBtn.hidden = veh !== "car" && veh !== "possum"; handBtn.textContent = veh === "possum" ? "Boost" : "Handbrake"; handBtn.dataset.key = veh === "possum" ? "Shift" : "Space"; flipBtn.hidden = !(veh === "car" && car?.gold); plantBtn.hidden = !(veh === "possum" && T.admin?.plant); boostBtn.hidden = veh === "ride" || (veh === "plane" && !canBoost(plane));
       boostBtn.textContent = veh === "possum" ? "Jump" : "Boost"; boostBtn.dataset.key = veh === "possum" ? "Space" : "Shift";
       if (veh === "ride") { if (RIDE_UP[ride.k] > 1) snd.door(); } else if (veh !== "possum") { snd.door(); snd.start(veh === "plane" && plane.heli ? "heli" : veh); } showKeys(veh === "plane" && plane.heli ? "heli" : veh === "ride" ? null : veh === "car" && car.gold ? "gold" : veh);
       // on a phone, a word about the sticks (on a desktop the list of keys has just come up, bottom left)
@@ -11239,6 +11294,20 @@ const handle = async (m, post) => {
     const handBtn = $("bsHandBtn"), pull = on => e => { F.hand = on && (veh === "car" || veh === "possum"); handBtn.classList.toggle("on", !!F.hand); e.preventDefault(); };
     const handPress = { pointerdown: pull(true), pointerup: pull(false), pointercancel: pull(false), pointerleave: pull(false), contextmenu: e => e.preventDefault() };
     Object.entries(handPress).forEach(([k, f]) => handBtn.addEventListener(k, f));
+    // the possum plants things (Ash, 15 November 2026: "also plant trees or bushes or flowers"): Plant (or G) opens four choices; what
+    // it plants goes in just in front of it, into your own map edits (a construction worker can Send or Save them as usual)
+    const plantBtn = document.createElement("button"), plantMenu = document.createElement("div");
+    plantBtn.type = "button"; plantBtn.className = "bs-fly-x bs-plant"; plantBtn.textContent = "Plant"; plantBtn.dataset.key = "G"; plantBtn.hidden = true; plantBtn.setAttribute("aria-expanded", "false");
+    plantMenu.className = "bs-plantmenu"; plantMenu.hidden = true; plantMenu.setAttribute("role", "menu");
+    for (const [kind, label] of [["addFlower", "Flowers"], ["addBush", "A bush"], ["addSmallTree", "A small tree"], ["addTree", "A tree"]]) { const b = document.createElement("button"); b.type = "button"; b.setAttribute("role", "menuitem"); b.textContent = label;
+      b.onclick = e => { e.stopPropagation(); plantMenu.hidden = true; plantBtn.setAttribute("aria-expanded", "false"); const P = pos;
+        if (veh !== "possum" || !P) return; if (P.y > ground(P.x, P.z) + 0.4 || P.mode !== "ground") return toast("Plant it on the ground.", 2000);
+        const x = P.x + Math.sin(P.h) * 0.9, z = P.z + Math.cos(P.h) * 0.9; if (solid(x, z)) return toast("Not there: there's something in the way.", 2000);
+        if (T.admin?.plant?.(kind, x, z)) { snd.step(1.2); toast(`${label} planted. It's in your map edits.`, 2500); } };
+      plantMenu.append(b); }
+    plantBtn.onclick = e => { e.stopPropagation(); plantMenu.hidden = !plantMenu.hidden; plantBtn.setAttribute("aria-expanded", String(!plantMenu.hidden)); };
+    $("bsFly")?.append(plantBtn, plantMenu);
+    C.plantMenu = () => { if (veh !== "possum" || plantBtn.hidden) return false; plantBtn.click(); return true; };
     const flipBtn = $("bsFlipBtn"), flipPress = e => { e.preventDefault(); if (veh === "car" && car?.gold) F.flip = true; }; flipBtn.addEventListener("pointerdown", flipPress);
     const hidden = () => snd.quiet(document.hidden); document.addEventListener("visibilitychange", hidden);
     C.riding = () => veh === "ride";
@@ -11251,7 +11320,7 @@ const handle = async (m, post) => {
     C.toGold = () => { const G = planes.find(P => P.gold); if (!G) return false; if (veh) leave(false);
       const sn = Math.sin(G.h), cs = Math.cos(G.h), dx = sn * 7 - cs * 5, dz = cs * 7 + sn * 5; T.tween = null;
       F.pos.x = G.x + dx; F.pos.z = G.z + dz; F.pos.y = ground(F.pos.x, F.pos.z) + (T.walk ? F.eye : 14); F.yaw = Math.atan2(dx, dz); F.pitch = T.walk ? -0.06 : -0.6; at = 0; return true; };
-    C.dispose = () => { if (veh) leave(false); btn.onclick = null; btn.hidden = boostBtn.hidden = handBtn.hidden = flipBtn.hidden = true; flipBtn.removeEventListener("pointerdown", flipPress); F.hand = false; Object.entries(press).forEach(([k, f]) => boostBtn.removeEventListener(k, f)); Object.entries(handPress).forEach(([k, f]) => handBtn.removeEventListener(k, f));
+    C.dispose = () => { if (veh) leave(false); btn.onclick = null; btn.hidden = boostBtn.hidden = handBtn.hidden = flipBtn.hidden = true; plantBtn.remove(); plantMenu.remove(); flipBtn.removeEventListener("pointerdown", flipPress); F.hand = false; Object.entries(press).forEach(([k, f]) => boostBtn.removeEventListener(k, f)); Object.entries(handPress).forEach(([k, f]) => handBtn.removeEventListener(k, f));
       document.removeEventListener("visibilitychange", hidden); document.body.classList.remove("bsdrive", "bsplane"); snd.dispose(); showKeys(null); try { for (const P of planes) P.parts.remove(); for (const G of owns) G.parts.remove(); ring.remove(); possumMesh?.remove(); poleMesh?.remove(); } catch {} };
     return C;
   }
