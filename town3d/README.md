@@ -1007,3 +1007,13 @@ the drive in front of the stairs is taken out (`edits.json`). The first round's 
   of another, to cut lag and overlap.
 - For Ash, the "phone took your finger off" message now also gives the slowest frame in the last 3 seconds, how many other
   fingers were down, and what had just happened (for example the sharper model being swapped in).
+
+## Fly to Walk back; place names clipped, not faded; more clues for dropped fingers (15 November 2026)
+
+- Fly to Walk is back (it wasn't the cause of the dropped fingers): zoom comes down to about 6 m from the ground you look at,
+  and squeezing on in there, under 6 m up, puts you on foot; holding Down at the lowest height for 1.2 s does too.
+- Place names in Moorooka and Inverloch are kept off the top buttons and the sticks by a fixed `clip-path` on their layer,
+  instead of a check that changed each name's opacity and pointer-events a few times a second (now ruled out as a cause of
+  the iPhone cancelling fingers).
+- For Ash, the "phone took your finger off" message also covers Boost and the Handbrake, and lists what on the controls or the
+  page's classes changed in the 1.5 s before (a `MutationObserver` on `#bsFly` and `body`).

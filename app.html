@@ -1344,6 +1344,11 @@ body.bsdrive:not(.bsplane) .bs-fly-x.bs-boost { bottom: calc(240px + env(safe-ar
 .bs-fly-x.bs-me-btn[aria-expanded="true"] { background: #fff; color: #1b1830; }
 body.bsme #bsFlyX, body.bsme #bsTimeBtn, body.bsme #bsFlyTimeBox { display: none !important; }
 body.bstown.bswalk:not(.bsdrive) .bs-ud { display: none !important; }
+/* Place names keep clear of the buttons along the top (and of the sticks on a touch screen) by a fixed clip on their layer:
+   nothing on the page changes as they move. (It was a check that faded each name a few times a second; that was dropped while
+   chasing the stick losing its finger, Ash, 15 November 2026.) */
+#bsTown .inv-embed-labels { clip-path: inset(calc(112px + env(safe-area-inset-top)) 0 0 0); }
+@media (pointer: coarse) { #bsTown .inv-embed-labels { clip-path: inset(calc(112px + env(safe-area-inset-top)) 0 calc(300px + env(safe-area-inset-bottom)) 0); } }
 /* No text selection or iPhone copy menu anywhere in Explore (Ash, 15 November 2026: a held finger on the stick selected "Get out",
    the Copy / Look Up bar came up, and the selection took the touch off the stick so the car stopped). Typing boxes still select. */
 .bs-fly, .bs-fly * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
@@ -7685,7 +7690,7 @@ const handle = async (m, post) => {
       ti.oninput = () => { BS.view.ms = bsMidnight(BS.view.day) + (+ti.value) * 60000; to.textContent = bsTime(BS.view.ms); $("bsTimeBtnT").textContent = to.textContent; bsApply(true); }; }
     const F = BS.fly = { ...start, pos: start.pos.clone(), start, keys: new Set(), stick: { x: 0, y: 0 }, lookStick: { x: 0, y: 0 }, vert: 0, touches: new Map(), drag: null };
     const canvas = $("bsGl"), touch = matchMedia("(pointer: coarse)").matches;
-    document.body.classList.add("bsfly"); $("bsFly").hidden = false;
+    document.body.classList.add("bsfly"); $("bsFly").hidden = false; try { bsWatchOn(); } catch {}
     const tip = $("bsFlyTip"); tip.classList.remove("dim");
     if (touch) tip.textContent = "Left stick to move, right stick to look. Up and Down are top right.";
     else bsTip("Drag to look around\nW A S D or the arrows to move\nSpace to go up · C to go down\nShift to go faster\nR to start again · Esc to exit\n? to hide this list");
@@ -7835,9 +7840,20 @@ const handle = async (m, post) => {
   document.addEventListener("selectionchange", () => { if (!BS.fly) return; try { const sel = getSelection(); if (sel && !sel.isCollapsed && !/^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName || "")) { bsLost.sel = String(sel).slice(0, 30); sel.removeAllRanges(); } } catch {} });
   function bsLost(what, e) { if (!isAsh()) return; const now = performance.now(); if (now - (bsLost.at || 0) < 4000) return; bsLost.at = now;
     // clues: the slowest frame in the last 3 seconds (a busy page), how many fingers were down, and what had just happened
-    const slow = (BS.gaps || []).filter(g => now - g[0] < 3000).reduce((a, g) => Math.max(a, g[1]), 0), fingers = e?.touches?.length ?? "?", recent = (BS.notes || []).filter(n => now - n[0] < 3000).map(n => n[1]).join(", ");
+    const slow = (BS.gaps || []).filter(g => now - g[0] < 3000).reduce((a, g) => Math.max(a, g[1]), 0), fingers = e?.touches?.length ?? "?", recent = (BS.notes || []).filter(n => now - n[0] < 1500).slice(-6).map(n => n[1]).join(", ");
     toast(`The phone took your finger off the ${what}${bsLost.sel ? ` (it selected "${bsLost.sel}")` : ""}. Slowest frame ${Math.round(slow)} ms, ${fingers} other finger${fingers === 1 ? "" : "s"}${recent ? ", after: " + recent : ""}. Screenshot this for Claude.`, 7000); bsLost.sel = ""; }
-  const bsNote = what => { (BS.notes ||= []).push([performance.now(), what]); if (BS.notes.length > 20) BS.notes.shift(); };
+  const bsNote = what => { const n = (BS.notes ||= []), now = performance.now(); if (n.length && n[n.length - 1][1] === what && now - n[n.length - 1][0] < 1000) { n[n.length - 1][0] = now; return; } n.push([now, what]); if (n.length > 20) n.shift(); };
+  // For Ash, while the dropped finger is looked into: note what on the page changed (shown, hidden, restyled, added), so the
+  // message can say what happened just before the phone let go. The sticks' own knobs and the place names are left out.
+  let bsWatch = null;
+  function bsWatchOn() { if (bsWatch || !isAsh() || !window.MutationObserver) return;
+    const name = el => el.id ? "#" + el.id : el.className && typeof el.className === "string" ? "." + el.className.trim().split(/\s+/)[0] : el.tagName?.toLowerCase();
+    bsWatch = new MutationObserver(list => { for (const m of list) { const t = m.target; if (!t || t.nodeType !== 1) continue;
+      if (t.closest?.(".bs-joy, #toast, .inv-embed-labels, .bs-peer, #verBadge") || t.id === "bsHeight" || t.id === "bsMeH") continue;
+      if (m.type === "attributes") { if (m.attributeName === "style" && /^(CANVAS)$/.test(t.tagName)) continue; bsNote(`${name(t)} ${m.attributeName}${m.attributeName === "hidden" ? (t.hidden ? " on" : " off") : ""}`); }
+      else if (m.addedNodes.length || m.removedNodes.length) bsNote(`${name(t)} ${m.addedNodes.length ? "+" : "-"}${name(m.addedNodes[0] || m.removedNodes[0]) || "text"}`); } });
+    bsWatch.observe($("bsFly"), { subtree: true, childList: true, attributes: true, attributeFilter: ["hidden", "class", "style"] });
+    bsWatch.observe(document.body, { attributes: true, attributeFilter: ["class", "style"] }); }
   function bsFlyTick(dt) {
     const F = BS.fly, k = F.keys, has = (...c) => c.some(x => k.has(x));
     if (F.drive) return F.drive(dt);  // driving a car in a town model (townCar): the car moves, and the view follows it
@@ -8257,12 +8273,20 @@ const handle = async (m, post) => {
 
         // ---- flying: drag the view to move, pinch (or scroll) to zoom, two fingers (or right-drag) to turn ----
         const look3 = () => { const cp = Math.cos(F.pitch); return [-Math.sin(F.yaw) * cp, Math.sin(F.pitch), -Math.cos(F.yaw) * cp]; };
-        const reach = () => { const d = look3(), h = Math.max(2, F.pos.y - ground()); return bsClamp(d[1] < -0.08 ? h / -d[1] : h * 6, 25, far); };  // how far off the ground you're looking at is
+        const reach = () => { const d = look3(), h = Math.max(2, F.pos.y - ground()); return bsClamp(d[1] < -0.08 ? h / -d[1] : h * 6, 6, far); };  // how far off the ground you're looking at is
         const fovK = m.fov ? () => 2 * Math.tan(m.fov() * Math.PI / 360) : () => 1.1547;  // the model's own field of view where it gives one, so the ground stays under your finger
         const pan = (dx, dy) => { const k = fovK() * reach() / (box.clientHeight || 600), sy = Math.sin(F.yaw), cy = Math.cos(F.yaw), up = k / Math.max(0.35, Math.sin(-F.pitch));
           F.pos.x += -cy * dx * k - sy * dy * up; F.pos.z += sy * dx * k - cy * dy * up; keepIn(); };
+        // Zooming comes right down to about 6 m from the ground you look at; squeezing on in there, under 6 m up and looking down,
+        // puts you on foot (Ash, 15 November 2026: "If I'm on fly and I zoom in right into the ground auto switch to walk", then
+        // "only go to walk when closer to ground", and, after it was taken out to rule it out, "Add back fly into walk, it wasn't that")
+        let squeeze = 1, squeezeAt = 0;
         const zoomTurn = (scale, turn) => { const R = reach(), d = look3(), L = [F.pos.x + d[0] * R, F.pos.y + d[1] * R, F.pos.z + d[2] * R];  // about the ground in the middle of the view
-          F.yaw += turn; const R2 = bsClamp(R * scale, 20, out), e = look3(); F.pos.set(L[0] - e[0] * R2, L[1] - e[1] * R2, L[2] - e[2] * R2); keepIn(); };
+          const was = F.pos.clone();
+          F.yaw += turn; const R2 = bsClamp(R * scale, 6, out), e = look3(); F.pos.set(L[0] - e[0] * R2, L[1] - e[1] * R2, L[2] - e[2] * R2); keepIn();
+          const stuck = F.pos.distanceTo(was) < 0.3 && look3()[1] < -0.15 && F.pos.y - ground() < 6;
+          if (!T.walk && !T.tween && scale < 1 && stuck) { const now = performance.now(); if (now - squeezeAt > 700) squeeze = 1; squeezeAt = now;
+            squeeze *= scale; if (squeeze < 0.5) { squeeze = 1; toMode(true); } } else if (scale >= 1 || !stuck) squeeze = 1; };
         const ptrs = new Map(); let pinch = null;
         const gest = {
           pointerdown: e => { if (T.admin?.down(e)) return; if (T.walk) return; list.hidden = true; jump.setAttribute("aria-expanded", "false"); fl.hidden = true; fb.setAttribute("aria-expanded", "false"); closeAsk(); try { box.setPointerCapture(e.pointerId); } catch {}
@@ -10224,10 +10248,10 @@ const handle = async (m, post) => {
       if (btn.hidden !== !near) btn.hidden = !near; if (near && btn.textContent !== say) btn.textContent = say; };
     btn.onclick = () => { C.enter(); btn.blur(); };
     const hold = on => e => { F.boost = on && !!veh; boostBtn.classList.toggle("on", F.boost); e.preventDefault(); };
-    const press = { pointerdown: hold(true), pointerup: hold(false), pointercancel: hold(false), pointerleave: hold(false), contextmenu: e => e.preventDefault() };
+    const press = { pointerdown: hold(true), pointerup: hold(false), pointercancel: e => { bsLost("boost", null); hold(false)(e); }, pointerleave: hold(false), contextmenu: e => e.preventDefault() };
     Object.entries(press).forEach(([k, f]) => boostBtn.addEventListener(k, f));
     const handBtn = $("bsHandBtn"), pull = on => e => { F.hand = on && veh === "car"; handBtn.classList.toggle("on", !!F.hand); e.preventDefault(); };
-    const handPress = { pointerdown: pull(true), pointerup: pull(false), pointercancel: pull(false), pointerleave: pull(false), contextmenu: e => e.preventDefault() };
+    const handPress = { pointerdown: pull(true), pointerup: pull(false), pointercancel: e => { bsLost("handbrake", null); pull(false)(e); }, pointerleave: pull(false), contextmenu: e => e.preventDefault() };
     Object.entries(handPress).forEach(([k, f]) => handBtn.addEventListener(k, f));
     const hidden = () => snd.quiet(document.hidden); document.addEventListener("visibilitychange", hidden);
     C.pose = () => veh === "car" ? { k: car.bus ? "bus" : car.gold ? "gold" : "car", x: car.x, y: car.y, z: car.z, h: car.h, p: car.p, r: car.r }
@@ -10332,14 +10356,9 @@ const handle = async (m, post) => {
     m.setMinutes(bsMins(BS.view.ms));
     T.streets?.update();
     T.car?.frame(); T.peers?.frame(); T.me?.frame(); T.traffic?.frame(); T.critter?.frame(); T.no6?.frame();
-    // Moorooka's and Inverloch's models have no setLabelObstacles, so their place names are kept clear of the top buttons (and of
-    // the sticks on a touch screen) here: a name that strays under them fades out, a few times a second
-    if (!m.setLabelObstacles) { const now = performance.now(); if (now - (T.lblAt || 0) > 150) { T.lblAt = now;
-      const lay = T.lblLayer?.isConnected ? T.lblLayer : (T.lblLayer = document.querySelector("#bsFly .inv-embed-labels, .inv-embed-labels"));
-      if (lay) { const H = lay.clientHeight || innerHeight, touch = T.lblTouch ??= matchMedia("(pointer: coarse)").matches;
-        for (const el of lay.children) { const v = el.style.visibility === "visible", q = v && /translate3d\((-?[\d.]+)px,\s*(-?[\d.]+)px/.exec(el.style.transform);
-          const y0 = q ? +q[2] : 0, hide = !!q && (y0 < 112 || (touch && y0 + (el._h ||= el.offsetHeight || 30) > H - 300));  // (its height measured once)
-          if (el._hid !== hide) { el._hid = hide; el.style.opacity = hide ? "0" : ""; el.style.pointerEvents = hide ? "none" : ""; } } } } }
+    // flying: held down at the lowest you can fly (Down, or C) for a moment, and you are on foot there
+    if (!T.walk && !T.tween && !F.drive && F.floor && F.hot?.f) { const low = F.pos.y <= F.floor() + 0.1, down = F.vert < -0.3 || F.keys.has("KeyC"), now = performance.now();
+      if (!(low && down)) T.downAt = 0; else if (!T.downAt) T.downAt = now; else if (now - T.downAt > 1200) { T.downAt = 0; F.hot.f(); } }
     // the clock's hands, the koala and the wombats: wherever the weather's own are now
     if (T.live?.length) { const M = T.mtx || (T.mtx = new BS.B.THREE.Matrix4());
       T.roots.forEach(r => r.updateWorldMatrix(true, true));
