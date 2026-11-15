@@ -1089,9 +1089,9 @@ driving it, other players starting, and the ordinary weather view. Not checked o
   Settings into Explore's Settings panel. The Emote button shows whenever you walk, on your own too. The weather
   screen's Explore button opens the same town model as the town's own Explore.
 
-## Pandy and Arlo at 6 Beaudesert Road, and the pencil by the Look stick (15 November 2026)
+## Ash and Arlo at 6 Beaudesert Road, and the pencil by the Look stick (15 November 2026)
 
-- **Pandy** (`townHome6`, `townPlaneParts(_, "pandy")`): stands on the front path at 6 Beaudesert Road looking out to
+- **Ash** (`townHome6`, `townPlaneParts(_, "ash")`, short curly brown hair; first made as "Pandy"): stands on the front path at 6 Beaudesert Road looking out to
   the street; turns to you within 14 m on foot and waves the first time (again after you've gone 25 m away).
 - **Arlo**, an apricot cavoodle (`"arlo"`): potters a few steps at a time on the front lawn, turns to look at you within
   7 m and wags his tail within 9 m.
@@ -1099,3 +1099,12 @@ driving it, other players starting, and the ordinary weather view. Not checked o
   something is happening. Explore parts has a switch for them (`home6`).
 - **The map-editing pencil** sits where the handbrake shows in a car (over the Look stick on a phone, bottom right on
   a desktop), and is away while you drive or fly something.
+
+## A few moving cars to get into, and emotes on your own (15 November 2026)
+
+- **Four of the app's own moving cars** again (`townTraffic`, `N = 4`), on the main roads near where you start; the models'
+  own moving traffic stays off. Walk out in front of one and it stops (it now looks 15 m ahead for you). **Get in the car**
+  takes it over (`P.take`): it leaves the traffic and is yours, like the golden car, for the rest of the visit.
+- **Emotes** work with no one else about (they used to do nothing), and as a construction worker you see yourself do
+  them (`townEmotePose`, shared with other players' figures). The Emote button shows for Ash, or while another player is
+  in town, and sits just under Get in the car, between the sticks.
