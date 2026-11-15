@@ -1354,6 +1354,15 @@ body.bspossum .bs-fly-x.bs-boost.on { background: #ffd166; }
 .bs-fly-x.bs-chat[hidden] { display: none; }
 .bs-chatbar { pointer-events: auto; position: absolute; z-index: 5; left: 50%; top: calc(62px + env(safe-area-inset-top)); transform: translateX(-50%); width: min(440px, calc(100% - 32px)); display: flex; gap: 6px; padding: 6px; box-sizing: border-box; border-radius: 16px; background: rgba(22, 24, 34, 0.9); }
 .bs-chatbar[hidden] { display: none; }
+/* a suggested map change being reviewed (Ash, from Settings): who sent it, then Approve, Deny, Next */
+.bs-review { pointer-events: auto; position: absolute; z-index: 6; left: 50%; top: calc(124px + env(safe-area-inset-top)); transform: translateX(-50%); width: min(400px, calc(100% - 32px)); box-sizing: border-box; padding: 12px 14px; border-radius: 16px; background: rgba(22, 24, 34, 0.92); color: #fff; font: 500 0.86rem/1.35 var(--ui); }
+.bs-review[hidden] { display: none; }
+.bs-review p { margin: 0 28px 4px 0; } .bs-review small { display: block; color: #c9cfe0; font-size: 0.76rem; }
+.bs-review div { display: flex; gap: 8px; margin-top: 10px; }
+.bs-review button { min-height: 44px; padding: 0 16px; border: 0; border-radius: 11px; background: rgba(255, 255, 255, 0.16); color: #fff; font: 700 0.86rem var(--ui); cursor: pointer; }
+.bs-review button.ok { background: #7fd36b; color: #10240c; } .bs-review button.no { background: #ff8a7a; color: #2a0d08; }
+.bs-review button.x { position: absolute; top: 4px; right: 4px; min-height: 40px; width: 40px; padding: 0; background: none; font-size: 1.3rem; }
+.bs-review button:focus-visible { outline: 2px solid #ffd166; outline-offset: 2px; }
 .bs-askname { flex-wrap: wrap; } .bs-askname p { flex: 1 0 100%; margin: 2px 4px 2px; color: #fff; font: 700 0.86rem var(--ui); }
 .bs-askname .skip { background: rgba(255, 255, 255, 0.16); color: #fff; }
 .bs-chatbar input { flex: 1; min-width: 0; height: 40px; padding: 0 12px; border: 0; border-radius: 11px; background: #fff; color: #1b1830; font: 500 16px var(--ui); user-select: text; -webkit-user-select: text; }
@@ -8374,10 +8383,11 @@ const handle = async (m, post) => {
         // the planes (townCar), each with somewhere to stand beside it
         const rides = m.addParts ? TOWN_RIDES[cfg.place] : null;
         // golden ones only for Ash (Ash, 15 November 2026: "Only show the teleport to the golden objects if user name is ash or Ashley")
-        if (rides) for (const P of rides.planes) if (!P.gold || isAsh()) mine.push({ name: P.name, group: "Things to drive and fly", what: P.what,
+        // (the golden ones are under "Just for you" at the top of the list instead, made each time it opens: players(), below)
+        if (rides) for (const P of rides.planes) if (!P.gold) mine.push({ name: P.name, group: "Things to drive and fly", what: P.what,
           walk: (() => { const s = Math.sin(P.h), c = Math.cos(P.h), dx = s * 7 - c * 5, dz = c * 7 + s * 5;  // ahead of its nose and off to one side, clear of the wing
             return { x: P.x + dx, z: P.z + dz, yaw: Math.atan2(dx, dz), pitch: -0.06 }; })(), target: [P.x, P.z] });
-        if (rides) for (const G of rides.cars) { if ((G.spare && m.nearestCar) || (G.gold && !isAsh())) continue; /* a red car of the app's own only where the model has no cars to hand over */ const dx = Math.sin(G.h) * (G.bus ? 13 : 5.5), dz = Math.cos(G.h) * (G.bus ? 13 : 5.5);  // in front of its nose (nearer to it than to a car parked beside it)
+        if (rides) for (const G of rides.cars) { if ((G.spare && m.nearestCar) || G.gold) continue; /* a red car of the app's own only where the model has no cars to hand over */ const dx = Math.sin(G.h) * (G.bus ? 13 : 5.5), dz = Math.cos(G.h) * (G.bus ? 13 : 5.5);  // in front of its nose (nearer to it than to a car parked beside it)
           mine.push({ name: G.name, group: "Things to drive and fly", what: G.what, walk: { x: G.x + dx, z: G.z + dz, yaw: Math.atan2(dx, dz), pitch: -0.1 }, target: [G.x, G.z] }); }
         // the possum (Moorooka): on the footpath in Kingwell Street, a few steps from it
         if (rides?.possum) { const S = rides.possum; mine.push({ name: S.name, group: "Things to drive and fly", what: S.what, walk: { ...S.stand, pitch: -0.12 }, target: [S.x, S.z] }); }
@@ -8473,14 +8483,26 @@ const handle = async (m, post) => {
         // other players in town, nearest first, at the top of the list each time it opens (Ash, 15 November 2026: "In go to I want a
         // thing that goes to another player near me"); one takes you to stand 6 m in front of them, looking at them
         const players = () => { list.querySelectorAll(".bs-town-players").forEach(el => el.remove());
-          const GH = isAsh() && T.car?.goldHeli; if (GH) { const b = document.createElement("button"); b.type = "button"; b.setAttribute("role", "menuitem"); b.className = "bs-town-players"; b.dataset.townGoldheli = "1";
-            const sm = document.createElement("small"); sm.textContent = "Somewhere different each visit. Only you see this"; b.append("The golden helicopter", sm); list.prepend(b); }  // (Ash only)
-          const who = T.peers?.list?.() || []; if (!who.length) return;
+          // the golden car, plane and helicopter together under "Just for you" (Ash only; Ash, 15 November 2026: "Merge the golden
+          // teleports in the just for you"), each where it is now
+          const golds = isAsh() ? goldOnes() : [];
+          const goldEls = golds.length ? [(() => { const h = document.createElement("p"); h.className = "bs-town-group bs-town-players"; h.setAttribute("role", "presentation"); h.textContent = "Just for you"; return h; })(),
+            ...golds.map((g, i) => { const b = document.createElement("button"); b.type = "button"; b.setAttribute("role", "menuitem"); b.className = "bs-town-players"; b.dataset.townGold = i;
+              const sm = document.createElement("small"); sm.textContent = g.what; b.append(g.name, sm); return b; })] : [];
+          const who = T.peers?.list?.() || []; if (!who.length) { list.prepend(...goldEls); return; }
           const near = who.map(q => ({ ...q, d: Math.hypot(q.x - F.pos.x, q.z - F.pos.z) })).sort((a, b) => a.d - b.d);
           const head = document.createElement("p"); head.className = "bs-town-group bs-town-players"; head.setAttribute("role", "presentation"); head.textContent = "Players in town";
           const btns = near.map(q => { const b = document.createElement("button"); b.type = "button"; b.setAttribute("role", "menuitem"); b.className = "bs-town-players"; b.dataset.townPlayer = q.id;
             const sm = document.createElement("small"); sm.textContent = q.d < 1000 ? `${Math.round(q.d)} m away` : `${(q.d / 1000).toFixed(1)} km away`; b.append(q.name, sm); return b; });
-          list.prepend(head, ...btns); };
+          list.prepend(...goldEls, head, ...btns); };
+        const goldOnes = () => { const C = T.car, out = []; if (!C) return out;
+          if (C.gold?.gold) out.push({ name: "The golden car", what: "A fifth faster than the others", G: C.gold, k: "car" });
+          for (const P of C.planes || []) if (P.gold) out.push(P.heli ? { name: "The golden helicopter", what: "40% faster. Somewhere different each visit", G: P, k: "heli" } : { name: "The golden plane", what: "Faster, and the only plane with a boost", G: P, k: "plane" });
+          return out; };
+        const toGold = i => { const g = goldOnes()[i]; if (!g) return; const G = g.G; T.tween = null; if (!T.walk) setMode(true);
+          const s = Math.sin(G.h), c = Math.cos(G.h); let dx, dz;
+          if (g.k === "car") { dx = s * 5.5; dz = c * 5.5; } else if (g.k === "plane") { dx = s * 7 - c * 5; dz = c * 7 + s * 5; } else { dx = c * 9; dz = -s * 9; }  // in front of a car's nose; ahead of a plane and clear of its wing; beside a helicopter
+          const x = G.x + dx, z = G.z + dz; F.pos.set(x, ground(x, z) + F.eye, z); F.yaw = Math.atan2(-(G.x - x), -(G.z - z)); F.pitch = -0.15; };
         const toPlayer = id => { const q = (T.peers?.list?.() || []).find(v => v.id === id); if (!q) return toast("They've just left.", 2200);
           T.tween = null; if (!T.walk) setMode(true); const sx = Math.sin(q.h), sz = Math.cos(q.h); let x = q.x + sx * 6, z = q.z + sz * 6;
           if (T.solid?.(x, z) || m.solidAt?.(x, z)) { x = q.x - sx * 6; z = q.z - sz * 6; }
@@ -8489,8 +8511,7 @@ const handle = async (m, post) => {
         jump.hidden = !places.length; jump.textContent = "Jump to…"; jump.setAttribute("aria-haspopup", "menu"); openList(false);
         jump.onclick = () => openList(list.hidden);
         list.onclick = e => { if (e.target.closest("[data-town-fly]")) { openList(false); flyTo(); jump.focus({ preventScroll: true }); return; }
-          if (e.target.closest("[data-town-goldheli]")) { openList(false); const G = T.car?.goldHeli; if (G) { T.tween = null; if (!T.walk) setMode(true); const x = G.x + Math.cos(G.h) * 9, z = G.z - Math.sin(G.h) * 9;
-            F.pos.set(x, ground(x, z) + F.eye, z); F.yaw = Math.atan2(-(G.x - x), -(G.z - z)); F.pitch = -0.15; } jump.focus({ preventScroll: true }); return; }
+          const gd = e.target.closest("[data-town-gold]"); if (gd) { openList(false); toGold(+gd.dataset.townGold); jump.focus({ preventScroll: true }); return; }
           const pl = e.target.closest("[data-town-player]"); if (pl) { openList(false); toPlayer(pl.dataset.townPlayer); jump.focus({ preventScroll: true }); return; }
           const bn = e.target.closest("[data-town-go]"); if (!bn) return; const p = places[+bn.dataset.townGo]; openList(false); go(p, T.walk && !p.water);  // the inlet and the strait are best seen from the air
           jump.focus({ preventScroll: true }); };
@@ -9690,7 +9711,32 @@ const handle = async (m, post) => {
     const goTo = e => { const p = e.paint[0]?.p || e.gone.cars[0] || e.gone.trees[0] || e.gone.people[0], F = BS.fly; if (!p || !F) return; T.tween = null;
       if (T.walk) { F.pos.x = p[0]; F.pos.z = p[1] + 9; F.yaw = 0; F.pitch = -0.4; } else { F.pos.x = p[0]; F.pos.z = p[1] + 45; F.pos.y = m.groundAt(p[0], p[1]) + 45; F.yaw = 0; F.pitch = -0.75; } };
     plansBtn.onclick = e => { e.stopPropagation(); plansBox.hidden = !plansBox.hidden; plansBtn.setAttribute("aria-expanded", String(!plansBox.hidden)); drawPlans(); loadPlans(); plansBtn.blur(); };
-    if (admin()) setTimeout(() => loadPlans().then(() => { const n = waiting().length; if (n && !T.dead) toast(`${n} suggestion${n === 1 ? "" : "s"} from construction workers. ${can() ? "Tap the pencil, then Suggestions." : "Play as Construction worker (Settings), then the pencil > Suggestions."}`, 7000); }), 6000);
+    // no prompt about them any more (Ash, 15 November 2026: "Stop doing that annoying prompt to merge in changes, show a btn in
+    // settings instead to merge them in with a thing that shows me the suggested change then approve or deny"): they are
+    // loaded quietly, for Settings > Suggested map changes, which shows them one at a time (review, below)
+    const revT = admin() ? setTimeout(() => loadPlans(), 6000) : 0;
+    const revBox = document.createElement("div"); revBox.className = "bs-review"; revBox.hidden = true; revBox.setAttribute("role", "dialog"); revBox.setAttribute("aria-label", "Suggested map change");
+    ($("bsTown") || fly).appendChild(revBox);
+    let rev = null;
+    const revClose = () => { revBox.hidden = true; rev = null; if (look) { look = null; apply(); } drawPlans(); };
+    const revShow = () => { const list = waiting(); if (!rev || !list.includes(rev)) rev = list[0] || null;
+      if (!rev) { revClose(); return toast("No suggested changes waiting.", 2500); }
+      look = rev.e; apply(); goTo(rev.e);
+      const i = list.indexOf(rev), n = all(rev.e), who = document.createElement("p"), b = document.createElement("b"), sm = document.createElement("small");
+      b.textContent = rev.by; who.append(b, ` suggested ${n} change${n === 1 ? "" : "s"} here, ${ago(rev.time)}.`);
+      sm.textContent = list.length > 1 ? `${i + 1} of ${list.length}. It's drawn on the map now, only for you.` : "It's drawn on the map now, only for you.";
+      const bt = (label, cls, f) => { const x = document.createElement("button"); x.type = "button"; x.textContent = label; if (cls) x.className = cls; x.onclick = ev => { ev.stopPropagation(); f(); }; return x; };
+      const row = document.createElement("div"); row.append(bt("Approve", "ok", revYes), bt("Deny", "no", revNo));
+      if (list.length > 1) row.append(bt("Next", "", () => { rev = list[(i + 1) % list.length]; revShow(); }));
+      const x = bt("\u00d7", "x", revClose); x.setAttribute("aria-label", "Close");
+      revBox.replaceChildren(x, who, sm, row); revBox.hidden = false; drawPlans(); };
+    const revNext = P => { doneSet.add(P.id); keepDone(); look = null; rev = null; showFresh(); drawPlans();
+      if (waiting().length) revShow(); else { revBox.hidden = true; apply(); } };
+    // Approve: into your edits, and saved for everyone straight away when the GitHub key is saved
+    const revYes = () => { const P = rev; if (!P) return; mine.paint.push(...P.e.paint); for (const kind of KINDS) mine.gone[kind].push(...P.e.gone[kind]); save(); count(); revNext(P);
+      if (store.get("brief.ghToken", "")) send(); else toast("Approved. It's in your map edits; save the GitHub key in Settings to put it in everyone's app.", 7000); };
+    const revNo = () => { const P = rev; if (!P) return; revNext(P); toast(`Denied. ${P.by}'s change is gone from your map.`, 2500); };
+    A.plans = { count: () => waiting().length, open: async () => { plansAt = 0; await loadPlans(); if (!T.dead) { rev = null; revShow(); } } };
     const send = async () => { if (!admin()) return suggest(); if (saving) return; if (!all(mine)) return say("Nothing to save yet.", 2500);
       const tok = store.get("brief.ghToken", "");
       if (!tok) return say("To save for everyone, first save the GitHub key in Admin (in Settings), then tap Save again. Or Copy, and paste to Claude.", 9000);
@@ -9710,8 +9756,9 @@ const handle = async (m, post) => {
         for (const kind of KINDS) { const w = new Set(gone[kind]); sent.gone[kind].push(...mine.gone[kind].filter(g => w.has(g))); mine.gone[kind] = mine.gone[kind].filter(g => !w.has(g)); }
         sentAt = Date.now(); ops.length = 0; save(); apply(); count(); }
       if (!bad) { toast("Saved for everyone. It's in everyone's app in about 5 minutes.", 6000); say("Saved. In everyone's app in about 5 minutes.", 8000); }
-      else say(bad === 401 || bad === 403 || bad === 404 ? "The GitHub key didn't work for this. Check it in Admin (in Settings), or Copy and paste to Claude."
-        : bad === -1 ? "Couldn't reach GitHub. Check your connection and tap Save again." : `GitHub wouldn't take that (error ${bad}). Copy, and paste to Claude instead.`, 10000); };
+      else { const why = bad === 401 || bad === 403 || bad === 404 ? "The GitHub key didn't work for this. Check it in Admin (in Settings), or Copy and paste to Claude."
+        : bad === -1 ? "Couldn't reach GitHub. Check your connection and tap Save again." : `GitHub wouldn't take that (error ${bad}). Copy, and paste to Claude instead.`;
+        say(why, 10000); if (bar.hidden) toast(why, 8000); } };
     const on = [], bin = clear.innerHTML;
     const listen = (el, f) => { el.addEventListener("click", f); on.push([el, f]); };
     listen(btn, () => { const open = bar.hidden; bar.hidden = !open; btn.setAttribute("aria-pressed", String(open)); document.body.classList.toggle("bsadmin", open); if (!open) { A.tool = null; done(); } show(); });
@@ -9733,7 +9780,7 @@ const handle = async (m, post) => {
         clearTimeout(clear.t); unsure(); mine = blank(); ops.length = 0; save(); apply(); count(); say("All your edits on this device are cleared.", 3000); } });
     A.refresh = () => { if (!can()) { bar.hidden = true; A.tool = null; done(); btn.setAttribute("aria-pressed", "false"); document.body.classList.remove("bsadmin", "bsadmin-tool"); look = null; apply(); } btn.hidden = !can(); show(); };
     A.refresh();
-    A.dispose = () => { clearTimeout(freshT[0]); clearInterval(freshT[1]); plansBtn.remove(); plansBox.remove(); on.forEach(([el, f]) => el.removeEventListener("click", f)); ink.remove(); bar.hidden = true; btn.hidden = true; btn.setAttribute("aria-pressed", "false"); document.body.classList.remove("bsadmin", "bsadmin-tool"); clearTimeout(say.t); clearTimeout(clear.t); clear.dataset.sure = ""; clear.classList.add("bs-admin-ic"); clear.innerHTML = bin; };
+    A.dispose = () => { clearTimeout(revT); revBox.remove(); clearTimeout(freshT[0]); clearInterval(freshT[1]); plansBtn.remove(); plansBox.remove(); on.forEach(([el, f]) => el.removeEventListener("click", f)); ink.remove(); bar.hidden = true; btn.hidden = true; btn.setAttribute("aria-pressed", "false"); document.body.classList.remove("bsadmin", "bsadmin-tool"); clearTimeout(say.t); clearTimeout(clear.t); clear.dataset.sure = ""; clear.classList.add("bs-admin-ic"); clear.innerHTML = bin; };
     return A;
   }
   // Driving and flying (Ash, 14 November 2026: "if i press enter when walking i get into the car", then "needs sounds, shift for
@@ -9916,7 +9963,9 @@ const handle = async (m, post) => {
     // none for a while (Ash, 15 November 2026: "Reduce traffic through the apps, they are a bit dumb and run into each other"), then
     // four, the models' own moving cars being off (Ash: "Add back a few cars but not many. I want to be able to get into a moving
     // car"): walk out in front of one and it stops for you; Get in the car takes it over (P.take) and it is yours from then on.
-    const home = T.spawn || [F.pos.x, F.pos.z], N = 4, NEAR = 300, FAR = 800, NONE = new THREE.Matrix4().makeScale(0, 0, 0).elements;
+    // (a light amount again, seven: Ash, 15 November 2026: "Add back some of the traffic so there is a light amount of cars around.
+    // Careful not to cause lag". Each is a few draw calls, and one more than 450 m away is not drawn)
+    const home = T.spawn || [F.pos.x, F.pos.z], N = 7, NEAR = 300, FAR = 800, NONE = new THREE.Matrix4().makeScale(0, 0, 0).elements;
     if (!N) return P;  // nothing to load or draw
     let roads = null, nodes = null, dead = false, last = 0;
     const key = (x, z) => Math.round(x / 2) + "," + Math.round(z / 2);
@@ -10146,7 +10195,11 @@ const handle = async (m, post) => {
       let wv = null; if (isAdmin()) { wv = el("button", "bs-me-exit", "Set the weather's view"); wv.type = "button";
         wv.onclick = () => { meClose(); bsFlyOff(); setTimeout(() => { try { bsFlyOn(); } catch {} }, 400); }; }
       const ver = el("p", "bs-me-ver", `Version ${document.querySelector('meta[name="an-commit"]')?.content || "dev"}`);  // (Ash, 15 November 2026: "Add the v number into settings")
-      meBox.append(head, you, as, sw, here, tm, app, ...(isAsh() ? exAshSecs(meDraw) : []), towns, ...(wv ? [wv] : []), hi, ver); };  // no Exit explore (Ash, 15 November 2026: "Remove exit explore"); Esc, or the browser's back, still leaves
+      // suggested map changes from construction workers, one at a time on the map (Ash only)
+      let sug = null; if (isAsh() && T.admin?.plans) { const n = T.admin.plans.count(); sug = el("div", "bs-me-sec"); sug.append(el("span", "bs-me-lbl", "Suggested map changes (just you)"));
+        const b = el("button", "bs-me-go", n ? `Review ${n} suggestion${n === 1 ? "" : "s"}` : "Check for suggestions"); b.type = "button"; b.onclick = () => { meClose(); T.admin.plans.open(); };
+        sug.append(b, el("p", "", n ? "Shows each one on the map where it is, then Approve puts it in everyone's app, or Deny drops it." : "None waiting from construction workers.")); }
+      meBox.append(head, you, as, sw, here, tm, app, ...(sug ? [sug] : []), ...(isAsh() ? exAshSecs(meDraw) : []), towns, ...(wv ? [wv] : []), hi, ver); };  // no Exit explore (Ash, 15 November 2026: "Remove exit explore"); Esc, or the browser's back, still leaves
     // closes with its \u00d7, the gear again, or a tap anywhere else
     const meOut = e => { if (!meBox.hidden && !meBox.contains(e.target) && !meBtn.contains(e.target)) meClose(); }; document.addEventListener("pointerdown", meOut, true);
     document.body.classList.add("bsme"); meBtn.hidden = false; meBtn.onclick = () => { meBox.hidden = !meBox.hidden; meBtn.setAttribute("aria-expanded", String(!meBox.hidden)); if (!meBox.hidden) meDraw(); meBtn.blur(); };

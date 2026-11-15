@@ -1268,3 +1268,17 @@ were not it.
   `inverloch-model.js?v=20`, `logan-model.js?v=37`); when a model is rebuilt from ai-forge, set `medium.pixelRatio` to
   1.3 in its quality table too.
 - **Street names** read the models' own labels from the page (a layout) only while the view is moving.
+
+## Golden ones under "Just for you", suggestions reviewed from Settings, a light amount of traffic (15 November 2026)
+
+- **Just for you** (Ash: "Merge the golden teleports in the just for you"): Jump to opens with a "Just for you" heading (Ash or
+  Ashley only) holding the golden car, the golden plane and the golden helicopter, each where it is now (`goldOnes`, `toGold`).
+  They are no longer in "Things to drive and fly". The other players in town come under it.
+- **No more prompt about suggestions** (Ash: "Stop doing that annoying prompt to merge in changes, show a btn in settings instead
+  ... shows me the suggested change then approve or deny"): the toast on opening is gone. Settings has "Suggested map changes
+  (just you)" with Review N suggestions. It takes you to each one and draws it (only for Ash), with Approve, Deny and Next in a
+  card under the top buttons (`.bs-review`). Approve adds it to your map edits and saves for everyone when the GitHub key is
+  saved (the same Save as the pencil's, so any of your own edits waiting go too); Deny drops it. The pencil's Suggestions list
+  is still there.
+- **Traffic** (Ash: "Add back some of the traffic so there is a light amount of cars around. Careful not to cause lag"): the app's
+  moving cars go from 4 to 7 (`townTraffic`, `N`). Each is a few draw calls and one more than 450 m away is not drawn.
