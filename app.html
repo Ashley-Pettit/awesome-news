@@ -1401,6 +1401,7 @@ body.bscam #bsTown .bs-review, body.bscam #bsTown .bs-ridecard { visibility: hid
 .bs-review[hidden] { display: none; }
 .bs-review p { margin: 0 28px 4px 0; } .bs-review small { display: block; color: #c9cfe0; font-size: 0.76rem; }
 .bs-review div { display: flex; gap: 8px; margin-top: 10px; }
+.bs-review .bs-rev-what { margin: 6px 0 4px; padding-left: 18px; font-size: 0.82rem; line-height: 1.35; } .bs-review .bs-rev-what li { margin: 2px 0; }
 .bs-review button { min-height: 44px; padding: 0 16px; border: 0; border-radius: 11px; background: rgba(255, 255, 255, 0.16); color: #fff; font: 700 0.86rem var(--ui); cursor: pointer; }
 .bs-review button.ok { background: #7fd36b; color: #10240c; } .bs-review button.no { background: #ff8a7a; color: #2a0d08; }
 .bs-review button.x { position: absolute; top: 4px; right: 4px; min-height: 40px; width: 40px; padding: 0; background: none; font-size: 1.3rem; }
@@ -2093,7 +2094,7 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <div class="bs-town-list bs-town-floods" id="bsTownFloods" role="menu" aria-label="Floods to show on the map" hidden></div>
     <div class="bs-slides" role="group" aria-label="Street names, tide, time and flood"><button class="bs-fly-x bs-ic" type="button" id="bsNamesBtn" data-key="N" aria-pressed="false" aria-label="Street names" title="Show street names (N)" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M9 21h6"/><path d="M5 5h11l3 2.5L16 10H5z"/><path d="M19 12H8l-3 2.5L8 17h11z"/></svg></button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false" aria-label="Time of day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span id="bsTimeBtnT">Time</span></button><button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" data-key="L" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button></div>
     <div class="bs-admin" id="bsAdmin" role="toolbar" aria-label="Edit the map" hidden>
-      <div class="bs-admin-row" role="group" aria-label="Tool"><button type="button" data-tool="path" aria-pressed="false"><i style="background:#cfcabd"></i>Path</button><button type="button" data-tool="grass" aria-pressed="false"><i style="background:#6fa64b"></i>Grass</button><button type="button" data-tool="road" aria-pressed="false"><i style="background:#4a4d52"></i>Road</button><button type="button" data-tool="tree" aria-pressed="false"><i style="background:#4c7a33;border-radius:50%"></i>Tree</button><button type="button" data-tool="small" aria-pressed="false"><i style="background:#6a9f48;border-radius:50%;transform:scale(.7)"></i>Small tree</button><button type="button" data-tool="bush" aria-pressed="false"><i style="background:#3f7a3a;border-radius:40%"></i>Bush</button><button type="button" data-tool="flowers" aria-pressed="false"><i style="background:#e0567a;border-radius:50%"></i>Flowers</button><button type="button" data-tool="car" aria-pressed="false"><i style="background:#2d5ea8;border-radius:3px"></i>Car</button><button type="button" data-tool="light" aria-pressed="false"><i style="background:#8e9396;width:4px"></i>Light</button><button type="button" data-tool="delete" aria-pressed="false">Delete</button></div>
+      <div class="bs-admin-row" role="group" aria-label="Tool"><button type="button" data-tool="path" aria-pressed="false"><i style="background:#cfcabd"></i>Path</button><button type="button" data-tool="grass" aria-pressed="false"><i style="background:#6fa64b"></i>Grass</button><button type="button" data-tool="road" aria-pressed="false"><i style="background:#4a4d52"></i>Road</button><button type="button" data-tool="tree" aria-pressed="false"><i style="background:#4c7a33;border-radius:50%"></i>Tree</button><button type="button" data-tool="small" aria-pressed="false"><i style="background:#6a9f48;border-radius:50%;transform:scale(.7)"></i>Small tree</button><button type="button" data-tool="bush" aria-pressed="false"><i style="background:#3f7a3a;border-radius:40%"></i>Bush</button><button type="button" data-tool="flowers" aria-pressed="false"><i style="background:#e0567a;border-radius:50%"></i>Flowers</button><button type="button" data-tool="car" aria-pressed="false"><i style="background:#2d5ea8;border-radius:3px"></i>Car</button><button type="button" data-tool="light" aria-pressed="false"><i style="background:#8e9396;width:4px"></i>Light</button><button type="button" data-tool="move" aria-pressed="false">Move</button><button type="button" data-tool="delete" aria-pressed="false">Delete</button></div>
       <div class="bs-admin-row"><span class="bs-admin-w" id="bsAdminW" role="group" aria-label="Width" hidden><button type="button" data-w="-1" aria-label="Narrower">&minus;</button><output id="bsAdminWOut"></output><button type="button" data-w="1" aria-label="Wider">+</button></span><button type="button" id="bsAdminLine" aria-pressed="true" hidden>Straight</button><button type="button" class="bs-admin-ic" id="bsAdminUndo" aria-label="Undo" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5 4 9l4 4"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button><button type="button" id="bsAdminSave" aria-label="Save my edits for everyone">Save</button><button type="button" id="bsAdminCopy" aria-label="Copy edits">Copy</button><button type="button" class="bs-admin-ic" id="bsAdminClear" aria-label="Clear all my edits" title="Clear all my edits"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 7V4h4v3M6 7l1 13h10l1-13"/></svg></button></div>
       <p class="bs-admin-note" id="bsAdminNote" role="status"></p>
     </div>
@@ -9851,6 +9852,9 @@ const handle = async (m, post) => {
       tree: { put: "addTree", say: "Tap the ground to plant a tree." }, small: { put: "addSmallTree", say: "Tap the ground to plant a small tree." },
       bush: { put: "addBush", say: "Tap the ground to plant a bush." }, flowers: { put: "addFlower", say: "Tap the ground to plant a bed of flowers." }, car: { put: "addCar", say: "Tap the ground to park a car, facing the way you're looking." },
       light: { put: "addLight", say: "Tap the ground to stand a street light, its arm reaching the way you're looking." },
+      // Move (Ash, 15 November 2026: "more options of what to change including moving those white blocks on the ground", "Concrete, and other things"):
+      // tap a thing to pick it up, then tap where it goes
+      move: { say: "Tap something to pick it up (a stroke of path or concrete, grass or road, a parked car, a tree, or anything put in), then tap where it goes." },
       delete: { say: "Tap a parked car, a tree, a person, a street light you put in, or one of your own strokes." } };
     let pref = {}; try { pref = JSON.parse(localStorage.getItem("an3d-admin") || "{}") || {}; } catch {}
     const keep = () => { try { localStorage.setItem("an3d-admin", JSON.stringify(pref)); } catch {} };
@@ -9899,12 +9903,33 @@ const handle = async (m, post) => {
       else { const i = g ? strokeAt(g.x, g.z) : -1; if (i < 0) return say("Nothing to take out there. Tap a parked car, a tree, a person or one of your own strokes.", 3500);
         ops.push({ back: mine.paint[i], at: i }); mine.paint.splice(i, 1); say("Stroke taken out.", 2500); }
       save(); apply(); };
+    // the Move tool: the first tap picks a thing up, the second puts it there (a stroke keeps its shape; a parked car or a tree of the
+    // model's is taken out where it was and one put in where it goes; anything put in just moves)
+    let held = null;
+    const ADDS = ["addTree", "addCar", "addLight", "addSmallTree", "addBush", "addFlower"], ADD_R = { addCar: 2.6, addTree: 1.8 };
+    const moveTap = (cx, cy) => { const g = m.groundUnder(cx, cy);
+      if (held) { if (!g) return say("That missed the ground. Tap where it should go.", 2500); const H = held; held = null;
+        if (H.stroke) { const s = mine.paint[mine.paint.indexOf(H.stroke)]; if (s) { const dx = g.x - H.x, dz = g.z - H.z; s.p = s.p.map((v, i) => r2(v + (i % 2 ? dz : dx))); } }
+        else if (H.add) { if (H.own) { H.q[0] = r2(g.x); H.q[1] = r2(g.z); } else { mine.gone.noAdd.push([H.q[0], H.q[1]]); mine.gone[H.add].push(H.q.length > 2 ? [r2(g.x), r2(g.z), H.q[2]] : [r2(g.x), r2(g.z)]); } }
+        else if (H.car) { mine.gone.cars.push([r2(H.x), r2(H.z)]); mine.gone.addCar.push([r2(g.x), r2(g.z), r2(H.h ?? BS.fly.yaw + Math.PI)]); }
+        else if (H.tree) { mine.gone.trees.push([r2(H.x), r2(H.z)]); mine.gone.addTree.push([r2(g.x), r2(g.z)]); }
+        save(); apply(); count(); return say(`${H.name} moved.`, 2200); }
+      if (!g) return say("That missed the ground.", 2000);
+      for (const kind of ADDS) { const r = ADD_R[kind] || 1.2, i = mine.gone[kind].findIndex(q => Math.hypot(q[0] - g.x, q[1] - g.z) < r);
+        if (i >= 0) { held = { add: kind, own: true, q: mine.gone[kind][i], name: kind === "addCar" ? "Car" : kind === "addLight" ? "Street light" : "Planting" }; return say(`Picked up. Now tap where it goes.`, 3000); }
+        const o = layers().filter(e => e !== mine).flatMap(e => e.gone[kind]).find(q => Math.hypot(q[0] - g.x, q[1] - g.z) < r);
+        if (o) { held = { add: kind, own: false, q: o.slice(), name: kind === "addCar" ? "Car" : kind === "addLight" ? "Street light" : "Planting" }; return say("Picked up. Now tap where it goes.", 3000); } }
+      const th = m.pickThing?.(cx, cy);
+      if (th?.type === "car") { held = { car: true, x: th.x, z: th.z, h: th.heading, name: "Parked car" }; return say("Parked car picked up. Now tap where it goes.", 3000); }
+      if (th?.type === "tree") { held = { tree: true, x: th.x, z: th.z, name: "Tree" }; return say("Tree picked up. Now tap where it goes.", 3000); }
+      const i = strokeAt(g.x, g.z); if (i >= 0) { held = { stroke: mine.paint[i], x: g.x, z: g.z, name: ["", "Grass", "Road", "Path"][mine.paint[i].k] || "Stroke" }; return say(`${held.name} picked up. Now tap where that spot should go.`, 3500); }
+      say("Nothing to pick up there. Tap one of your strokes, a parked car, a tree, or something put in.", 3500); };
     A.down = e => { if (!A.tool) return false;
       if (e.pointerType === "mouse" && e.button !== 0) return false;
       if (ptr) { nav.ptrs.set(ptr.id, { x: ptr.x, y: ptr.y }); done(); return false; }  // a second finger: stop drawing, and both fingers move the map
       if (nav.ptrs.size) return false;
       const g = m.groundUnder(e.clientX, e.clientY);
-      ptr = { id: e.pointerId, x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, pts: g && A.tool !== "delete" && !TOOLS[A.tool].put ? [g.x, g.z] : null, scr: [e.clientX, e.clientY] };
+      ptr = { id: e.pointerId, x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, pts: g && A.tool !== "delete" && A.tool !== "move" && !TOOLS[A.tool].put ? [g.x, g.z] : null, scr: [e.clientX, e.clientY] };
       trail.setAttribute("stroke", TOOLS[A.tool].col || "#fff");
       try { box.setPointerCapture(e.pointerId); } catch {} e.preventDefault(); return true; };
     A.move = e => { if (!ptr || e.pointerId !== ptr.id) return false; ptr.x = e.clientX; ptr.y = e.clientY; e.preventDefault();
@@ -9917,6 +9942,7 @@ const handle = async (m, post) => {
     A.up = e => { if (!ptr || e.pointerId !== ptr.id) return false; const p = ptr; ptr = null; trail.setAttribute("points", "");
       if (e.type === "pointercancel") { draft = null; apply(); return true; }
       if (A.tool === "delete") { if (Math.hypot(e.clientX - p.sx, e.clientY - p.sy) < 12) takeOut(e.clientX, e.clientY); return true; }
+      if (A.tool === "move") { if (Math.hypot(e.clientX - p.sx, e.clientY - p.sy) < 12) moveTap(e.clientX, e.clientY); return true; }
       if (TOOLS[A.tool].put) { if (Math.hypot(e.clientX - p.sx, e.clientY - p.sy) >= 12) return true;  // a tap puts one in; a drag moves the view
         const g = m.groundUnder(e.clientX, e.clientY); if (!g) { say("That missed the ground.", 2000); return true; }
         const kind = TOOLS[A.tool].put, h = r2(BS.fly.yaw + Math.PI); mine.gone[kind].push(kind === "addTree" ? [r2(g.x), r2(g.z)] : [r2(g.x), r2(g.z), h]); ops.push({ gone: kind });
@@ -9995,6 +10021,22 @@ const handle = async (m, post) => {
     ($("bsTown") || fly).appendChild(revBox);
     let rev = null;
     const revClose = () => { revBox.hidden = true; rev = null; if (look) { look = null; apply(); } drawPlans(); };
+    // what a suggestion does, in words (Ash, 15 November 2026: "When reviewing changes give me more info about what the person did"):
+    // the strokes by kind with their lengths and widths, what was planted or put in, what was taken out, and the street it's on
+    let streetsP = null;
+    const describe = e => { const out = [], len = p => { let L = 0; for (let i = 2; i < p.length; i += 2) L += Math.hypot(p[i] - p[i - 2], p[i + 1] - p[i - 1]); return L; };
+      for (const [k, one, many] of [[3, "path or concrete", "paths or concrete"], [2, "road", "roads"], [1, "grass", "grass"]]) { const S = e.paint.filter(s => s.k === k); if (!S.length) continue;
+        const L = S.reduce((n, s) => n + len(s.p), 0), w = S.reduce((n, s) => n + s.w, 0) / S.length; out.push(`${S.length === 1 ? (k === 1 ? "Grass" : "A " + one) : S.length + " " + many} ${k === 1 ? "painted" : "laid"}, ${Math.max(1, Math.round(L))} m long, ${w.toFixed(1)} m wide`); }
+      const n = k => e.gone[k].length, pl = (c, a, b) => c ? `${c} ${c === 1 ? a : b}` : "";
+      const put = [pl(n("addTree"), "tree", "trees"), pl(n("addSmallTree"), "small tree", "small trees"), pl(n("addBush"), "bush", "bushes"), pl(n("addFlower"), "flower bed", "flower beds"), pl(n("addCar"), "parked car", "parked cars"), pl(n("addLight"), "street light", "street lights")].filter(Boolean);
+      if (put.length) out.push("Put in: " + put.join(", "));
+      const gone = [pl(n("cars"), "parked car", "parked cars"), pl(n("trees"), "tree", "trees"), pl(n("people"), "walker", "walkers"), pl(n("noAdd"), "thing someone put in", "things others put in")].filter(Boolean);
+      if (gone.length) out.push("Taken out: " + gone.join(", "));
+      return out; };
+    const streetNear = async e => { const p = e.paint[0]?.p || KINDS.map(k => e.gone[k][0]).find(Boolean); if (!p) return "";
+      try { streetsP ||= townStreetData(cfg); const d = await streetsP; let best = null, bd = 120;
+        for (const r of d.roads) { const nm = d.names?.[r.name]; if (!nm) continue; const q = r.pts; for (let i = 0; i + 3 < q.length; i += 2) { const ax = q[i], az = q[i + 1], dx = q[i + 2] - ax, dz = q[i + 3] - az, L = dx * dx + dz * dz || 1, t = bsClamp(((p[0] - ax) * dx + (p[1] - az) * dz) / L, 0, 1), dd = Math.hypot(p[0] - ax - dx * t, p[1] - az - dz * t); if (dd < bd) { bd = dd; best = nm; } } }
+        return best || ""; } catch { return ""; } };
     const revShow = () => { const list = waiting(); if (!rev || !list.includes(rev)) rev = list[0] || null;
       if (!rev) { revClose(); return toast("No suggested changes waiting.", 2500); }
       look = rev.e; apply(); goTo(rev.e);
@@ -10005,7 +10047,9 @@ const handle = async (m, post) => {
       const row = document.createElement("div"); row.append(bt("Approve", "ok", revYes), bt("Deny", "no", revNo));
       if (list.length > 1) row.append(bt("Next", "", () => { rev = list[(i + 1) % list.length]; revShow(); }));
       const x = bt("\u00d7", "x", revClose); x.setAttribute("aria-label", "Close");
-      revBox.replaceChildren(x, who, sm, row); revBox.hidden = false; drawPlans(); };
+      const what = document.createElement("ul"); what.className = "bs-rev-what"; for (const line of describe(rev.e)) { const li = document.createElement("li"); li.textContent = line; what.append(li); }
+      const R0 = rev; streetNear(rev.e).then(st => { if (st && rev === R0 && !revBox.hidden) who.append(` On or near ${st}.`); });
+      revBox.replaceChildren(x, who, what, sm, row); revBox.hidden = false; drawPlans(); };
     const revNext = P => { doneSet.add(P.id); keepDone(); look = null; rev = null; showFresh(); drawPlans();
       if (waiting().length) revShow(); else { revBox.hidden = true; apply(); } };
     // Approve: into your edits, and saved for everyone straight away when the GitHub key is saved
