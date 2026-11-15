@@ -1322,6 +1322,11 @@ body.bsdrive:not(.bsplane) .bs-fly-x.bs-car { bottom: calc(68px + env(safe-area-
 /* touch only: the handbrake sits above the Look stick while you drive a car, and Boost moves up to make room */
 .bs-fly-x.bs-hand { top: auto; left: auto; right: 34px; bottom: calc(192px + env(safe-area-inset-bottom)); z-index: 2; touch-action: none; user-select: none; -webkit-user-select: none; }
 .bs-fly-x.bs-hand[hidden] { display: none; }
+/* the map-editing pencil: where the handbrake shows in a car, over the Look stick (Ash, 15 November 2026), and away while you drive or fly one */
+.bs-fly-x.bs-edit { top: auto; left: auto; right: 34px; bottom: calc(192px + env(safe-area-inset-bottom)); width: 46px; height: 46px; padding: 0; display: inline-flex; align-items: center; justify-content: center; z-index: 2; }
+.bs-fly-x.bs-edit svg { width: 20px; height: 20px; }
+.bs-fly-x.bs-edit[hidden], body.bsdrive .bs-fly-x.bs-edit, body.flypeek .bs-fly-x.bs-edit { display: none; }
+.bs-fly-x.bs-edit[aria-pressed="true"] { background: #fff; color: #1b1830; }
 .bs-fly-x.bs-hand.on { background: #fff; color: #1b1830; }
 body.bsdrive:not(.bsplane) .bs-fly-x.bs-boost { bottom: calc(240px + env(safe-area-inset-bottom)); }
 .bs-fly-x.bs-boost.on { background: linear-gradient(90deg, #ff9f1c var(--charge, 100%), #8d8676 var(--charge, 100%)); }
@@ -1981,7 +1986,7 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <div class="bs-town-mode" id="bsTownMode" role="group" aria-label="Walk or fly" data-key="F" hidden><button type="button" data-town-mode="walk" aria-pressed="true">Walk</button><button type="button" data-town-mode="fly" aria-pressed="false">Fly</button></div>
     <div class="bs-town-list" id="bsTownList" role="menu" aria-label="Places to jump to" hidden></div>
     <div class="bs-town-list bs-town-floods" id="bsTownFloods" role="menu" aria-label="Floods to show on the map" hidden></div>
-    <div class="bs-slides" role="group" aria-label="Street names, edit, tide, time and flood"><button class="bs-fly-x bs-ic" type="button" id="bsNamesBtn" data-key="N" aria-pressed="false" aria-label="Street names" title="Show street names (N)" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M9 21h6"/><path d="M5 5h11l3 2.5L16 10H5z"/><path d="M19 12H8l-3 2.5L8 17h11z"/></svg></button><button class="bs-fly-x bs-ic" type="button" id="bsEditBtn" aria-pressed="false" aria-controls="bsAdmin" aria-label="Edit the map" title="Edit the map" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg></button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false" aria-label="Time of day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span id="bsTimeBtnT">Time</span></button><button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button></div>
+    <div class="bs-slides" role="group" aria-label="Street names, tide, time and flood"><button class="bs-fly-x bs-ic" type="button" id="bsNamesBtn" data-key="N" aria-pressed="false" aria-label="Street names" title="Show street names (N)" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M9 21h6"/><path d="M5 5h11l3 2.5L16 10H5z"/><path d="M19 12H8l-3 2.5L8 17h11z"/></svg></button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false" aria-label="Time of day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span id="bsTimeBtnT">Time</span></button><button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button></div>
     <div class="bs-admin" id="bsAdmin" role="toolbar" aria-label="Edit the map" hidden>
       <div class="bs-admin-row" role="group" aria-label="Tool"><button type="button" data-tool="path" aria-pressed="false"><i style="background:#cfcabd"></i>Path</button><button type="button" data-tool="grass" aria-pressed="false"><i style="background:#6fa64b"></i>Grass</button><button type="button" data-tool="road" aria-pressed="false"><i style="background:#4a4d52"></i>Road</button><button type="button" data-tool="delete" aria-pressed="false">Delete</button></div>
       <div class="bs-admin-row"><span class="bs-admin-w" id="bsAdminW" role="group" aria-label="Width" hidden><button type="button" data-w="-1" aria-label="Narrower">&minus;</button><output id="bsAdminWOut"></output><button type="button" data-w="1" aria-label="Wider">+</button></span><button type="button" id="bsAdminLine" aria-pressed="true" hidden>Straight</button><button type="button" class="bs-admin-ic" id="bsAdminUndo" aria-label="Undo" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5 4 9l4 4"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button><button type="button" id="bsAdminSave" aria-label="Save my edits for everyone">Save</button><button type="button" id="bsAdminCopy" aria-label="Copy edits">Copy</button><button type="button" class="bs-admin-ic" id="bsAdminClear" aria-label="Clear all my edits" title="Clear all my edits"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 7V4h4v3M6 7l1 13h10l1-13"/></svg></button></div>
@@ -2008,6 +2013,7 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <button class="bs-fly-x bs-car" type="button" id="bsCarBtn" data-key="Enter" hidden>Get in the car</button>
     <button class="bs-fly-x bs-boost" type="button" id="bsBoostBtn" data-key="Shift" hidden>Boost</button>
     <button class="bs-fly-x bs-hand" type="button" id="bsHandBtn" hidden>Handbrake</button>
+    <button class="bs-fly-x bs-edit" type="button" id="bsEditBtn" aria-pressed="false" aria-controls="bsAdmin" aria-label="Edit the map" title="Edit the map" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg></button>
     <div class="bs-keys" id="bsKeys" hidden><p class="bs-keys-now" id="bsKeysNow"></p><dl id="bsKeysList"></dl><p class="bs-keys-q">? to hide this list</p></div>
     <button class="bs-fly-x bs-fly-lock" type="button" id="bsFlyLock" hidden>Use this view for the weather</button>
     <div class="bs-ud" role="group" aria-label="Fly up or down">
@@ -8514,6 +8520,7 @@ const handle = async (m, post) => {
         if (TOWN_TOGETHER.includes(cfg.place) && !OFF.has("players")) try { T.peers = townPeers(T, m, F, ground, cfg.place, box); } catch (e) { console.warn("Town model: other players couldn't start", e); }
         if (!OFF.has("me")) try { T.me = townMe(T, m, F, ground); } catch (e) { console.warn("Town model: the construction worker couldn't start", e); }
         if (!OFF.has("traffic")) try { T.traffic = townTraffic(T, m, F, ground, cfg); } catch (e) { console.warn("Town model: the traffic couldn't start", e); }
+        if (cfg.place === "moo" && !OFF.has("home6")) try { T.home6 = townHome6(T, m); } catch (e) { console.warn("Town model: Pandy and Arlo couldn't start", e); }
         if (!OFF.has("animal")) try { T.critter = townCritter(T, m, ground, cfg.place); } catch (e) { console.warn("Town model: the animal couldn't start", e); }
         F.hot = { f: () => toMode(!T.walk),
           enter: () => T.car?.enter(), keys: () => !!T.car?.keys?.(), undo: () => !!T.admin?.undo?.(), emotes: () => !!T.peers?.menu?.(), emote: i => !!T.peers?.emote?.(i), gold: () => isAsh() && !!T.car?.toGold?.(),
@@ -9921,9 +9928,9 @@ const handle = async (m, post) => {
       for (const [v, label] of [["explorer", "Explorer"], ["builder", "Construction worker"]]) { const bn = el("button", "", label); bn.type = "button"; bn.setAttribute("aria-pressed", String(townRole() === v));
         bn.onclick = () => { if (townRole() === v) return; try { if (v === "builder") localStorage.setItem("an-player-role", "builder"); else localStorage.removeItem("an-player-role"); } catch {}
           lastSent = null; T.admin?.refresh?.(); meDraw();
-          toast(v === "builder" ? (isAsh() ? "Construction worker. The pencil (top right) edits the ground and Saves for everyone." : "You're a construction worker. Tap the pencil (top right) to change the ground, then Send it to the town planner.") : "You're exploring.", 5000); };
+          toast(v === "builder" ? (isAsh() ? "Construction worker. The pencil (bottom right) edits the ground and Saves for everyone." : "You're a construction worker. Tap the pencil (bottom right) to change the ground, then Send it to the town planner.") : "You're exploring.", 5000); };
         rl.append(bn); }
-      as.append(el("span", "bs-me-lbl", "Play as"), rl, el("p", "", townRole() !== "builder" ? "Walk, drive and fly anywhere in town. Pick Construction worker to get the pencil (top right) and help shape the model."
+      as.append(el("span", "bs-me-lbl", "Play as"), rl, el("p", "", townRole() !== "builder" ? "Walk, drive and fly anywhere in town. Pick Construction worker to get the pencil (bottom right) and help shape the model."
         : isAsh() ? "You see yourself from behind, and the pencil edits the ground. As the town planner, Save puts it in everyone's app, and Suggestions has what others sent."
         : "Help us build and shape this model! Your edits are sent to the town planner who can permanently update this model."));
       // whether other players see you
@@ -10071,6 +10078,45 @@ const handle = async (m, post) => {
   }
   // The plane: a small high-winged four-seater, white with a blue stripe. Nose to +Z, wheels on y = 0. Returns the body and, apart,
   // the propeller's blades and the blur they become when it spins (each about the propeller's own centre).
+  // Ash's place, 6 Beaudesert Road (Ash, 15 November 2026: "Add pandy a person out the front of this house ... without making it
+  // high cost for lag. Add Arlo onto 6 Beaudesert rd. A small cavapoo dog"). Pandy stands on the front lawn looking out to the
+  // street, turns to you and waves when you walk up; Arlo potters about the lawn, a few steps at a time, and wags when you're close.
+  // Two small pieces (about 900 triangles in all), only drawn within 260 m, and only moved while something is actually happening.
+  function townHome6(T, m) {
+    const P = { frame() {}, dispose() {} }; if (!m.addParts || !m.groundAt) return P;
+    const THREE = BS.B.THREE, g = (x, z) => m.groundAt(x, z), M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), ONE = new THREE.Vector3(1, 1, 1), R = new THREE.Matrix4();
+    const FAR = new THREE.Matrix4().makeTranslation(0, -1e5, 0).elements, SH = [new THREE.Matrix4().makeTranslation(-0.25, 1.36, 0), new THREE.Matrix4().makeTranslation(0.25, 1.36, 0)], TAIL = new THREE.Matrix4().makeTranslation(0, 0.33, -0.19);
+    const ME = { x: -252.4, z: -993.6, yaw: -Math.PI / 2 }, LAWN = { x: -252.6, z: -997.2, r: 1.7 };  // on the lawn beside the drive, facing the street (west)
+    const pp = m.addParts(townPlaneParts("#3f7f8c", "pandy").map(q => ({ ...q, matrix: FAR.slice() })));
+    const ap = m.addParts(townPlaneParts("#e2b47c", "arlo").map(q => ({ ...q, matrix: FAR.slice() })));
+    const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
+    let shown = false, last = performance.now(), look = ME.yaw, waveT = -1, waved = false, t = 0;
+    const dog = { x: LAWN.x + LAWN.r, z: LAWN.z, h: 0, to: null, rest: 1.5, wag: 0 };
+    const drawMe = arm => { M.compose(V.set(ME.x, g(ME.x, ME.z), ME.z), Q.setFromEuler(E.set(0, look, 0, "YXZ")), ONE); pp.setMatrix(0, M.elements.slice());
+      pp.setMatrix(1, M.clone().multiply(SH[0]).multiply(R.makeRotationZ(-arm)).elements); pp.setMatrix(2, M.clone().multiply(SH[1]).multiply(R.makeRotationZ(0.06)).elements); };
+    const drawDog = wag => { M.compose(V.set(dog.x, g(dog.x, dog.z), dog.z), Q.setFromEuler(E.set(0, dog.h, 0, "YXZ")), ONE); ap.setMatrix(0, M.elements.slice());
+      ap.setMatrix(1, M.clone().multiply(TAIL).multiply(R.makeRotationX(-0.5)).multiply(new THREE.Matrix4().makeRotationZ(wag)).elements); };
+    P.frame = () => { const now = performance.now(), dt = Math.min(0.1, (now - last) / 1000); last = now; t += dt; const F = BS.fly; if (!F) return;
+      const dx = F.pos.x - ME.x, dz = F.pos.z - ME.z, d = Math.hypot(dx, dz), up = F.pos.y - g(F.pos.x, F.pos.z);
+      if (d > 260 || up > 220) { if (shown) { for (let i = 0; i < 3; i++) pp.setMatrix(i, FAR.slice()); for (let i = 0; i < 2; i++) ap.setMatrix(i, FAR.slice()); shown = false; } return; }
+      let me = !shown, pet = !shown; shown = true;
+      // Pandy: turns to you as you come up the drive (within 14 m, on foot), and waves the first time
+      const want = d < 14 && T.walk ? Math.atan2(dx, dz) : ME.yaw, turn = wrap(want - look);
+      if (Math.abs(turn) > 0.01) { look += turn * Math.min(1, dt * 3); me = true; }
+      if (d < 12 && T.walk && !waved) { waved = true; waveT = 0; } else if (d > 25) waved = false;
+      let arm = 0.06; if (waveT >= 0) { waveT += dt; const k = Math.min(1, waveT * 4, (2.4 - waveT) * 4); arm = 0.06 + k * (2.5 + 0.35 * Math.sin(waveT * 11)); me = true; if (waveT > 2.4) waveT = -1; }
+      if (me) drawMe(arm);
+      // Arlo: a few steps across the lawn, a sniff, then off again (only moved while he moves); his tail goes when you're near
+      if (dog.to) { const ex = dog.to[0] - dog.x, ez = dog.to[1] - dog.z, L = Math.hypot(ex, ez), st = Math.min(L, 0.9 * dt);
+        const hw = wrap(Math.atan2(ex, ez) - dog.h); dog.h += hw * Math.min(1, dt * 8); dog.x += ex / (L || 1) * st; dog.z += ez / (L || 1) * st; pet = true;
+        if (L < 0.05) { dog.to = null; dog.rest = 2 + Math.random() * 5; } }
+      else if ((dog.rest -= dt) <= 0) { const a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * LAWN.r; dog.to = [LAWN.x + Math.cos(a) * r, LAWN.z + Math.sin(a) * r]; }
+      else if (d < 7 && T.walk) { const hw = wrap(Math.atan2(F.pos.x - dog.x, F.pos.z - dog.z) - dog.h); if (Math.abs(hw) > 0.02) { dog.h += hw * Math.min(1, dt * 4); pet = true; } }
+      const wag = d < 9 ? 0.5 * Math.sin(t * 16) : 0; if (wag || dog.wag) pet = true; dog.wag = wag;
+      if (pet) drawDog(wag); };
+    P.dispose = () => { try { pp.remove(); } catch {} try { ap.remove(); } catch {} };
+    return P;
+  }
   function townPlaneParts(stripe = "#1f6fb2", car = false) {
     const lin = hex => { const v = parseInt(hex.slice(1), 16); return [((v >> 16) & 255) / 255, ((v >> 8) & 255) / 255, (v & 255) / 255].map(c => Math.pow(c, 2.2)); };
     const WHITE = lin("#f3f3ee"), BLUE = lin(stripe), GLASS = lin("#1c2a36"), DARK = lin("#2a2c30"), TYRE = lin("#17181a"), GREY = lin("#b9bcc0");
@@ -10088,6 +10134,41 @@ const handle = async (m, post) => {
           quad(p(a0, -1), p(a1, -1), p(a1, 1), p(a0, 1), TYRE); tri([x + w / 2, y, z], p(a0, 1), p(a1, 1), TYRE); tri([x - w / 2, y, z], p(a1, -1), p(a0, -1), TYRE); } };
       return { P, N, C, tri, quad, hull, box, wheel, part: extra => ({ positions: new Float32Array(P), normals: new Float32Array(N), colors: new Float32Array(C), color: [1, 1, 1], roughness: 0.55, doubleSide: true, ...extra }) }; };
     const b = mesh();
+    // a rough ball: ns round by nr down, each point pushed in or out a little (seeded, so it's the same every time)
+    const ball = (B, cx, cy, cz, rx, ry, rz, col, seed = 1, ns = 7, nr = 4, jit = 0.18) => { let sd = seed * 7919 + 13; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647, R = [];
+      for (let j = 0; j <= nr; j++) { R.push([]); for (let i = 0; i < ns; i++) { const ph = j / nr * Math.PI, th = (i + (j % 2) * 0.5) / ns * Math.PI * 2, k = j === 0 || j === nr ? 1 : 1 - jit / 2 + rnd() * jit;
+        R[j].push([cx + Math.sin(ph) * Math.sin(th) * rx * k, cy + Math.cos(ph) * ry * k, cz + Math.sin(ph) * Math.cos(th) * rz * k]); } }
+      for (let j = 0; j < nr; j++) for (let i = 0; i < ns; i++) { const a = R[j][i], b2 = R[j][(i + 1) % ns], c = R[j + 1][(i + 1) % ns], d = R[j + 1][i], cl = Array.isArray(col[0]) ? col[(i + j) % col.length] : col;
+        if (j === 0) B.tri(a, c, d, cl); else if (j === nr - 1) B.tri(a, b2, d, cl); else B.quad(a, b2, c, d, cl); } };
+    if (car === "pandy") {  // Pandy, out the front of 6 Beaudesert Road: 1.68 m, feet on y = 0, facing +Z, a top in the colour given
+      const TOP = lin(stripe), JEAN = lin("#3d5878"), SHOE = lin("#ece9e2"), SOLE = lin("#9a948a"), SKIN = lin("#e2b393"), HAIR = lin("#4a3022"), EYE = lin("#2a1f1a"), LIP = lin("#b4675f");
+      for (const sx of [-1, 1]) { b.box(sx * 0.1 - 0.06, sx * 0.1 + 0.06, 0, 0.035, -0.09, 0.15, SOLE); b.box(sx * 0.1 - 0.055, sx * 0.1 + 0.055, 0.035, 0.09, -0.085, 0.14, SHOE);
+        b.box(sx * 0.1 - 0.07, sx * 0.1 + 0.07, 0.09, 0.84, -0.075, 0.075, JEAN); }
+      b.box(-0.19, 0.19, 0.8, 0.9, -0.11, 0.11, JEAN);  // hips
+      b.hull([0.115, 0.185, 0.88, 1.38], [-0.115, 0.185, 0.88, 1.38], TOP); b.box(-0.235, 0.235, 1.22, 1.39, -0.12, 0.12, TOP);  // top, wider at the shoulders
+      b.box(-0.055, 0.055, 1.38, 1.47, -0.05, 0.05, SKIN);
+      ball(b, 0, 1.565, 0.005, 0.095, 0.115, 0.105, SKIN, 3, 8, 5, 0.04);  // head
+      ball(b, 0, 1.6, -0.02, 0.108, 0.105, 0.112, HAIR, 5, 8, 4, 0.08);  // hair on top and behind
+      b.box(-0.105, 0.105, 1.36, 1.6, -0.12, -0.03, HAIR);  // down to the shoulders behind
+      for (const sx of [-1, 1]) b.box(sx * 0.035 - 0.012, sx * 0.035 + 0.012, 1.565, 1.585, 0.098, 0.106, EYE);
+      b.box(-0.022, 0.022, 1.505, 1.515, 0.096, 0.104, LIP);
+      // each arm a part of its own, from its shoulder (the body's part first, then right, then left), with a hand
+      const arm = () => { const a = mesh(); a.box(-0.06, 0.06, -0.26, 0.02, -0.065, 0.065, TOP); a.box(-0.045, 0.045, -0.6, -0.26, -0.045, 0.045, SKIN); a.box(-0.04, 0.04, -0.7, -0.6, -0.03, 0.05, SKIN); return a.part({ roughness: 0.75 }); };
+      return [b.part({ roughness: 0.75 }), arm(), arm()];
+    }
+    if (car === "arlo") {  // Arlo, a cavoodle (cavapoo): small and curly, apricot, floppy ears; 0.34 m at the shoulder, paws on y = 0, facing +Z
+      const COAT = [lin(stripe), lin("#dba66c"), lin("#c88f52")], EAR = [lin("#b97d45"), lin("#c88a4e")], DARK = lin("#24170f"), TONGUE = lin("#d9737a");
+      ball(b, 0, 0.27, -0.02, 0.105, 0.1, 0.19, COAT, 11, 7, 4, 0.22);  // body
+      ball(b, 0, 0.29, 0.12, 0.1, 0.105, 0.09, COAT, 12, 7, 4, 0.22);  // chest
+      for (const [sx, z] of [[-1, 0.12], [1, 0.12], [-1, -0.13], [1, -0.13]]) { b.box(sx * 0.06 - 0.032, sx * 0.06 + 0.032, 0.03, 0.22, z - 0.032, z + 0.032, COAT[1]); ball(b, sx * 0.06, 0.035, z + 0.012, 0.04, 0.035, 0.05, COAT[0], 20 + sx, 6, 3, 0.2); }
+      ball(b, 0, 0.43, 0.2, 0.085, 0.085, 0.085, COAT, 13, 7, 4, 0.22);  // head
+      ball(b, 0, 0.4, 0.285, 0.045, 0.04, 0.055, COAT[1], 14, 6, 3, 0.15);  // muzzle
+      b.box(-0.017, 0.017, 0.408, 0.432, 0.33, 0.345, DARK);  // nose
+      for (const sx of [-1, 1]) { b.box(sx * 0.034 - 0.011, sx * 0.034 + 0.011, 0.442, 0.464, 0.266, 0.278, DARK); ball(b, sx * 0.08, 0.385, 0.19, 0.03, 0.075, 0.045, EAR, 15 + sx, 6, 3, 0.2); }
+      b.box(-0.015, 0.015, 0.355, 0.37, 0.3, 0.33, TONGUE);
+      const tail = mesh(); ball(tail, 0, 0.06, -0.03, 0.035, 0.07, 0.035, COAT, 16, 6, 3, 0.25);  // the tail, about its base (wags)
+      return [b.part({ roughness: 0.95 }), tail.part({ roughness: 0.95 })];
+    }
     if (car === "roo" || car === "emu" || car === "wombat") {  // an Australian animal, feet on y = 0, facing +Z
       if (car === "roo") { const F = lin("#a3693d"), L = lin("#dcb88c"), D = lin("#3b2a1e");
         for (const sx of [-1, 1]) { b.box(sx * 0.12 - 0.05, sx * 0.12 + 0.05, 0, 0.07, -0.08, 0.36, F); b.box(sx * 0.13 - 0.03, sx * 0.13 + 0.01, 1.24, 1.42, 0.02, 0.07, F); b.box(sx * 0.11 - 0.03, sx * 0.11 + 0.03, 0.66, 0.84, 0.14, 0.26, F); }
@@ -10494,7 +10575,7 @@ const handle = async (m, post) => {
     m.setCamera(F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch);
     m.setMinutes(bsMins(BS.view.ms));
     T.streets?.update();
-    T.car?.frame(); T.peers?.frame(); T.me?.frame(); T.traffic?.frame(); T.critter?.frame(); T.no6?.frame();
+    T.car?.frame(); T.peers?.frame(); T.me?.frame(); T.traffic?.frame(); T.critter?.frame(); T.no6?.frame(); T.home6?.frame();
     // flying: held down at the lowest you can fly (Down, or C) for a moment, and you are on foot there
     if (!T.walk && !T.tween && !F.drive && F.floor && F.hot?.f) { const low = F.pos.y <= F.floor() + 0.1, down = F.vert < -0.3 || F.keys.has("KeyC"), now = performance.now();
       if (!(low && down)) T.downAt = 0; else if (!T.downAt) T.downAt = now; else if (now - T.downAt > 1200) { T.downAt = 0; F.hot.f(); } }
@@ -10512,7 +10593,7 @@ const handle = async (m, post) => {
     BS.town = null; T.dead = true; T.on = false; T.ungest?.(); T.unlay?.(); T.unflood?.();
     T.streets?.dispose(); T.streets = null; $("bsNamesBtn").hidden = true;
     T.admin?.dispose(); T.admin = null;
-    T.car?.dispose(); T.car = null; T.peers?.dispose(); T.peers = null; T.me?.dispose(); T.me = null; T.traffic?.dispose(); T.traffic = null; T.critter?.dispose(); T.critter = null;
+    T.car?.dispose(); T.car = null; T.peers?.dispose(); T.peers = null; T.me?.dispose(); T.me = null; T.traffic?.dispose(); T.traffic = null; T.critter?.dispose(); T.critter = null; T.home6?.dispose(); T.home6 = null;
     T.unbar?.();
     if (BS.fly) { const F = BS.fly; F.walk = F.speed = F.floor = F.hot = F.drive = null; F.ceil = 0; F.lim = null; }  // Explore, if it carries on, is its old self
     try { T.model?.dispose(); } catch {}
@@ -11118,7 +11199,7 @@ const handle = async (m, post) => {
   // Explore's parts, each switched on or off on this device by Ash (they were for finding what made an iPhone let go of the
   // stick, 15 November 2026). Read when a town opens.
   const EX_PARTS = [["animal", "The animal by Norman Road's helicopter"], ["rides", "Cars, planes, helicopter and bus to drive"], ["admin", "Map editing (the pencil)"],
-    ["players", "Other players and the Settings gear"], ["me", "Construction worker view"], ["no6", "6 Beaudesert Road's street detail"], ["streets", "Street names"], ["places", "Place names on the model"]];
+    ["players", "Other players and the Settings gear"], ["me", "Construction worker view"], ["no6", "6 Beaudesert Road's street detail"], ["home6", "Pandy and Arlo at 6 Beaudesert Road"], ["streets", "Street names"], ["places", "Place names on the model"]];
   const exOff = () => { try { return new Set(JSON.parse(localStorage.getItem("an3d-off") || "[]")); } catch { return new Set(); } };
   // Ash's own Explore settings, in Explore's Settings panel (Ash, 15 November 2026: "Move the settings for explore into the
   // settings for explore rather than in the main awesome news"): the cars and planes numbers (RIDE_DEF) and Explore's parts.

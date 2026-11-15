@@ -1088,3 +1088,14 @@ driving it, other players starting, and the ordinary weather view. Not checked o
   just right of the Settings gear. Ash's cars-and-planes numbers and Explore parts moved from the news app's
   Settings into Explore's Settings panel. The Emote button shows whenever you walk, on your own too. The weather
   screen's Explore button opens the same town model as the town's own Explore.
+
+## Pandy and Arlo at 6 Beaudesert Road, and the pencil by the Look stick (15 November 2026)
+
+- **Pandy** (`townHome6`, `townPlaneParts(_, "pandy")`): stands on the front path at 6 Beaudesert Road looking out to
+  the street; turns to you within 14 m on foot and waves the first time (again after you've gone 25 m away).
+- **Arlo**, an apricot cavoodle (`"arlo"`): potters a few steps at a time on the front lawn, turns to look at you within
+  7 m and wags his tail within 9 m.
+- Cheap: two small pieces (about 900 triangles), drawn only within 260 m and below 220 m up, and only moved while
+  something is happening. Explore parts has a switch for them (`home6`).
+- **The map-editing pencil** sits where the handbrake shows in a car (over the Look stick on a phone, bottom right on
+  a desktop), and is away while you drive or fly something.
