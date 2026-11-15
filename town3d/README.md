@@ -1253,3 +1253,18 @@ version shares: while exploring, the news page behind and the weather sheet the 
 iPhone (more so in an in-app browser such as Edge, whose toolbars move with scrolling), a drag that the phone takes as
 the start of a scroll cancels the touch, and the stick or the look goes back to the middle. While exploring, the page,
 the weather sheet and the 3D view are now locked: no scrolling, bouncing or zooming (`body.bsfly` rules).
+## Faster on phones (15 November 2026)
+
+Ash: "Game is getting a bit laggy, optimise". The models are drawn every frame (they animate), so what costs is the
+phone's graphics work per frame. Measured at the Moorooka start on foot: about 520,000 triangles in 81 draw calls,
+of which the app's own extras (people, Arlo, cars, the golden helicopter) are about 3,400 triangles in 4 calls, so they
+were not it.
+
+- **No frosted-glass blur over a town model.** Every button, stick, panel and label with `backdrop-filter` made the
+  phone blur the moving 3D picture under it again each frame, and there are a dozen of them now (Share, Chat, Emote,
+  the pencil were added today). Over a town model they're plain, a little more opaque (`--bs-scrim` .66).
+- **A little less resolution on phones**: the models' medium setting (what an iPhone gets) now draws at 1.3 times the
+  page size, down from 1.5: about a quarter fewer pixels to fill. Bundles patched (`moorooka-model.js?v=28`,
+  `inverloch-model.js?v=20`, `logan-model.js?v=37`); when a model is rebuilt from ai-forge, set `medium.pixelRatio` to
+  1.3 in its quality table too.
+- **Street names** read the models' own labels from the page (a layout) only while the view is moving.
