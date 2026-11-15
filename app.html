@@ -1421,6 +1421,7 @@ body.bsme .bs-height, body.bstown.bsme .bs-height { left: 16px; top: calc(62px +
 .bs-me-num small { display: block; margin-top: 2px; font-weight: 500; font-size: 0.7rem; color: rgba(255, 255, 255, 0.6); }
 .bs-me .bs-me-num input { flex: none; width: 5.2em; height: 36px; padding: 0 8px; text-align: right; }
 .bs-me-key { display: flex; gap: 6px; } .bs-me-key input { flex: 1; min-width: 0; } .bs-me-key .bs-me-go { flex: none; padding: 0 14px; }
+.bs-me-towns a { color: #ffd36b; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
 .bs-me .bs-me-ver { font: 600 0.7rem var(--ui); color: #8fb4ff; text-align: right; }
 .bs-me-h { display: flex; justify-content: space-between; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.14); font-weight: 650; }
 .bs-me-exit { width: 100%; min-height: 42px; border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 12px; background: none; color: #fff; font: 700 0.86rem var(--ui); cursor: pointer; }
@@ -5932,7 +5933,8 @@ const handle = async (m, post) => {
     // with its old buttons. The old fly-about stays for keeping a view for the weather (Admin with the passphrase, or Claude's copy).
     // the same town model as the town's own Explore, for everyone, admins too (Ash, 15 November 2026: "Why when I launch via awesome
     // news is the ui different. It should load the exact same thing": with the passphrase unlocked it used to open the old fly-about)
-    $("bsFlyBtn").onclick = () => { const k = ({ invTown: "inv", invBeach: "inv", driveInv: "inv", moo: "moo", mooBowls: "moo", driveMoo: "moo", logan: "logan" })[BS.sceneKey];
+    // (Brisbane opens Moorooka, Brisbane's own model; the motorway drive, Logan's: Ash, 15 November 2026)
+    $("bsFlyBtn").onclick = () => { const k = ({ invTown: "inv", invBeach: "inv", driveInv: "inv", moo: "moo", mooBowls: "moo", driveMoo: "moo", logan: "logan", bri: "moo", drive: "logan" })[BS.sceneKey];
       if (k && TOWNS[k]) townModelOpen(true, k); else bsFlyOn(); };
     $("bsHourIn").addEventListener("change", () => { BS.view.play = true; });
     $("bsHourIn").addEventListener("input", e => { BS.view.play = false; BS.view.ms = bsMidnight(bsKey(BS.view.ms)) + (+e.target.value) * 60000; BS.view.day = bsKey(BS.view.ms); if (BS.view.mode === "live") BS.view.mode = "day"; bsApply(true); });
@@ -10100,8 +10102,17 @@ const handle = async (m, post) => {
         if (!onEx) { const a = el("a", "bs-me-go", "Open the 3D model's page"); a.href = url; app.append(a); }
         app.append(after); }
       const hi = el("div", "bs-me-h"), ho = el("span", "", F.hText || ""); ho.id = "bsMeH"; hi.append(el("span", "", "Height above the ground"), ho);
+      // the other towns, plain links (Ash, 15 November 2026: "In settings I want to be able to change from Logan to Inverloch and
+      // moorooka. Nothing fancy. Just a hyperlink"): each opens that town's Explore page
+      const towns = el("div", "bs-me-sec bs-me-towns"); towns.append(el("span", "bs-me-lbl", "Other towns"));
+      { const root = exploreLink().url.replace(/(\/awesome-news\/).*$/, "$1"), row = el("p", "");
+        [["moo", "moorooka", "Moorooka"], ["inv", "inverloch", "Inverloch"], ["logan", "logan", "Logan"]].filter(([k]) => k !== T.cfg?.place).forEach(([, dir, name], i) => {
+          if (i) row.append(" \u00b7 "); const a = el("a", "", name); a.href = `${root}${dir}/explore/`; row.append(a); }); towns.append(row); }
+      // admins: fly around the weather's own scene, to keep a view for the weather there ("Use this view for the weather")
+      let wv = null; if (isAdmin()) { wv = el("button", "bs-me-exit", "Set the weather's view"); wv.type = "button";
+        wv.onclick = () => { meClose(); bsFlyOff(); setTimeout(() => { try { bsFlyOn(); } catch {} }, 400); }; }
       const ver = el("p", "bs-me-ver", `Version ${document.querySelector('meta[name="an-commit"]')?.content || "dev"}`);  // (Ash, 15 November 2026: "Add the v number into settings")
-      meBox.append(head, you, as, sw, here, tm, app, ...(isAsh() ? exAshSecs(meDraw) : []), hi, ver); };  // no Exit explore (Ash, 15 November 2026: "Remove exit explore"); Esc, or the browser's back, still leaves
+      meBox.append(head, you, as, sw, here, tm, app, ...(isAsh() ? exAshSecs(meDraw) : []), towns, ...(wv ? [wv] : []), hi, ver); };  // no Exit explore (Ash, 15 November 2026: "Remove exit explore"); Esc, or the browser's back, still leaves
     // closes with its \u00d7, the gear again, or a tap anywhere else
     const meOut = e => { if (!meBox.hidden && !meBox.contains(e.target) && !meBtn.contains(e.target)) meClose(); }; document.addEventListener("pointerdown", meOut, true);
     document.body.classList.add("bsme"); meBtn.hidden = false; meBtn.onclick = () => { meBox.hidden = !meBox.hidden; meBtn.setAttribute("aria-expanded", String(!meBox.hidden)); if (!meBox.hidden) meDraw(); meBtn.blur(); };

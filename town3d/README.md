@@ -1195,3 +1195,7 @@ a car but then move around as a possum not a car. Add a teleport to kingwell str
   awesome news settings"): the news app's Settings no longer has "Exploring with others" (player name and showing you to
   others are in the map's Settings), and the map's Settings has, for Ash, the GitHub key that saves map edits and kept
   views for everyone, under Cars and planes and Explore parts.
+- **Brisbane and the motorway drive** open a town model too: Brisbane opens Moorooka, the motorway drive Logan. For
+  admins, the map's Settings has "Set the weather's view": it closes the model and opens the weather's own fly-around,
+  where "Use this view for the weather" keeps the view.
+- **Other towns** in the map's Settings: plain links to the other two towns' Explore pages.
