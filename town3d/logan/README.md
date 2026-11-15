@@ -62,7 +62,10 @@ Wembley Road is in detail:
   Jump to. Its spot and size are from the aerial view; how its boxes are laid and coloured is drawn to look right.
 - **Joined up** (from the map's own shapes, not imagery): paths that stopped short run on to the nearest crossing,
   footpath, path or car park; crossings that landed on grass have a path to the nearest footpath; car parks no road
-  reached have a driveway, with the footpath carried across; thin bare strips beside the paths are grassed.
+  reached have a driveway, with the footpath carried across; thin bare strips between the paths and the car parks or lawns are grassed.
+- **Clean joins where paving meets:** a path stops at a footpath, the forecourt, a kerb or a car park with a straight
+  edge rather than lapping over it; crossing stripes are on the road only; footpaths are flush with the kerb. No
+  shape of ground is drawn over another, so nothing shows through as the ground fades at a distance or at night.
 - **The bays along the west wing:** a row nose-in against its wall off the road south of the west roundabout, the
   road widened on its far side where they take some of it.
 - The railway and its wiring, and the named schools, parks and streets.
