@@ -1206,3 +1206,7 @@ a car but then move around as a possum not a car. Add a teleport to kingwell str
   an app"): from the home screen app, a link to another town's page opened in a browser view with the address bar. The
   links now close this town's model and open the other one on the same page (the link is still there underneath, for
   a long press or a new tab). Share then gives the town you're in.
+- **Car turning** and **Golden car turning** (Ash: "I want to be able to adjust in settings how fast a car turns or
+  golden car turns"): in the map's Settings > Cars and planes, as a % of the usual (20 to 400). They multiply how fast
+  the car swings round for its speed and steering, apply straight away (`C.reread`), and leave the handbrake spin to its
+  own settings.

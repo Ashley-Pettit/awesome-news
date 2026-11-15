@@ -10190,10 +10190,10 @@ const handle = async (m, post) => {
   // sorts of settings when in as an admin"). Each is [default, name, unit, least, most]. What he sets is kept on that device
   // ("an3d-rides", shared by every town) and is read when a model opens.
   const RIDE_DEF = { carTop: [100, "Car top speed", "km/h", 20, 500], carAccel: [5, "Car acceleration", "m/s\u00b2", 1, 40], carBoostTop: [210, "Car top speed on boost", "km/h", 40, 900],
-    boostSecs: [4, "Boost lasts", "seconds", 1, 60], boostBack: [10, "Boost refills in", "seconds", 1, 120], slideTurn: [155, "Handbrake spin", "degrees a second", 20, 720], slideSlow: [8, "Handbrake slows the car by", "km/h a second", 0, 100],
+    boostSecs: [4, "Boost lasts", "seconds", 1, 60], boostBack: [10, "Boost refills in", "seconds", 1, 120], carTurn: [100, "Car turning", "%", 20, 400], slideTurn: [155, "Handbrake spin", "degrees a second", 20, 720], slideSlow: [8, "Handbrake slows the car by", "km/h a second", 0, 100],
     planeTop: [223, "Plane top speed", "km/h", 120, 1500], planeBoostTop: [540, "Plane top speed on boost", "km/h", 150, 3000], planeAccel: [9, "Plane acceleration", "m/s\u00b2", 2, 80], planeLift: [94, "Plane take-off speed", "km/h", 30, 300],
     gold: [20, "Golden car and plane are better by", "%", 0, 400],
-    goldSlideTurn: [240, "Golden car handbrake spin", "degrees a second", 20, 1440], goldSlideSlow: [5, "Golden car handbrake slows it by", "km/h a second", 0, 100],
+    goldTurn: [100, "Golden car turning", "%", 20, 400], goldSlideTurn: [240, "Golden car handbrake spin", "degrees a second", 20, 1440], goldSlideSlow: [5, "Golden car handbrake slows it by", "km/h a second", 0, 100],
     goldBoostSecs: [5, "Golden car boost lasts", "seconds", 1, 60], goldBoostBack: [5, "Golden car boost refills in", "seconds", 0.5, 120], planeBoost: [0, "Standard plane has a boost", "0 for no, 1 for yes", 0, 1], volume: [100, "Engine volume", "%", 0, 300] };
   function rideSettings() { let o = {}; try { o = JSON.parse(localStorage.getItem("an3d-rides") || "{}") || {}; } catch {}
     const r = {}; for (const k in RIDE_DEF) { const [d, , , lo, hi] = RIDE_DEF[k], v = o[k] == null || o[k] === "" ? NaN : +o[k]; r[k] = Number.isFinite(v) ? bsClamp(v, lo, hi) : d; } return r; }
@@ -10648,7 +10648,8 @@ const handle = async (m, post) => {
         car.steer += (str * 0.55 / (1 + (Math.abs(v) / (8 * K)) ** 2 * 1.2) - car.steer) * Math.min(1, dt * 7);  // less lock the faster it goes
         car.v = v; let bump = 0;
         for (let n = Math.max(1, Math.ceil(Math.abs(v) * dt / 1.2)), i = 0, st = dt / n; i < n; i++) {  // in steps of a metre or so, so it cannot skip through a wall
-          const h = car.h - (slide ? str * sTurn * Math.PI / 180 * Math.sign(car.v) : (car.v / (car.bus ? 6.4 : 2.6)) * Math.tan(car.steer)) * st;
+          // (how fast it turns: Settings > Cars and planes > Car turning, and Golden car turning: Ash, 15 November 2026)
+          const h = car.h - (slide ? str * sTurn * Math.PI / 180 * Math.sign(car.v) : (car.v / (car.bus ? 6.4 : 2.6)) * Math.tan(car.steer) * (gc ? R.goldTurn : R.carTurn) / 100) * st;
           const d = car.dir + wrap(h - car.dir) * Math.min(1, st * (slide ? 1.5 : 10));  // the way it travels comes round to the way it points: slowly while it slides
           const x = car.x + Math.sin(d) * car.v * st, z = car.z + Math.cos(d) * car.v * st;
           if (inside(x, z) && (fits(SHAPE, x, z, h) || !fits(SHAPE, car.x, car.z, car.h))) { car.x = x; car.z = z; car.h = h; car.dir = d; }  // (a car parked inside a building's outline can still drive out)
@@ -10825,6 +10826,7 @@ const handle = async (m, post) => {
     C.pose = () => veh === "ride" ? null : veh === "possum" ? { k: "possum", x: pos.x, y: pos.y, z: pos.z, h: pos.h, p: pos.p, r: 0 } : veh === "car" ? { k: car.bus ? "bus" : car.gold ? "gold" : "car", x: car.x, y: car.y, z: car.z, h: car.h, p: car.p, r: car.r }
       : veh ? { k: plane.heli ? (plane.gold ? "goldheli" : "heli") : plane.gold ? "goldplane" : "plane", x: plane.x, y: plane.y, z: plane.z, h: plane.h, p: plane.p, r: plane.r } : null;
     C.where = () => veh === "ride" ? { kind: "ride", with: ride.name } : veh === "possum" ? { kind: "possum", x: pos.x, y: pos.y, z: pos.z, heading: pos.h, speed: pos.v, mode: pos.mode, up: pos.y - ground(pos.x, pos.z) } : veh === "car" ? { kind: "car", gold: !!car.gold, bus: !!car.bus, x: car.x, z: car.z, heading: car.h, dir: car.dir, speed: car.v, charge } : veh ? { kind: "plane", heli: !!plane.heli, x: plane.x, y: plane.y, z: plane.z, heading: plane.h, pitch: plane.p, speed: plane.v, air: plane.air } : null;  // for checking
+    C.reread = () => Object.assign(R, rideSettings());  // a number changed in Settings: the ones read as it goes (turning) apply straight away
     C.planes = planes; C.gold = gold; C.goldHeli = planes.find(P => P.heli && P.gold) || null;
     // to the golden plane (a key of Ash's own, not shown anywhere)
     C.toGold = () => { const G = planes.find(P => P.gold); if (!G) return false; if (veh) leave(false);
@@ -11561,7 +11563,8 @@ const handle = async (m, post) => {
       t.append(el("small", "", `${unit.split(".")[0]}, usually ${d}`)); inp.type = "number"; inp.inputMode = "decimal"; inp.min = lo; inp.max = hi; inp.step = "any"; inp.value = r[k];
       inp.onchange = () => { let o = {}; try { o = JSON.parse(localStorage.getItem("an3d-rides") || "{}") || {}; } catch {}
         const v = inp.value.trim() === "" ? NaN : +inp.value; if (Number.isFinite(v)) o[k] = bsClamp(v, lo, hi); else delete o[k];
-        try { localStorage.setItem("an3d-rides", JSON.stringify(o)); } catch {} inp.value = rideSettings()[k]; toast(`${name}: ${rideSettings()[k]}. It applies the next time you open Explore.`, 2600); };
+        try { localStorage.setItem("an3d-rides", JSON.stringify(o)); } catch {} inp.value = rideSettings()[k]; BS.town?.car?.reread?.();
+        toast(`${name}: ${rideSettings()[k]}${unit === "%" ? "%" : ""}. ${/Turn$/.test(k) ? "Try it now." : "It applies the next time you open Explore."}`, 2600); };
       row.append(t, inp); cars.append(row); }
     const back = el("button", "bs-me-exit", "Put the usual numbers back"); back.type = "button";
     back.onclick = () => { try { localStorage.removeItem("an3d-rides"); } catch {} redraw(); toast("Cars and planes are back to their usual numbers.", 2200); };
