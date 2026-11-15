@@ -1361,6 +1361,11 @@ body.bspossum .bs-fly-x.bs-boost.on { background: #ffd166; }
    gear; Exit explore lives in the panel, and the height (or speed while driving) sits under the gear. */
 .bs-fly-x.bs-me-btn { position: absolute; top: calc(14px + env(safe-area-inset-top)); left: 16px; right: auto; bottom: auto; width: 38px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
 .bs-fly-x.bs-me-btn[hidden] { display: none; }
+/* Speed (Ash, 15 November 2026: "Game is getting a bit laggy, optimise"): over a town model, no frosted-glass blur behind the
+   buttons, sticks, labels and panels. Every blurred one made the phone blur the moving 3D picture under it again each frame,
+   and there are a dozen of them now. A little more opaque instead, so they read the same. */
+body.bstown #bsFly, body.bstown #bsFly *, body.bstown .inv-embed-labels *, body.bstown .lgn-embed-labels * { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+body.bstown #weather { --bs-scrim: rgba(14, 18, 34, .66); }
 /* Share, just right of the gear (Ash, 15 November 2026: "Move share to the right of settings cog") */
 .bs-fly-x.bs-share-btn { position: absolute; top: calc(14px + env(safe-area-inset-top)); left: 16px; right: auto; bottom: auto; width: 38px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
 .bs-fly-x.bs-me-btn:not([hidden]) ~ .bs-share-btn { left: 62px; }
@@ -8169,15 +8174,15 @@ const handle = async (m, post) => {
   // latitude, longitude, metres back, tilt and bearing). A model with floods can also set floodOf (what its flooded area is a share
   // of: "Logan"), floodNote (the line under the list) and floodWarn (show the not-official notice first, and a banner while a flood is on).
   const TOWNS = {
-    inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=19", assets: TOWN3D, place: "inv", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
-    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=27", assets: TOWN3D + "moorooka/", place: "moo", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
+    inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=20", assets: TOWN3D, place: "inv", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
+    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=28", assets: TOWN3D + "moorooka/", place: "moo", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
       walkStart: { x: -269.8, z: -991.4, yaw: -1.623 },  // Ash's pick for where Moorooka starts: the Beaudesert Road footpath, looking at the house he chose
       // its floods: widest over the Oxley Creek flats along the model's western edge, seen from the east. floodWarn: the not-official notice has to be accepted
       // before the list opens, and a banner says the same while a flood is showing (Ash asked for both).
       floodLook: [-27.5375, 153.0115, 1100, 40, 100], floodOf: "this map", noFloodSlider: true,  // Ash: no water level slider ("At the peak") in Moorooka: a flood just rises to its peak
       floodWarn: { council: "Brisbane City Council", short: "BCC", how: "our own computer simulation of rain running over the ground and the creeks rising (and, in big river floods, Oxley Creek backing up), on a 5 m model of the terrain", map: "Brisbane City Council's Flood Awareness Map and FloodWise Property Report" },
       floodNote: "A guide only: our own simulation, from the terrain, the buildings and the Bureau's design rainfall for Moorooka. It includes water running over the ground to the creeks. No council flood mapping is used. For property, insurance or planning decisions, use Brisbane City Council's Flood Awareness Map and FloodWise Property Report." },
-    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=36", assets: TOWN3D + "logan/", place: "logan", pre: ["map.json", "height.png", "roads.bin", "buildings.bin", "ground.webp", "relief.webp", "lights.webp", "cover.png"], up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
+    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=37", assets: TOWN3D + "logan/", place: "logan", pre: ["map.json", "height.png", "roads.bin", "buildings.bin", "ground.webp", "relief.webp", "lights.webp", "cover.png"], up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
       start: "council", onFoot: true, noFloodSlider: true, flyTo: { id: "brownsplains", label: "Fly to Browns Plains" }, wait: 90000, ceil: 110000, fast: 600, far: 150000, out: 130000, stride: 0.02, pad: 80000, stand: [0.45, 400], floodLook: [-27.69, 153.17, 12000, 55, -35],
       // the same not-official notice and banner as Moorooka's (Ash, 12 November 2026)
       floodWarn: { council: "Logan City Council", short: "LCC", how: "the 2017 flood as mapped, and the others worked out from river gauge heights and rainfall over a terrain model", map: "Logan City Council's flood maps" } },  // shown small in the bottom right corner the whole time the model is open
@@ -10861,7 +10866,8 @@ const handle = async (m, post) => {
         if (!S.on || !S.spots || !S.w) return;
         const F = BS.fly, w = S.w, h = S.h, now = performance.now();
         // the model's own place names, read every few frames so names keep clear of them
-        if (S.frame++ % 6 === 0) { const r0 = box.getBoundingClientRect(); S.places = []; S.placeNames = new Set();
+        const posKey = F.pos.x.toFixed(1) + "," + F.pos.y.toFixed(1) + "," + F.pos.z.toFixed(1) + "," + F.yaw.toFixed(3) + "," + F.pitch.toFixed(3);
+        if (S.frame++ % 6 === 0 && posKey !== S.posKey) { S.posKey = posKey; const r0 = box.getBoundingClientRect(); S.places = []; S.placeNames = new Set();
           for (const el of box.querySelectorAll(".inv-label, .lgn-label")) {  // the models' own names (some of Logan's are spans) if (el.style.visibility === "hidden" || el.closest("[data-an-model]")?.style.visibility === "hidden") continue;
             const r = el.getBoundingClientRect(); if (r.width && r.right > r0.left && r.left < r0.right && r.bottom > r0.top && r.top < r0.bottom && getComputedStyle(el).visibility === "visible") { S.places.push([r.left - r0.left, r.top - r0.top, r.right - r0.left, r.bottom - r0.top]); S.placeNames.add(el.textContent.trim()); } } }
         const fov = m.fov ? m.fov() : 60, keyNow = [F.pos.x.toFixed(2), F.pos.y.toFixed(2), F.pos.z.toFixed(2), F.yaw.toFixed(4), F.pitch.toFixed(4), w, h, fov, S.places.length].join();
