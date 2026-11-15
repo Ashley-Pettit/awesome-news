@@ -1371,6 +1371,16 @@ body.bspossum .bs-fly-x.bs-boost.on { background: #ffd166; }
 .bs-locktip kbd { display: inline-block; margin: 0 2px 0 6px; padding: 0 5px; border-radius: 4px; background: #fff; color: #1b1830; font: 700 0.7rem/1.5 var(--ui); }
 @keyframes bsLockTip { 0%, 75% { opacity: 1; } 100% { opacity: 0.35; } }
 @media (prefers-reduced-motion: reduce) { .bs-locktip { animation: none; } }
+/* the controls list says what the keys do on foot, so the older tip line is not shown under it */
+body.bstown:has(#bsKeys:not([hidden])) #bsFlyTip { display: none !important; }
+/* camera mode (?, on a computer): every button hidden for a clean view, and a line saying how to bring them back */
+body.bscam #bsFly > *:not(#bsTown):not(#bsCamTip):not(canvas) { visibility: hidden !important; }
+body.bscam #bsTown .bs-review, body.bscam #bsTown .bs-ridecard { visibility: hidden !important; }
+.bs-camtip { position: absolute; z-index: 6; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); transform: translateX(-50%); margin: 0; padding: 6px 12px; border-radius: 999px; background: rgba(20, 22, 34, 0.78); color: #fff; font: 600 0.78rem/1.4 var(--ui); white-space: nowrap; pointer-events: none; transition: opacity 0.6s; }
+.bs-camtip[hidden] { display: none; } .bs-camtip.fade { opacity: 0.25; }
+.bs-camtip kbd { display: inline-block; margin: 0 2px; padding: 0 5px; border-radius: 4px; background: #fff; color: #1b1830; font: 700 0.7rem/1.5 var(--ui); }
+/* on a computer the keys do these (listed in the controls): Get in and Get out, and Boost */
+@media (hover: hover) and (pointer: fine) { body.bstown #bsCarBtn, body.bstown #bsBoostBtn { display: none !important; } }
 /* a suggested map change being reviewed (Ash, from Settings): who sent it, then Approve, Deny, Next */
 .bs-review { pointer-events: auto; position: absolute; z-index: 6; left: 50%; top: calc(124px + env(safe-area-inset-top)); transform: translateX(-50%); width: min(400px, calc(100% - 32px)); box-sizing: border-box; padding: 12px 14px; border-radius: 16px; background: rgba(22, 24, 34, 0.92); color: #fff; font: 500 0.86rem/1.35 var(--ui); }
 .bs-review[hidden] { display: none; }
@@ -2081,7 +2091,8 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <p class="bs-locktip" id="bsLockTip" hidden>The mouse looks around. <kbd>Esc</kbd> gives it back. <kbd>M</kbd> Settings <kbd>J</kbd> Jump to <kbd>P</kbd> Share <kbd>L</kbd> Flood</p>
     <button class="bs-fly-x bs-flip" type="button" id="bsFlipBtn" data-key="X" aria-label="Spin round (X)" hidden>180</button>
     <button class="bs-fly-x bs-edit" type="button" id="bsEditBtn" aria-pressed="false" aria-controls="bsAdmin" aria-label="Edit the map" title="Edit the map" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg></button>
-    <div class="bs-keys" id="bsKeys" hidden><p class="bs-keys-now" id="bsKeysNow"></p><dl id="bsKeysList"></dl><p class="bs-keys-q">? to hide this list</p></div>
+    <div class="bs-keys" id="bsKeys" hidden><p class="bs-keys-now" id="bsKeysNow"></p><dl id="bsKeysList"></dl><p class="bs-keys-q">? hides the buttons</p></div>
+    <p class="bs-camtip" id="bsCamTip" hidden>Press <kbd>?</kbd> to bring the buttons back</p>
     <button class="bs-fly-x bs-fly-lock" type="button" id="bsFlyLock" hidden>Use this view for the weather</button>
     <div class="bs-ud" role="group" aria-label="Fly up or down">
       <button type="button" class="bs-udb" data-ud="1" data-key="Space" aria-label="Fly up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg><span>Up</span></button>
@@ -7972,7 +7983,9 @@ const handle = async (m, post) => {
         if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.code === "KeyZ" && F.hot?.undo?.()) { e.preventDefault(); return; }  // admin mode, with its bar open: undo the last edit
         F.keys.add(e.code); if (/^(Space|Arrow)/.test(e.code)) e.preventDefault();
         if (e.ctrlKey || e.metaKey || e.altKey) return;
-        if (e.key === "?") { if (!F.hot?.keys?.()) bsTipToggle(); return; }  // the list of controls: the walking one, or the one for what you are driving
+        // in a town, ? hides every button for a clean view (camera mode), and ? brings them back (Ash, 15 November 2026: "? Doesn't
+        // work. Make that instead go to camera mode (hides all buttons) other than press ? To return")
+        if (e.key === "?") { if (BS.town?.on) { exCam(); return; } if (!F.hot?.keys?.()) bsTipToggle(); return; }  // the list of controls: the walking one, or the one for what you are driving
         if (e.code === "Enter" || e.code === "NumpadEnter") {  // get into the nearest parked car, or out of it (the town models). A focused button keeps its own Enter
           const el = document.activeElement, free = !el || el === document.body || el.id === "bsFly" || el.id === "bsCarBtn" || !!el.closest?.("#bsTownMode");
           if (free && F.hot?.enter?.()) { e.preventDefault(); return; } }
@@ -8005,7 +8018,7 @@ const handle = async (m, post) => {
     // control viewpoint"): walking or driving in a town, a click on the view hands the mouse to the view; Esc gives it back, and
     // M, P and L still open Settings, Share and Flood. Not with a map-editing tool in hand, and never on a phone
     const desk = matchMedia("(hover: hover) and (pointer: fine)").matches;
-    F.on.lock = e => { const T = BS.town; if (!desk || !T?.on || !T.walk || T.admin?.tool || e.pointerType !== "mouse" || e.button !== 0 || document.pointerLockElement) return;
+    F.on.lock = e => { const T = BS.town; if (!desk || !T?.on || T.admin?.tool || e.pointerType !== "mouse" || e.button !== 0 || document.pointerLockElement) return;
       if (e.target.closest?.("button, a, input, select, textarea, label, [role=menu], [role=dialog], [role=toolbar], .bs-me, .bs-review, .bs-chatbar, .bs-keys, #bsTownList, #bsShareBox")) return;
       try { const r = canvas.requestPointerLock?.({ unadjustedMovement: true }); r?.catch?.(() => { try { canvas.requestPointerLock(); } catch {} }); } catch {} };
     F.on.lockChange = () => { const on = document.pointerLockElement === canvas; document.body.classList.toggle("bslocked", on); $("bsLockTip").hidden = !on; };
@@ -8051,7 +8064,10 @@ const handle = async (m, post) => {
   // looked at, then the map-editing bar
   // the time of day an admin last set in Explore (kept on the device), or nothing: midday
   function exTimeSaved() { if (!isAdmin()) return null; let v = null; try { v = localStorage.getItem("an3d-time"); } catch {} const n = v == null ? NaN : +v; return Number.isFinite(n) && n >= 0 && n < 1440 ? n : null; }
+  function exCam(on = !document.body.classList.contains("bscam")) { document.body.classList.toggle("bscam", on); const t = $("bsCamTip");
+    if (t) { t.hidden = !on; t.classList.remove("fade"); clearTimeout(exCam.t); if (on) exCam.t = setTimeout(() => t.classList.add("fade"), 2500); } }
   function exEscMore() {
+    if (document.body.classList.contains("bscam")) { exCam(false); return true; }
     const open = id => { const el = $(id); return el && !el.hidden ? el : null; };
     const em = open("bsEmotes"); if (em) { em.hidden = true; return true; }
     const ch = open("bsChatBar"); if (ch) { ch.hidden = true; $("bsChatIn")?.blur(); return true; }
@@ -8469,7 +8485,7 @@ const handle = async (m, post) => {
         // ---- Walk or Fly ----
         const tideBox = $("bsTownTide"), tideIn = $("bsTownTideIn"), tideOut = $("bsTownTideOut"), tidal = m.tide.max > m.tide.min, tideBtn = $("bsTideBtn");
         tideBtn.setAttribute("aria-expanded", "false"); tideBtn.onclick = () => { tideBox.hidden = !tideBox.hidden; tideBtn.setAttribute("aria-expanded", String(!tideBox.hidden)); };  // Moorooka has no tide to move
-        const setMode = (walk, to) => { T.walk = walk; document.body.classList.toggle("bswalk", walk); F.walk = walk ? () => ground() + F.eye : null; tideBtn.hidden = walk || !tidal; tideBox.hidden = tideBtn.hidden || tideBtn.getAttribute("aria-expanded") !== "true"; F.lim = walk ? inner : outer;
+        const setMode = (walk, to) => { T.walk = walk; T.car?.walkKeys?.(walk); document.body.classList.toggle("bswalk", walk); F.walk = walk ? () => ground() + F.eye : null; tideBtn.hidden = walk || !tidal; tideBox.hidden = tideBtn.hidden || tideBtn.getAttribute("aria-expanded") !== "true"; F.lim = walk ? inner : outer;
           modeBox.querySelectorAll("button").forEach(bn => bn.setAttribute("aria-pressed", String((bn.dataset.townMode === "walk") === walk)));
           if (document.pointerLockElement) document.exitPointerLock?.();
           F.vert = 0; F.keys.clear();  // (the sticks are left alone: a thumb still on one carries on, and lifting it centres it)
@@ -8645,7 +8661,7 @@ const handle = async (m, post) => {
         const first = cfg.walkStart ? { walk: { ...cfg.walkStart, pitch: 0.02 }, fly: above(cfg.walkStart.x, cfg.walkStart.z, cfg.walkStart.yaw) }
           : cfg.start ? places.find(p => p.id === cfg.start) || places[0] : places[0] && (mine.length || !inv) ? places[0] : null;
         T.spawn = first?.walk ? [first.walk.x, first.walk.z] : first?.target ? [first.target[0], first.target[1]] : [cfg.air[0], cfg.air[2]];  // where the traffic keeps to
-        if (first) go(first, !!(cfg.onFoot && first.walk)); else { setMode(false); F.pos.set(cfg.air[0], cfg.air[1], cfg.air[2]); F.yaw = cfg.air[3]; F.pitch = cfg.air[4]; }
+        if (first) go(first, !!first.walk); else  /* (on foot is where every town opens now: Ash, 15 November 2026, "Make walk the default") */ { setMode(false); F.pos.set(cfg.air[0], cfg.air[1], cfg.air[2]); F.yaw = cfg.air[3]; F.pitch = cfg.air[4]; }
         F.start = { pos: F.pos.clone(), yaw: F.yaw, pitch: F.pitch }; const startWalk = T.walk;
         T.atStart = () => first?.walk && F.pos.distanceTo(F.start.pos) < 3;  // still where Explore opened
         // the keys (desktop): F walk or fly, J the places list, R back to the start
@@ -8673,7 +8689,7 @@ const handle = async (m, post) => {
           j: () => openList(list.hidden),
           esc: () => { if (!ask.hidden) { closeAsk(); return true; } if (!list.hidden) { openList(false); return true; } if (!fl.hidden) { fl.hidden = true; fb.setAttribute("aria-expanded", "false"); return true; } return false; },
           r: () => { T.tween = null; F.eye = EYE; if (T.walk !== startWalk) setMode(startWalk); F.pos.copy(F.start.pos); F.yaw = F.start.yaw; F.pitch = F.start.pitch; } };
-        modeBox.hidden = false; T.on = true; box.hidden = false;
+        modeBox.hidden = cfg.place === "moo"; T.on = true; box.hidden = false;  /* (Moorooka is on foot only: Ash, 15 November 2026, "Move walk/settings in moorooka but not in Logan or Inverloch"; F still flies on a keyboard) */
         { const note = $("bsTownNote"); note.textContent = cfg.note || ""; note.hidden = !cfg.note; }  // Logan's standing note
         F.heightAt = () => F.pos.y - ground(); $("bsHeight").hidden = false;  // the height shown top left
         // a model that names places (Logan's) keeps them out from under the buttons along the top and, on a phone, the sliders and sticks
@@ -9990,7 +10006,7 @@ const handle = async (m, post) => {
       more: { planes: [{ x: -1602.1, z: 422, h: 2.6, heli: true, name: "The helicopter", at: "behind 11 Norman Road", what: "On the grass behind 11 Norman Road" }], cars: [{ x: -214, z: -359.6, h: -1.571, bus: true, name: "The bus", what: "In A'Beckett Street, out the front of The Hub" }] },
       roam: [[-278, -562], [627, -1086], [-108, -190], [17, -179], [-1585, 1221], [575, 1066]] },
     logan: { planes: [{ x: 5732, z: -12989, h: 1.0, name: "The plane", at: "on the big lawn in Civic Centre Park", what: "On the big open lawn in Civic Centre Park, behind the council, with room to take off" }],
-      cars: [{ x: 5816.2, z: -13302.9, h: 1.94, spare: true, name: "The red car", what: "On the lawn out the front of the council, by the plane" }, { x: 5789.8, z: -13198.7, h: 2.03, gold: true, name: "The golden car", what: "In the car park behind the council. A fifth faster than the red one" }],
+      cars: [{ x: 5816.2, z: -13302.9, h: 1.94, spare: true, name: "The red car", what: "On the lawn out the front of the council, by the plane" }, { x: 5788.7, z: -13204.6, h: 3.63, gold: true, name: "The golden car", what: "In the car park behind the council. A fifth faster than the red one" }],
       more: { planes: [{ x: 5842.3, z: -12977.7, h: 1.0, heli: true, name: "The helicopter", at: "in Civic Centre Park, by the police station", what: "On the grass in Civic Centre Park, by Logan Central Police Station" }], cars: [{ x: 5752.7, z: -13341.2, h: -1.126, bus: true, name: "The bus", what: "At the bus stop on the street out the front of the council" }] },
       roam: [[5749, -13002], [6006, -13466], [5650, -13194], [7441, -11580], [5927, 564], [8554, -7453]] },
   };
@@ -10119,7 +10135,7 @@ const handle = async (m, post) => {
     // car"): walk out in front of one and it stops for you; Get in the car takes it over (P.take) and it is yours from then on.
     // (a light amount again, seven: Ash, 15 November 2026: "Add back some of the traffic so there is a light amount of cars around.
     // Careful not to cause lag". Each is a few draw calls, and one more than 450 m away is not drawn)
-    const home = T.spawn || [F.pos.x, F.pos.z], N = 7, NEAR = 300, FAR = 800, NONE = new THREE.Matrix4().makeScale(0, 0, 0).elements;
+    const home = T.spawn || [F.pos.x, F.pos.z], N = T.cfg?.place === "moo" ? 5 : 7, NEAR = 300, FAR = 800, NONE = new THREE.Matrix4().makeScale(0, 0, 0).elements;
     if (!N) return P;  // nothing to load or draw
     let roads = null, nodes = null, dead = false, last = 0;
     const key = (x, z) => Math.round(x / 2) + "," + Math.round(z / 2);
@@ -10863,7 +10879,19 @@ const handle = async (m, post) => {
           const g = Math.min(hi, Math.max(lo, m.groundAt(cx, cz))) + 0.1; R.top = Math.max(R.eave, g + 2.4, hi + 1.5); }  // the walls' height, as the model raises them
         return R.top + Math.min(Math.max(0, R.ridge - R.top), edge * 0.55); }
       return null; };
-    // what the possum stands on there: the ground, the top of a street light, or a roof
+    // the trees, for the possum to climb (Ash, 15 November 2026: "Make the trees climbable"): every tree of 3 m or more from
+    // town.json (x, z in quarter metres, height in decimetres), in 20 m squares, loaded with the roofs. It goes up the trunk like a
+    // street light and sits up in the tree, about four fifths of the way up; nothing new is drawn
+    let treeCells = null;
+    const loadTrees = () => { if (treeCells || !T.cfg) return; treeCells = new Map();
+      townStreetData(T.cfg).then(d => { const s = d.town?.trees; if (typeof s !== "string") return; const b = atob(s), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i);
+        const A = new Int16Array(u.buffer, 0, u.length >> 1);
+        for (let i = 0; i + 2 < A.length; i += 3) { const x = A[i] / 4, z = A[i + 1] / 4, h = (A[i + 2] & 255) / 10; if (h < 3) continue; const key = Math.floor(x / 20) * 65536 + Math.floor(z / 20);
+          let L = treeCells.get(key); if (!L) treeCells.set(key, L = []); L.push({ x, z, y: null, top: h * 0.8 }); } }).catch(() => {}); };
+    const treeAt = (x, z, r = 0.55) => { if (!treeCells) return null; const cx = Math.floor(x / 20), cz = Math.floor(z / 20);
+      for (let a = -1; a <= 1; a++) for (let c = -1; c <= 1; c++) for (const t of treeCells.get((cx + a) * 65536 + cz + c) || []) if (Math.abs(t.x - x) < r && Math.abs(t.z - z) < r && Math.hypot(t.x - x, t.z - z) < r) { if (t.y == null) t.y = m.groundAt(t.x, t.z); return t; }
+      return null; };
+    // what the possum stands on there: the ground, the top of a street light or a tree, or a roof
     // the roofs of the cars near the possum, found once a frame: the nearest parked car, the app's own cars and the traffic
     // (Ash, 15 November 2026: "let the possum also get ontop of cars"): it runs up on to one like a low wall, and drops off the edge
     let carTops = [];
@@ -10871,7 +10899,7 @@ const handle = async (m, post) => {
       const pc = m.nearestCar?.(x, z, 14); if (pc) add(pc.x, pc.z, pc.heading, false);
       for (const G of owns) add(G.x, G.z, G.h, G.bus); for (const D of T.traffic?.cars || []) add(D.x, D.z, D.h, false);
       carTops = out; };
-    const surf = (x, z) => { let y = ground(x, z); const q = poleAt(x, z); if (q) y = Math.max(y, q.y + POLE_TOP);
+    const surf = (x, z) => { let y = ground(x, z); const q = poleAt(x, z); if (q) y = Math.max(y, q.y + POLE_TOP); const tr = treeAt(x, z); if (tr) y = Math.max(y, tr.y + tr.top);
       for (const t of carTops) { const dx = x - t.x, dz = z - t.z; if (Math.abs(dx * t.s + dz * t.c) < t.hl && Math.abs(dx * t.c - dz * t.s) < t.hw) y = Math.max(y, t.top); }
       if (m.solidAt?.(x, z) || T.solid?.(x, z)) y = Math.max(y, roofAt(x, z) ?? m.groundAt(x, z) + 4.5);
       return y; };
@@ -10892,16 +10920,20 @@ const handle = async (m, post) => {
     const KEYS = { plane: [[["W", "S"], "Power up, power down (S backs up on the ground)"], [["A", "D"], "Turn (\u2190 and \u2192 too)"], [["\u2193"], "Nose up, to climb"], [["\u2191"], "Nose down, to come down"], [["Shift"], "Boost"], [["Drag"], "Look around"], [["Enter"], "Get out, once you have landed"]],
       car: [[["W", "S"], "Go, and brake or reverse (\u2191 and \u2193 too)"], [["A", "D"], "Steer (\u2190 and \u2192 too)"], [["Space"], "Handbrake: swings the tail round"], [["Shift"], "Mega boost"], [["Drag"], "Look around"], [["Enter"], "Get out"]] };
     KEYS.heli = [[["W", "S"], "Forward, back"], [["A", "D"], "Turn (\u2190 and \u2192 too)"], [["\u2193"], "Up (Space too)"], [["\u2191"], "Down (C too)"], [["Drag"], "Look around"], [["Enter"], "Get out, once you have landed"]];
+    // on foot, on a computer: the buttons for getting in, Boost and getting out are not shown there, so the keys are listed instead
+    // (Ash, 15 November 2026: "On computer hide emote and get in the car, instead show as controls")
+    KEYS.walk = [[["W", "A", "S", "D"], "Walk (the arrows too)"], [["Shift"], "Run"], [["Click"], "Look around with the mouse (Esc gives it back)"], [["Enter"], "Get in the car, plane or possum nearby"], [["J"], "Jump to"], [["M"], "Settings"], [["?"], "Hide the buttons, for a clean view"]];
     KEYS.bus = KEYS.car; KEYS.gold = [...KEYS.car.slice(0, 4), [["X"], "180: hop and spin round, still going"], ...KEYS.car.slice(4)];
     KEYS.possum = [[["W", "A", "S", "D"], "Run that way, from where you're looking (the arrows too)"], [["W"], "Into a street light or a wall: climb it"], [["S"], "On a wall: let go"], [["Space"], "Jump (off a wall too)"], [["Shift"], "Boost"], [["Drag"], "Look around"], [["Enter"], "Hop out"]];
     const hint = text => { if (keysNow.textContent !== text) { keysNow.textContent = text; if (touch) keysBox.hidden = !text; } };
-    const keysOff = off => { keysBox.classList.toggle("off", off); keysQ.textContent = off ? "? to show the controls" : "? to hide this list"; };
+    const keysOff = off => { keysBox.classList.toggle("off", off); keysQ.textContent = "? hides the buttons"; };
     const showKeys = kind => { keysNow.textContent = ""; keysOff(false); keysBox.hidden = !kind || touch;  // (on a phone it shows once there is something to say)
       keysList.replaceChildren(...(KEYS[kind] || []).filter(([ks]) => !(kind === "plane" && plane && !canBoost(plane) && ks[0] === "Shift")).flatMap(([ks, what]) => { const dt = document.createElement("dt"), dd = document.createElement("dd");
         for (const key of ks) { const kb = document.createElement("kbd"); kb.textContent = key; dt.append(kb); } dd.textContent = what; return [dt, dd]; }));
       // the stick and the Up and Down buttons say what they do in it
       if (joyName) joyName.textContent = kind === "plane" ? "Power and turn" : kind === "heli" ? "Go and turn" : kind === "car" ? "Drive" : kind === "possum" ? "Run and turn" : "Move";
       if (udName.length === 2) { udName[0].textContent = kind === "plane" ? "Climb" : kind === "possum" ? "Jump" : "Up"; udName[1].textContent = kind === "plane" ? "Dive" : kind === "possum" ? "Let go" : "Down"; } };
+    C.walkKeys = on => { if (!veh) showKeys(on ? "walk" : null); }; if (T.walk) showKeys("walk");
     C.keys = () => { if (!veh) return false; keysOff(!keysBox.classList.contains("off")); return true; };  // "?" hides the list and brings it back
     // ---- the boost's charge: a fine ring of 48 slanted ticks on the ground round the car, lit as far round as there is charge
     // left, running from red-orange (nearly out) through gold to pale (full), between two hairlines. It shows while the boost is
@@ -10939,7 +10971,7 @@ const handle = async (m, post) => {
         P.v = 0; P.spin = 0; const [y, p, r] = lie(P, 2, 1.2); P.y = y; P.p = p; P.r = r;
         if (step) { F.pos.x = P.x + Math.cos(P.h) * 1.9; F.pos.z = P.z - Math.sin(P.h) * 1.9; F.yaw = P.h + Math.PI; F.pitch = -0.04; }  // out of the left door
         plane = null; showPlane(P); }
-      veh = null; car = null; plane = null; window.anFast = false; showKeys(null); C.in = false; F.drive = null; F.boost = false; F.hText = ""; F.vert = 0; F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.keys.clear();
+      veh = null; car = null; plane = null; window.anFast = false; showKeys(T.walk ? "walk" : null); C.in = false; F.drive = null; F.boost = false; F.hText = ""; F.vert = 0; F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.keys.clear();
       document.body.classList.remove("bsdrive", "bsplane", "bspossum", "bsride"); boostBtn.hidden = true; boostBtn.textContent = "Boost"; handBtn.hidden = true; flipBtn.hidden = true; F.flip = false; handBtn.classList.remove("on"); F.hand = false; at = 0; C.frame(); };
     let camOff = null;  // where the view is from what you're in
     // (up in a plane, Moorooka's model stops fetching its sharpest ground and building backyards: window.anFast, moorooka-model.js patched)
@@ -11033,7 +11065,7 @@ const handle = async (m, post) => {
             if (!inside(x, z)) { P.v = 0; break; }
             const s = surf(x, z);
             if (s > P.y + 0.6) {  // a street light or a wall in the way: running at it, it starts up it (a wall met in the air too: it grabs on)
-              if (P.v > 0) { const q = poleAt(x, z); P.mode = "climb"; P.vy = 0; P.wall = { top: s, pole: q };
+              if (P.v > 0) { const q = poleAt(x, z) || treeAt(x, z); P.mode = "climb"; P.vy = 0; P.wall = { top: s, pole: q };
                 if (q) { P.h = Math.atan2(q.x - P.x, q.z - P.z); P.x = q.x - Math.sin(P.h) * 0.32; P.z = q.z - Math.cos(P.h) * 0.32; } }
               P.v = 0; break; }
             P.x = x; P.z = z;
@@ -11069,7 +11101,9 @@ const handle = async (m, post) => {
           if (!P.air) { if (up && climb > 0.05) P.air = true; else { P.vy = 0; const [y, p, r] = lie(P, 1.5, 0.9); P.y = y; P.p += (p - P.p) * e; P.r += (r - P.r) * e; } }
           if (P.air) { P.p += (-0.3 * P.v / 50 - P.p) * e; P.r += (P.turn * 0.3 * Math.min(1, Math.abs(P.v) / 20) - P.r) * e;
             P.x = bsClamp(P.x + Math.sin(P.h) * P.v * dt, F.lim[0], F.lim[1]); P.z = bsClamp(P.z + Math.cos(P.h) * P.v * dt, F.lim[2], F.lim[3]); P.y = Math.min(P.y + P.vy * dt, ground(P.x, P.z) + 1500);
-            const roof = solid(P.x, P.z), floor = ground(P.x, P.z) + (roof ? 12 : 0);
+            // (roofs are solid at their real height: Ash, 15 November 2026, "Can you make the roofs all collision so things hit them?"
+            // A helicopter can come down on one and sit there; a plane bounces up off it)
+            const rY = roofAt(P.x, P.z), roof = rY != null || solid(P.x, P.z), floor = rY != null ? rY + 0.15 : ground(P.x, P.z) + (roof ? (roofs ? 6.5 : 12) : 0);
             if (P.y <= floor) { P.y = floor; if (!roof && climb <= 0.05) { P.air = false; if (P.vy < -4) snd.thud(Math.min(1.4, -P.vy / 8)); P.v *= 0.3; } P.vy = Math.max(0, P.vy); } }
           P.ang = (P.ang || 0) + P.spin * 30 * dt; showPlane(P);
           const alt = Math.max(0, P.y - ground(P.x, P.z));
@@ -11094,8 +11128,8 @@ const handle = async (m, post) => {
           P.p += ((climb > 0 ? 0.42 : 0.5) * climb * K - slow * 0.45 - P.p) * Math.min(1, dt * 1.8 * K);
           P.x = bsClamp(P.x + Math.sin(P.h) * P.v * Math.cos(P.p) * dt, F.lim[0], F.lim[1]); P.z = bsClamp(P.z + Math.cos(P.h) * P.v * Math.cos(P.p) * dt, F.lim[2], F.lim[3]);
           const sink = P.v * Math.sin(P.p) - slow * 7; P.y = Math.min(P.y + sink * dt, ground(P.x, P.z) + 1500);
-          const roof = solid(P.x, P.z), floor = ground(P.x, P.z) + (roof ? 12 : 0);
-          if (P.y <= floor) { P.y = floor; if (roof) P.p = Math.max(P.p, 0.08); else { P.air = false; thud = Math.max(2, -sink * 1.6); } }  // over a building it clears the roof; anywhere else that is a landing
+          const rY = roofAt(P.x, P.z), roof = rY != null || solid(P.x, P.z), floor = rY != null ? rY + 0.4 : ground(P.x, P.z) + (roof ? (roofs ? 6.5 : 12) : 0);
+          if (P.y <= floor) { if (roof && P.y < floor - 0.3 && P.v > 10) snd.thud(Math.min(1.4, 0.4 + P.v / 40)); P.y = floor; if (roof) P.p = Math.max(P.p, 0.08); else { P.air = false; thud = Math.max(2, -sink * 1.6); } }  // over a building it clears the roof; anywhere else that is a landing
         }
         if (thud > 1.5) snd.thud(Math.min(1.6, 0.4 + thud / 14));
         P.spin += ((thr > 0.05 ? 1 : 0.45) - P.spin) * Math.min(1, dt * 1.5); P.ang = (P.ang || 0) + P.spin * 40 * dt; showPlane(P);
@@ -11148,8 +11182,8 @@ const handle = async (m, post) => {
       if (c.ride) { const q = c.ride; ride = { id: q.id, name: q.name, k: q.k, at: [q.x, q.y, q.z, performance.now()], v: 0 }; veh = "ride"; camYaw = q.h + Math.PI;
         document.body.classList.add("bsdrive", "bsride"); T.peers?.ride?.(q.id, true); toast(`You're riding with ${q.name}. Look around with the right stick.`, 3000); }
       else if (c.possum) { veh = "possum"; pos.v = 0; pos.jumped = true; camYaw = pos.h + Math.PI; document.body.classList.add("bsdrive", "bspossum");
-        const wait = loadRoofs(); if (wait) { toast("Loading the roofs the possum can climb\u2026", 8000); wait.then(() => { if (veh === "possum") toast("Ready. Run at a wall or a street light to climb it.", 2500); }); } }  // (no Up and Down: Jump sits where Boost does, over the right stick)
-      else if (c.plane) { plane = c.plane; veh = "plane"; plane.v = 0; plane.spin = 0; plane.turn = 0; camYaw = plane.h + Math.PI; document.body.classList.add("bsdrive", "bsplane"); boostBtn.style.setProperty("--charge", "100%"); }
+        loadTrees(); const wait = loadRoofs(); if (wait) { toast("Loading the roofs the possum can climb\u2026", 8000); wait.then(() => { if (veh === "possum") toast("Ready. Run at a wall or a street light to climb it.", 2500); }); } }  // (no Up and Down: Jump sits where Boost does, over the right stick)
+      else if (c.plane) { plane = c.plane; veh = "plane"; if (T.cfg?.place === "moo") loadRoofs(); /* (Moorooka's roofs, so planes and helicopters meet them) */ plane.v = 0; plane.spin = 0; plane.turn = 0; camYaw = plane.h + Math.PI; document.body.classList.add("bsdrive", "bsplane"); boostBtn.style.setProperty("--charge", "100%"); }
       else { if (c.own && !owns.includes(c.own)) { const G = T.traffic?.take?.(c.own); if (!G) return true; owns.push(G); c.own = G; }
         car = c.own ? { own: c.own, gold: c.own.gold, bus: c.own.bus, x: c.own.x, z: c.own.z, h: c.own.h, dir: c.own.h, y: c.own.y, p: c.own.p, r: c.own.r, v: 0, steer: 0 } : { id: c.id, bus: !!c.bus, x: c.x, z: c.z, h: c.heading, dir: c.heading, y: ground(c.x, c.z) + 0.05, p: 0, r: 0, v: 0, steer: 0 };
         if (!car.own && !m.driveCar(c.id[0], c.id[1], car.x, car.y, car.z, car.h, 0, 0)) { car = null; toast("That car won't start. Try another one."); return true; }
@@ -11165,7 +11199,7 @@ const handle = async (m, post) => {
     // the Get in button: there while something is in reach of where you are walking (looked for a few times a second)
     C.frame = () => { if (veh) return; const now = performance.now(); if (now - at < 300) return; at = now;
       if (pos) { const d = Math.hypot(pos.x - F.pos.x, pos.z - F.pos.z), dh = Math.hypot(PS.x - F.pos.x, PS.z - F.pos.z);
-        if (!possumMesh && Math.min(d, dh) < 400) wake(); if (d < 80) loadRoofs();
+        if (!possumMesh && Math.min(d, dh) < 400) wake(); if (d < 80) { loadRoofs(); loadTrees(); }
         if ((pos.x !== PS.x || pos.z !== PS.z) && d > 150) possumHome(); }  // left behind, the possum goes home to number 16
       const near = T.walk && !T.tween ? reach() : null; shownRide = near?.ride ? { id: near.ride.id, t: now } : null; const say = near?.ride ? `Ride with ${near.ride.name}` : near?.possum ? "Be the possum" : near?.plane ? (near.plane.heli ? (near.plane.gold ? "Get in the golden helicopter" : "Get in the helicopter") : "Get in the plane") : near?.own?.bus || near?.bus ? "Get in the bus" : near?.gold ? "Get in the golden car" : "Get in the car";
       if (btn.hidden !== !near) btn.hidden = !near; if (near && btn.textContent !== say) btn.textContent = say; };
@@ -11285,7 +11319,10 @@ const handle = async (m, post) => {
     // that carried on underneath, could give the real time of day)
     m.setMinutes(BS.exTimeSet ? bsMins(BS.view.ms) : 12 * 60);
     T.streets?.update();
-    T.car?.frame(); T.me?.frame(); T.peers?.frame();  // (the worker view sets the camera first, so names and bubbles are placed from where you really look) T.traffic?.frame(); T.critter?.frame(); T.no6?.frame(); T.home6?.frame();
+    // (the worker view sets the camera first, so names and bubbles are placed from where you really look; the traffic, the animal,
+    // number 6 and the people out the front had been left out of every frame by a note on the same line, from #128 to 15 November 2026)
+    T.car?.frame(); T.me?.frame(); T.peers?.frame();
+    T.traffic?.frame(); T.critter?.frame(); T.no6?.frame(); T.home6?.frame();
     // flying: held down at the lowest you can fly (Down, or C) for a moment, and you are on foot there
     if (!T.walk && !T.tween && !F.drive && F.floor && F.hot?.f) { const low = F.pos.y <= F.floor() + 0.1, down = F.vert < -0.3 || F.keys.has("KeyC"), now = performance.now();
       if (!(low && down)) T.downAt = 0; else if (!T.downAt) T.downAt = now; else if (now - T.downAt > 1200) { T.downAt = 0; F.hot.f(); } }

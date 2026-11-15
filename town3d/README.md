@@ -1397,3 +1397,24 @@ Ash: "Cars aren't working in Logan." Since #150 nothing could be driven or flown
 went on the same line as the start of `tick`, so it hid `const dt = ..., k = ..., has = ...` and every frame in a vehicle threw.
 The note is on its own line now. Also, the golden car's random parking spot is now picked only from places within 1.2 km of
 its usual one (Logan's places run out to Jimboomba).
+
+## On foot by default, trees to climb, solid roofs, the traffic moving again, camera mode (15 November 2026)
+
+- **The traffic, Inverloch's animal and the people at number 6 were standing still** since #128: a note on the same line as
+  `T.traffic?.frame(); T.critter?.frame(); T.no6?.frame(); T.home6?.frame();` in `townModelFrame` hid them. They are on their own
+  line again. Moorooka has 5 moving cars (Ash: "Add a couple of auto driving cars in moorooka. Not too many"), the others 7.
+- **On foot by default** (Ash: "Make walk the default"): every town opens walking at its first place. Moorooka has no Walk or
+  Fly switch (Ash: "Move walk/settings in moorooka but not in Logan or Inverloch"), so no Up and Down either ("In moorooka but
+  not others remove up down when walking"); F still flies on a keyboard.
+- **Trees to climb** (Ash: "Make the trees climbable"): the possum runs up any tree of 3 m or more like a street light and sits
+  about four fifths of the way up (`loadTrees`, `treeAt`: town.json's trees in 20 m squares, loaded with the roofs). Nothing new
+  is drawn or downloaded.
+- **Solid roofs** (Ash: "Can you make the roofs all collision so things hit them?"): in Moorooka, planes and helicopters meet each
+  roof at its real height (the possum's `roofAt`, loaded when you get in) instead of 12 m up everywhere; a helicopter can sit on one,
+  a plane bounces off. Elsewhere a building still counts as 12 m.
+- **Logan's golden car** (Ash: "park the golden car properly, it's inside the road") is in a bay in the car park behind the council.
+- **On a computer** (Ash: "make the mouse control the joystick", "hide ... get in the car, instead show as controls", "Make that
+  [?] instead go to camera mode (hides all buttons) other than press ? To return", "hide boost and get out as they are already in
+  settings"): a click on the view gives the mouse to the view, flying too; Get in and Get out and Boost are not shown (Enter and
+  Shift); on foot the controls list says what each key does; ? hides every button (camera mode) and ? or Esc brings them back.
+  Emote stays.
