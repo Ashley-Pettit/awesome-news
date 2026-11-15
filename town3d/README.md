@@ -1472,3 +1472,17 @@ again (slower while it is still turning round) and the view swings round behind 
 - **Riding on a moving car** (Ash: "When the possum grips to a car plane or other vehicle, keep him attached if it moves"): standing
   on top of the traffic or one of the app's own cars, it moves and turns with the car (`P.ride`). Other players' cars, planes and
   helicopters it already held on to.
+
+## The possum's Grip (16 November 2026)
+
+Ash: "I put the possum on a car, it stayed gripped but I wanted it to follow the car. Add a thing to the possum called grip so
+even if not on the side of the car I can hold onto a car no one is driving yet."
+
+- **Grip** (the button over Jump on a phone, Q on a computer) takes hold of the nearest car within about 2.5 m of the possum:
+  a parked car, the app's own cars, a car of the traffic, or another player's car, plane or helicopter. The possum goes on the
+  roof where it grabbed and is carried wherever the car goes. Grip again, or Jump, lets go.
+- Gripping a car nobody is driving: when another player gets in and drives it off, their car is where the parked one was, so
+  the possum grabs on to theirs and goes with them.
+- Why it didn't follow before: a car of the traffic stopped for the possum on its own roof (it took the possum for someone in
+  the road ahead of it), then after 10 s stopped it was put back somewhere else. The traffic now ignores the possum it carries
+  (`T.car.carrying()`).

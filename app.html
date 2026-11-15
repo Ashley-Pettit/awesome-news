@@ -1377,6 +1377,11 @@ body.bstown:has(#bsKeys:not([hidden])) #bsFlyTip { display: none !important; }
 /* the possum's Plant button and its four choices, above the stick's row, in the middle */
 .bs-fly-x.bs-plant { position: absolute; left: 50%; right: auto; top: auto; bottom: calc(116px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: #4f8a3a; color: #fff; }
 .bs-fly-x.bs-plant[hidden], .bs-plantmenu[hidden] { display: none; }
+/* the possum's Grip, over Jump (Ash, 16 November 2026: "Add a thing to the possum called grip"); a key (Q) on a computer */
+.bs-fly-x.bs-grip { top: auto; left: auto; right: 34px; bottom: calc(268px + env(safe-area-inset-bottom)); min-width: 84px; background: #fff; color: #1b1830; z-index: 2; touch-action: none; user-select: none; -webkit-user-select: none; }
+.bs-fly-x.bs-grip.on { background: #7ed0ff; }
+.bs-fly-x.bs-grip[hidden] { display: none; }
+@media (hover: hover) and (pointer: fine) { .bs-fly-x.bs-grip { display: none; } }
 .bs-plantmenu { pointer-events: auto; position: absolute; z-index: 5; left: 50%; bottom: calc(166px + env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; width: min(340px, calc(100% - 32px)); }
 .bs-plantmenu button { min-height: 44px; padding: 0 14px; border: 0; border-radius: 999px; background: rgba(22, 24, 34, 0.86); color: #fff; font: 700 0.84rem var(--ui); cursor: pointer; }
 .bs-plantmenu button:focus-visible { outline: 2px solid #ffd166; outline-offset: 2px; }
@@ -7986,6 +7991,7 @@ const handle = async (m, post) => {
         // Settings, Share and Flood on a keyboard (Ash, 15 November 2026: "Needs a btn to get into settings or share or flood"): M, P and
         // L, which free the mouse first when it is looking around
         if (e.code === "KeyG" && !e.ctrlKey && !e.metaKey && BS.town?.car?.plantMenu?.()) { e.preventDefault(); return; }  // the possum's Plant
+        if (e.code === "KeyQ" && !e.ctrlKey && !e.metaKey && BS.town?.car?.grip?.()) { e.preventDefault(); return; }  // the possum's Grip
         if (!e.ctrlKey && !e.metaKey && !e.altKey && /^Key[MPL]$/.test(e.code)) { const b = $({ KeyM: "bsMeBtn", KeyP: "bsShareBtn", KeyL: "bsTownFlood" }[e.code]);
           if (b && !b.hidden && b.getClientRects().length) { if (document.pointerLockElement) document.exitPointerLock?.(); b.click(); e.preventDefault(); return; } }
         if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.code === "KeyZ" && F.hot?.undo?.()) { e.preventDefault(); return; }  // admin mode, with its bar open: undo the last edit
@@ -10192,7 +10198,7 @@ const handle = async (m, post) => {
         const h0 = Math.atan2(bx - ax, bz - az), ux = Math.sin(h0), uz = Math.cos(h0), cx = C.x ?? ax, cz = C.z ?? az, fh = C.h ?? h0, fx = Math.sin(fh), fz = Math.cos(fh);
         let want = C.top;
         // you: stop if you are in its way
-        if (me) { const dx = me.x - cx, dz = me.z - cz, ahead = dx * fx + dz * fz, side = Math.abs(dx * fz - dz * fx);
+        if (me && T.car?.carrying?.() !== C) { const dx = me.x - cx, dz = me.z - cz, ahead = dx * fx + dz * fz, side = Math.abs(dx * fz - dz * fx);
           if (ahead > 0 && ahead < 15 && side < 2.4) want = 0; }
         // another car ahead: follow it at a distance, or wait for one crossing (the one listed first goes first, so two never wait on each other)
         for (let di = 0; di < P.cars.length; di++) { const D = P.cars[di]; if (D === C || D.x == null) continue;
@@ -10968,7 +10974,7 @@ const handle = async (m, post) => {
     // what the possum stands on there: the ground, the top of a street light or a tree, or a roof
     // the roofs of the cars near the possum, found once a frame: the nearest parked car, the app's own cars and the traffic
     // (Ash, 15 November 2026: "let the possum also get ontop of cars"): it runs up on to one like a low wall, and drops off the edge
-    let carTops = [];
+    let carTops = [], gripAsk = false;  /* (Grip pressed: taken up on the possum's next frame) */
     const findCarTops = (x, z) => { const out = [], add = (cx, cz, h, bus, ref) => { if (cx == null || h == null || Math.hypot(cx - x, cz - z) > 14) return; out.push({ ref, x: cx, z: cz, s: Math.sin(h), c: Math.cos(h), hl: bus ? 6 : 2.25, hw: bus ? 1.25 : 0.95, top: ground(cx, cz) + (bus ? 3.3 : 1.45) }); };
       const pc = m.nearestCar?.(x, z, 14); if (pc) add(pc.x, pc.z, pc.heading, false);
       for (const G of owns) add(G.x, G.z, G.h, G.bus, G); for (const D of T.traffic?.cars || []) add(D.x, D.z, D.h, false, D);
@@ -11002,7 +11008,7 @@ const handle = async (m, post) => {
     // (Ash, 15 November 2026: "On computer hide emote and get in the car, instead show as controls")
     KEYS.walk = [[["W", "A", "S", "D"], "Walk (the arrows too)"], [["Shift"], "Run"], [["Click"], "Look around with the mouse (Esc gives it back)"], [["Enter"], "Get in the car, plane or possum nearby"], [["J"], "Jump to"], [["M"], "Settings"], [["?"], "Hide the buttons, for a clean view"]];
     KEYS.bus = KEYS.car; KEYS.gold = [...KEYS.car.slice(0, 4), [["X"], "180: hop and spin round, still going"], ...KEYS.car.slice(4)];
-    KEYS.possum = [[["W", "A", "S", "D"], "Run that way, from where you're looking (the arrows too)"], [["W"], "Into a street light or a wall: climb it"], [["S"], "On a wall: let go"], [["Space"], "Jump (off a wall too)"], [["Shift"], "Boost"], [["Drag"], "Look around"], [["Enter"], "Hop out"]];
+    KEYS.possum = [[["W", "A", "S", "D"], "Run that way, from where you're looking (the arrows too)"], [["W"], "Into a street light or a wall: climb it"], [["S"], "On a wall: let go"], [["Space"], "Jump (off a wall too)"], [["Shift"], "Boost"], [["Q"], "Grip the car beside you (Q again lets go)"], [["Drag"], "Look around"], [["Enter"], "Hop out"]];
     const hint = text => { if (keysNow.textContent !== text) { keysNow.textContent = text; if (touch) keysBox.hidden = !text; } };
     const keysOff = off => { keysBox.classList.toggle("off", off); keysQ.textContent = "? hides the buttons"; };
     const showKeys = kind => { keysNow.textContent = ""; keysOff(false); keysBox.hidden = !kind || touch;  // (on a phone it shows once there is something to say)
@@ -11039,7 +11045,7 @@ const handle = async (m, post) => {
       if (was === "ride") { const q = ride.q; T.peers?.ride?.(ride.id, false);
         if (step && q) { const back = RIDE_UP[q.k] > 1 ? 2.4 : 1.2; F.pos.x = q.x - Math.cos(q.h) * back; F.pos.z = q.z + Math.sin(q.h) * back; F.yaw = q.h + Math.PI; F.pitch = -0.04; }
         ride = null; }
-      else if (was === "possum") { const P = pos; P.v = 0;
+      else if (was === "possum") { const P = pos; P.v = 0; P.grip = null;
         if (!step) possumHome();  // flying off, a jump to a place or starting again: it goes home to number 16
         else { if (P.mode === "air") { P.y = surf(P.x, P.z); P.vy = 0; P.mode = "ground"; } if (P.mode !== "climb") P.p = 0; showPossum();  // left where it is, even halfway up a wall
           // you stand where the view was (behind it, clear of the building it is on); facing it
@@ -11051,7 +11057,7 @@ const handle = async (m, post) => {
         if (step) { F.pos.x = P.x + Math.cos(P.h) * 1.9; F.pos.z = P.z - Math.sin(P.h) * 1.9; F.yaw = P.h + Math.PI; F.pitch = -0.04; }  // out of the left door
         plane = null; showPlane(P); }
       veh = null; car = null; plane = null; window.anFast = false; showKeys(T.walk ? "walk" : null); C.in = false; F.drive = null; F.boost = false; F.hText = ""; F.vert = 0; F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.keys.clear();
-      document.body.classList.remove("bsdrive", "bsplane", "bspossum", "bsride"); boostBtn.hidden = true; boostBtn.textContent = "Boost"; handBtn.hidden = true; flipBtn.hidden = true; F.flip = false; plantBtn.hidden = plantMenu.hidden = true; handBtn.classList.remove("on"); F.hand = false; at = 0; C.frame(); };
+      document.body.classList.remove("bsdrive", "bsplane", "bspossum", "bsride"); boostBtn.hidden = true; boostBtn.textContent = "Boost"; handBtn.hidden = true; flipBtn.hidden = true; F.flip = false; plantBtn.hidden = plantMenu.hidden = true; gripBtn.hidden = true; handBtn.classList.remove("on"); F.hand = false; at = 0; C.frame(); };
     let camOff = null;  // where the view is from what you're in
     // (up in a plane, Moorooka's model stops fetching its sharpest ground and building backyards: window.anFast, moorooka-model.js patched)
     const tick = dt0 => { window.anFast = veh === "plane" && !!plane?.air; const dt = Math.min(dt0, 0.1), k = F.keys, has = (...c) => c.some(x => k.has(x));
@@ -11121,16 +11127,39 @@ const handle = async (m, post) => {
         P.t += dt;
         // riding on top of a car that moves (the traffic, or one of the app's own being driven): it goes where the car goes, turning
         // with it (Ash, 15 November 2026: "When the possum grips to a car plane or other vehicle, keep him attached if it moves")
-        if (P.ride && P.mode === "ground" && !P.cling) { const r = P.ride.ref, L0 = P.ride.last;
+        if (P.ride && P.mode === "ground" && !P.cling && !P.grip) { const r = P.ride.ref, L0 = P.ride.last;
           if (r && r.x != null && r.h != null) { const dh = wrap(r.h - L0[2]), c = Math.cos(dh), sn = Math.sin(dh), dx = P.x - L0[0], dz = P.z - L0[1];
             P.x = r.x + dx * c + dz * sn; P.z = r.z - dx * sn + dz * c; P.h += dh; if (P.mh != null) P.mh += dh; P.ride.last = [r.x, r.z, r.h]; } else P.ride = null; }
         // holding on to another player's plane or helicopter (Ash, 15 November 2026: "when a player is in the possum and a player is in
         // the plane that the possum can hold onto the plane"): it rides on top where it grabbed, until Jump springs it off
+        // Grip (Q, or the Grip button): it takes hold of the car next to it, from the side or the back as well as on top, parked or
+        // moving, and is carried wherever that car goes; someone getting in and driving off takes it with them (their car is where
+        // the parked one was, so it grabs on to theirs). Grip again, or Jump, lets go (Ash, 16 November 2026: "Add a thing to the
+        // possum called grip so even if not on the side of the car I can hold onto a car no one is driving yet")
+        if (gripAsk) { gripAsk = false;
+          if (P.grip || P.cling) { if (P.cling) T.peers?.ride?.(P.cling.id, false); P.grip = P.cling = null; P.mode = "air"; P.vy = 3; toast("You've let go.", 1800); }
+          else { let best = null, gap = 2.6; const look = (x, z, h, hl, hw, o) => { if (x == null || h == null) return; const dx = P.x - x, dz = P.z - z, along = dx * Math.sin(h) + dz * Math.cos(h), side = dx * Math.cos(h) - dz * Math.sin(h);
+              const g = Math.hypot(Math.max(0, Math.abs(along) - hl), Math.max(0, Math.abs(side) - hw)); if (g < gap && Math.abs(P.y - ground(x, z)) < 7) { gap = g; best = { ...o, x, z, h, hl, hw, along, side }; } };
+            for (const q of T.peers?.list?.() || []) if (CLING[q.k]) look(q.x, q.z, q.h, q.k === "bus" ? 6 : 3.4, q.k === "bus" ? 1.25 : 1.7, { peer: q });
+            for (const G of owns) look(G.x, G.z, G.h, G.bus ? 6 : 2.25, G.bus ? 1.25 : 0.95, { ref: G, top: G.bus ? 3.3 : 1.45 });
+            for (const D of T.traffic?.cars || []) if (!D.away) look(D.x, D.z, D.h, 2.25, 0.95, { ref: D, top: 1.45 });
+            { const pc = m.nearestCar?.(P.x, P.z, 9); if (pc) look(pc.x, pc.z, pc.heading, 2.25, 0.95, { ref: { x: pc.x, z: pc.z, h: pc.heading, parked: true }, top: 1.45 }); }
+            if (!best) toast("Nothing to grip here. Get right up to a car first.", 2200);
+            else if (best.peer) { const q = best.peer; P.cling = { id: q.id, name: q.name, along: bsClamp(best.along, -2.4, 2.4), side: bsClamp(best.side, -0.5, 0.5), dh: wrap(P.h - q.h) }; P.v = 0; P.ride = null;
+              T.peers?.ride?.(q.id, 2, [P.cling.along, P.cling.side, P.cling.dh].map(v => Math.round(v * 100) / 100)); toast(`Holding on to ${q.name}! Jump or Grip to let go.`, 2600); }
+            else { P.grip = { ref: best.ref, top: best.top, along: bsClamp(best.along, 0.5 - best.hl, best.hl - 0.5), side: bsClamp(best.side, 0.35 - best.hw, best.hw - 0.35), dh: wrap(P.h - best.h), last: [best.x, best.z] }; P.ride = null; P.v = 0; snd.squeak(1.1);
+              toast(best.ref.parked || best.ref === gold || owns.includes(best.ref) ? "Gripping the car. When someone drives it away, you go too. Jump or Grip to let go." : "Gripping the car! Jump or Grip to let go.", 3200); } } }
+        if (P.grip && !P.cling) { const g = P.grip, r = g.ref;  // carried along: its place on the roof turns and moves with the car
+          if (!r || r.x == null || r.h == null || Math.hypot(r.x - g.last[0], r.z - g.last[1]) > 30) { P.grip = null; P.mode = "air"; P.vy = 0; toast("The car's gone. You've let go.", 2200); }  // (a car of the traffic that has been put back somewhere else)
+          else { const sn = Math.sin(r.h), cs = Math.cos(r.h), x = r.x + sn * g.along + cs * g.side, z = r.z + cs * g.along - sn * g.side;
+            P.v = Math.hypot(x - P.x, z - P.z) / Math.max(dt, 1e-3); P.x = x; P.z = z; P.y = ground(r.x, r.z) + g.top; P.h = r.h + g.dh; P.mh = P.h; P.mode = "ground"; P.vy = 0; g.last = [r.x, r.z];
+            if (jump && !P.jumped) { P.grip = null; P.mode = "air"; P.vy = 8; toast("You've let go.", 1800); } } }
         const CL = P.cling, cq = CL && (T.peers?.list?.() || []).find(v => v.id === CL.id);
         if (CL && (!cq || !CLING[cq.k])) { P.cling = null; P.mode = "air"; P.vy = 0; toast(`${CL.name} has gone. You're off.`, 2200); }
-        if (P.cling) { const q = cq, sn = Math.sin(q.h), cs = Math.cos(q.h), x = q.x + sn * CL.along + cs * CL.side, z = q.z + cs * CL.along - sn * CL.side;
+        if (P.cling) { const q = cq, sn = Math.sin(q.h), cs = Math.cos(q.h), x = q.x + sn * CL.along + cs * CL.side, z = q.z + cs * CL.along - sn * CL.side; P.grip = null;
           P.v = Math.hypot(x - P.x, z - P.z) / Math.max(dt, 1e-3); P.x = x; P.z = z; P.y = q.y + CLING[q.k]; P.h = q.h + CL.dh; P.mode = "ground"; P.vy = 0;
           if (jump && !P.jumped) { P.cling = null; P.mode = "air"; P.vy = 8; T.peers?.ride?.(CL.id, false); toast("You've let go.", 1800); } }
+        else if (P.grip) { /* gripping a car: carried, above */ }
         else if (P.mode === "climb") { const W = P.wall; P.v = 0;
           if (thr < -0.1 || drop || (jump && !P.jumped)) { P.mode = "air"; P.vy = jump ? 6 : 0; P.h += Math.PI; P.wall = null; }  // lets go (stick back, or Jump to spring off), turning round as it drops
           else if (thr > 0.1 || jump) { P.y += R.possumClimb * dt * Math.max(thr, jump ? 1 : 0);
@@ -11168,7 +11197,7 @@ const handle = async (m, post) => {
           // into the golden possum who is faster and can jump higher and also can do a 360 in the air")
           if (!P.gold && POOL6 && P.mode === "ground" && P.y < ground(P.x, P.z) + 0.6) { const dx = P.x - POOL6.bx, dz = P.z - POOL6.bz, a = dx * POOL6.ux + dz * POOL6.uz, w = -dx * POOL6.uz + dz * POOL6.ux;
             if (a > 2.4 && a < 6 && w > -3.6 && w < 4.2) { P.gold = true; goldPossum(); snd.squeak(1.5); toast("Splash! You're the golden possum: faster, jumps higher, and Jump again in the air for a 360.", 6000); } } }  // two and a half times as high as it was (Ash, 15 November 2026)
-        { let on = null; if (P.mode === "ground" && !P.cling) for (const t of carTops) { const dx = P.x - t.x, dz = P.z - t.z; if (t.ref && Math.abs(P.y - t.top) < 0.4 && Math.abs(dx * t.s + dz * t.c) < t.hl && Math.abs(dx * t.c - dz * t.s) < t.hw) { on = t.ref; break; } }
+        { let on = null; if (P.mode === "ground" && !P.cling && !P.grip) for (const t of carTops) { const dx = P.x - t.x, dz = P.z - t.z; if (t.ref && Math.abs(P.y - t.top) < 0.4 && Math.abs(dx * t.s + dz * t.c) < t.hl && Math.abs(dx * t.c - dz * t.s) < t.hw) { on = t.ref; break; } }
           if (!on) P.ride = null; else if (P.ride?.ref !== on) P.ride = { ref: on, last: [on.x, on.z, on.h] }; }
         // its sounds: a patter of feet as it runs, claws as it climbs, a squeak as it jumps
         P.pat = (P.pat || 0) + (P.mode === "ground" ? Math.abs(P.v) * dt / 0.55 : P.mode === "climb" ? Math.abs(P.y - (P.lastY ?? P.y)) / 0.3 : 0); P.lastY = P.y;
@@ -11179,12 +11208,12 @@ const handle = async (m, post) => {
         if (!P.cling && P.mode !== "climb") for (const q of T.peers?.list?.() || []) { if (!CLING[q.k]) continue;
           const dx = P.x - q.x, dz = P.z - q.z, along = dx * Math.sin(q.h) + dz * Math.cos(q.h), side = dx * Math.cos(q.h) - dz * Math.sin(q.h);
           if (Math.abs(along) < 3.4 && Math.abs(side) < 1.7 && P.y > q.y - 0.6 && P.y < q.y + CLING[q.k] + 1.5) {
-            P.cling = { id: q.id, name: q.name, along: bsClamp(along, -2.4, 2.4), side: bsClamp(side, -0.5, 0.5), dh: wrap(P.h - q.h) }; P.v = 0;
-            T.peers?.ride?.(q.id, 2, [P.cling.along, P.cling.side, P.cling.dh].map(v => Math.round(v * 100) / 100)); toast(`Holding on to ${q.name}! Jump to let go.`, 2600); break; } }
+            const was = !!P.grip; P.cling = { id: q.id, name: q.name, along: bsClamp(along, -2.4, 2.4), side: bsClamp(side, -0.5, 0.5), dh: wrap(P.h - q.h) }; P.v = 0; P.grip = P.ride = null;
+            T.peers?.ride?.(q.id, 2, [P.cling.along, P.cling.side, P.cling.dh].map(v => Math.round(v * 100) / 100)); toast(was ? `${q.name} is driving off with you! Jump to let go.` : `Holding on to ${q.name}! Jump to let go.`, 2800); break; } }
         P.p += ((P.mode === "climb" ? 1.45 : P.mode === "air" ? bsClamp(P.vy * 0.03, -0.35, 0.35) : 0) - P.p) * Math.min(1, dt * 12); showPossum();
         const up = P.y - ground(P.x, P.z);
         hint(P.mode === "climb" ? (touch ? "Climbing. Stick forward to go up, back to let go" : "Climbing. W goes up, S lets go") : "");
-        o = P; D = P.cling ? 9 : 3.4 + Math.min(3, Math.abs(P.v) / 12); text = P.cling ? `Holding on to ${P.cling.name} \u00b7 ${Math.round(P.v * 3.6)} km/h` : P.mode === "climb" ? "Climbing \u00b7 " + Math.round(up) + " m" : Math.round(Math.abs(P.v) * 3.6) + " km/h" + (up > 1.5 ? " \u00b7 " + Math.round(up) + " m up" : "");
+        o = P; D = P.cling || P.grip ? 9 : 3.4 + Math.min(3, Math.abs(P.v) / 12); text = P.cling ? `Holding on to ${P.cling.name} \u00b7 ${Math.round(P.v * 3.6)} km/h` : P.grip ? `Gripping the car \u00b7 ${Math.round(P.v * 3.6)} km/h` : P.mode === "climb" ? "Climbing \u00b7 " + Math.round(up) + " m" : Math.round(Math.abs(P.v) * 3.6) + " km/h" + (up > 1.5 ? " \u00b7 " + Math.round(up) + " m up" : "");
       } else { const P = plane, K = P.k, jet = boost && canBoost(P), top = (jet ? JET : CRUISE) * K;  // (only the golden plane has a boost)
         // the nose: the down arrow lifts it and the up arrow lowers it, as pulling back and pushing on a plane's stick does
         // (Ash, 14 November 2026: "if i press down my plane shifts upwards and vica versa"). Space and C, and Climb and Dive, too.
@@ -11287,7 +11316,7 @@ const handle = async (m, post) => {
         veh = "car"; camYaw = car.h + Math.PI; document.body.classList.add("bsdrive"); showRing(charge < 0.999); }
       C.in = true; camOff = null; off = [wrap(F.yaw - camYaw), bsClamp(F.pitch + 0.2, -1, 0.55)]; idle = 0; last = [F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch];
       F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.vert = 0; F.boost = false; F.keys.clear(); F.drive = tick;
-      btn.textContent = veh === "possum" ? "Hop out" : "Get out"; btn.hidden = false; handBtn.hidden = veh !== "car" && veh !== "possum"; handBtn.textContent = veh === "possum" ? "Boost" : "Handbrake"; handBtn.dataset.key = veh === "possum" ? "Shift" : "Space"; flipBtn.hidden = !(veh === "car" && car?.gold); plantBtn.hidden = !(veh === "possum" && T.admin?.plant); boostBtn.hidden = veh === "ride" || (veh === "plane" && !canBoost(plane));
+      btn.textContent = veh === "possum" ? "Hop out" : "Get out"; btn.hidden = false; handBtn.hidden = veh !== "car" && veh !== "possum"; handBtn.textContent = veh === "possum" ? "Boost" : "Handbrake"; handBtn.dataset.key = veh === "possum" ? "Shift" : "Space"; flipBtn.hidden = !(veh === "car" && car?.gold); plantBtn.hidden = !(veh === "possum" && T.admin?.plant); gripBtn.hidden = veh !== "possum"; boostBtn.hidden = veh === "ride" || (veh === "plane" && !canBoost(plane));
       boostBtn.textContent = veh === "possum" ? "Jump" : "Boost"; boostBtn.dataset.key = veh === "possum" ? "Space" : "Shift";
       if (veh === "ride") { if (RIDE_UP[ride.k] > 1) snd.door(); } else if (veh !== "possum") { snd.door(); snd.start(veh === "plane" && plane.heli ? "heli" : veh); } showKeys(veh === "plane" && plane.heli ? "heli" : veh === "ride" ? null : veh === "car" && car.gold ? "gold" : veh);
       // on a phone, a word about the sticks (on a desktop the list of keys has just come up, bottom left)
@@ -11321,6 +11350,11 @@ const handle = async (m, post) => {
     plantBtn.onclick = e => { e.stopPropagation(); plantMenu.hidden = !plantMenu.hidden; plantBtn.setAttribute("aria-expanded", String(!plantMenu.hidden)); };
     $("bsFly")?.append(plantBtn, plantMenu);
     C.plantMenu = () => { if (veh !== "possum" || plantBtn.hidden) return false; plantBtn.click(); return true; };
+    const gripBtn = document.createElement("button"); gripBtn.type = "button"; gripBtn.className = "bs-fly-x bs-grip"; gripBtn.textContent = "Grip"; gripBtn.dataset.key = "Q"; gripBtn.hidden = true;
+    gripBtn.addEventListener("pointerdown", e => { e.preventDefault(); e.stopPropagation(); if (veh === "possum") gripAsk = true; }); $("bsFly")?.append(gripBtn);
+    C.grip = () => { if (veh !== "possum") return false; gripAsk = true; return true; };
+    // what the possum is riding on or gripping: a car of the traffic does not stop for it (it was stopping for the possum on its roof)
+    C.carrying = () => veh === "possum" && pos ? pos.grip?.ref || pos.ride?.ref || null : null;
     const flipBtn = $("bsFlipBtn"), flipPress = e => { e.preventDefault(); if (veh === "car" && car?.gold) F.flip = true; }; flipBtn.addEventListener("pointerdown", flipPress);
     const hidden = () => snd.quiet(document.hidden); document.addEventListener("visibilitychange", hidden);
     C.riding = () => veh === "ride";
@@ -11333,7 +11367,7 @@ const handle = async (m, post) => {
     C.toGold = () => { const G = planes.find(P => P.gold); if (!G) return false; if (veh) leave(false);
       const sn = Math.sin(G.h), cs = Math.cos(G.h), dx = sn * 7 - cs * 5, dz = cs * 7 + sn * 5; T.tween = null;
       F.pos.x = G.x + dx; F.pos.z = G.z + dz; F.pos.y = ground(F.pos.x, F.pos.z) + (T.walk ? F.eye : 14); F.yaw = Math.atan2(dx, dz); F.pitch = T.walk ? -0.06 : -0.6; at = 0; return true; };
-    C.dispose = () => { if (veh) leave(false); btn.onclick = null; btn.hidden = boostBtn.hidden = handBtn.hidden = flipBtn.hidden = true; plantBtn.remove(); plantMenu.remove(); flipBtn.removeEventListener("pointerdown", flipPress); F.hand = false; Object.entries(press).forEach(([k, f]) => boostBtn.removeEventListener(k, f)); Object.entries(handPress).forEach(([k, f]) => handBtn.removeEventListener(k, f));
+    C.dispose = () => { if (veh) leave(false); btn.onclick = null; btn.hidden = boostBtn.hidden = handBtn.hidden = flipBtn.hidden = true; plantBtn.remove(); plantMenu.remove(); gripBtn.remove(); flipBtn.removeEventListener("pointerdown", flipPress); F.hand = false; Object.entries(press).forEach(([k, f]) => boostBtn.removeEventListener(k, f)); Object.entries(handPress).forEach(([k, f]) => handBtn.removeEventListener(k, f));
       document.removeEventListener("visibilitychange", hidden); document.body.classList.remove("bsdrive", "bsplane"); snd.dispose(); showKeys(null); try { for (const P of planes) P.parts.remove(); for (const G of owns) G.parts.remove(); ring.remove(); possumMesh?.remove(); poleMesh?.remove(); } catch {} };
     return C;
   }
