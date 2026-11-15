@@ -76,3 +76,31 @@ we've lost tonnes of great work in design." The cause was the model being rebuil
 `town3d/README.md`, "Inverloch put back together"). This section is Claude's safeguard against it happening again; if
 Ash words it differently, their wording wins.
 
+
+## Explore's touch sticks: don't break them
+
+Ash plays Explore on an iPhone with two thumbs. When the left stick drops back to the middle, the game can't be played, and this
+has broken three times. Before any change that touches Explore's input, loading order or main-thread work, follow these rules.
+
+- **Keep the stick listeners passive.** The `touchstart`/`touchmove`/`touchend` listeners on `.bs-joy` and the Up/Down buttons
+  use `{ passive: true }`, and `touch-action: none` stops scrolling. A listener that can cancel makes iOS wait for the page; when the
+  page is busy it cancels the finger, and the stick resets (15 November 2026).
+- **Track each finger by its own id.** A stick takes the touch whose target is inside it (`el.contains(t.target)`), not
+  `changedTouches[0]`: two thumbs landing together can arrive in one event. A finger on the view's left half must not steer or reset
+  `F.stick` while the move stick is held (16 November 2026, "when I put two fingers on at once").
+- **Don't change when or how the news loads around Explore.** Holding the news back on a direct Explore link (#168, to save about
+  2 MB) made the stick drop on Ash's iPhone, and reverting it fixed it (#172). The exact cause wasn't pinned down. The likely
+  suspect is the news loading and rendering in the middle of a game (the ten-minute refresh). Leave the order as it is: the news
+  loads first, then Explore opens.
+- **Nothing heavy mid-game.** Don't add big fetches, full renders, or rebuilding the DOM while Explore is open. Defer them until
+  you leave Explore.
+- **Test before shipping any change like this.** Use the two-finger test: phone size with `hasTouch`, a finger held on the move
+  stick, a second finger put down, moved and lifted on the view and on the look stick. The stick must hold. Do it in all three
+  towns, and also leave the game running for over ten minutes. Say in the pull request that this was done. Then ask Ash to check on
+  his iPhone before calling it fixed: a desktop browser does not behave like iOS.
+- **If Ash reports the stick dropping again,** revert the most recent change to Explore loading or input first, then investigate.
+  Don't stack fixes on top.
+
+Where this comes from: on 16 November 2026 Ash said "Okay this works. Now do a full report for yourself and never break this again",
+after the #168 revert brought the stick back. The bullet points are Claude's reading of what went wrong; if Ash words it
+differently, their wording wins.
