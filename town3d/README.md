@@ -1241,3 +1241,7 @@ Also `isAsh()`, asked every frame, reads the player name from storage at most on
 Ash: "That didn't fix it. Go back to 130". `app.html` is put back to 1fd5ce6 (#130, car turning). This takes out, for
 now: Chat in the Emote menu and the name prompt (#133), midday and the Explore parts reset (#134), and the moving cars
 off again (#135). The models are as at #130 too.
+- **The player name decides** (Ash: "my name is Ben so I shouldn't have admin but I can see go to golden helicopter"):
+  when Explore's player name is set, `isAsh()` goes by it alone; the news app's name only counts when no player name
+  is set. Read at most once a second. This also lets Ash test the stick as not-Ash by setting his player name to
+  anything else.
