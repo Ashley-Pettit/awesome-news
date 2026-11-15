@@ -10823,7 +10823,7 @@ const handle = async (m, post) => {
     // ---- the golden car, the app's own mesh too: twice the top speed and the acceleration of a parked car
     const showOwn = G => { M.compose(V.set(G.x, G.y, G.z), Q.setFromEuler(E.set(-G.p, G.h, G.r, "YXZ")), ONE); G.parts.setMatrix(0, M.elements.slice()); };
     // a golden car that parks somewhere different each visit: in the place of a parked car near one of the town's places
-    const parkAt = home => { if (!home.park || !m.nearestCar || !m.spots) return home; const spots = m.spots().filter(s => s.kind !== "water");
+    const parkAt = home => { if (!home.park || !m.nearestCar || !m.spots) return home; const spots = m.spots().filter(s => s.kind !== "water" && Math.hypot(s.tx - home.x, s.tz - home.z) < 1200);  // (near its usual place: Logan's places run out to Jimboomba)
       for (let t = 0; t < 24 && spots.length; t++) { const s = spots[Math.floor(Math.random() * spots.length)], c = m.nearestCar(s.tx, s.tz, 120);
         if (!c || RIDES.cars.some(o => o !== home && Math.hypot(o.x - c.x, o.z - c.z) < 30)) continue;
         T.hideCars = [c.id]; if (T.admin?.apply) T.admin.apply(); else m.setRemoved?.({ cars: T.hideCars, trees: [], people: [] });
@@ -10942,7 +10942,8 @@ const handle = async (m, post) => {
       veh = null; car = null; plane = null; window.anFast = false; showKeys(null); C.in = false; F.drive = null; F.boost = false; F.hText = ""; F.vert = 0; F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.keys.clear();
       document.body.classList.remove("bsdrive", "bsplane", "bspossum", "bsride"); boostBtn.hidden = true; boostBtn.textContent = "Boost"; handBtn.hidden = true; flipBtn.hidden = true; F.flip = false; handBtn.classList.remove("on"); F.hand = false; at = 0; C.frame(); };
     let camOff = null;  // where the view is from what you're in
-    const tick = dt0 => { window.anFast = veh === "plane" && !!plane?.air;  // up in a plane: Moorooka's model stops fetching its sharpest ground and building backyards (moorooka-model.js, patched) const dt = Math.min(dt0, 0.1), k = F.keys, has = (...c) => c.some(x => k.has(x));
+    // (up in a plane, Moorooka's model stops fetching its sharpest ground and building backyards: window.anFast, moorooka-model.js patched)
+    const tick = dt0 => { window.anFast = veh === "plane" && !!plane?.air; const dt = Math.min(dt0, 0.1), k = F.keys, has = (...c) => c.some(x => k.has(x));
       // flying the camera, a jump to a place or starting again has moved the view: that is getting out
       if (!T.walk || T.tween || BS.town !== T || Math.abs(F.pos.x - last[0]) + Math.abs(F.pos.y - last[1]) + Math.abs(F.pos.z - last[2]) > 1e-3) return leave(false);
       // looking round: the right stick, or a drag (which has already turned the view)
