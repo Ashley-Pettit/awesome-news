@@ -1605,3 +1605,10 @@ change my hairdo", Venky out the back of 10 Beaudesert Road ("Fix up this house"
   `band`, `pole`, `rails`, `kerbPaint`.
 - Logan's sliding doors stood at the building's average floor height, which was below the paving at the door ("in the dirt"); they
   now stand on the precinct's ground at the door.
+
+## Logan council: the forecourt is concrete, not dirt (16 November 2026)
+
+- The ground under the entry canopy was drawn as tan exposed aggregate (kind 5), which read as dirt around the sliding doors (Ash: "Fix
+  Logan door"). In `town3d/logan/map.json` (precinct `ground`), that one shape is now light concrete (code 81 to 65: kind 4, the
+  lighter tint), like the paths in the aerial photo. Data only; the other kind 5 paths are unchanged. If the precinct is rebuilt in
+  ai-forge, make the same change there.
