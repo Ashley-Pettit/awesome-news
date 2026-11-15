@@ -7875,26 +7875,36 @@ const handle = async (m, post) => {
         : `Saved on this device. To make it everyone's, save the GitHub key in Admin, then keep the view again.`, 8000); };
     // The on-screen sticks: drag the knob; it springs back when you let go. Touch events (each finger tracked by its own id)
     // so both sticks and Up/Down work at the same time on a phone; the mouse uses pointer events.
+    // One Pointer Events path for both iPhone fingers and desktop mouse. Pointer capture keeps
+    // move/up events on the original stick even if the finger slides outside its circle.
+    // Mixing Touch Events with mouse-only Pointer Events left iOS touch ownership uncaptured.
     F.joys = [...document.querySelectorAll("#bsFly .bs-joy")].map(el => {
-      const knob = el.querySelector("i"), v = el.dataset.joy === "move" ? F.stick : F.lookStick; let id = null;
-      const set = p => { const r = el.getBoundingClientRect(), R = r.width / 2 - 14; let dx = p.clientX - (r.left + r.width / 2), dy = p.clientY - (r.top + r.height / 2);
+      const knob = el.querySelector("i"), v = el.dataset.joy === "move" ? F.stick : F.lookStick;
+      let id = null;
+      const set = p => { const r = el.getBoundingClientRect(), R = Math.max(1, r.width / 2 - 14); let dx = p.clientX - (r.left + r.width / 2), dy = p.clientY - (r.top + r.height / 2);
         const d = Math.hypot(dx, dy); if (d > R) { dx *= R / d; dy *= R / d; }
         knob.style.transform = `translate(${dx}px, ${dy}px)`; v.x = dx / R; v.y = -dy / R; };
       const end = () => { id = null; knob.style.transform = ""; v.x = 0; v.y = 0; };
-      const mine = e => [...e.changedTouches].find(t => t.identifier === id);
+      const release = e => { if (e.pointerId !== id) return;
+        // Ignore the ensuing lostpointercapture event after a normal lift.
+        end(); if (el.hasPointerCapture?.(e.pointerId)) try { el.releasePointerCapture(e.pointerId); } catch {} };
       const h = {
-        touchstart: e => { if (id !== null) return; const t = e.changedTouches[0]; id = t.identifier; set(t); tip.classList.add("dim"); },
-        touchmove: e => { const t = mine(e); if (t) set(t); },
-        touchend: e => { if (mine(e)) end(); }, touchcancel: e => { if (mine(e)) end(); },
-        pointerdown: e => { if (e.pointerType !== "mouse") return; id = "m"; try { el.setPointerCapture(e.pointerId); } catch {} set(e); tip.classList.add("dim"); e.preventDefault(); },
-        pointermove: e => { if (e.pointerType === "mouse" && id === "m") set(e); },
-        pointerup: e => { if (e.pointerType === "mouse" && id === "m") end(); },
+        pointerdown: e => { if (id !== null || (e.pointerType === "mouse" && e.button !== 0)) return;
+          id = e.pointerId;
+          try { el.setPointerCapture(e.pointerId); } catch {}
+          set(e); tip.classList.add("dim"); e.preventDefault(); },
+        pointermove: e => { if (e.pointerId === id) { set(e); e.preventDefault(); } },
+        pointerup: release,
+        pointercancel: e => { if (e.pointerId !== id) return;
+          // A browser cancellation is NOT a finger lift; record it for Safari diagnosis.
+          F.lastJoyCancel = { stick: el.dataset.joy, at: performance.now(), visibility: document.visibilityState };
+          release(e); },
+        lostpointercapture: e => { if (e.pointerId === id) {
+          F.lastJoyCancel = { stick: el.dataset.joy, at: performance.now(), reason: "lostpointercapture", visibility: document.visibilityState };
+          end(); } },
+        contextmenu: e => e.preventDefault(),
       };
-      // The touch listeners are passive (the stick's touch-action: none keeps the page still instead of preventDefault). A
-      // listener that could cancel makes an iPhone wait for the page before it moves each finger, and when the page was busy
-      // for a moment (loading tiles, the traffic) it gave up and cancelled the finger: the stick went back to the middle
-      // (Ash, 15 November 2026, in all three towns)
-      Object.entries(h).forEach(([k, f]) => el.addEventListener(k, f, { passive: /^touch/.test(k) }));
+      Object.entries(h).forEach(([k, f]) => el.addEventListener(k, f));
       return { el, h, end };
     });
     F.uds = [...document.querySelectorAll("#bsFly .bs-udb")].map(el => {
