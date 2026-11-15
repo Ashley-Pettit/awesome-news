@@ -1371,3 +1371,22 @@ the red and golden cars and the helicopter behind 11 Norman Road were all where 
 - **PC** (Ash: "On pc make the game feel more natural when walking. Mouse able to control viewpoint. Needs a btn to get into
   settings or share or flood"): walking or driving, a click on the view hands the mouse to the view (Esc gives it back); M, P and L
   open Settings, Share and Flood (keycaps on the buttons); on foot the keys walk, Shift runs, with easing and a slight head bob.
+
+## Moorooka's houses: a front door, steps and framed windows (15 November 2026)
+
+Ash: "Can you make the moorooka houses a bit more accurate without causing lag or lots of load time?" Every house the general
+builder draws (all but number 6 and its neighbours) was a box with dark window squares the same on every side, and no way in.
+Now, in full detail only (near the view; the plain far version is unchanged):
+
+- **The front:** the wall that faces the nearest street (`anRoadNear`, street centre lines sampled every 8 m into 40 m cells,
+  once per load) gets a front door with a white frame in the middle window's place, and a little skillion roof over it in the
+  roof's colour. A high-set house (on stumps) gets a landing, a flight of timber stairs down towards the street with white
+  handrails, and two white posts under its roof; a low-set one, a concrete step.
+- **Windows:** every house window has a white frame.
+- **Cost** (`frameCost()`, software renderer, same views): on foot in Bohain Street 619,083 to 646,097 triangles (Light) and
+  1,849,106 to 1,960,030 (sharpest); 22 m up 450,202 to 472,078 and 1,626,294 to 1,720,992. About 5% more triangles and no
+  more draw calls (they go into the same meshes); nothing more to download.
+- **In the bundle** (`moorooka-model.js`, `?v=31`), patched: `anRoadNear` and `anFront` before the house builder (`$_`), the front
+  edge (`FE`) worked out before its windows, the frame before each house window's glass, `anFront` after the front edge's
+  windows, and `$_.road = anRoadNear(town)` at the start of `buildBuildings`. When the model is rebuilt from ai-forge, make the
+  same change in `src/features/moorooka3d/buildings.ts` (`addBuilding`, `buildBuildings`).
