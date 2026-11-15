@@ -1343,3 +1343,31 @@ the red and golden cars and the helicopter behind 11 Norman Road were all where 
 - **The golden helicopter** could land in A'Beckett Street: one of its random spots was the grass 18 m beside the plane, which
   there is the road. Towns with open spots of their own (Inverloch and Logan) now pick only from those; Moorooka, which has
   none, still uses the grass beside its planes, all in parks.
+
+## Esc, riders, the possum on cars, smoother planes, kept time, tailored app steps, more to build, mouse look (15 November 2026)
+
+- **Esc** (Ash: "ESC should not close the app, it should close the menu the person is in"): Esc closes Settings, Share, Jump to,
+  the flood list, emotes, chat, the time, a suggestion being looked at, then the map-editing bar (`exEscMore`). It never leaves
+  Explore.
+- **Riders** (Ash: "Make it more obvious when a player is riding with you"): while you drive or fly, a yellow card under the top
+  buttons says who is riding with you (or holding on), and their names float over what you're in (`.bs-ridecard`, `.bs-ridetag`).
+- **The possum on a plane** (Ash: "When flying the plane and the possum is on I can't see the possum"): holding on, the possum now
+  says where on top it is ([2, along, side, turn] in the ride message), and the pilot draws it right there, instead of where its
+  last word put it (well behind a plane at speed).
+- **The possum on cars** (Ash: "let the possum also get ontop of cars"): it holds on to cars and buses other players drive, and runs
+  up on to the nearest parked car, the app's own cars and the traffic like a low wall (`findCarTops`).
+- **Smoother planes** (Ash: "When flying the plane it's a bit laggy/choppy"): the follow view now rides with the vehicle and only
+  eases its place round it (it used to ease after it, so at speed it lagged more on a slow frame and the plane jumped about). Up in
+  a plane, Moorooka's model also stops fetching its sharpest ground and building backyards (`window.anFast`, `?v=30`).
+- **Kept for next time** (Ash: "When I adjust a setting, make that the default for next time the app opens"): an admin's Time of
+  day is kept (`an3d-time`); the other settings already were, and now save as you type.
+- **Make it an app, by browser** (Ash: "try to read browser so make it an app is tailored"): steps for Safari, Chrome, Edge and
+  Firefox on iPhone; Chrome, Samsung Internet, Firefox, Edge and Opera on Android; Chrome, Edge, Safari, Opera and Firefox on a
+  computer; and from inside another app. A line says which it's for.
+- **More to build** (Ash: "Add more features to be able to add or remove etc to the construction worker"): Tree, Car and Light
+  tools put in a tree, a parked car (facing the way you look) or a street light with a tap. Delete takes them out (yours go; a
+  published one is taken back out). They live in `edits.json` beside what is taken out (`gone.addTree`, `addCar`, `addLight`,
+  `noAdd`), so Save, Send, Suggestions and `tools/town/add_edits.py` carry them like any edit; older copies of the app ignore them.
+- **PC** (Ash: "On pc make the game feel more natural when walking. Mouse able to control viewpoint. Needs a btn to get into
+  settings or share or flood"): walking or driving, a click on the view hands the mouse to the view (Esc gives it back); M, P and L
+  open Settings, Share and Flood (keycaps on the buttons); on foot the keys walk, Shift runs, with easing and a slight head bob.
