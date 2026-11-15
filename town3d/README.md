@@ -1282,3 +1282,11 @@ were not it.
   is still there.
 - **Traffic** (Ash: "Add back some of the traffic so there is a light amount of cars around. Careful not to cause lag"): the app's
   moving cars go from 4 to 7 (`townTraffic`, `N`). Each is a few draw calls and one more than 450 m away is not drawn.
+
+## Bohain Street meets Beaudesert Road (15 November 2026)
+
+Ash: "Fix this road" (a blob of asphalt where Bohain Street splits in two to meet Beaudesert Road). In the photograph the two
+arms of Bohain Street go round one landscaped island, kerbed on all sides, with a footpath across it and a small kerbed refuge
+at the point where the north arm meets Beaudesert Road. The model had most of that island as road. `edits.json` now paints it
+back (16 strokes): the island as lawn, inset half a stroke from each kerb and filled along its length, the refuge and the path
+as concrete. It shows where the sharper ground is drawn (close up), like every map edit.
