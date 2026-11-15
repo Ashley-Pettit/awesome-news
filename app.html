@@ -8271,14 +8271,14 @@ const handle = async (m, post) => {
   // of: "Logan"), floodNote (the line under the list) and floodWarn (show the not-official notice first, and a banner while a flood is on).
   const TOWNS = {
     inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=20", assets: TOWN3D, place: "inv", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
-    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=31", assets: TOWN3D + "moorooka/", place: "moo", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
+    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=32", assets: TOWN3D + "moorooka/", place: "moo", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
       walkStart: { x: -269.8, z: -991.4, yaw: -1.623 },  // Ash's pick for where Moorooka starts: the Beaudesert Road footpath, looking at the house he chose
       // its floods: widest over the Oxley Creek flats along the model's western edge, seen from the east. floodWarn: the not-official notice has to be accepted
       // before the list opens, and a banner says the same while a flood is showing (Ash asked for both).
       floodLook: [-27.5375, 153.0115, 1100, 40, 100], floodOf: "this map", noFloodSlider: true,  // Ash: no water level slider ("At the peak") in Moorooka: a flood just rises to its peak
       floodWarn: { council: "Brisbane City Council", short: "BCC", how: "our own computer simulation of rain running over the ground and the creeks rising (and, in big river floods, Oxley Creek backing up), on a 5 m model of the terrain", map: "Brisbane City Council's Flood Awareness Map and FloodWise Property Report" },
       floodNote: "A guide only: our own simulation, from the terrain, the buildings and the Bureau's design rainfall for Moorooka. It includes water running over the ground to the creeks. No council flood mapping is used. For property, insurance or planning decisions, use Brisbane City Council's Flood Awareness Map and FloodWise Property Report." },
-    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=37", assets: TOWN3D + "logan/", place: "logan", pre: ["map.json", "height.png", "roads.bin", "buildings.bin", "ground.webp", "relief.webp", "lights.webp", "cover.png"], up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
+    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=38", assets: TOWN3D + "logan/", place: "logan", pre: ["map.json", "height.png", "roads.bin", "buildings.bin", "ground.webp", "relief.webp", "lights.webp", "cover.png"], up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
       start: "council", onFoot: true, noFloodSlider: true, flyTo: { id: "brownsplains", label: "Fly to Browns Plains" }, wait: 90000, ceil: 110000, fast: 600, far: 150000, out: 130000, stride: 0.02, pad: 80000, stand: [0.45, 400], floodLook: [-27.69, 153.17, 12000, 55, -35],
       // the same not-official notice and banner as Moorooka's (Ash, 12 November 2026)
       floodWarn: { council: "Logan City Council", short: "LCC", how: "the 2017 flood as mapped, and the others worked out from river gauge heights and rainfall over a terrain model", map: "Logan City Council's flood maps" } },  // shown small in the bottom right corner the whole time the model is open
@@ -8681,6 +8681,7 @@ const handle = async (m, post) => {
         if (TOWN_TOGETHER.includes(cfg.place) && !OFF.has("players")) try { T.peers = townPeers(T, m, F, ground, cfg.place, box); } catch (e) { console.warn("Town model: other players couldn't start", e); }
         if (!OFF.has("me")) try { T.me = townMe(T, m, F, ground); } catch (e) { console.warn("Town model: the construction worker couldn't start", e); }
         if (!OFF.has("traffic")) try { T.traffic = townTraffic(T, m, F, ground, cfg); } catch (e) { console.warn("Town model: the traffic couldn't start", e); }
+        if (cfg.place === "logan") try { T.mayor = townMayor(T, m); } catch (e) { console.warn("Town model: the Mayor couldn't start", e); }
         if (cfg.place === "moo" && !OFF.has("home6")) try { T.home6 = townHome6(T, m); } catch (e) { console.warn("Town model: Ash and Arlo couldn't start", e); }
         if (!OFF.has("animal")) try { T.critter = townCritter(T, m, ground, cfg.place); } catch (e) { console.warn("Town model: the animal couldn't start", e); }
         F.hot = { f: () => toMode(!T.walk),
@@ -10566,6 +10567,34 @@ const handle = async (m, post) => {
   // look like me. Short curly brown hair"). Ash stands on the front path looking out to the street, turns to you and waves when you
   // walk up; Arlo potters about the lawn, a few steps at a time, and wags when you're close.
   // Two small pieces (about 900 triangles in all), only drawn within 260 m, and only moved while something is actually happening.
+  // Logan: the Mayor, Jon Raven, standing beside Democracy (the ballot box ball) on the council's lawn, in a dark suit, with his
+  // name over him; he turns to you as you walk up (Ash, 15 November 2026: "Add a person mayor raven near the democracy ball")
+  function townMayor(T, m) {
+    const P = { frame() {}, dispose() {} }; if (!m.addParts || !m.groundAt || !m.spots) return P;
+    const s = m.spots().find(q => /democracy/i.test(q.name || "")); if (!s) return P;
+    const THREE = BS.B.THREE, M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), ONE = new THREE.Vector3(1, 1, 1);
+    const FAR = new THREE.Matrix4().makeTranslation(0, -1e5, 0).elements, wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
+    let dx = (s.stand?.x ?? s.tx - 9.5) - s.tx, dz = (s.stand?.z ?? s.tz + 8.7) - s.tz; const l = Math.hypot(dx, dz) || 1; dx /= l; dz /= l;  // towards where you look at it from
+    const me = { x: s.tx + dx * 2.7 + dz * 1.4, z: s.tz + dz * 2.7 - dx * 1.4 }; me.yaw = me.look = Math.atan2(dx, dz);
+    const parts = m.addParts(townPlaneParts("#1f2a44", "person").map(q => ({ ...q, matrix: FAR.slice() }))), n = townPlaneParts("#1f2a44", "person").length;
+    const tag = document.createElement("div"); tag.className = "bs-peer bs-mayor"; tag.textContent = "Mayor Jon Raven"; tag.hidden = true; ($("bsTown") || document.body).appendChild(tag);
+    let last = performance.now(), shown = false;
+    P.frame = () => { const now = performance.now(), dt = Math.min(0.1, (now - last) / 1000); last = now; const F = BS.fly; if (!F) return;
+      const ddx = F.pos.x - me.x, ddz = F.pos.z - me.z, d = Math.hypot(ddx, ddz);
+      if (d > 300) { if (shown) { for (let i = 0; i < n; i++) parts.setMatrix(i, FAR.slice()); shown = false; } tag.hidden = true; return; }
+      const want = d < 14 && T.walk ? Math.atan2(ddx, ddz) : me.yaw, turn = wrap(want - me.look); me.look += turn * Math.min(1, dt * 3);
+      const y = m.groundAt(me.x, me.z); M.compose(V.set(me.x, y, me.z), Q.setFromEuler(E.set(0, me.look, 0, "YXZ")), ONE);
+      for (let i = 0; i < n; i++) parts.setMatrix(i, M.elements.slice()); shown = true;
+      // his name, over him, while he is near enough to read
+      const cam = m.getCamera?.(), box = $("bsTown"); if (!cam || !box || d > 80) { tag.hidden = true; return; }
+      const w = box.clientWidth, h = box.clientHeight, f = 1 / Math.tan(((m.fov ? m.fov() : 50) * Math.PI) / 360);
+      const cp = Math.cos(cam.pitch), fx = -Math.sin(cam.yaw) * cp, fy = Math.sin(cam.pitch), fz = -Math.cos(cam.yaw) * cp, rx = Math.cos(cam.yaw), rz = -Math.sin(cam.yaw), ux = -fy * rz, uy = rz * fx - rx * fz, uz = fy * rx;
+      const ax = me.x - cam.x, ay = y + 2.15 - cam.y, az = me.z - cam.z, depth = ax * fx + ay * fy + az * fz;
+      if (depth < 1) { tag.hidden = true; return; } tag.hidden = false;
+      tag.style.transform = `translate(${Math.round(w / 2 + (ax * rx + az * rz) / depth * f * (h / 2))}px, ${Math.round(h / 2 - (ax * ux + ay * uy + az * uz) / depth * f * (h / 2))}px) translate(-50%, -100%)`; };
+    P.dispose = () => { try { parts.remove(); } catch {} tag.remove(); };
+    return P;
+  }
   function townHome6(T, m) {
     const P = { frame() {}, dispose() {} }; if (!m.addParts || !m.groundAt) return P;
     const THREE = BS.B.THREE, g = (x, z) => m.groundAt(x, z), M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), ONE = new THREE.Vector3(1, 1, 1), R = new THREE.Matrix4();
@@ -11322,7 +11351,7 @@ const handle = async (m, post) => {
     // (the worker view sets the camera first, so names and bubbles are placed from where you really look; the traffic, the animal,
     // number 6 and the people out the front had been left out of every frame by a note on the same line, from #128 to 15 November 2026)
     T.car?.frame(); T.me?.frame(); T.peers?.frame();
-    T.traffic?.frame(); T.critter?.frame(); T.no6?.frame(); T.home6?.frame();
+    T.traffic?.frame(); T.critter?.frame(); T.no6?.frame(); T.home6?.frame(); T.mayor?.frame();
     // flying: held down at the lowest you can fly (Down, or C) for a moment, and you are on foot there
     if (!T.walk && !T.tween && !F.drive && F.floor && F.hot?.f) { const low = F.pos.y <= F.floor() + 0.1, down = F.vert < -0.3 || F.keys.has("KeyC"), now = performance.now();
       if (!(low && down)) T.downAt = 0; else if (!T.downAt) T.downAt = now; else if (now - T.downAt > 1200) { T.downAt = 0; F.hot.f(); } }
@@ -11340,7 +11369,7 @@ const handle = async (m, post) => {
     BS.town = null; T.dead = true; T.on = false; T.ungest?.(); T.unlay?.(); T.unflood?.();
     T.streets?.dispose(); T.streets = null; $("bsNamesBtn").hidden = true;
     T.admin?.dispose(); T.admin = null;
-    T.car?.dispose(); T.car = null; T.peers?.dispose(); T.peers = null; T.me?.dispose(); T.me = null; T.traffic?.dispose(); T.traffic = null; T.critter?.dispose(); T.critter = null; T.home6?.dispose(); T.home6 = null;
+    T.car?.dispose(); T.car = null; T.peers?.dispose(); T.peers = null; T.me?.dispose(); T.me = null; T.traffic?.dispose(); T.traffic = null; T.mayor?.dispose(); T.mayor = null; T.critter?.dispose(); T.critter = null; T.home6?.dispose(); T.home6 = null;
     T.unbar?.();
     if (BS.fly) { const F = BS.fly; F.walk = F.speed = F.floor = F.hot = F.drive = null; F.ceil = 0; F.lim = null; }  // Explore, if it carries on, is its old self
     try { T.model?.dispose(); } catch {}
