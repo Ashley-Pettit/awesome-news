@@ -1228,3 +1228,10 @@ a car but then move around as a possum not a car. Add a teleport to kingwell str
   moorooka via awesome news". The home screen app keeps its own storage, and there the parts switched off while hunting
   the stick bug were still off: no Settings gear (so the old Exit explore and time buttons showed), no place names, no
   6 Beaudesert Road detail. They can still be switched off again in Settings.
+
+## The stick letting go, again (15 November 2026)
+
+Ash: "09 still has the joystick bug. We need to revert back to 130". 12b2509 (#132) is the same app as 1fd5ce6 (#130):
+#132 undid #131 exactly. So the cause is earlier than #130. The best lead: the bug first went away the morning the app's
+moving cars were taken out (#114), and the four moving cars came back in #119. They're off again (`townTraffic` N = 0).
+Also `isAsh()`, asked every frame, reads the player name from storage at most once a second.
