@@ -1170,3 +1170,15 @@ a car but then move around as a possum not a car. Add a teleport to kingwell str
   Up to 120 characters. Hidden players can't chat.
 - The worker view now sets its camera before names and bubbles are placed (they were placed from your eyes, not the
   camera behind you).
+
+## The golden helicopter, the possum holding on to a plane, version in Settings (15 November 2026)
+
+- **Golden helicopter** in every town (Ash: "Random location no go to btn unless name is ash. 40% faster"): gold all
+  over, 40% faster forward and up. Each visit it stands somewhere different: one of the town's open spots or the grass
+  18 m either side of a plane or helicopter, dry, clear of buildings and away from the golden plane. Only Ash gets it in
+  Jump to (at the top). Other players see it gold (`goldheli`), and can ride with whoever flies it.
+- **The possum holds on to planes** (Ash: "when a player is in the possum and a player is in the plane that the possum
+  can hold onto the plane"): run into or land on another player's plane or helicopter and it grabs on, riding on top
+  where it touched; Jump lets go. The pilot is told. Others see the possum up there.
+- **Ride with**: tapping the button now takes you to the player it named, even if they've rolled a little out of reach.
+- **Version** at the bottom of Explore's Settings, for everyone.
