@@ -8433,10 +8433,24 @@ const handle = async (m, post) => {
         list.innerHTML = (goTo ? `<button type="button" role="menuitem" class="bs-town-flyto" data-town-fly><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 13.5 21 4l-6.5 17-3-7.5z"/></svg>${esc(cfg.flyTo.label)}<small>Drawn in detail: houses, pools, yards and the park</small></button>` : "")
           + places.map((p, i) => p === goTo ? "" : (p.group && p.group !== places[i - 1]?.group ? `<p class="bs-town-group" role="presentation">${esc(p.group)}</p>` : "")
             + `<button type="button" role="menuitem" data-town-go="${i}"${p.what ? ` aria-label="${esc(p.name + ", " + p.what)}"` : ""}>${esc(p.name[0].toUpperCase() + p.name.slice(1))}${p.what ? `<small>${esc(p.what)}</small>` : ""}</button>`).join("");
-        const openList = on => { list.hidden = !on; jump.setAttribute("aria-expanded", String(on)); if (on) { fl.hidden = true; fb.setAttribute("aria-expanded", "false"); list.querySelector("button")?.focus({ preventScroll: true }); } };
+        // other players in town, nearest first, at the top of the list each time it opens (Ash, 15 November 2026: "In go to I want a
+        // thing that goes to another player near me"); one takes you to stand 6 m in front of them, looking at them
+        const players = () => { list.querySelectorAll(".bs-town-players").forEach(el => el.remove());
+          const who = T.peers?.list?.() || []; if (!who.length) return;
+          const near = who.map(q => ({ ...q, d: Math.hypot(q.x - F.pos.x, q.z - F.pos.z) })).sort((a, b) => a.d - b.d);
+          const head = document.createElement("p"); head.className = "bs-town-group bs-town-players"; head.setAttribute("role", "presentation"); head.textContent = "Players in town";
+          const btns = near.map(q => { const b = document.createElement("button"); b.type = "button"; b.setAttribute("role", "menuitem"); b.className = "bs-town-players"; b.dataset.townPlayer = q.id;
+            const sm = document.createElement("small"); sm.textContent = q.d < 1000 ? `${Math.round(q.d)} m away` : `${(q.d / 1000).toFixed(1)} km away`; b.append(q.name, sm); return b; });
+          list.prepend(head, ...btns); };
+        const toPlayer = id => { const q = (T.peers?.list?.() || []).find(v => v.id === id); if (!q) return toast("They've just left.", 2200);
+          T.tween = null; if (!T.walk) setMode(true); const sx = Math.sin(q.h), sz = Math.cos(q.h); let x = q.x + sx * 6, z = q.z + sz * 6;
+          if (T.solid?.(x, z) || m.solidAt?.(x, z)) { x = q.x - sx * 6; z = q.z - sz * 6; }
+          F.pos.set(x, ground(x, z) + F.eye, z); F.yaw = Math.atan2(-(q.x - x), -(q.z - z)); F.pitch = -0.2; toast(`You're with ${q.name}.`, 2000); };
+        const openList = on => { if (on) players(); list.hidden = !on; jump.setAttribute("aria-expanded", String(on)); if (on) { fl.hidden = true; fb.setAttribute("aria-expanded", "false"); list.querySelector("button")?.focus({ preventScroll: true }); } };
         jump.hidden = !places.length; jump.textContent = "Jump to…"; jump.setAttribute("aria-haspopup", "menu"); openList(false);
         jump.onclick = () => openList(list.hidden);
         list.onclick = e => { if (e.target.closest("[data-town-fly]")) { openList(false); flyTo(); jump.focus({ preventScroll: true }); return; }
+          const pl = e.target.closest("[data-town-player]"); if (pl) { openList(false); toPlayer(pl.dataset.townPlayer); jump.focus({ preventScroll: true }); return; }
           const bn = e.target.closest("[data-town-go]"); if (!bn) return; const p = places[+bn.dataset.townGo]; openList(false); go(p, T.walk && !p.water);  // the inlet and the strait are best seen from the air
           jump.focus({ preventScroll: true }); };
 
@@ -9766,6 +9780,47 @@ const handle = async (m, post) => {
     else if (name === "bow") o.lean = 0.75 * Math.sin(Math.PI * et / secs);
     else if (name === "heart") { o.fwdR = o.fwdL = 1.3 * ease; o.armR = o.armL = 0.25 * ease; }
     return o; }
+  // Explore's players meet through public MQTT brokers over secure websockets (port 443 first, so it gets through mobile data
+  // and work networks), every message sent to both and taken from whichever arrives (Ash, 15 November 2026: "Still can't see
+  // another player"; the phone-to-phone links (WebRTC) never got through on mobile data). It looks like the room the code had
+  // before: makeAction(name) gives [send, onReceive], onPeerJoin, onPeerLeave, leave. Only names, colours, where you are and
+  // emotes go through it, and only while you're in Explore.
+  const TOWN_BROKERS = [["wss://public.cloud.shiftr.io/", "public", "public"], ["wss://broker.emqx.io:8084/mqtt", "", ""]];
+  function townRelay(base) {
+    const me = Math.random().toString(36).slice(2, 10), enc = new TextEncoder(), dec = new TextDecoder(), acts = {}, seen = new Map(), socks = [];
+    let onJoin = () => {}, onLeave = () => {}, dead = false;
+    const str = t => { const b = enc.encode(t); return [b.length >> 8, b.length & 255, ...b]; };
+    const pkt = (type, body) => { const out = [type]; let n = body.length; do { let d = n % 128; n = Math.floor(n / 128); if (n) d |= 128; out.push(d); } while (n); return new Uint8Array([...out, ...body]); };
+    const broker = ([url, user, pass], k) => { const S = { url, ws: null, ok: false, buf: new Uint8Array(0), ping: 0, tries: 0 }; socks.push(S);
+      const open = () => { if (dead) return; let ws; try { ws = new WebSocket(url, "mqtt"); } catch { return later(); } S.ws = ws; ws.binaryType = "arraybuffer";
+        ws.onopen = () => { const flags = 0x02 | (user ? 0x80 | 0x40 : 0);
+          ws.send(pkt(0x10, [...str("MQTT"), 4, flags, 0, 60, ...str("an" + me + k), ...(user ? [...str(user), ...str(pass)] : [])]));
+          ws.send(pkt(0x82, [0, 1, ...str(base + "/#"), 0])); S.ping = setInterval(() => { try { ws.send(new Uint8Array([0xc0, 0])); } catch {} }, 30000); };
+        ws.onmessage = e => { const a = new Uint8Array(e.data), b = new Uint8Array(S.buf.length + a.length); b.set(S.buf); b.set(a, S.buf.length); let i = 0;
+          for (;;) { if (b.length - i < 2) break; let n = 0, m = 1, j = i + 1, c; do { c = b[j++]; n += (c & 127) * m; m *= 128; } while (c & 128 && j < b.length); if (c & 128 || j + n > b.length) break;
+            const hdr = b[i], type = hdr >> 4, body = b.subarray(j, j + n); i = j + n;
+            if (type === 2) { S.ok = body[1] === 0; S.tries = 0; }
+            else if (type === 3) { const tl = (body[0] << 8) | body[1], topic = dec.decode(body.subarray(2, 2 + tl)), qos = (hdr >> 1) & 3; got(topic, body.subarray(2 + tl + (qos ? 2 : 0))); } }
+          S.buf = b.slice(i); };
+        ws.onclose = () => { S.ok = false; clearInterval(S.ping); later(); }; ws.onerror = () => {}; };
+      const later = () => { if (dead) return; S.tries++; setTimeout(open, Math.min(30000, 1500 * S.tries)); };
+      open(); };
+    const got = (topic, body) => { const parts = topic.slice(base.length + 1).split("/"), id = parts[0], name = parts[1]; if (!id || id === me) return;
+      if (name === "bye") { if (seen.has(id)) { seen.delete(id); onLeave(id); } return; }
+      const now = performance.now(), was = seen.get(id); seen.set(id, now); if (!was) onJoin(id);
+      let data; try { data = JSON.parse(dec.decode(body)); } catch { return; } if (data && data.k && data.k !== me) return;  // sent to someone else
+      acts[name]?.(data?.d, id); };
+    const send = (name, data, to) => { const body = [...str(base + "/" + me + "/" + name), ...enc.encode(JSON.stringify(to ? { d: data, k: to } : { d: data }))];
+      for (const S of socks) if (S.ok) try { S.ws.send(pkt(0x30, body)); } catch {} };
+    TOWN_BROKERS.forEach(broker);
+    // say hello now and then so newcomers learn you're here, and let go of anyone not heard from in 15 s
+    const hello = setInterval(() => { send("hi", 1); const now = performance.now(); for (const [id, t] of seen) if (now - t > 15000) { seen.delete(id); onLeave(id); } }, 4000);
+    setTimeout(() => send("hi", 1), 1200);
+    const bye = () => send("bye", 1); addEventListener("pagehide", bye);
+    return { makeAction: name => [(data, to) => send(name, data, to), cb => { acts[name] = cb; }], onPeerJoin: f => { onJoin = f; }, onPeerLeave: f => { onLeave = f; },
+      count: () => socks.filter(S => S.ok).length,
+      leave() { bye(); dead = true; clearInterval(hello); removeEventListener("pagehide", bye); for (const S of socks) { clearInterval(S.ping); try { S.ws?.close(); } catch {} } } };
+  }
   const TOWN_EMOTES = [["wave", "Wave", "\ud83d\udc4b", "wave", 2.6], ["dance", "Dance", "\ud83d\udd7a", "dance", 4.5], ["jump", "Jump", "\u2b06\ufe0f", "jump", 2], ["cheer", "Cheer", "\ud83d\ude4c", "cheer", 2.8],
     ["spin", "Spin", "\ud83c\udf00", "spin", 2], ["bow", "Bow", "\ud83d\ude47", "bow", 2.2], ["heart", "Heart", "\u2764\ufe0f", "send a heart", 3]];
   const TOWN_TOGETHER = ["logan", "moo", "inv"];  // every town (Ash, 15 November 2026: "Copy the multiplayer to moorooka and Inverloch")
@@ -9922,6 +9977,7 @@ const handle = async (m, post) => {
       possum: () => townPlaneParts(undefined, "possum") };
     const peers = new Map(); let sendEmote = null, emoteAt = 0; const SH = [new THREE.Matrix4().makeTranslation(-0.31, 1.42, 0), new THREE.Matrix4().makeTranslation(0.31, 1.42, 0)], R1 = new THREE.Matrix4(), R2 = new THREE.Matrix4();
     const emoteBtn = $("bsEmoteBtn"), emoteBox = $("bsEmotes");
+    P.list = () => [...peers].filter(([, q]) => q.shown && q.b && q.b.k !== "none").map(([id, q]) => ({ id, name: q.name || "A player", x: q.shown.x, z: q.shown.z, h: q.shown.h }));
     const emoted = (name, id) => { const q = peers.get(id), e = TOWN_EMOTES.find(v => v[0] === name); if (q && e) q.emote = { e, t0: performance.now() }; };
     P.emote = n => { const e = typeof n === "number" ? TOWN_EMOTES[n] : TOWN_EMOTES.find(v => v[0] === n), now = performance.now(); if (!e || now - emoteAt < 1200) return false;  // (it used to do nothing with no one else about)
       emoteAt = now; if (sendEmote && peers.size) try { sendEmote(e[0]); } catch {} if (T.me) T.me.emote = { e, t0: now }; toast(`${e[2]} You ${e[3]}.`, 1800); emoteBox.hidden = true; emoteBtn.setAttribute("aria-expanded", "false"); return true; };
@@ -10008,8 +10064,10 @@ const handle = async (m, post) => {
     document.body.classList.add("bsme"); meBtn.hidden = false; meBtn.onclick = () => { meBox.hidden = !meBox.hidden; meBtn.setAttribute("aria-expanded", String(!meBox.hidden)); if (!meBox.hidden) meDraw(); meBtn.blur(); };
     // nothing is fetched or connected until the model has had a moment to itself
     let joining = null;
-    const join = wait => { joining = setTimeout(async () => { try { const lib = await import(new URL(TOWN3D + "vendor/trystero-nostr.js?v=1", document.baseURI).href); if (dead) return;
-        room = lib.joinRoom({ appId: "awesome-news-explore-1" }, "town-" + place);
+    const join = wait => { joining = setTimeout(async () => { try { if (dead) return;
+        // through public message brokers, not phone to phone (Ash, 15 November 2026: "Still can't see another player": phones on
+        // mobile data or behind some routers can't reach each other directly, and there was no relay for them)
+        room = townRelay("awesome-news-explore-1/town-" + place);
         const [sp, gp] = room.makeAction("pose"), [sn, gn] = room.makeAction("name"), [se, ge] = room.makeAction("emote"); sendPose = sp; sendName = sn; sendEmote = se; gp(got); gn(named); ge(emoted);
         room.onPeerJoin(id => { try { tell(id); if (lastSent) sendPose(lastSent, id); } catch {} }); room.onPeerLeave(drop);
       } catch (e) { console.warn("Town model: other players couldn't connect", e); } }, wait); };
@@ -10030,7 +10088,7 @@ const handle = async (m, post) => {
       const can = !!T.walk && !T.car?.in && (peers.size > 0 || isAsh()); if (emoteBtn.hidden === can) { emoteBtn.hidden = !can; if (!can) emoteBox.hidden = true; }
       if (!peers.size) return;
       const cam = m.getCamera(), w = box.clientWidth, h = box.clientHeight, f = 1 / Math.tan(((m.fov ? m.fov() : 50) * Math.PI) / 360);
-      const cp = Math.cos(cam.pitch), fx = -Math.sin(cam.yaw) * cp, fy = Math.sin(cam.pitch), fz = -Math.cos(cam.yaw) * cp, rx = Math.cos(cam.yaw), rz = -Math.sin(cam.yaw), ux = -fy * rz, uy = fz * rx - fx * rz, uz = fy * rx;
+      const cp = Math.cos(cam.pitch), fx = -Math.sin(cam.yaw) * cp, fy = Math.sin(cam.pitch), fz = -Math.cos(cam.yaw) * cp, rx = Math.cos(cam.yaw), rz = -Math.sin(cam.yaw), ux = -fy * rz, uy = rz * fx - rx * fz, uz = fy * rx;  // up = right × forward (uy had its sign the wrong way round, so names sat mirrored above or below the player)
       for (const [id, q] of peers) { if (!q.b) continue;
         if (now - q.b.t > 12000) { drop(id); continue; }  // not heard from: gone
         const kind = q.b.k;
