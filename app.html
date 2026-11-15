@@ -9775,7 +9775,7 @@ const handle = async (m, post) => {
     P.dispose = () => { try { parts?.remove(); } catch {} parts = null; };
     return P;
   }
-  // Traffic (Ash, 15 November 2026: "Animate some of the cars particularly near the player spawn"): a few everyday cars (5 in Moorooka, 8 elsewhere)
+  // Traffic (Ash, 15 November 2026: "Animate some of the cars particularly near the player spawn"): three everyday cars on the main roads
   // drive the streets around where you start, most within 300 m of it, at 30 to 50 km/h, keeping left. They mostly carry on
   // straight at a corner (now and then turning, never doubling back unless the street ends), slow down into bends and corners,
   // follow the car ahead at a distance, wait for one crossing in front, and stop for you. Each sits on its four wheels the way
@@ -9788,7 +9788,8 @@ const handle = async (m, post) => {
     const COLS = ["#f2f2ee", "#b8bcc2", "#1d1f24", "#2d5ea8", "#a8262c", "#5c6670", "#e4e1d6", "#3f6b4a", "#8c8f94", "#1f3a66"];
     // fewer than at first (Ash, 15 November 2026: "too much traffic in moorooka and they overlap ... app getting a little laggy"):
     // Moorooka's model has cars of its own on Beaudesert Road
-    const home = T.spawn || [F.pos.x, F.pos.z], N = cfg.place === "moo" ? 5 : 8, NEAR = 300, FAR = 800;
+    // (fewer again, and on main roads only: Ash, 15 November 2026: "less cars. They cause lag and often look silly")
+    const home = T.spawn || [F.pos.x, F.pos.z], N = 3, NEAR = 300, FAR = 800, NONE = new THREE.Matrix4().makeScale(0, 0, 0).elements;
     let roads = null, nodes = null, dead = false, last = 0;
     const key = (x, z) => Math.round(x / 2) + "," + Math.round(z / 2);
     const start = C => { // a random point on a street, mostly near the start
@@ -9812,7 +9813,7 @@ const handle = async (m, post) => {
       let d; try { d = await townStreetData(cfg); } catch { return; } if (dead) return;
       if (d.town) d.roads.forEach((r, i) => { r.wd = (d.town.roads[i]?.[3] || 0) / 10; });  // Moorooka and Inverloch know each street's width
       const pick = lim => d.roads.filter(r => r.cls <= lim && r.pts.length >= 4);
-      let list = pick(4); if (list.length < 50) list = pick(5);
+      let list = pick(2); if (list.length < 20) list = pick(3);  // the main roads (classes 0 to 2) where there are enough of them
       roads = []; for (const r of list) { const p = r.pts; let near = false; for (let k = 0; k < p.length; k += 2) if (Math.hypot(p[k] - home[0], p[k + 1] - home[1]) < FAR) { near = true; break; } if (near) roads.push({ p, n: p.length / 2, lane: r.wd > 3 ? bsClamp(r.wd / 4, 1.5, 3.2) : 1.9 }); }
       if (roads.length < 3) return;
       nodes = new Map(); for (const r of roads) for (let j = 0; j < r.n; j++) { const k = key(r.p[j * 2], r.p[j * 2 + 1]); let a = nodes.get(k); if (!a) nodes.set(k, a = []); a.push([r, j]); }
@@ -9823,6 +9824,8 @@ const handle = async (m, post) => {
       // you: on foot, or in whatever you are driving
       const me = T.car?.in ? T.car.pose?.() : T.walk ? { x: F.pos.x, z: F.pos.z } : null;
       P.cars.forEach((C, ci) => {
+        // more than 450 m from you: out of sight and left where it is until you come back (no work each frame)
+        if (C.x != null && Math.hypot(C.x - F.pos.x, C.z - F.pos.z) > 450) { if (!C.away) { C.away = true; C.parts.setMatrix(0, NONE.slice()); } return; } C.away = false;
         let [ax, az, bx, bz] = seg(C), L = Math.hypot(bx - ax, bz - az) || 0.01;
         const h0 = Math.atan2(bx - ax, bz - az), ux = Math.sin(h0), uz = Math.cos(h0), cx = C.x ?? ax, cz = C.z ?? az, fh = C.h ?? h0, fx = Math.sin(fh), fz = Math.cos(fh);
         let want = C.top;
