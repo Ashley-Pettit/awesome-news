@@ -7972,7 +7972,8 @@ const handle = async (m, post) => {
       const end = () => { id = null; knob.style.transform = ""; v.x = 0; v.y = 0; };
       const mine = e => [...e.changedTouches].find(t => t.identifier === id);
       const h = {
-        touchstart: e => { if (id !== null) return; const t = e.changedTouches[0]; id = t.identifier; set(t); tip.classList.add("dim"); },
+        // two fingers down at once can come in one event: take the one on this stick, not just the first
+        touchstart: e => { if (id !== null) return; const ts = [...e.changedTouches], t = ts.find(q => el.contains(q.target)) || ts[0]; id = t.identifier; set(t); tip.classList.add("dim"); },
         touchmove: e => { const t = mine(e); if (t) set(t); },
         touchend: e => { if (mine(e)) end(); }, touchcancel: e => { if (mine(e)) end(); },
         pointerdown: e => { if (e.pointerType !== "mouse") return; id = "m"; try { el.setPointerCapture(e.pointerId); } catch {} set(e); tip.classList.add("dim"); e.preventDefault(); },
@@ -7984,7 +7985,7 @@ const handle = async (m, post) => {
       // for a moment (loading tiles, the traffic) it gave up and cancelled the finger: the stick went back to the middle
       // (Ash, 15 November 2026, in all three towns)
       Object.entries(h).forEach(([k, f]) => el.addEventListener(k, f, { passive: /^touch/.test(k) }));
-      return { el, h, end };
+      return { el, h, end, held: () => id !== null, move: v === F.stick };
     });
     F.uds = [...document.querySelectorAll("#bsFly .bs-udb")].map(el => {
       let on = null;
@@ -8046,10 +8047,14 @@ const handle = async (m, post) => {
       pointermove: e => {
         if (e.pointerType === "mouse") { if (F.drag && document.pointerLockElement !== canvas && (e.buttons & 1)) { look(e.clientX - F.drag.x, e.clientY - F.drag.y, 0.005); F.drag = { x: e.clientX, y: e.clientY }; } return; }
         const t = F.touches.get(e.pointerId); if (!t) return;
+        // a finger on the view's left half steers only while the move stick isn't held: a second finger landing there sent the
+        // stick back to the middle (Ash, 16 November 2026: "when I put two fingers on at once. The left joystick bounces back to centre")
+        const stickHeld = () => F.joys?.some(j => j.move && j.held());
+        if (t.move && stickHeld()) { t.x = e.clientX; t.y = e.clientY; return; }
         if (t.move) { F.stick.x = bsClamp((e.clientX - t.sx) / 55, -1, 1); F.stick.y = bsClamp(-(e.clientY - t.sy) / 55, -1, 1); }
         else look(e.clientX - t.x, e.clientY - t.y, 0.006);
         t.x = e.clientX; t.y = e.clientY; e.preventDefault(); },
-      pointerup: e => { F.drag = null; canvas.style.cursor = ""; const t = F.touches.get(e.pointerId); if (t?.move) { F.stick.x = 0; F.stick.y = 0; } F.touches.delete(e.pointerId); },
+      pointerup: e => { F.drag = null; canvas.style.cursor = ""; const t = F.touches.get(e.pointerId); if (t?.move && !F.joys?.some(j => j.move && j.held())) { F.stick.x = 0; F.stick.y = 0; } F.touches.delete(e.pointerId); },
     };
     F.on.pointercancel = e => F.on.pointerup(e);
     // the mouse looks around on a computer (Ash, 15 November 2026: "On pc make the game feel more natural when walking. Mouse able to
@@ -12877,6 +12882,9 @@ const handle = async (m, post) => {
     feeds[key] = { ...(feeds[key] || {}), items: out };
   }
   async function loadStatic(manual) {
+    // in Explore by a direct link, the news waits until you leave: the ten-minute refresh (and coming back to the app) loaded all of
+    // it mid-game, and the busy page dropped the stick (Ash, 16 November 2026: the joystick bouncing back to the middle)
+    if (newsLater && BS.town && !manual) return;
     try {
       const st = await (await fetch(`data/status.json?t=${Date.now()}`, { cache: "no-store" })).json();
       // a link straight into Explore: open it now and leave the news (the feeds, Emma's audio list, the stories kept for offline: about 2 MB)
