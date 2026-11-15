@@ -1666,3 +1666,10 @@ Ash: "Better share links 4 explores". Each 3D model's link preview (`local/<slug
 is now a closer view of the town: Moorooka's Beaudesert Road shops, Logan's council building and Inverloch's inlet. Each card has
 the Explore icon, "Explore <town> in 3D" and three chips. `tools/share_cards.py` makes these and the local apps' cards from
 `local/<slug>/explore-shot.jpg`, a 1200 x 630 render from Explore. The pages ask for `explore-share.jpg?v=2`.
+
+## Logan on phones: a half-size ground photo (16 November 2026)
+
+Logan crashed on Ash's iPhone (the tab ran out of memory and reloaded). Its ground photo, `ground.webp` at 4096 x 3456, takes about
+75 MB of graphics memory. On a touch screen (`window.anSmallGround`, set in `app.html`), `logan-model.js` (`?v=42`, patched where it
+names its files) and the preload use `ground-2k.webp` (2048 x 1728, about 19 MB) instead. Computers still get the full photo. If
+`ground.webp` is remade, remake `ground-2k.webp` from it (Lanczos, WebP quality 86).
