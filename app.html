@@ -10805,16 +10805,20 @@ const handle = async (m, post) => {
     }
     if (car === "bush") {  // a bush a construction worker (or the possum) plants: a rounded lump of leaves about 1 m tall. stripe: which green
       const L = [["#3f7a3a", "#4f8d45"], ["#557f2f", "#6a9640"], ["#2f6a45", "#3f7d55"], ["#4d7f3a", "#5f9448"], ["#6a8a3a", "#7d9f4a"]][(+String(stripe).slice(1) || 0) % 5];
-      b.box(-0.55, 0, -0.5, 0.55, 0.7, 0.5, lin(L[0])); b.box(-0.42, 0.7, -0.4, 0.42, 1.0, 0.4, lin(L[1])); b.box(-0.35, 0.25, -0.62, 0.3, 0.75, 0.62, lin(L[1]));
+      const LL = [lin(L[0]), lin(L[1]), lin(L[0])]; ball(b, 0, 0.48, 0, 0.62, 0.48, 0.56, LL, 61, 9, 5, 0.18); ball(b, 0.25, 0.75, 0.1, 0.38, 0.3, 0.36, LL, 62, 7, 4, 0.2); ball(b, -0.28, 0.62, -0.12, 0.36, 0.3, 0.34, LL, 63, 7, 4, 0.2);
       return [b.part({ roughness: 0.95 })]; }
-    if (car === "flowers") {  // a small bed of flowers: dark soil, green leaves and a dozen flower heads in one of five mixes. stripe: which mix
-      const MIX = [["#e0567a", "#f2d14b", "#ffffff"], ["#7a4fc9", "#e98bd0", "#ffffff"], ["#e8452e", "#f29a2e", "#f2d14b"], ["#3f7fe0", "#ffffff", "#f2d14b"], ["#d6336c", "#ff8fb1", "#f6c8d8"]][(+String(stripe).slice(1) || 0) % 5].map(lin);
-      b.box(-0.6, 0, -0.45, 0.6, 0.08, 0.45, lin("#4a3626")); b.box(-0.55, 0.08, -0.4, 0.55, 0.26, 0.4, lin("#4f8a3a"));
-      for (let i = 0; i < 12; i++) { const x = -0.45 + (i % 4) * 0.3 + (i % 2 ? 0.05 : -0.04), z = -0.28 + Math.floor(i / 4) * 0.28, h = 0.32 + ((i * 7) % 5) * 0.03; b.box(x - 0.06, h, z - 0.06, x + 0.06, h + 0.1, z + 0.06, MIX[i % 3]); }
-      return [b.part({ roughness: 0.8 })]; }
+    if (car === "flowers") {  // a bed of flowers (Ash, 15 November 2026: "The flowers planted look real bad"): a low mound of leafy clumps on an oval
+      // of mulch, with about twenty round flower heads on short stems at different heights, in one of five mixes. stripe: which mix
+      const MIX = [["#e0567a", "#f2d14b", "#fbf7ef", "#f08aa8"], ["#7a4fc9", "#e98bd0", "#fbf7ef", "#a77fe0"], ["#e8452e", "#f29a2e", "#f2d14b", "#f6c35a"], ["#3f7fe0", "#fbf7ef", "#f2d14b", "#7fa8f0"], ["#d6336c", "#ff8fb1", "#f6c8d8", "#fbf7ef"]][(+String(stripe).slice(1) || 0) % 5].map(lin);
+      const LEAF = [lin("#4f8a3a"), lin("#5f9a44"), lin("#3f7a32")], STEM = lin("#4a7a32"), MULCH = [lin("#5a4130"), lin("#4a3626")];
+      ball(b, 0, 0.02, 0, 0.75, 0.05, 0.55, MULCH, 71, 10, 2, 0.05);
+      for (let k = 0; k < 5; k++) { const a = k * 1.256, r = k ? 0.38 : 0; ball(b, Math.cos(a) * r, 0.14, Math.sin(a) * r * 0.75, 0.26, 0.16, 0.24, LEAF, 72 + k, 7, 3, 0.2); }
+      for (let i = 0; i < 20; i++) { const a = i * 2.39996, r = 0.12 + 0.5 * Math.sqrt((i + 0.5) / 20), x = Math.cos(a) * r, z = Math.sin(a) * r * 0.72, h = 0.3 + ((i * 37) % 9) * 0.02;
+        b.box(x - 0.008, x + 0.008, 0.12, h, z - 0.008, z + 0.008, STEM); ball(b, x, h + 0.035, z, 0.055, 0.04, 0.055, MIX[i % 4], 80 + i, 6, 3, 0.1); }
+      return [b.part({ roughness: 0.75 })]; }
     if (car === "tree") {  // a tree a construction worker plants: a trunk and a stepped, leafy crown. Trunk on y = 0
       const BARK = lin("#7a5b3f"), L1 = lin("#4c7a33"), L2 = lin("#5b8d3e"), L3 = lin("#6a9f48");
-      b.box(-0.15, 0.15, 0, 2.3, -0.15, 0.15, BARK); b.box(-1.6, 1.6, 2.0, 3.3, -1.6, 1.6, L1); b.box(-1.25, 1.25, 3.3, 4.3, -1.25, 1.25, L2); b.box(-0.7, 0.7, 4.3, 5.0, -0.7, 0.7, L3);
+      b.box(-0.15, 0.15, 0, 2.6, -0.15, 0.15, BARK); ball(b, 0, 3.35, 0, 1.65, 1.25, 1.6, [L1, L2, L1], 91, 9, 5, 0.2); ball(b, 0.5, 4.1, 0.3, 0.95, 0.75, 0.9, [L2, L3, L2], 92, 7, 4, 0.22); ball(b, -0.55, 3.9, -0.35, 0.85, 0.7, 0.85, [L2, L3, L1], 93, 7, 4, 0.22);
       return [b.part({ roughness: 0.9 })]; }
     if (car === "sedan") {  // an everyday car for the traffic: a plain sedan in the colour given. Nose to +Z, wheels on y = 0
       const BODY = lin(stripe);
@@ -10965,9 +10969,9 @@ const handle = async (m, post) => {
     // the roofs of the cars near the possum, found once a frame: the nearest parked car, the app's own cars and the traffic
     // (Ash, 15 November 2026: "let the possum also get ontop of cars"): it runs up on to one like a low wall, and drops off the edge
     let carTops = [];
-    const findCarTops = (x, z) => { const out = [], add = (cx, cz, h, bus) => { if (cx == null || h == null || Math.hypot(cx - x, cz - z) > 14) return; out.push({ x: cx, z: cz, s: Math.sin(h), c: Math.cos(h), hl: bus ? 6 : 2.25, hw: bus ? 1.25 : 0.95, top: ground(cx, cz) + (bus ? 3.3 : 1.45) }); };
+    const findCarTops = (x, z) => { const out = [], add = (cx, cz, h, bus, ref) => { if (cx == null || h == null || Math.hypot(cx - x, cz - z) > 14) return; out.push({ ref, x: cx, z: cz, s: Math.sin(h), c: Math.cos(h), hl: bus ? 6 : 2.25, hw: bus ? 1.25 : 0.95, top: ground(cx, cz) + (bus ? 3.3 : 1.45) }); };
       const pc = m.nearestCar?.(x, z, 14); if (pc) add(pc.x, pc.z, pc.heading, false);
-      for (const G of owns) add(G.x, G.z, G.h, G.bus); for (const D of T.traffic?.cars || []) add(D.x, D.z, D.h, false);
+      for (const G of owns) add(G.x, G.z, G.h, G.bus, G); for (const D of T.traffic?.cars || []) add(D.x, D.z, D.h, false, D);
       carTops = out; };
     const surf = (x, z) => { let y = ground(x, z); const q = poleAt(x, z); if (q) y = Math.max(y, q.y + POLE_TOP); const tr = treeAt(x, z) || (pos ? treeAt(x, z, 0, pos.y) : null); if (tr) y = Math.max(y, tr.y + tr.top);
       for (const t of carTops) { const dx = x - t.x, dz = z - t.z; if (Math.abs(dx * t.s + dz * t.c) < t.hl && Math.abs(dx * t.c - dz * t.s) < t.hw) y = Math.max(y, t.top); }
@@ -11115,6 +11119,11 @@ const handle = async (m, post) => {
         o = car; D = (car.bus ? 15 : 7.5) + Math.min(5, a / 9); text = Math.round(a * 3.6) + " km/h";
       } else if (veh === "possum") { findCarTops(pos.x, pos.z); const P = pos, run = has("ShiftLeft", "ShiftRight") || !!F.hand, top = R.possumTop / 3.6 * (run ? 1 + R.possumBoost / 100 : 1), jump = has("Space") || !!F.boost, drop = has("KeyC");  // (Boost: the button over Jump, or Shift)  // walking is 11 m/s: three times that, less a fifth (Ash, 15 November 2026: "speed down by 20%"); no boost, the button is Jump
         P.t += dt;
+        // riding on top of a car that moves (the traffic, or one of the app's own being driven): it goes where the car goes, turning
+        // with it (Ash, 15 November 2026: "When the possum grips to a car plane or other vehicle, keep him attached if it moves")
+        if (P.ride && P.mode === "ground" && !P.cling) { const r = P.ride.ref, L0 = P.ride.last;
+          if (r && r.x != null && r.h != null) { const dh = wrap(r.h - L0[2]), c = Math.cos(dh), sn = Math.sin(dh), dx = P.x - L0[0], dz = P.z - L0[1];
+            P.x = r.x + dx * c + dz * sn; P.z = r.z - dx * sn + dz * c; P.h += dh; if (P.mh != null) P.mh += dh; P.ride.last = [r.x, r.z, r.h]; } else P.ride = null; }
         // holding on to another player's plane or helicopter (Ash, 15 November 2026: "when a player is in the possum and a player is in
         // the plane that the possum can hold onto the plane"): it rides on top where it grabbed, until Jump springs it off
         const CL = P.cling, cq = CL && (T.peers?.list?.() || []).find(v => v.id === CL.id);
@@ -11138,7 +11147,7 @@ const handle = async (m, post) => {
           if (mag > 0.15) { P.h += Math.sign(turn) * Math.min(Math.abs(turn), (P.mode === "air" ? 2.2 : 6.2) * dt); P.mh = goH;  /* (another 20% slower: Ash, 15 November 2026) */ } else if (P.mh == null) P.mh = P.h;
           // (car-like again: it runs the way it faces, slower while it is still turning round, and the view swings round behind it:
           // Ash, 15 November 2026, "Actually make the possum car like again". The slower turning stays)
-          const want = P.sit || mag <= 0.15 ? 0 : top * mag * (P.gold ? 1.4 : 1) * Math.max(0.2, Math.cos(turn)); P.v += (want - P.v) * Math.min(1, dt * (want > P.v ? 10 : 14));
+          const want = P.sit || mag <= 0.15 ? 0 : top * mag * (P.gold ? 1.4 : 1) * Math.max(0.05, Math.cos(turn)) ** 2;  /* (a very tight turning circle: it all but stops to swing round, then runs: Ash, 15 November 2026) */ P.v += (want - P.v) * Math.min(1, dt * (want > P.v ? 10 : 14));
           for (let n = Math.max(1, Math.ceil(Math.abs(P.v) * dt / 0.4)), i = 0, st = dt / n; i < n; i++) {  // in steps of 40 cm, so it cannot skip through a wall or past a light
             const x = P.x + Math.sin(P.h) * P.v * st, z = P.z + Math.cos(P.h) * P.v * st;
             if (!inside(x, z)) { P.v = 0; break; }
@@ -11159,6 +11168,8 @@ const handle = async (m, post) => {
           // into the golden possum who is faster and can jump higher and also can do a 360 in the air")
           if (!P.gold && POOL6 && P.mode === "ground" && P.y < ground(P.x, P.z) + 0.6) { const dx = P.x - POOL6.bx, dz = P.z - POOL6.bz, a = dx * POOL6.ux + dz * POOL6.uz, w = -dx * POOL6.uz + dz * POOL6.ux;
             if (a > 2.4 && a < 6 && w > -3.6 && w < 4.2) { P.gold = true; goldPossum(); snd.squeak(1.5); toast("Splash! You're the golden possum: faster, jumps higher, and Jump again in the air for a 360.", 6000); } } }  // two and a half times as high as it was (Ash, 15 November 2026)
+        { let on = null; if (P.mode === "ground" && !P.cling) for (const t of carTops) { const dx = P.x - t.x, dz = P.z - t.z; if (t.ref && Math.abs(P.y - t.top) < 0.4 && Math.abs(dx * t.s + dz * t.c) < t.hl && Math.abs(dx * t.c - dz * t.s) < t.hw) { on = t.ref; break; } }
+          if (!on) P.ride = null; else if (P.ride?.ref !== on) P.ride = { ref: on, last: [on.x, on.z, on.h] }; }
         // its sounds: a patter of feet as it runs, claws as it climbs, a squeak as it jumps
         P.pat = (P.pat || 0) + (P.mode === "ground" ? Math.abs(P.v) * dt / 0.55 : P.mode === "climb" ? Math.abs(P.y - (P.lastY ?? P.y)) / 0.3 : 0); P.lastY = P.y;
         if (P.pat >= 1) { P.pat %= 1; if (P.mode === "climb") snd.scratch(); else snd.step(0.6 + Math.random() * 0.5); }
