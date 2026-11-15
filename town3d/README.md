@@ -1624,3 +1624,30 @@ From the size report Ash asked for:
   Logan door"). In `town3d/logan/map.json` (precinct `ground`), that one shape is now light concrete (code 81 to 65: kind 4, the
   lighter tint), like the paths in the aerial photo. Data only; the other kind 5 paths are unchanged. If the precinct is rebuilt in
   ai-forge, make the same change there.
+
+## Moorooka: real names and the photo shops made realistic (16 November 2026)
+
+Ash: "Use the real business names, we are making a mini moorooka here. Use the photos I gave you to make it realistic".
+
+- **Real names** in place of the placeholders (each from a business listing at that address): Yeshi Buna, Ethio African Cafe (Shop
+  1/131, left of the post office, was "Butcher"); Cutting Master Barbershop (147, was "Barber"); David Stephensen Optometrist (195-197,
+  was "Optometrist"); Eddy's Barber Shop (190-204, was "Barber"); The Cleo Collective hair salon (2/116: its "cleo" sign in script and
+  its HAIR SALON sign) and The Cheesecake Shop in the pharmacy row (were "Hair salon" and "Cafe"); the ward office's sign reads
+  "Councillor Steve Griffiths, Moorooka Ward Office" as the real one does. All are in Jump to.
+- **From Ash's photos:**
+  - Greencross Vets: a cream cottage under red tiles (the model's grey box had dark glass across its front), its Vet sign and letter
+    board on two posts by the corner, the joke a line at a time.
+  - The ward office: white render, a flat roof, the deep red fascia with its raised middle and the councillor's sign, teal-framed glass,
+    and the tall black sign by the car park.
+  - Advance Mechanical Centre: dark navy, a flat roof, the 93 on the wall, its posters, the tall red sign by the kerb and a concrete
+    forecourt.
+  - Snap Fitness: the car park under it, the copper laser-cut screen across the first floor with the sign on it, the red frame, and the
+    stairs up each end between red walls.
+  - The pharmacy row: glass shopfronts under a dark fascia, the green MOOROOKA and CareClinic window graphics, the Cheesecake Shop's mint,
+    and a grey iron roof. The Willow: dark timber.
+- **How the colours get in:** `moorooka-model.js` (`?v=34`) is patched to ask `window.anStyle(x, z)` about each building (by the mean of
+  its outline's corners) for its kind, wall, roof and understorey colours, a flat roof, or no shopfront (`noShop`: the model puts a
+  generic glass shopfront and awning on every wall facing Beaudesert Road along the shopping strip, which is what the vet had). The list
+  is `MOO_STYLE` in `app.html`. `moorooka-model-am.js` (the beta page's) is not patched.
+- **Not done:** the two plain shops at 145-147 and the one with posters at 204 have no name on the photos or in the listings, so they stay
+  plain. "Yeshi Buna" is the 2026 listing for Shop 1/131; the older photo showed a butcher there.
