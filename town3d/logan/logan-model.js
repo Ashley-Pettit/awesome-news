@@ -4384,7 +4384,7 @@ float lgLarge = step(650.0, aDims.x * aDims.z); // sheds and shops
     lx = lgRidge; lz = 0.0; lh = mix(aDims.y + aDims.w, aDims.y - lgDrop, lgGable);
   }
   lgLocal = vec3(lx, lh, lz);
-  float lgGrow = 1.0 - smoothstep(uRange * 0.7, uRange, distance(uEye, aPos));
+  float lgGrow = 1.0 - smoothstep(uRange * 0.94, uRange, distance(uEye, aPos));
   float ly = lh * lgGrow - (1.0 - step(0.01, position.y)) * aRot.z;
   transformed = vec3(aPos.x + lx * aRot.x - lz * aRot.y, aPos.y + ly, aPos.z + lx * aRot.y + lz * aRot.x);
 }
