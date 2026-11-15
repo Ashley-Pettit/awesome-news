@@ -1556,3 +1556,18 @@ change my hairdo", Venky out the back of 10 Beaudesert Road ("Fix up this house"
   does when stuck or too far away.
 - Ash: "The rising sun is now little village. You can do yoga there and learn the yoga emote." 108 Beaudesert Road is Little
   Village; its yoga teacher runs a short class and you learn the Yoga emote (perk `yoga`).
+
+## Possum's house from the aerial photo; grip, jump, disco ball, doctor pointer; traffic follows you (16 November 2026)
+
+- **16 Kingwell Street** (the possum's house) wears Queensland's 10 cm aerial photo on its roof: `town3d/moorooka/possum-house.jpg`
+  (18 KB, 352 x 400 px over 22 x 25 m), draped 6 cm over the model's roof in 0.4 m squares inside the surveyed outline, edges snapped
+  to the walls, shifted about a metre to line up (roofs lean in an aerial photo). Loaded only when the possum is built.
+- **Grip**: the button now shows only when there's a car to grip (or "Let go" while holding), and sits above Jump instead of over it.
+  Hop out of the possum while it grips a car, get in and drive that car: the possum stays on the roof and rides along.
+- The possum turns another 30% slower.
+- **Sue's bread** now lets you jump on foot (Space, or Jump on a phone; others see it), instead of making you a giant.
+- **Drunk**: a red pointer at the top shows the way and distance to the doctor; and a **Disco ball** emote while drunk (a mirror ball
+  drops in over you, spins, and throws coloured beams round for nine seconds; other players see it).
+- **Post office**: after sending, it offers to share the app with the person.
+- **Traffic follows you**: it used to stay within 800 m of where Explore started (number 6), so away from there no cars moved. Now,
+  450 m on, it re-centres on you and brings the out-of-sight cars round (the bus too, unless you're on it).
