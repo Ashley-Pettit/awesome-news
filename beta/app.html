@@ -1345,8 +1345,6 @@ body.bspossum .bs-fly-x.bs-boost.on { background: #ffd166; }
 .bs-peer[hidden] { display: none; }
 /* what a player has just said: a white speech bubble over them, their name small on top, for about 30 s */
 .bs-peer.said { max-width: 220px; padding: 7px 11px 8px; border-radius: 14px; background: #fff; color: #1b1830; font: 600 0.82rem/1.3 var(--ui); white-space: normal; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25); }
-.bs-peer.said.top { left: 50%; top: calc(112px + env(safe-area-inset-top)); transform: translateX(-50%) !important; max-width: min(320px, calc(100% - 32px)); }
-.bs-peer.said.top::after { display: none; }
 .bs-peer.said b { display: block; font-size: 0.66rem; font-weight: 700; color: #5b6070; }
 .bs-peer.said::after { content: ""; position: absolute; left: 50%; bottom: -6px; width: 12px; height: 12px; margin-left: -6px; background: #fff; transform: rotate(45deg); }
 /* Chat: under Emote; the box to type in sits at the top, clear of the phone's keyboard */
@@ -1420,9 +1418,6 @@ body.bsme .bs-height, body.bstown.bsme .bs-height { left: 16px; top: calc(62px +
 .bs-me-num { display: flex; align-items: center; justify-content: space-between; gap: 10px; font: 650 0.8rem/1.2 var(--ui); }
 .bs-me-num small { display: block; margin-top: 2px; font-weight: 500; font-size: 0.7rem; color: rgba(255, 255, 255, 0.6); }
 .bs-me .bs-me-num input { flex: none; width: 5.2em; height: 36px; padding: 0 8px; text-align: right; }
-.bs-me-key { display: flex; gap: 6px; } .bs-me-key input { flex: 1; min-width: 0; } .bs-me-key .bs-me-go { flex: none; padding: 0 14px; }
-.bs-me-towns a { color: #ffd36b; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
-.bs-me .bs-me-ver { font: 600 0.7rem var(--ui); color: #8fb4ff; text-align: right; }
 .bs-me-h { display: flex; justify-content: space-between; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.14); font-weight: 650; }
 .bs-me-exit { width: 100%; min-height: 42px; border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 12px; background: none; color: #fff; font: 700 0.86rem var(--ui); cursor: pointer; }
 .bs-me-exit:hover { background: rgba(255, 255, 255, 0.1); }
@@ -3524,7 +3519,7 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
   function loganLine() {
     if (!$("lbLogan")) return "";  // the Logan news button has made way for the local apps
     // Logan news is just for Ash (the name in Settings)
-    const ids = isAsh() ? driveList("logan").ids : [], n = ids.length;
+    const ids = /^ash(ley)?$/i.test((S.name || "").trim()) ? driveList("logan").ids : [], n = ids.length;
     const b = $("lbLogan"); if (b) b.hidden = !n;
     // "From the start", as on the main card: once there's somewhere to carry on from, or stories already heard.
     const f = $("lbLoganFresh");
@@ -4071,6 +4066,10 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
         <div class="field"><label for="setName">Your name</label><input type="text" id="setName" placeholder="Optional" autocomplete="given-name" maxlength="30" value="${esc(S.name)}"></div>
         <div class="field"><label for="setRegion">Local news</label><select id="setRegion">${regions.map(r => `<option value="${r.id}"${r.id === S.region ? " selected" : ""}>${esc(r.label)}${counts["local-" + r.id] != null ? ` (${counts["local-" + r.id]})` : ""}</option>`).join("")}</select></div>
       </div><p class="hint">Your name is used in the greeting.</p></div>
+      <div class="group"><h2>Exploring with others</h2><div class="card">
+        <div class="field"><label for="setPlayer">Player name</label><input type="text" id="setPlayer" placeholder="${esc(playerName())}" autocomplete="off" maxlength="16" value="${esc((() => { try { return localStorage.getItem("an-player") || ""; } catch { return ""; } })())}"></div>
+        ${toggle("data-player-show", "1", (() => { try { return localStorage.getItem("an-player-off") !== "1"; } catch { return true; } })(), "Show me to other players", "Others exploring the same suburb in 3D see where you are and your player name")}
+      </div><p class="hint">In each suburb's 3D map, people exploring at the same time see each other. Your player name is shown over you, so pick one you are happy for anyone to see.</p></div>
       <div class="group"><h2>Your suburb</h2><div class="card">${[["moorooka", "Moorooka"], ["inverloch", "Inverloch"], ["logan", "Logan"]].map(([id, label]) =>
         `<a class="field" style="color:inherit;text-decoration:none" href="${location.pathname.replace(/(moorooka|inverloch|logan)\/?(index\.html)?$/, "").replace(/[^/]*$/, "")}${id}/"><span class="lbl">${label}<span class="sub">Open the ${label} news and its 3D map</span></span><span class="chev" aria-hidden="true">\u203a</span></a>`).join("")}
       </div><p class="hint">Each suburb has its own news and its own 3D map to explore.</p></div>
@@ -5931,11 +5930,8 @@ const handle = async (m, post) => {
     // Explore from the weather screen opens the same 3D town as everywhere else (Ash, 15 November 2026: "Bring Inverloch in line
     // with the other apps settings and layout"): Inverloch's weather scene used to open a fly-about of the weather's own scene,
     // with its old buttons. The old fly-about stays for keeping a view for the weather (Admin with the passphrase, or Claude's copy).
-    // the same town model as the town's own Explore, for everyone, admins too (Ash, 15 November 2026: "Why when I launch via awesome
-    // news is the ui different. It should load the exact same thing": with the passphrase unlocked it used to open the old fly-about)
-    // (Brisbane opens Moorooka, Brisbane's own model; the motorway drive, Logan's: Ash, 15 November 2026)
-    $("bsFlyBtn").onclick = () => { const k = ({ invTown: "inv", invBeach: "inv", driveInv: "inv", moo: "moo", mooBowls: "moo", driveMoo: "moo", logan: "logan", bri: "moo", drive: "logan" })[BS.sceneKey];
-      if (k && TOWNS[k]) townModelOpen(true, k); else bsFlyOn(); };
+    $("bsFlyBtn").onclick = () => { const k = ({ invTown: "inv", invBeach: "inv", moo: "moo", mooBowls: "moo", logan: "logan" })[BS.sceneKey];
+      if (k && TOWNS[k] && !(A.unlocked || state.mode === "claude")) townModelOpen(true, k); else bsFlyOn(); };
     $("bsHourIn").addEventListener("change", () => { BS.view.play = true; });
     $("bsHourIn").addEventListener("input", e => { BS.view.play = false; BS.view.ms = bsMidnight(bsKey(BS.view.ms)) + (+e.target.value) * 60000; BS.view.day = bsKey(BS.view.ms); if (BS.view.mode === "live") BS.view.mode = "day"; bsApply(true); });
     bsApply(true); bsTick();
@@ -8457,8 +8453,6 @@ const handle = async (m, post) => {
         // other players in town, nearest first, at the top of the list each time it opens (Ash, 15 November 2026: "In go to I want a
         // thing that goes to another player near me"); one takes you to stand 6 m in front of them, looking at them
         const players = () => { list.querySelectorAll(".bs-town-players").forEach(el => el.remove());
-          const GH = isAsh() && T.car?.goldHeli; if (GH) { const b = document.createElement("button"); b.type = "button"; b.setAttribute("role", "menuitem"); b.className = "bs-town-players"; b.dataset.townGoldheli = "1";
-            const sm = document.createElement("small"); sm.textContent = "Somewhere different each visit. Only you see this"; b.append("The golden helicopter", sm); list.prepend(b); }  // (Ash only)
           const who = T.peers?.list?.() || []; if (!who.length) return;
           const near = who.map(q => ({ ...q, d: Math.hypot(q.x - F.pos.x, q.z - F.pos.z) })).sort((a, b) => a.d - b.d);
           const head = document.createElement("p"); head.className = "bs-town-group bs-town-players"; head.setAttribute("role", "presentation"); head.textContent = "Players in town";
@@ -8473,8 +8467,6 @@ const handle = async (m, post) => {
         jump.hidden = !places.length; jump.textContent = "Jump to…"; jump.setAttribute("aria-haspopup", "menu"); openList(false);
         jump.onclick = () => openList(list.hidden);
         list.onclick = e => { if (e.target.closest("[data-town-fly]")) { openList(false); flyTo(); jump.focus({ preventScroll: true }); return; }
-          if (e.target.closest("[data-town-goldheli]")) { openList(false); const G = T.car?.goldHeli; if (G) { T.tween = null; if (!T.walk) setMode(true); const x = G.x + Math.cos(G.h) * 9, z = G.z - Math.sin(G.h) * 9;
-            F.pos.set(x, ground(x, z) + F.eye, z); F.yaw = Math.atan2(-(G.x - x), -(G.z - z)); F.pitch = -0.15; } jump.focus({ preventScroll: true }); return; }
           const pl = e.target.closest("[data-town-player]"); if (pl) { openList(false); toPlayer(pl.dataset.townPlayer); jump.focus({ preventScroll: true }); return; }
           const bn = e.target.closest("[data-town-go]"); if (!bn) return; const p = places[+bn.dataset.townGo]; openList(false); go(p, T.walk && !p.water);  // the inlet and the strait are best seen from the air
           jump.focus({ preventScroll: true }); };
@@ -8519,7 +8511,7 @@ const handle = async (m, post) => {
               T.tween = { a: { x: F.pos.x, y: F.pos.y, z: F.pos.z, yaw: F.yaw, pitch: F.pitch }, b: lookFrom(...cfg.floodLook), t0: performance.now(), ms: 1800 }; };
             ask.querySelector('[data-ask="yes"]').focus({ preventScroll: true }); };
           // Logan's floods are for Ash only for now (Ash, 13 November 2026: "Just for logan hide the flood btn unless the users name is Ash or Ashley")
-          fb.hidden = cfg.place === "logan" && !isAsh(); fb.setAttribute("aria-pressed", "false"); openFloods(false);
+          fb.hidden = cfg.place === "logan" && !/^ash(ley)?$/i.test((S.name || "").trim()); fb.setAttribute("aria-pressed", "false"); openFloods(false);
           // the notice: Cancel has the focus to start with, Escape cancels, Tab stays inside it
           const closeWarn = () => { warn.hidden = true; warn.onclick = warn.onkeydown = null; fb.focus({ preventScroll: true }); };
           const openWarn = () => { openList(false); warn.hidden = false; const [no, yes] = warn.querySelectorAll("button"); no.focus({ preventScroll: true });
@@ -9998,7 +9990,7 @@ const handle = async (m, post) => {
     const THREE = BS.B.THREE, M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), ONE = new THREE.Vector3(1, 1, 1), NONE = new THREE.Matrix4().makeScale(0, 0, 0).elements;
     const TOPS = ["#d1495b", "#2e86ab", "#3a9d5d", "#e08e2b", "#7b5ea7", "#1f9e9e", "#c2577a", "#5b7f2f"], wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
     const SHAPES = { walk: c => townPlaneParts(c, "person"), builder: c => townPlaneParts(c, "builder"), car: c => townPlaneParts(c, true), gold: () => townPlaneParts("#e8b923", true), bus: () => townPlaneParts("#2f7fc4", "bus"),
-      plane: () => townPlaneParts().slice(0, 1), goldplane: () => townPlaneParts("#e2ad1c").slice(0, 1), heli: () => townPlaneParts("#c8322b", "heli").slice(0, 2), goldheli: () => townPlaneParts("#e2ad1c", "heli").slice(0, 2),
+      plane: () => townPlaneParts().slice(0, 1), goldplane: () => townPlaneParts("#e2ad1c").slice(0, 1), heli: () => townPlaneParts("#c8322b", "heli").slice(0, 2),
       possum: () => townPlaneParts(undefined, "possum") };
     const peers = new Map(); let sendEmote = null, emoteAt = 0; const SH = [new THREE.Matrix4().makeTranslation(-0.31, 1.42, 0), new THREE.Matrix4().makeTranslation(0.31, 1.42, 0)], R1 = new THREE.Matrix4(), R2 = new THREE.Matrix4();
     const emoteBtn = $("bsEmoteBtn"), emoteBox = $("bsEmotes"), chatBtn = $("bsChatBtn"), chatBar = $("bsChatBar"), chatIn = $("bsChatIn");
@@ -10021,7 +10013,7 @@ const handle = async (m, post) => {
       if (el.dataset.k === key) return; el.dataset.k = key; el.classList.toggle("said", !!on);
       if (on) { const b = document.createElement("b"); b.textContent = name; el.replaceChildren(b, chat.text); } else el.textContent = sign ? `${name} ${sign}` : name; };
     P.list = () => [...peers].filter(([, q]) => q.shown && q.b && q.b.k !== "none").map(([id, q]) => ({ id, name: q.name || "A player", k: q.b.k, x: q.shown.x, y: q.shown.y, z: q.shown.z, h: q.shown.h, p: q.shown.p, r: q.shown.r }));
-    let sendRide = null; P.ride = (id, on) => { try { sendRide?.(on === 2 ? 2 : on ? 1 : 0, id); } catch {} };  // tell a driver you've got in with them, or out
+    let sendRide = null; P.ride = (id, on) => { try { sendRide?.(on ? 1 : 0, id); } catch {} };  // tell a driver you've got in with them, or out
     const emoted = (name, id) => { const q = peers.get(id), e = TOWN_EMOTES.find(v => v[0] === name); if (q && e) q.emote = { e, t0: performance.now() }; };
     P.emote = n => { const e = typeof n === "number" ? TOWN_EMOTES[n] : TOWN_EMOTES.find(v => v[0] === n), now = performance.now(); if (!e || now - emoteAt < 1200) return false;  // (it used to do nothing with no one else about)
       emoteAt = now; if (sendEmote && peers.size) try { sendEmote(e[0]); } catch {} if (T.me) T.me.emote = { e, t0: now }; toast(`${e[2]} You ${e[3]}.`, 1800); emoteBox.hidden = true; emoteBtn.setAttribute("aria-expanded", "false"); return true; };
@@ -10102,17 +10094,7 @@ const handle = async (m, post) => {
         if (!onEx) { const a = el("a", "bs-me-go", "Open the 3D model's page"); a.href = url; app.append(a); }
         app.append(after); }
       const hi = el("div", "bs-me-h"), ho = el("span", "", F.hText || ""); ho.id = "bsMeH"; hi.append(el("span", "", "Height above the ground"), ho);
-      // the other towns, plain links (Ash, 15 November 2026: "In settings I want to be able to change from Logan to Inverloch and
-      // moorooka. Nothing fancy. Just a hyperlink"): each opens that town's Explore page
-      const towns = el("div", "bs-me-sec bs-me-towns"); towns.append(el("span", "bs-me-lbl", "Other towns"));
-      { const root = exploreLink().url.replace(/(\/awesome-news\/).*$/, "$1"), row = el("p", "");
-        [["moo", "moorooka", "Moorooka"], ["inv", "inverloch", "Inverloch"], ["logan", "logan", "Logan"]].filter(([k]) => k !== T.cfg?.place).forEach(([, dir, name], i) => {
-          if (i) row.append(" \u00b7 "); const a = el("a", "", name); a.href = `${root}${dir}/explore/`; row.append(a); }); towns.append(row); }
-      // admins: fly around the weather's own scene, to keep a view for the weather there ("Use this view for the weather")
-      let wv = null; if (isAdmin()) { wv = el("button", "bs-me-exit", "Set the weather's view"); wv.type = "button";
-        wv.onclick = () => { meClose(); bsFlyOff(); setTimeout(() => { try { bsFlyOn(); } catch {} }, 400); }; }
-      const ver = el("p", "bs-me-ver", `Version ${document.querySelector('meta[name="an-commit"]')?.content || "dev"}`);  // (Ash, 15 November 2026: "Add the v number into settings")
-      meBox.append(head, you, as, sw, here, tm, app, ...(isAsh() ? exAshSecs(meDraw) : []), towns, ...(wv ? [wv] : []), hi, ver); };  // no Exit explore (Ash, 15 November 2026: "Remove exit explore"); Esc, or the browser's back, still leaves
+      meBox.append(head, you, as, sw, here, tm, app, ...(isAsh() ? exAshSecs(meDraw) : []), hi); };  // no Exit explore (Ash, 15 November 2026: "Remove exit explore"); Esc, or the browser's back, still leaves
     // closes with its \u00d7, the gear again, or a tap anywhere else
     const meOut = e => { if (!meBox.hidden && !meBox.contains(e.target) && !meBtn.contains(e.target)) meClose(); }; document.addEventListener("pointerdown", meOut, true);
     document.body.classList.add("bsme"); meBtn.hidden = false; meBtn.onclick = () => { meBox.hidden = !meBox.hidden; meBtn.setAttribute("aria-expanded", String(!meBox.hidden)); if (!meBox.hidden) meDraw(); meBtn.blur(); };
@@ -10124,7 +10106,7 @@ const handle = async (m, post) => {
         room = townRelay("awesome-news-explore-1/town-" + place);
         const [sp, gp] = room.makeAction("pose"), [sn, gn] = room.makeAction("name"), [se, ge] = room.makeAction("emote"); sendPose = sp; sendName = sn; sendEmote = se; gp(got); gn(named); ge(emoted);
         const [sc, gc] = room.makeAction("chat"); sendChat = sc; gc(chatted);
-        const [sr, gr] = room.makeAction("ride"); sendRide = sr; gr((on, id) => { const q = peers.get(id); if (q?.name) toast(on === 2 ? `${q.name}, the possum, is holding on to you!` : on ? `${q.name} has got in with you.` : `${q.name} has got out.`, 2600); });
+        const [sr, gr] = room.makeAction("ride"); sendRide = sr; gr((on, id) => { const q = peers.get(id); if (q?.name) toast(on ? `${q.name} has got in with you.` : `${q.name} has got out.`, 2600); });
         room.onPeerJoin(id => { try { tell(id); if (lastSent) sendPose(lastSent, id); } catch {} }); room.onPeerLeave(drop);
       } catch (e) { console.warn("Town model: other players couldn't connect", e); } }, wait); };
     // always in the room, so you see the others even while they can't see you (Ash, 15 November 2026: "I can't see the person
@@ -10144,11 +10126,7 @@ const handle = async (m, post) => {
         if (moved || now - lastAt > 3000) { lastSent = a; lastAt = now; try { sendPose(a); } catch {} } }
       const can = !!T.walk && !T.car?.in && (peers.size > 0 || isAsh()); if (emoteBtn.hidden === can) { emoteBtn.hidden = !can; if (!can) emoteBox.hidden = true; }
       const canChat = (!!T.walk || !!T.car?.in) && (peers.size > 0 || isAsh()); if (chatBtn.hidden === canChat) { chatBtn.hidden = !canChat; if (!canChat) chatBar.hidden = true; }
-      // what you just said: over you when you can see yourself (the worker view), otherwise at the top of the screen, for 30 s
-      // (Ash, 15 November 2026: "The speech bubble didn't work": in your own eyes' view there was no you to put it over)
-      const saying = myChat && now - myChat.t < CHAT_MS, mine3 = saying && T.me?.third?.();
-      if (saying && !mine3) { sayIn(meEl, "You said", myChat, now); meEl.hidden = false; meEl.classList.add("top"); meEl.style.transform = ""; }
-      else { meEl.classList.remove("top"); if (!mine3 && !meEl.hidden) meEl.hidden = true; }
+      const mine3 = myChat && now - myChat.t < CHAT_MS && T.me?.third?.(); if (!mine3 && !meEl.hidden) meEl.hidden = true;
       if (!peers.size && !mine3) return;
       const cam = m.getCamera(), w = box.clientWidth, h = box.clientHeight, f = 1 / Math.tan(((m.fov ? m.fov() : 50) * Math.PI) / 360);
       const cp = Math.cos(cam.pitch), fx = -Math.sin(cam.yaw) * cp, fy = Math.sin(cam.pitch), fz = -Math.cos(cam.yaw) * cp, rx = Math.cos(cam.yaw), rz = -Math.sin(cam.yaw), ux = -fy * rz, uy = rz * fx - rx * fz, uz = fy * rx;  // up = right × forward (uy had its sign the wrong way round, so names sat mirrored above or below the player)
@@ -10171,7 +10149,7 @@ const handle = async (m, post) => {
         M.compose(V.set(s.x, s.y + up, s.z), Q.setFromEuler(E.set(lean - s.p, s.h + turn, s.r, "YXZ")), ONE); q.parts.setMatrix(0, M.elements.slice());
         if (kind === "walk" || kind === "builder") { q.parts.setMatrix(1, M.clone().multiply(SH[0]).multiply(R1.makeRotationZ(-armR)).multiply(R2.makeRotationX(-fwdR)).elements); q.parts.setMatrix(2, M.clone().multiply(SH[1]).multiply(R1.makeRotationZ(armL)).multiply(R2.makeRotationX(-fwdL)).elements); }
         sayIn(q.el, q.name, q.chat, now, sign);
-        if (kind === "heli" || kind === "goldheli") q.parts.setMatrix(1, M.clone().multiply(new THREE.Matrix4().makeTranslation(0, 2.45, 0.1)).multiply(new THREE.Matrix4().makeRotationY(now / 60)).elements);
+        if (kind === "heli") q.parts.setMatrix(1, M.clone().multiply(new THREE.Matrix4().makeTranslation(0, 2.45, 0.1)).multiply(new THREE.Matrix4().makeRotationY(now / 60)).elements);
         if (kind === "possum") q.parts.setMatrix(1, M.clone().multiply(new THREE.Matrix4().makeTranslation(0, 0, -0.27)).multiply(new THREE.Matrix4().makeRotationY(0.22 * Math.sin(now / 160))).elements);  // its tail, swaying
         // their name over them, where they are on the screen
         const top = kind === "walk" ? 2.1 : kind === "builder" ? 2.25 : kind === "bus" ? 3.7 : kind === "possum" ? 0.9 : 2.9, dx = s.x - cam.x, dy = s.y + top - cam.y, dz = s.z - cam.z, depth = dx * fx + dy * fy + dz * fz;
@@ -10400,9 +10378,9 @@ const handle = async (m, post) => {
       return [b.part({}), arm(), arm()];
     }
     if (car === "heli") {  // a small helicopter: a glass nose, a tail boom, skids on y = 0. The rotor and its blur are apart, about the mast
-      const COL = lin(stripe), BODY = stripe === "#e2ad1c" ? COL : WHITE;  // (the golden one is gold all over)
+      const COL = lin(stripe);
       const H = [[2.1, 0.22, 0.8, 1.2], [1.35, 0.72, 0.5, 1.8], [0.2, 0.82, 0.45, 2.02], [-1.0, 0.72, 0.6, 1.98], [-1.9, 0.26, 1.15, 1.72], [-5.3, 0.1, 1.4, 1.62]];
-      H.slice(0, -1).forEach((q, i) => b.hull(q, H[i + 1], i === 0 ? GLASS : i >= 3 ? COL : BODY, i <= 1 ? GLASS : i >= 3 ? COL : BODY, true));
+      H.slice(0, -1).forEach((q, i) => b.hull(q, H[i + 1], i === 0 ? GLASS : i >= 3 ? COL : WHITE, i <= 1 ? GLASS : i >= 3 ? COL : WHITE, true));
       for (const sx of [-1, 1]) { b.quad([sx * 0.83, 1.15, 1.2], [sx * 0.83, 1.15, -0.2], [sx * 0.83, 1.85, -0.2], [sx * 0.76, 1.7, 1.2], GLASS);
         b.box(sx * 0.95 - 0.05, sx * 0.95 + 0.05, 0, 0.09, -1.5, 1.7, DARK); for (const z of [-0.9, 1.0]) b.box(sx * 0.9 - 0.04, sx * 0.9 + 0.04, 0.09, 0.55, z - 0.04, z + 0.04, DARK); }
       b.hull([-4.6, 0.04, 1.5, 1.62], [-5.4, 0.04, 1.5, 2.6], COL); b.box(-0.6, 0.6, 1.47, 1.53, -5.25, -4.85, COL);  // fin and tailplane
@@ -10491,17 +10469,11 @@ const handle = async (m, post) => {
     // the golden plane with no place of its own stands on open ground picked for this visit (dry, if any of it is)
     const roam = (RIDES.roam || []).filter(([x, z]) => ground(x, z) - m.groundAt(x, z) < 0.35), spot = roam.length ? roam[Math.floor(Math.random() * roam.length)] : null;
     const homes = RIDES.planes.some(q => q.gold) || !spot ? RIDES.planes : [...RIDES.planes, { x: spot[0], z: spot[1], h: Math.random() * Math.PI * 2, gold: true, name: "The golden plane", at: "" }];
-    // the golden helicopter (Ash, 15 November 2026: "Add a golden helicopter. Random location no go to btn unless name is ash. 40%
-    // faster"): on open ground picked at random each visit, from the town's open spots and the grass beside each plane and helicopter,
-    // dry and clear of buildings, and not where the golden plane is
-    { const near = homes.flatMap(q => [18, -18].map(d => [q.x + Math.cos(q.h) * d, q.z - Math.sin(q.h) * d])), all = [...roam, ...near]
-        .filter(([x, z]) => (!spot || Math.hypot(x - spot[0], z - spot[1]) > 40) && ground(x, z) - m.groundAt(x, z) < 0.35 && inside(x, z) && fits(CAR, x, z, 0) && fits(CAR, x, z, Math.PI / 2));
-      if (all.length) { const [x, z] = all[Math.floor(Math.random() * all.length)]; homes.push({ x, z, h: Math.random() * Math.PI * 2, heli: true, gold: true, name: "The golden helicopter", at: "" }); } }
     const planes = homes.map(home => { const P = { home, x: home.x, z: home.z, h: home.h, y: 0, p: 0, r: 0, v: 0, air: false, spin: 0, turn: 0, ang: 0 };
       const [y, p, r] = lie(P, 2, 1.2); P.y = y; P.p = p; P.r = r;
       P.gold = !!home.gold; P.k = P.gold ? GOLD : 1;  // the golden one: a fifth more push, speed and quickness on the controls, and the only one with a boost
       P.heli = !!home.heli;
-      P.parts = m.addParts((P.heli ? townPlaneParts(P.gold ? "#e2ad1c" : "#c8322b", "heli") : townPlaneParts(P.gold ? "#e2ad1c" : undefined)).map(q => ({ ...q, matrix: M.identity().elements.slice() }))); showPlane(P); return P; });
+      P.parts = m.addParts((P.heli ? townPlaneParts("#c8322b", "heli") : townPlaneParts(P.gold ? "#e2ad1c" : undefined)).map(q => ({ ...q, matrix: M.identity().elements.slice() }))); showPlane(P); return P; });
     // ---- the golden car, the app's own mesh too: twice the top speed and the acceleration of a parked car
     const showOwn = G => { M.compose(V.set(G.x, G.y, G.z), Q.setFromEuler(E.set(-G.p, G.h, G.r, "YXZ")), ONE); G.parts.setMatrix(0, M.elements.slice()); };
     const owns = RIDES.cars.filter(home => !home.spare || !m.nearestCar).map(home => { const G = { x: home.x, z: home.z, h: home.h, y: 0, p: 0, r: 0, gold: !!home.gold, bus: !!home.bus };
@@ -10657,14 +10629,7 @@ const handle = async (m, post) => {
         o = car; D = (car.bus ? 15 : 7.5) + Math.min(5, a / 9); text = Math.round(a * 3.6) + " km/h";
       } else if (veh === "possum") { const P = pos, top = 11 * 3 * 0.8, jump = has("Space") || !!F.boost, drop = has("KeyC");  // walking is 11 m/s: three times that, less a fifth (Ash, 15 November 2026: "speed down by 20%"); no boost, the button is Jump
         P.t += dt;
-        // holding on to another player's plane or helicopter (Ash, 15 November 2026: "when a player is in the possum and a player is in
-        // the plane that the possum can hold onto the plane"): it rides on top where it grabbed, until Jump springs it off
-        const CL = P.cling, cq = CL && (T.peers?.list?.() || []).find(v => v.id === CL.id);
-        if (CL && (!cq || !CLING[cq.k])) { P.cling = null; P.mode = "air"; P.vy = 0; toast(`${CL.name} has gone. You're off.`, 2200); }
-        if (P.cling) { const q = cq, sn = Math.sin(q.h), cs = Math.cos(q.h), x = q.x + sn * CL.along + cs * CL.side, z = q.z + cs * CL.along - sn * CL.side;
-          P.v = Math.hypot(x - P.x, z - P.z) / Math.max(dt, 1e-3); P.x = x; P.z = z; P.y = q.y + CLING[q.k]; P.h = q.h + CL.dh; P.mode = "ground"; P.vy = 0;
-          if (jump && !P.jumped) { P.cling = null; P.mode = "air"; P.vy = 8; T.peers?.ride?.(CL.id, false); toast("You've let go.", 1800); } }
-        else if (P.mode === "climb") { const W = P.wall; P.v = 0;
+        if (P.mode === "climb") { const W = P.wall; P.v = 0;
           if (thr < -0.1 || drop || (jump && !P.jumped)) { P.mode = "air"; P.vy = jump ? 6 : 0; P.h += Math.PI; P.wall = null; }  // lets go (stick back, or Jump to spring off), turning round as it drops
           else if (thr > 0.1 || jump) { P.y += 12 * dt * Math.max(thr, jump ? 1 : 0);
             if (P.y >= W.top - 0.05) { P.mode = "ground"; P.wall = null;  // over the top: on to the light, or a step on to the roof
@@ -10691,26 +10656,19 @@ const handle = async (m, post) => {
             if (P.y <= s) { if (P.vy < -9) snd.thud(Math.min(1.2, -P.vy / 18)); P.y = s; P.vy = 0; P.mode = "ground"; } }
           else if (P.mode === "ground") { P.y += (surf(P.x, P.z) - P.y) * Math.min(1, dt * 20); if (jump && !P.jumped) { P.mode = "air"; P.vy = 11.1; } } }  // two and a half times as high as it was (Ash, 15 November 2026)
         P.jumped = jump;  // (one jump a press)
-        // touching a plane or helicopter someone's flying (running into it, or landing on it): it grabs on
-        if (!P.cling && P.mode !== "climb") for (const q of T.peers?.list?.() || []) { if (!CLING[q.k]) continue;
-          const dx = P.x - q.x, dz = P.z - q.z, along = dx * Math.sin(q.h) + dz * Math.cos(q.h), side = dx * Math.cos(q.h) - dz * Math.sin(q.h);
-          if (Math.abs(along) < 3.4 && Math.abs(side) < 1.7 && P.y > q.y - 0.6 && P.y < q.y + CLING[q.k] + 1.5) {
-            P.cling = { id: q.id, name: q.name, along: bsClamp(along, -2.4, 2.4), side: bsClamp(side, -0.5, 0.5), dh: wrap(P.h - q.h) }; P.v = 0;
-            T.peers?.ride?.(q.id, 2); toast(`Holding on to ${q.name}! Jump to let go.`, 2600); break; } }
         P.p += ((P.mode === "climb" ? 1.45 : P.mode === "air" ? bsClamp(P.vy * 0.03, -0.35, 0.35) : 0) - P.p) * Math.min(1, dt * 12); showPossum();
         const up = P.y - ground(P.x, P.z);
         hint(P.mode === "climb" ? (touch ? "Climbing. Stick forward to go up, back to let go" : "Climbing. W goes up, S lets go") : "");
-        o = P; D = P.cling ? 9 : 3.4 + Math.min(3, Math.abs(P.v) / 12); text = P.cling ? `Holding on to ${P.cling.name} \u00b7 ${Math.round(P.v * 3.6)} km/h` : P.mode === "climb" ? "Climbing \u00b7 " + Math.round(up) + " m" : Math.round(Math.abs(P.v) * 3.6) + " km/h" + (up > 1.5 ? " \u00b7 " + Math.round(up) + " m up" : "");
+        o = P; D = 3.4 + Math.min(3, Math.abs(P.v) / 12); text = P.mode === "climb" ? "Climbing \u00b7 " + Math.round(up) + " m" : Math.round(Math.abs(P.v) * 3.6) + " km/h" + (up > 1.5 ? " \u00b7 " + Math.round(up) + " m up" : "");
       } else { const P = plane, K = P.k, jet = boost && canBoost(P), top = (jet ? JET : CRUISE) * K;  // (only the golden plane has a boost)
         // the nose: the down arrow lifts it and the up arrow lowers it, as pulling back and pushing on a plane's stick does
         // (Ash, 14 November 2026: "if i press down my plane shifts upwards and vica versa"). Space and C, and Climb and Dive, too.
         const climb = bsClamp((has("ArrowDown", "Space") ? 1 : 0) - (has("ArrowUp", "KeyC") ? 1 : 0) + F.vert, -1, 1);
         if (P.heli) {  // the helicopter: the rotor spins up, then it lifts straight off. W and S go forward and back, A and D turn it on the spot, and it sets down wherever it meets open ground
           P.spin += (1 - P.spin) * Math.min(1, dt * 0.9); const up = P.spin > 0.8, e = Math.min(1, dt * 3);
-          const HK = P.gold ? 1.4 : 1;  // the golden helicopter: 40% faster, forward and up
-          P.v += ((P.air ? (thr >= 0 ? thr * 50 * HK : thr * 14 * HK) : 0) - P.v) * Math.min(1, dt * (P.air ? 0.9 : 4));
+          P.v += ((P.air ? (thr >= 0 ? thr * 50 : thr * 14) : 0) - P.v) * Math.min(1, dt * (P.air ? 0.9 : 4));
           P.turn += (str - P.turn) * Math.min(1, dt * 5); P.h -= P.turn * 1.25 * dt;
-          P.vy = (P.vy || 0) + ((up ? climb * 11 * HK : -3) - (P.vy || 0)) * Math.min(1, dt * 2.2);
+          P.vy = (P.vy || 0) + ((up ? climb * 11 : -3) - (P.vy || 0)) * Math.min(1, dt * 2.2);
           if (!P.air) { if (up && climb > 0.05) P.air = true; else { P.vy = 0; const [y, p, r] = lie(P, 1.5, 0.9); P.y = y; P.p += (p - P.p) * e; P.r += (r - P.r) * e; } }
           if (P.air) { P.p += (-0.3 * P.v / 50 - P.p) * e; P.r += (P.turn * 0.3 * Math.min(1, Math.abs(P.v) / 20) - P.r) * e;
             P.x = bsClamp(P.x + Math.sin(P.h) * P.v * dt, F.lim[0], F.lim[1]); P.z = bsClamp(P.z + Math.cos(P.h) * P.v * dt, F.lim[2], F.lim[3]); P.y = Math.min(P.y + P.vy * dt, ground(P.x, P.z) + 1500);
@@ -10773,16 +10731,13 @@ const handle = async (m, post) => {
       let best = null; for (const q of T.peers?.list?.() || []) { if (!RIDE_REACH[q.k]) continue; const d = Math.hypot(q.x - F.pos.x, q.z - F.pos.z);
         if (d < RIDE_REACH[q.k] && q.y - ground(q.x, q.z) < 3 && (!best || d < best.distance)) best = { ride: q, distance: d }; }
       return best && (!r2 || best.distance < (r2.distance ?? 11) + 4) ? best : r2; };  // (someone in it wins over an empty one beside it, such as your own copy of the golden car they drove off in)
-    const RIDE_REACH = { car: 8, gold: 8, bus: 15, plane: 11, goldplane: 11, heli: 11, goldheli: 11, possum: 6 }, RIDE_BACK = { car: 7, gold: 7, bus: 13, plane: 15, goldplane: 15, heli: 14, goldheli: 14, possum: 3.6 },
-      RIDE_UP = { car: 1.5, gold: 1.5, bus: 3.4, plane: 2.4, goldplane: 2.4, heli: 2.4, goldheli: 2.4, possum: 0.9 };
-    let ride = null, shownRide = null;  // the player you're riding with: { id, name, k, at: [x, y, z, t] }; who the button last offered
-    const CLING = { plane: 1.95, goldplane: 1.95, heli: 2.05, goldheli: 2.05 };  // what the possum can hold on to, and how high its top is
+    const RIDE_REACH = { car: 8, gold: 8, bus: 15, plane: 11, goldplane: 11, heli: 11, possum: 6 }, RIDE_BACK = { car: 7, gold: 7, bus: 13, plane: 15, goldplane: 15, heli: 14, possum: 3.6 },
+      RIDE_UP = { car: 1.5, gold: 1.5, bus: 3.4, plane: 2.4, goldplane: 2.4, heli: 2.4, possum: 0.9 };
+    let ride = null;  // the player you're riding with: { id, name, k, at: [x, y, z, t] }
     C.enter = () => { if (veh) { if (veh === "plane" && plane.heli && plane.air) return toast(touch ? "Land first: hold Down until it is on the ground." : "Land first: hold the up arrow (or C) until it is on the ground."), true;
       if (veh === "plane" && (plane.air || plane.v > 6)) return toast(touch ? "Land and stop first: pull the left stick back to slow down, and it comes down as it slows (or hold Dive)." : "Land and stop first: S slows the plane, and it comes down as it slows (or hold the up arrow)."), true; return leave(true), true; }
       if (!T.walk || T.tween) return false;
-      let c = reach();
-      if (shownRide && performance.now() - shownRide.t < 2000 && !c?.ride) { const q = (T.peers?.list?.() || []).find(v => v.id === shownRide.id);
-        if (q && RIDE_REACH[q.k] && Math.hypot(q.x - F.pos.x, q.z - F.pos.z) < RIDE_REACH[q.k] * 2.5) c = { ride: q, distance: 0 }; }
+      const c = reach();
       if (!c) { const far = parked(F.pos.x, F.pos.z, 5000) || (owns.length ? { distance: nearOwn()[1] } : null), [P, d] = nearPlane(), home = P && Math.hypot(P.x - P.home.x, P.z - P.home.z) < 30;
         toast(`Nothing close enough to get into. ${far ? `The nearest car is ${Math.round(far.distance)} m away` : ""}${far && P ? ", and t" : P ? "T" : "."}${P ? `he nearest plane is ${Math.round(d)} m away${home && P.home.at ? ", " + P.home.at : ""}.` : ""}`, 4500); return true; }
       if (c.ride) { const q = c.ride; ride = { id: q.id, name: q.name, k: q.k, at: [q.x, q.y, q.z, performance.now()], v: 0 }; veh = "ride"; camYaw = q.h + Math.PI;
@@ -10807,7 +10762,7 @@ const handle = async (m, post) => {
       if (pos) { const d = Math.hypot(pos.x - F.pos.x, pos.z - F.pos.z), dh = Math.hypot(PS.x - F.pos.x, PS.z - F.pos.z);
         if (!possumMesh && Math.min(d, dh) < 400) wake(); if (d < 80) loadRoofs();
         if ((pos.x !== PS.x || pos.z !== PS.z) && d > 150) possumHome(); }  // left behind, the possum goes home to number 16
-      const near = T.walk && !T.tween ? reach() : null; shownRide = near?.ride ? { id: near.ride.id, t: now } : null; const say = near?.ride ? `Ride with ${near.ride.name}` : near?.possum ? "Be the possum" : near?.plane ? (near.plane.heli ? (near.plane.gold ? "Get in the golden helicopter" : "Get in the helicopter") : "Get in the plane") : near?.own?.bus || near?.bus ? "Get in the bus" : near?.gold ? "Get in the golden car" : "Get in the car";
+      const near = T.walk && !T.tween ? reach() : null, say = near?.ride ? `Ride with ${near.ride.name}` : near?.possum ? "Be the possum" : near?.plane ? (near.plane.heli ? "Get in the helicopter" : "Get in the plane") : near?.own?.bus || near?.bus ? "Get in the bus" : near?.gold ? "Get in the golden car" : "Get in the car";
       if (btn.hidden !== !near) btn.hidden = !near; if (near && btn.textContent !== say) btn.textContent = say; };
     btn.onclick = () => { C.enter(); btn.blur(); };
     const hold = on => e => { F.boost = on && !!veh; boostBtn.classList.toggle("on", F.boost); e.preventDefault(); };
@@ -10819,9 +10774,9 @@ const handle = async (m, post) => {
     const hidden = () => snd.quiet(document.hidden); document.addEventListener("visibilitychange", hidden);
     C.riding = () => veh === "ride";
     C.pose = () => veh === "ride" ? null : veh === "possum" ? { k: "possum", x: pos.x, y: pos.y, z: pos.z, h: pos.h, p: pos.p, r: 0 } : veh === "car" ? { k: car.bus ? "bus" : car.gold ? "gold" : "car", x: car.x, y: car.y, z: car.z, h: car.h, p: car.p, r: car.r }
-      : veh ? { k: plane.heli ? (plane.gold ? "goldheli" : "heli") : plane.gold ? "goldplane" : "plane", x: plane.x, y: plane.y, z: plane.z, h: plane.h, p: plane.p, r: plane.r } : null;
+      : veh ? { k: plane.heli ? "heli" : plane.gold ? "goldplane" : "plane", x: plane.x, y: plane.y, z: plane.z, h: plane.h, p: plane.p, r: plane.r } : null;
     C.where = () => veh === "ride" ? { kind: "ride", with: ride.name } : veh === "possum" ? { kind: "possum", x: pos.x, y: pos.y, z: pos.z, heading: pos.h, speed: pos.v, mode: pos.mode, up: pos.y - ground(pos.x, pos.z) } : veh === "car" ? { kind: "car", gold: !!car.gold, bus: !!car.bus, x: car.x, z: car.z, heading: car.h, dir: car.dir, speed: car.v, charge } : veh ? { kind: "plane", heli: !!plane.heli, x: plane.x, y: plane.y, z: plane.z, heading: plane.h, pitch: plane.p, speed: plane.v, air: plane.air } : null;  // for checking
-    C.planes = planes; C.gold = gold; C.goldHeli = planes.find(P => P.heli && P.gold) || null;
+    C.planes = planes; C.gold = gold;
     // to the golden plane (a key of Ash's own, not shown anywhere)
     C.toGold = () => { const G = planes.find(P => P.gold); if (!G) return false; if (veh) leave(false);
       const sn = Math.sin(G.h), cs = Math.cos(G.h), dx = sn * 7 - cs * 5, dz = cs * 7 + sn * 5; T.tween = null;
@@ -11239,9 +11194,7 @@ const handle = async (m, post) => {
   // Rod: the middle of Norman Road, Inverloch, into Inverloch's town centre.
   const ROD_DRIVE = { home: { q: "Norman Road, Inverloch", label: "Norman Road", sign: "Norman Rd", lat: -38.64062, lon: 145.71191 },
     work: { q: "Inverloch", label: "Inverloch town centre", sign: "Inverloch", lat: -38.63316, lon: 145.72795 }, leave: "07:45", toName: "Drive into Inverloch", toWord: "into Inverloch" };
-  // Ash: by the news app's name, or by the player name in Explore's Settings (Ash, 15 November 2026: "I think player name is not giving
-  // me admin": each town's app keeps its own news name, but the player name is the same in all of them)
-  function isAsh() { if (/^ash(ley)?$/i.test((S.name || "").trim())) return true; try { return /^ash(ley)?$/i.test((localStorage.getItem("an-player") || "").trim()); } catch { return false; } }
+  const isAsh = () => /^ash(ley)?$/i.test((S.name || "").trim());
   const isRod = () => /^rod(ney)?$/i.test((S.name || "").trim());
   const commuteOK = () => !!DEFAULT_COMMUTE || !!A.unlocked || isAsh() || isRod();
   // What the drive is called: "Drive to work" (or Rod's "Drive into Inverloch"), "Drive home".
@@ -11518,7 +11471,7 @@ const handle = async (m, post) => {
         <form class="adminpass" id="ghForm" style="margin-top:0"><input type="password" id="ghTok" placeholder="${gh ? "Saved. Paste to replace" : "GitHub key"}" aria-label="GitHub key" autocomplete="off"><button type="submit">Save</button></form></div>`;
   }
   // ---- Admin (Ash and Rod by name, the passphrase, or the private copy): its own tab in Settings, and a button beside Settings ----
-  function isAdmin() { return /^(rod|rodney|ash|ashley)$/i.test((S.name || "").trim()) || isAsh() || !!A.unlocked || state.mode === "claude"; }
+  function isAdmin() { return /^(rod|rodney|ash|ashley)$/i.test((S.name || "").trim()) || !!A.unlocked || state.mode === "claude"; }
   function adminHTML() {
     if (!isAdmin()) return "";
     const kept = Object.keys({ ...WX_CAMS, ...(state.wxCams || {}) }).length;
@@ -11568,13 +11521,8 @@ const handle = async (m, post) => {
         toast(`${name}: ${off.has(k) ? "off" : "on"}. It applies the next time you open Explore.`, 2600); };
       parts.append(sw); }
     parts.append(el("p", "", "Only you see these, and only on this device."));
-    // the GitHub key that puts your map edits and kept views in everyone's app (the same key as in the news app's Settings > Admin)
-    const key = el("div", "bs-me-sec"), has = !!store.get("brief.ghToken", ""); key.append(el("span", "bs-me-lbl", "GitHub key (just you)"));
-    const kf = el("form", "bs-me-key"), ki = el("input"), kb = el("button", "bs-me-go", "Save"); ki.type = "password"; ki.autocomplete = "off"; ki.placeholder = has ? "Saved. Paste to replace" : "Paste your GitHub key"; ki.setAttribute("aria-label", "GitHub key"); kb.type = "submit";
-    kf.append(ki, kb); kf.onsubmit = e => { e.preventDefault(); const v = ki.value.trim(); if (!v) return; store.set("brief.ghToken", v); A.ghBad = false; saveAdmin(); redraw(); toast("Saved. Map edits and kept views now go to everyone.", 2600); };
-    key.append(kf, el("p", "", has ? (A.ghBad ? "The saved key isn't working. Paste a new one." : "Saved. Save in map editing puts your edits in everyone's app.") : "Without it, your map edits stay on this device."));
-    for (const sec of [cars, parts, key]) { sec.addEventListener("keydown", e => e.stopPropagation()); sec.addEventListener("keyup", e => e.stopPropagation()); }
-    return [cars, parts, key]; }
+    for (const sec of [cars, parts]) { sec.addEventListener("keydown", e => e.stopPropagation()); sec.addEventListener("keyup", e => e.stopPropagation()); }
+    return [cars, parts]; }
   function previewGo() {
     const p = state.prevSel;
     BS.prev = { place: p.place === "bowls" ? "moo" : p.place === "invbeach" ? "inv" : p.place, sky: p.sky };
@@ -11607,7 +11555,7 @@ const handle = async (m, post) => {
   function showVersion() {
     // Ash: the commit id, small and blue in the bottom right corner of every screen, Explore included (Ash, 15 November 2026:
     // "If in as ash show the v number in blue small bottom right"). It lets taps through to whatever is under it.
-    { const ash = isAsh(), commit = document.querySelector('meta[name="an-commit"]')?.content || "";
+    { const ash = /^ash(ley)?$/i.test((S.name || "").trim()), commit = document.querySelector('meta[name="an-commit"]')?.content || "";
       let b = $("verBadge"); if (ash && !b) { b = document.createElement("div"); b.id = "verBadge"; b.setAttribute("aria-hidden", "true"); document.body.appendChild(b); }
       if (b) { b.hidden = !ash; b.textContent = commit || "dev"; } }
     const el = $("appVer"); if (!el) return;
@@ -11619,7 +11567,7 @@ const handle = async (m, post) => {
     el.textContent = !built ? "v dev" : `${d} ${m}` === today ? `v ${hm}` : `v ${d} ${m}`;
     // Ash: the commit it was built from instead (the same short id as in the update notes), to check it's the latest
     const commit = document.querySelector('meta[name="an-commit"]')?.content || "";
-    if (commit && isAsh()) el.textContent = commit;
+    if (commit && /^ash(ley)?$/i.test((S.name || "").trim())) el.textContent = commit;
     el.title = `Version built ${built || "here"}${id ? " (" + id + ")" : ""}`;
   }
   // The page's build (stamped by build.py) against the latest on the site. Never mid-listen: it waits until you stop.
