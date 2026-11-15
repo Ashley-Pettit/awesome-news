@@ -1311,3 +1311,24 @@ as concrete. It shows where the sharper ground is drawn (close up), like every m
   whop-whop four to seven times a second), the plane's propeller buzz and rush of air are louder; the possum patters as it runs,
   scratches as it climbs and squeaks as it jumps; Inverloch's animal thumps (kangaroo), grunts (wombat) or drums (emu) when
   you're within 30 m.
+
+## Midday everywhere, number 6's pool and shed, the possum's Boost and settings (15 November 2026)
+
+- **Midday in every town** (Ash: "Logan was nighttime, keep it daytime unless as an admin it's changed"): the town models now
+  get midday every frame (`townModelFrame`) until an admin moves Time of day in Settings (`BS.exTimeSet`), and each town opens
+  at midday again. Opening another town from Settings used to keep the weather view's clock, which could be night.
+- **Number 6's pool and shed** (Ash, with two photos: "The pool is directly behind the house. The clothes line is no longer
+  there. The shed is left of the pool. From the house it's on the back left"): in `townNo6`, square to the house from the
+  middle of its back wall. Travertine paving out to a black 1.2 m pool fence; the pool across the yard (8.2 by 3.6 m) with a
+  raised spa on the house side at its south end and a furled umbrella; a garden bed of cordylines and gingers behind; the
+  shed outside the fence on the north side: blue weatherboards, white trim and corner boards, a grey Colorbond gable, white
+  double doors with little panes facing the house, a window on its pool side, on stumps with three blue steps. The model's
+  clothes hoist and the garden box by the back wall are taken out of its data (`moorooka-model.js`, `?v=29`).
+- **The possum** (Ash: "Add into settings the ability to customise the possum. Slow it down by 25% but add back boost"): top
+  speed 71 km/h (was 95), and a Boost button where the handbrake goes (Shift on a keyboard, 60% faster while held). Settings >
+  Cars, planes and the possum has its top speed, boost, jump and climbing speed (`RIDE_DEF.possum*`); they apply at once.
+- **Settings kept** (Ash: "if I reload the app they are lost"): the numbers are saved as you type, not only when you leave the
+  box (closing Settings straight after a change could lose it).
+- **Buttons apart** (Ash: "In the golden car move the buttons a tiny bit apart"): Handbrake, Boost and 180 are 62 px apart.
+- **Hotkeys** (Ash: "Give them hotkeys for pc"): X for the 180 and Shift for the possum's Boost, shown on the buttons' keycaps
+  and in the controls list (the golden car's list has X).
