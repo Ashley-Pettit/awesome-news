@@ -1461,3 +1461,14 @@ its usual one (Logan's places run out to Jimboomba).
 Ash: "Make the possum turn another 20% slower", then "Actually make the possum car like again". It runs the way it faces
 again (slower while it is still turning round) and the view swings round behind it, as before #156. The turning stays slower:
 6.2 rad/s on the ground and 2.2 in the air (it was 11 and 4 before #156, 7.7 and 2.8 in #156).
+
+## Nicer plants, a tight-turning possum that rides on moving cars (15 November 2026)
+
+- **Plants** (Ash: "The flowers planted look real bad"): flowers are now an oval of mulch with leafy clumps and about twenty
+  round flower heads on stems; a bush is three lumpy rounded clumps (the old one had its box corners in the wrong order); trees
+  and small trees have a trunk under three lumpy rounded crowns, like the model's own trees.
+- **The possum's turning circle** (Ash: "With a very tight turning circle though"): it all but stops to swing round (speed times
+  the square of how far it still has to turn), then runs, so it turns on the spot.
+- **Riding on a moving car** (Ash: "When the possum grips to a car plane or other vehicle, keep him attached if it moves"): standing
+  on top of the traffic or one of the app's own cars, it moves and turns with the car (`P.ride`). Other players' cars, planes and
+  helicopters it already held on to.
