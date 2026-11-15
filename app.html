@@ -9941,18 +9941,32 @@ const handle = async (m, post) => {
       th.append(tl, tout); tm.append(th, tr);
       // make the 3D model an app on the phone's home screen, from its own page (/<suburb>/explore/), which has its own manifest
       const app = el("div", "bs-me-sec"); app.append(el("span", "bs-me-lbl", "Make it an app"));
-      const alone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true, onEx = /\/explore\/?$/.test(location.pathname);
-      const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1), android = /Android/.test(navigator.userAgent);
-      if (alone) app.append(el("p", "", "You're using it as an app already."));
-      else if (onEx && window.anInstall) { const b = el("button", "bs-me-go", "Install the app"); b.type = "button"; b.onclick = async () => { try { await window.anInstall.prompt(); } catch {} window.anInstall = null; meDraw(); }; app.append(b, el("p", "", "It goes on your home screen and opens straight into the 3D model.")); }
-      else { const ol = el("ol"), step = t => ol.append(el("li", "", t));
-        if (!onEx) step(`Open the 3D model's own page (below)${ios ? " in Safari" : android ? " in Chrome" : ""}.`);
-        if (ios) { step("Tap Share (the square with an arrow)."); step("Tap Add to Home Screen, then Add."); }
-        else if (android) { step("Tap the \u22ee menu, top right."); step("Tap Add to Home screen (or Install app)."); }
-        else { step("Click the install icon at the right of the address bar (Chrome or Edge)."); step("Or on your phone, open the page and add it to your home screen."); }
-        app.append(ol);
-        if (!onEx) { const a = el("a", "bs-me-go", "Open the 3D model's page"); a.href = exploreLink().url; app.append(a); }
-        app.append(el("p", "", "It goes on your home screen and opens straight into the 3D model.")); }
+      // (Ash, 15 November 2026: "The make it an app instructions don't work". On an iPhone it has to be added from Safari itself,
+      // from the 3D model's own page; from inside the news app on the home screen there is no Share button, and on iOS 26 Share
+      // sits under the ••• button.)
+      const alone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true, onEx = /\/explore\/?$/.test(location.pathname), url = exploreLink().url;
+      const ua = navigator.userAgent, ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1), android = /Android/.test(ua);
+      const safari = ios && !/CriOS|FxiOS|EdgiOS|OPiOS|GSA\//.test(ua);
+      const copyBtn = () => { const b = el("button", "bs-me-go", "Copy the link"); b.type = "button";
+        b.onclick = async () => { let ok = false; try { await navigator.clipboard.writeText(url); ok = true; } catch { try { const ta = document.createElement("textarea"); ta.value = url; ta.setAttribute("readonly", ""); ta.style.cssText = "position:fixed;left:-9999px;top:0"; document.body.appendChild(ta); ta.select(); ok = document.execCommand("copy"); ta.remove(); } catch {} }
+          b.textContent = ok ? "Copied" : url; setTimeout(() => { b.textContent = "Copy the link"; }, 2500); }; return b; };
+      const steps = list => { const ol = el("ol"); list.filter(Boolean).forEach(t => ol.append(el("li", "", t))); return ol; };
+      const after = el("p", "", "It goes on your home screen as its own app, and opens straight into the 3D model.");
+      if (alone && onEx) app.append(el("p", "", "You're using it as an app already."));
+      else if (onEx && window.anInstall) { const b = el("button", "bs-me-go", "Install the app"); b.type = "button"; b.onclick = async () => { try { await window.anInstall.prompt(); } catch {} window.anInstall = null; meDraw(); }; app.append(b, after); }
+      else if (ios && (alone || !safari)) {  // inside the news app, or another browser: it has to be done in Safari
+        app.append(steps(["Copy the link (below).", "Open Safari, paste it in the address bar and go.", "Tap \u2022\u2022\u2022 (bottom right), then Share. (On older iPhones, Share is the square with an arrow.)", "Scroll down, tap Add to Home Screen, then Add."]), copyBtn(), after); }
+      else if (ios) {
+        app.append(steps([!onEx && "Tap Open the 3D model's page (below).", "Tap \u2022\u2022\u2022 (bottom right), then Share. (On older iPhones, Share is the square with an arrow.)", "Scroll down, tap Add to Home Screen, then Add."]));
+        if (!onEx) { const a = el("a", "bs-me-go", "Open the 3D model's page"); a.href = url; app.append(a); }
+        app.append(after); }
+      else if (android) {
+        app.append(steps([!onEx && "Tap Open the 3D model's page (below), in Chrome.", "Tap the \u22ee menu, top right.", "Tap Add to Home screen (or Install app), then Install."]));
+        if (!onEx) { const a = el("a", "bs-me-go", "Open the 3D model's page"); a.href = url; app.append(a); }
+        app.append(after); }
+      else { app.append(steps([!onEx && "Open the 3D model's page (below) in Chrome or Edge.", "Click the install icon at the right of the address bar.", "Or on your phone, open the same page and add it to your home screen."]));
+        if (!onEx) { const a = el("a", "bs-me-go", "Open the 3D model's page"); a.href = url; app.append(a); }
+        app.append(after); }
       const hi = el("div", "bs-me-h"), ho = el("span", "", F.hText || ""); ho.id = "bsMeH"; hi.append(el("span", "", "Height above the ground"), ho);
       meBox.append(head, you, as, sw, tm, app, hi); };  // no Exit explore (Ash, 15 November 2026: "Remove exit explore"); Esc, or the browser's back, still leaves
     // closes with its \u00d7, the gear again, or a tap anywhere else
