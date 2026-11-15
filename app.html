@@ -8327,7 +8327,7 @@ const handle = async (m, post) => {
       floodLook: [-27.5375, 153.0115, 1100, 40, 100], floodOf: "this map", noFloodSlider: true,  // Ash: no water level slider ("At the peak") in Moorooka: a flood just rises to its peak
       floodWarn: { council: "Brisbane City Council", short: "BCC", how: "our own computer simulation of rain running over the ground and the creeks rising (and, in big river floods, Oxley Creek backing up), on a 5 m model of the terrain", map: "Brisbane City Council's Flood Awareness Map and FloodWise Property Report" },
       floodNote: "A guide only: our own simulation, from the terrain, the buildings and the Bureau's design rainfall for Moorooka. It includes water running over the ground to the creeks. No council flood mapping is used. For property, insurance or planning decisions, use Brisbane City Council's Flood Awareness Map and FloodWise Property Report." },
-    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=40", assets: TOWN3D + "logan/", place: "logan", lift: [5320, -13743.6, 6320, -12743.6, 0.25], pre: ["map.json", "height.png", "roads.bin", "buildings.bin", "ground.webp", "relief.webp", "lights.webp", "cover.png"], up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
+    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=41", assets: TOWN3D + "logan/", place: "logan", lift: [5320, -13743.6, 6320, -12743.6, 0.25], pre: ["map.json", "height.png", "roads.bin", "buildings.bin", "ground.webp", "relief.webp", "lights.webp", "cover.png"], up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
       start: "council", onFoot: true, noFloodSlider: true, flyTo: { id: "brownsplains", label: "Fly to Browns Plains" }, wait: 90000, ceil: 110000, fast: 600, far: 150000, out: 130000, stride: 0.02, pad: 80000, stand: [0.45, 400], floodLook: [-27.69, 153.17, 12000, 55, -35],
       // the same not-official notice and banner as Moorooka's (Ash, 12 November 2026)
       floodWarn: { council: "Logan City Council", short: "LCC", how: "the 2017 flood as mapped, and the others worked out from river gauge heights and rainfall over a terrain model", map: "Logan City Council's flood maps" } },  // shown small in the bottom right corner the whole time the model is open
@@ -10902,6 +10902,11 @@ const handle = async (m, post) => {
   // opens sideways"): the precinct's buildings are solid, to walk into as well as to drive into (T.solid, T.solidWalk), and the glass
   // doors under the covered entry are two panels that slide apart as you come up to them (the model's own glass there is taken out:
   // logan-model.js ?v=40), with the dark of the foyer behind
+  // Logan's council entry: the model leaves its wall open below this height on the doors' wall (logan-model.js ?v=41, patched:
+  // window.anDoorGaps), so you can walk through the doors into the foyer townCouncil draws (Ash, 16 November 2026: "Logan doors still too
+  // low. I can't walk in building"). The doors are map.json's entry.doors; the top is the paving there plus 3.55 m.
+  const COUNCIL_GAP = [5807.6, -13273.9, 5810.0, -13277.6, 47.6];
+  window.anDoorGaps = [COUNCIL_GAP];
   function townCouncil(T, m, ground) {
     const P = { frame() {}, dispose() {} }; if (!m.addParts || !m.groundAt) return P;
     const THREE = BS.B.THREE, M = new THREE.Matrix4(); let dead = false, parts = null, D = null, open = 0, last = performance.now();
@@ -10910,7 +10915,8 @@ const handle = async (m, post) => {
         for (let i = 0; i < q.length; i += 2) { x0 = Math.min(x0, q[i]); x1 = Math.max(x1, q[i]); z0 = Math.min(z0, q[i + 1]); z1 = Math.max(z1, q[i + 1]); }
         return { q, holes: (b.h || []).map(h => h.map(v => v / 10)), x0, x1, z0, z1, council: /Administration Centre/.test(b.n || "") }; }).filter(Boolean);
       const inPoly = (q, x, z) => { let c = false; for (let a = 0, b = q.length - 2; a < q.length; b = a, a += 2) if ((q[a + 1] > z) !== (q[b + 1] > z) && x < (q[b] - q[a]) * (z - q[a + 1]) / (q[b + 1] - q[a + 1]) + q[a]) c = !c; return c; };
-      T.solid = (x, z) => polys.some(B => x >= B.x0 && x <= B.x1 && z >= B.z0 && z <= B.z1 && inPoly(B.q, x, z) && !B.holes.some(h => inPoly(h, x, z))); T.solidWalk = true;
+      let foyer = null;  // the foyer behind the doors, walkable (set below, once the doors are placed)
+      T.solid = (x, z) => !(foyer && inPoly(foyer, x, z)) && polys.some(B => x >= B.x0 && x <= B.x1 && z >= B.z0 && z <= B.z1 && inPoly(B.q, x, z) && !B.holes.some(h => inPoly(h, x, z))); T.solidWalk = true;
       // the doors
       const C = polys.find(B => B.council), E = pc.entry; if (!C || !E?.doors) return;
       const [dx0, dz0, dx1, dz1] = E.doors, dl = Math.hypot(dx1 - dx0, dz1 - dz0), tx = (dx1 - dx0) / dl, tz = (dz1 - dz0) / dl, mx = (dx0 + dx1) / 2, mz = (dz0 + dz1) / 2, half = Math.min(dl / 2 - 0.3, 1.9);
@@ -10925,12 +10931,28 @@ const handle = async (m, post) => {
           for (const p of [A, B2, C2, A, C2, D2]) { G.P.push(...p); G.N.push(a / l, b / l, e / l); G.C.push(...c); } };
         q(at(u0, y0, o1), at(u1, y0, o1), at(u1, y1, o1), at(u0, y1, o1)); q(at(u1, y0, o0), at(u0, y0, o0), at(u0, y1, o0), at(u1, y1, o0)); q(at(u0, y1, o0), at(u0, y1, o1), at(u1, y1, o1), at(u1, y1, o0));
         q(at(u0, y0, o0), at(u0, y0, o1), at(u0, y1, o1), at(u0, y1, o0)); q(at(u1, y0, o1), at(u1, y0, o0), at(u1, y1, o0), at(u1, y1, o1)); };
-      const back = geo(), gl = geo(), gr = geo(), fL = geo(), fR = geo(), H = 2.6;
-      box(back, -half, half, -0.3, H, -0.6, -0.5, "#12161a"); box(back, -half - 0.12, half + 0.12, H, H + 0.22, 0.02, 0.2, "#4a4f55");  // the foyer's dark, and the door head over the track
+      const back = geo(), gl = geo(), gr = geo(), fL = geo(), fR = geo(), H = 2.9, top = Math.max(H + 0.5, COUNCIL_GAP[4] - fl), w2 = dl / 2;
+      // the doorway: jambs either side of the doors, the head over the track, glass above it up to the wall, and its frame
+      box(back, -w2, -half, -0.1, top, -0.05, 0.2, "#3b4046"); box(back, half, w2, -0.1, top, -0.05, 0.2, "#3b4046");
+      box(back, -half - 0.05, half + 0.05, H, H + 0.22, 0.02, 0.2, "#4a4f55"); box(back, -w2, w2, top - 0.12, top + 0.1, -0.05, 0.2, "#3b4046");
+      box(gl, -half, half, H + 0.22, top - 0.12, 0.08, 0.1, "#9fc4d6");
+      // the foyer, from Ash's "I can't walk in building": a room behind the doors (inside is -o), wider past the doorway, with a counter
+      const ft = [[-w2, 0], [w2, 0], [4, -3.5], [4, -9], [-4, -9], [-4, -3.5]], wallC = "#e8e4db", fq = (G, A, B2, C2, D2, hex) => { const c = lin(hex), ux = B2[0] - A[0], uy = B2[1] - A[1], uz = B2[2] - A[2], vx = D2[0] - A[0], vy = D2[1] - A[1], vz = D2[2] - A[2]; let a = uy * vz - uz * vy, b = uz * vx - ux * vz, e = ux * vy - uy * vx; const l = Math.hypot(a, b, e) || 1;
+        for (const p of [A, B2, C2, A, C2, D2]) { G.P.push(...p); G.N.push(a / l, b / l, e / l); G.C.push(...c); } };
+      // the room itself is drawn unlit, its shading painted on: the outdoor light (green from the grass below) made the ceiling olive
+      const room = geo();
+      for (let i = 1; i < ft.length - 1; i++) { const [u0, o0] = ft[0], [u1, o1] = ft[i], [u2, o2] = ft[i + 1];
+        fq(room, at(u0, 0.01, o0), at(u2, 0.01, o2), at(u1, 0.01, o1), at(u1, 0.01, o1), "#bdb8ae");  // the floor
+        fq(room, at(u0, top, o0), at(u1, top, o1), at(u2, top, o2), at(u2, top, o2), "#ecebe6"); }  // the ceiling
+      for (let i = 1; i < ft.length; i++) { const [u0, o0] = ft[i], [u1, o1] = ft[(i + 1) % ft.length]; fq(room, at(u0, -0.1, o0), at(u1, -0.1, o1), at(u1, top, o1), at(u0, top, o0), ["#d9d5cc", "#e2ded5", "#d2cec5", "#e2ded5", "#d9d5cc"][i - 1]); }
+      box(back, -2.4, 2.4, 0, 1.05, -7.5, -6.7, "#7d5f43"); box(back, -2.5, 2.5, 1.05, 1.12, -7.55, -6.6, "#ece6da");  // the counter
+      box(back, -3.2, 3.2, 1.5, 3.1, -8.98, -8.9, "#8f6d4c"); box(back, -2.2, 2.2, 2.0, 2.82, -8.9, -8.86, "#1f4e5f");  // the timber wall behind it, and the service sign
+      for (const u of [-3.4, 3.4]) box(back, u - 0.35, u + 0.35, 0, 0.45, -5.5, -3.9, "#4f6d7a");  // a bench each side
+      foyer = []; for (const [u, o] of [[-w2 + 0.2, 0.6], [w2 - 0.2, 0.6], [3.65, -3.6], [3.65, -8.6], [-3.65, -8.6], [-3.65, -3.6]]) { const q = at(u, 0, o); foyer.push(q[0], q[2]); }
       box(gl, -half + 0.06, -0.03, 0.06, H - 0.06, 0.1, 0.13, "#9fc4d6"); box(gr, 0.03, half - 0.06, 0.06, H - 0.06, 0.1, 0.13, "#9fc4d6");  // the glass
       for (const [G, a, b2] of [[fL, -half, 0], [fR, 0, half]]) { box(G, a, a + 0.07, 0, H, 0.08, 0.15, "#3b4046"); box(G, b2 - 0.07, b2, 0, H, 0.08, 0.15, "#3b4046"); box(G, a, b2, 0, 0.08, 0.08, 0.15, "#3b4046"); box(G, a, b2, H - 0.08, H, 0.08, 0.15, "#3b4046"); box(G, (a + b2) / 2 - 0.02 + (a < 0 ? 0.35 : -0.35), (a + b2) / 2 + 0.02 + (a < 0 ? 0.35 : -0.35), 0.9, 1.3, 0.15, 0.18, "#c9ccd0"); }
       const part = (G, extra) => ({ positions: new Float32Array(G.P), normals: new Float32Array(G.N), colors: new Float32Array(G.C), color: [1, 1, 1], roughness: 0.3, doubleSide: true, matrix: new THREE.Matrix4().elements, ...extra });
-      parts = m.addParts([part(back, { roughness: 0.9 }), part(gl, { opacity: 0.45 }), part(fL), part(gr, { opacity: 0.45 }), part(fR)]); D = { mx, mz, tx, tz, half }; }).catch(() => {});
+      parts = m.addParts([part(back, { roughness: 0.9 }), part(gl, { opacity: 0.45 }), part(fL), part(gr, { opacity: 0.45 }), part(fR), part(room, { unlit: true })]); D = { mx, mz, tx, tz, half }; }).catch(() => {});
     P.frame = () => { const now = performance.now(), dt = Math.min(0.1, (now - last) / 1000); last = now; if (!parts || !D) return; const F = BS.fly;
       const v = T.car?.in ? T.car.pose?.() : F.pos, near = v && Math.hypot(v.x - D.mx, v.z - D.mz) < 6, want = near ? 1 : 0;
       if (Math.abs(want - open) < 0.002) return; open += Math.sign(want - open) * Math.min(Math.abs(want - open), dt * 1.6); const s = D.half * 0.96 * (open * open * (3 - 2 * open));

@@ -1640,3 +1640,15 @@ Ash: "Use the real business names, we are making a mini moorooka here. Use the p
   is `MOO_STYLE` in `app.html`. `moorooka-model-am.js` (the beta page's) is not patched.
 - **Not done:** the two plain shops at 145-147 and the one with posters at 204 have no name on the photos or in the listings, so they stay
   plain. "Yeshi Buna" is the 2026 listing for Shop 1/131; the older photo showed a butcher there.
+
+## Logan council: taller doors and a foyer you can walk into (16 November 2026)
+
+Ash: "Logan doors still too low. I can't walk in building".
+
+- `logan-model.js` (`?v=41`) is patched so a wall whose two ends match a gap in `window.anDoorGaps` ([x0, z0, x1, z1, top]) is drawn
+  only above `top`. `app.html` sets the gap to the council's door wall (`COUNCIL_GAP`: map.json's entry.doors, top 47.6 m, about 3.55
+  m over the paving).
+- `townCouncil` draws 2.9 m sliding doors with glass above them up to the wall, and jambs either side. Behind them is a foyer, 4.4 m
+  wide at the doors and 8 m wide further in, 9 m deep. It has a counter, a timber wall with a sign panel, and benches. The room is
+  unlit (`unlit: true`) with its shading painted on, because the outdoor light turned its ceiling olive. `T.solid` leaves the foyer
+  walkable; the rest of the building stays solid. Logan's `addParts` has no textures, so the sign is a plain panel.
