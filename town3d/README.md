@@ -1065,3 +1065,7 @@ shapes). One more texture (2048 by 768) and one more draw. Opening measured the 
 **Checked** in the built Coastline News with a software renderer, desktop and phone sizes: the clock, bakery, memorial,
 library and shops by day, the bakery at night, the town from the air, getting into a parked car by the clock and
 driving it, other players starting, and the ordinary weather view. Not checked on a real phone.
+- **Explore parts on or off** (Settings > Admin, for Ash): moving traffic, the Norman Road animal, the rides, map editing,
+  other players (and the Settings gear), the construction worker view, 6 Beaudesert Road's street detail, street names and
+  place names can each be switched off on the device (`localStorage["an3d-off"]`), read when a town opens. They are there to
+  find which part makes an iPhone let go of the stick.
