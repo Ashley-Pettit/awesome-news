@@ -1322,8 +1322,16 @@ body.bsdrive:not(.bsplane) .bs-fly-x.bs-car { bottom: calc(68px + env(safe-area-
 /* touch only: the handbrake sits above the Look stick while you drive a car, and Boost moves up to make room */
 .bs-fly-x.bs-hand { top: auto; left: auto; right: 34px; bottom: calc(192px + env(safe-area-inset-bottom)); z-index: 2; touch-action: none; user-select: none; -webkit-user-select: none; }
 .bs-fly-x.bs-hand[hidden] { display: none; }
+/* the map-editing pencil: where the handbrake shows in a car, over the Look stick (Ash, 15 November 2026), and away while you drive or fly one */
+.bs-fly-x.bs-edit { top: auto; left: auto; right: 34px; bottom: calc(192px + env(safe-area-inset-bottom)); width: 46px; height: 46px; padding: 0; display: inline-flex; align-items: center; justify-content: center; z-index: 2; }
+.bs-fly-x.bs-edit svg { width: 20px; height: 20px; }
+.bs-fly-x.bs-edit[hidden], body.bsdrive .bs-fly-x.bs-edit, body.flypeek .bs-fly-x.bs-edit { display: none; }
+.bs-fly-x.bs-edit[aria-pressed="true"] { background: #fff; color: #1b1830; }
 .bs-fly-x.bs-hand.on { background: #fff; color: #1b1830; }
 body.bsdrive:not(.bsplane) .bs-fly-x.bs-boost { bottom: calc(240px + env(safe-area-inset-bottom)); }
+/* the possum: Jump where the handbrake goes, over the right stick, plain white (it has no charge) */
+body.bspossum .bs-fly-x.bs-boost { bottom: calc(192px + env(safe-area-inset-bottom)); background: #fff; color: #1b1830; min-width: 84px; }
+body.bspossum .bs-fly-x.bs-boost.on { background: #ffd166; }
 .bs-fly-x.bs-boost.on { background: linear-gradient(90deg, #ff9f1c var(--charge, 100%), #8d8676 var(--charge, 100%)); }
 @media (hover: hover) and (pointer: fine) { .bs-fly-x.bs-hand { display: none; } body.bsdrive:not(.bsplane) .bs-fly-x.bs-boost { bottom: calc(68px + env(safe-area-inset-bottom)); } .bs-fly-x.bs-boost { right: auto; left: calc(50% + 70px); bottom: calc(68px + env(safe-area-inset-bottom)); } body.bsplane .bs-fly-x.bs-boost { bottom: calc(166px + env(safe-area-inset-bottom)); left: calc(50% + 100px); } }
 /* What the keys do while you drive or fly (Ash, 14 November 2026: "with the plane show plane controls when in it"). On a desktop
@@ -1335,11 +1343,30 @@ body.bsdrive:not(.bsplane) .bs-fly-x.bs-boost { bottom: calc(240px + env(safe-ar
 /* another player's name, over them (townPeers) */
 .bs-peer { position: absolute; left: 0; top: 0; z-index: 1; padding: 2px 8px; border-radius: 999px; background: rgba(20, 22, 34, 0.72); color: #fff; font: 600 0.72rem/1.4 var(--ui); white-space: nowrap; pointer-events: none; will-change: transform; }
 .bs-peer[hidden] { display: none; }
+/* what a player has just said: a white speech bubble over them, their name small on top, for about 30 s */
+.bs-peer.said { max-width: 220px; padding: 7px 11px 8px; border-radius: 14px; background: #fff; color: #1b1830; font: 600 0.82rem/1.3 var(--ui); white-space: normal; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25); }
+.bs-peer.said.top { left: 50%; top: calc(112px + env(safe-area-inset-top)); transform: translateX(-50%) !important; max-width: min(320px, calc(100% - 32px)); }
+.bs-peer.said.top::after { display: none; }
+.bs-peer.said b { display: block; font-size: 0.66rem; font-weight: 700; color: #5b6070; }
+.bs-peer.said::after { content: ""; position: absolute; left: 50%; bottom: -6px; width: 12px; height: 12px; margin-left: -6px; background: #fff; transform: rotate(45deg); }
+/* Chat: under Emote; the box to type in sits at the top, clear of the phone's keyboard */
+.bs-fly-x.bs-chat { position: absolute; left: 50%; right: auto; top: auto; bottom: calc(66px + env(safe-area-inset-bottom)); transform: translateX(-50%); }
+.bs-fly-x.bs-chat[hidden] { display: none; }
+.bs-chatbar { pointer-events: auto; position: absolute; z-index: 5; left: 50%; top: calc(62px + env(safe-area-inset-top)); transform: translateX(-50%); width: min(440px, calc(100% - 32px)); display: flex; gap: 6px; padding: 6px; box-sizing: border-box; border-radius: 16px; background: rgba(22, 24, 34, 0.9); }
+.bs-chatbar[hidden] { display: none; }
+.bs-chatbar input { flex: 1; min-width: 0; height: 40px; padding: 0 12px; border: 0; border-radius: 11px; background: #fff; color: #1b1830; font: 500 16px var(--ui); user-select: text; -webkit-user-select: text; }
+.bs-chatbar button { height: 40px; padding: 0 14px; border: 0; border-radius: 11px; background: #ffd166; color: #1b1830; font: 700 0.86rem var(--ui); cursor: pointer; }
 /* my player: a button on the right edge, above Emote, and the small panel it opens */
 /* Settings, in the towns with other players (body.bsme): a gear top left opens the panel under it. Walk and Fly sit beside the
    gear; Exit explore lives in the panel, and the height (or speed while driving) sits under the gear. */
 .bs-fly-x.bs-me-btn { position: absolute; top: calc(14px + env(safe-area-inset-top)); left: 16px; right: auto; bottom: auto; width: 38px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
 .bs-fly-x.bs-me-btn[hidden] { display: none; }
+/* Share, just right of the gear (Ash, 15 November 2026: "Move share to the right of settings cog") */
+.bs-fly-x.bs-share-btn { position: absolute; top: calc(14px + env(safe-area-inset-top)); left: 16px; right: auto; bottom: auto; width: 38px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+.bs-fly-x.bs-me-btn:not([hidden]) ~ .bs-share-btn { left: 62px; }
+.bs-fly-x.bs-share-btn svg { width: 18px; height: 18px; }
+.bs-fly-x.bs-share-btn[aria-expanded="true"] { background: #fff; color: #1b1830; }
+body:not(.bstown) .bs-share-btn { display: none; }
 .bs-fly-x.bs-me-btn svg { width: 19px; height: 19px; }
 .bs-fly-x.bs-me-btn[aria-expanded="true"] { background: #fff; color: #1b1830; }
 body.bsme #bsFlyX, body.bsme #bsTimeBtn, body.bsme #bsFlyTimeBox { display: none !important; }
@@ -1390,14 +1417,21 @@ body.bsme .bs-height, body.bstown.bsme .bs-height { left: 16px; top: calc(62px +
 .bs-me-show[aria-checked="true"] i { background: #3a9d5d; }
 .bs-me-show[aria-checked="true"] i::after { transform: translateX(18px); }
 @media (prefers-reduced-motion: reduce) { .bs-me-show i, .bs-me-show i::after { transition: none; } }
+.bs-me-num { display: flex; align-items: center; justify-content: space-between; gap: 10px; font: 650 0.8rem/1.2 var(--ui); }
+.bs-me-num small { display: block; margin-top: 2px; font-weight: 500; font-size: 0.7rem; color: rgba(255, 255, 255, 0.6); }
+.bs-me .bs-me-num input { flex: none; width: 5.2em; height: 36px; padding: 0 8px; text-align: right; }
+.bs-me-key { display: flex; gap: 6px; } .bs-me-key input { flex: 1; min-width: 0; } .bs-me-key .bs-me-go { flex: none; padding: 0 14px; }
+.bs-me-towns a { color: #ffd36b; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+.bs-me .bs-me-ver { font: 600 0.7rem var(--ui); color: #8fb4ff; text-align: right; }
 .bs-me-h { display: flex; justify-content: space-between; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.14); font-weight: 650; }
 .bs-me-exit { width: 100%; min-height: 42px; border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 12px; background: none; color: #fff; font: 700 0.86rem var(--ui); cursor: pointer; }
 .bs-me-exit:hover { background: rgba(255, 255, 255, 0.1); }
 .bs-me p { margin: 0; color: rgba(255, 255, 255, 0.68); font-size: 0.72rem; }
 .bs-me :focus-visible { outline: 2px solid #ffd36b; outline-offset: 2px; }
 /* things to do to other players: a button on the right edge, and what it opens */
-.bs-fly-x.bs-emote { position: absolute; left: auto; right: 16px; top: 46%; bottom: auto; }
-.bs-emotes { pointer-events: auto; position: absolute; z-index: 3; right: 16px; top: calc(46% + 48px); display: grid; grid-template-columns: 1fr 1fr; gap: 8px 6px; }
+/* Emote: just under Get in the car, between the sticks (Ash, 15 November 2026), its menu opening above the car button */
+.bs-fly-x.bs-emote { position: absolute; left: 50%; right: auto; top: auto; bottom: calc(116px + env(safe-area-inset-bottom)); transform: translateX(-50%); }
+.bs-emotes { pointer-events: auto; position: absolute; z-index: 3; left: 50%; right: auto; transform: translateX(-50%); bottom: calc(214px + env(safe-area-inset-bottom)); display: grid; grid-template-columns: 1fr 1fr; gap: 8px 6px; }
 .bs-emotes[hidden] { display: none; }
 .bs-emotes button { position: relative; min-height: 40px; padding: 0 14px; border: 0; border-radius: 999px; background: var(--bs-scrim); color: var(--bs-ink); font: 600 0.85rem/1 var(--ui); text-align: left; cursor: pointer; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14); }
 /* Share: the link is copied on the tap, then these offer other ways to send it */
@@ -1407,7 +1441,7 @@ body.bsme .bs-height, body.bstown.bsme .bs-height { left: 16px; top: calc(62px +
 .bs-share a, .bs-share button { display: block; min-height: 38px; box-sizing: border-box; padding: 10px 12px; border: 0; border-radius: 10px; background: rgba(255, 255, 255, 0.16); color: inherit; font: 650 0.8rem/1.2 var(--ui); text-align: left; text-decoration: none; cursor: pointer; }
 .bs-share :focus-visible { outline: 2px solid #ffd36b; outline-offset: 2px; }
 .bs-emotes button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
-@media (max-height: 560px) { .bs-fly-x.bs-emote { top: 22%; } .bs-emotes { top: calc(22% + 44px); grid-template-columns: repeat(4, auto); } }
+@media (max-height: 560px) { .bs-emotes { grid-template-columns: repeat(4, auto); } }
 .bs-keys-now { margin: 0; font-weight: 700; }
 .bs-keys-now:empty { display: none; }
 .bs-keys dl, .bs-keys-q { display: none; margin: 0; }
@@ -1972,7 +2006,7 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <div class="bs-town-mode" id="bsTownMode" role="group" aria-label="Walk or fly" data-key="F" hidden><button type="button" data-town-mode="walk" aria-pressed="true">Walk</button><button type="button" data-town-mode="fly" aria-pressed="false">Fly</button></div>
     <div class="bs-town-list" id="bsTownList" role="menu" aria-label="Places to jump to" hidden></div>
     <div class="bs-town-list bs-town-floods" id="bsTownFloods" role="menu" aria-label="Floods to show on the map" hidden></div>
-    <div class="bs-slides" role="group" aria-label="Share, street names, edit, tide, time and flood"><button class="bs-fly-x bs-ic" type="button" id="bsShareBtn" aria-label="Share a link to this 3D model" title="Share" aria-expanded="false" aria-controls="bsShareBox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button><button class="bs-fly-x bs-ic" type="button" id="bsNamesBtn" data-key="N" aria-pressed="false" aria-label="Street names" title="Show street names (N)" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M9 21h6"/><path d="M5 5h11l3 2.5L16 10H5z"/><path d="M19 12H8l-3 2.5L8 17h11z"/></svg></button><button class="bs-fly-x bs-ic" type="button" id="bsEditBtn" aria-pressed="false" aria-controls="bsAdmin" aria-label="Edit the map" title="Edit the map" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg></button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false" aria-label="Time of day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span id="bsTimeBtnT">Time</span></button><button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button></div>
+    <div class="bs-slides" role="group" aria-label="Street names, tide, time and flood"><button class="bs-fly-x bs-ic" type="button" id="bsNamesBtn" data-key="N" aria-pressed="false" aria-label="Street names" title="Show street names (N)" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M9 21h6"/><path d="M5 5h11l3 2.5L16 10H5z"/><path d="M19 12H8l-3 2.5L8 17h11z"/></svg></button><button class="bs-fly-x" type="button" id="bsTideBtn" aria-controls="bsTownTide" aria-expanded="false" hidden>Tide</button><button class="bs-fly-x" type="button" id="bsTimeBtn" aria-controls="bsFlyTimeBox" aria-expanded="false" aria-label="Time of day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span id="bsTimeBtnT">Time</span></button><button class="bs-fly-x bs-town-flood" type="button" id="bsTownFlood" aria-haspopup="menu" aria-expanded="false" aria-pressed="false" hidden>Flood</button></div>
     <div class="bs-admin" id="bsAdmin" role="toolbar" aria-label="Edit the map" hidden>
       <div class="bs-admin-row" role="group" aria-label="Tool"><button type="button" data-tool="path" aria-pressed="false"><i style="background:#cfcabd"></i>Path</button><button type="button" data-tool="grass" aria-pressed="false"><i style="background:#6fa64b"></i>Grass</button><button type="button" data-tool="road" aria-pressed="false"><i style="background:#4a4d52"></i>Road</button><button type="button" data-tool="delete" aria-pressed="false">Delete</button></div>
       <div class="bs-admin-row"><span class="bs-admin-w" id="bsAdminW" role="group" aria-label="Width" hidden><button type="button" data-w="-1" aria-label="Narrower">&minus;</button><output id="bsAdminWOut"></output><button type="button" data-w="1" aria-label="Wider">+</button></span><button type="button" id="bsAdminLine" aria-pressed="true" hidden>Straight</button><button type="button" class="bs-admin-ic" id="bsAdminUndo" aria-label="Undo" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5 4 9l4 4"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button><button type="button" id="bsAdminSave" aria-label="Save my edits for everyone">Save</button><button type="button" id="bsAdminCopy" aria-label="Copy edits">Copy</button><button type="button" class="bs-admin-ic" id="bsAdminClear" aria-label="Clear all my edits" title="Clear all my edits"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 7V4h4v3M6 7l1 13h10l1-13"/></svg></button></div>
@@ -1991,13 +2025,17 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
     <div class="bs-fly-time bs-town-tide bs-town-rise" id="bsTownRise" hidden><span>Water</span><input type="range" id="bsTownRiseIn" min="0" max="1" step="0.01" value="1" aria-label="Flood water level"><output id="bsTownRiseOut" for="bsTownRiseIn"></output></div>
     <button class="bs-fly-x bs-fly-jump" type="button" id="bsFlyJump" data-key="J" hidden>Jump to Norman Rd</button>
     <button class="bs-fly-x bs-me-btn" type="button" id="bsMeBtn" aria-expanded="false" aria-controls="bsMe" aria-label="Settings" title="Settings" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+    <button class="bs-fly-x bs-share-btn" type="button" id="bsShareBtn" aria-label="Share a link to this 3D model" title="Share" aria-expanded="false" aria-controls="bsShareBox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button>
     <div class="bs-me" id="bsMe" hidden></div>
     <button class="bs-fly-x bs-emote" type="button" id="bsEmoteBtn" data-key="E" aria-expanded="false" aria-controls="bsEmotes" hidden>Emote</button>
     <div class="bs-emotes" id="bsEmotes" hidden></div>
+    <button class="bs-fly-x bs-chat" type="button" id="bsChatBtn" data-key="T" aria-controls="bsChatBar" hidden>Chat</button>
+    <form class="bs-chatbar" id="bsChatBar" hidden><input id="bsChatIn" type="text" maxlength="120" enterkeyhint="send" autocomplete="off" autocapitalize="sentences" placeholder="Say something to everyone here" aria-label="Message to everyone in town"><button type="submit">Send</button></form>
     <div class="bs-share" id="bsShareBox" role="group" aria-label="More ways to share" hidden></div>
     <button class="bs-fly-x bs-car" type="button" id="bsCarBtn" data-key="Enter" hidden>Get in the car</button>
     <button class="bs-fly-x bs-boost" type="button" id="bsBoostBtn" data-key="Shift" hidden>Boost</button>
     <button class="bs-fly-x bs-hand" type="button" id="bsHandBtn" hidden>Handbrake</button>
+    <button class="bs-fly-x bs-edit" type="button" id="bsEditBtn" aria-pressed="false" aria-controls="bsAdmin" aria-label="Edit the map" title="Edit the map" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg></button>
     <div class="bs-keys" id="bsKeys" hidden><p class="bs-keys-now" id="bsKeysNow"></p><dl id="bsKeysList"></dl><p class="bs-keys-q">? to hide this list</p></div>
     <button class="bs-fly-x bs-fly-lock" type="button" id="bsFlyLock" hidden>Use this view for the weather</button>
     <div class="bs-ud" role="group" aria-label="Fly up or down">
@@ -3486,7 +3524,7 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
   function loganLine() {
     if (!$("lbLogan")) return "";  // the Logan news button has made way for the local apps
     // Logan news is just for Ash (the name in Settings)
-    const ids = /^ash(ley)?$/i.test((S.name || "").trim()) ? driveList("logan").ids : [], n = ids.length;
+    const ids = isAsh() ? driveList("logan").ids : [], n = ids.length;
     const b = $("lbLogan"); if (b) b.hidden = !n;
     // "From the start", as on the main card: once there's somewhere to carry on from, or stories already heard.
     const f = $("lbLoganFresh");
@@ -4033,10 +4071,6 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
         <div class="field"><label for="setName">Your name</label><input type="text" id="setName" placeholder="Optional" autocomplete="given-name" maxlength="30" value="${esc(S.name)}"></div>
         <div class="field"><label for="setRegion">Local news</label><select id="setRegion">${regions.map(r => `<option value="${r.id}"${r.id === S.region ? " selected" : ""}>${esc(r.label)}${counts["local-" + r.id] != null ? ` (${counts["local-" + r.id]})` : ""}</option>`).join("")}</select></div>
       </div><p class="hint">Your name is used in the greeting.</p></div>
-      <div class="group"><h2>Exploring with others</h2><div class="card">
-        <div class="field"><label for="setPlayer">Player name</label><input type="text" id="setPlayer" placeholder="${esc(playerName())}" autocomplete="off" maxlength="16" value="${esc((() => { try { return localStorage.getItem("an-player") || ""; } catch { return ""; } })())}"></div>
-        ${toggle("data-player-show", "1", (() => { try { return localStorage.getItem("an-player-off") !== "1"; } catch { return true; } })(), "Show me to other players", "Others exploring the same suburb in 3D see where you are and your player name")}
-      </div><p class="hint">In each suburb's 3D map, people exploring at the same time see each other. Your player name is shown over you, so pick one you are happy for anyone to see.</p></div>
       <div class="group"><h2>Your suburb</h2><div class="card">${[["moorooka", "Moorooka"], ["inverloch", "Inverloch"], ["logan", "Logan"]].map(([id, label]) =>
         `<a class="field" style="color:inherit;text-decoration:none" href="${location.pathname.replace(/(moorooka|inverloch|logan)\/?(index\.html)?$/, "").replace(/[^/]*$/, "")}${id}/"><span class="lbl">${label}<span class="sub">Open the ${label} news and its 3D map</span></span><span class="chev" aria-hidden="true">\u203a</span></a>`).join("")}
       </div><p class="hint">Each suburb has its own news and its own 3D map to explore.</p></div>
@@ -5496,8 +5530,6 @@ const handle = async (m, post) => {
     const adm = t.closest("[data-admin]");
     if (adm) { A.full = !A.full; saveAdmin(); adm.setAttribute("aria-checked", String(A.full)); const sb = adm.querySelector(".sub"); if (sb) sb.textContent = A.full ? "On. Every story opens in full right here." : "Off. Stories show the publisher's preview."; toast(A.full ? "Full articles on" : "Full articles off"); applyVault(); for (const k in textCache) delete textCache[k]; store.set("brief.offlineAt", ""); saveOffline(); render(true); return; }
     if (t.closest("[data-player-show]")) { try { if (localStorage.getItem("an-player-off") === "1") localStorage.removeItem("an-player-off"); else localStorage.setItem("an-player-off", "1"); } catch {} renderSettings(); return; }
-    { const xp = t.closest("[data-ex-part]"); if (xp) { const off = exOff(), k = xp.dataset.exPart; if (off.has(k)) off.delete(k); else off.add(k); try { localStorage.setItem("an3d-off", JSON.stringify([...off])); } catch {} renderSettings(); toast(`${EX_PARTS.find(p => p[0] === k)[1]}: ${off.has(k) ? "off" : "on"} next time Explore opens.`, 3000); return; } }
-    if (t.closest("[data-ride-reset]")) { try { localStorage.removeItem("an3d-rides"); } catch {} renderSettings(); toast("Cars and planes are back to their usual numbers."); return; }
     if (t.closest("#adminLock")) { A.unlocked = false; saveAdmin(); keepSecret(""); store.set("brief.ghToken", ""); vaultKey = null; applyVault(); renderSettings(); render(true); return; }
     if (t.closest("#weather") && bsClick(t)) return;
     const stb = t.closest("[data-stab]");
@@ -5558,9 +5590,6 @@ const handle = async (m, post) => {
     document.getElementById(kind === "topics" ? "addTopic" : "addMuted")?.focus();
   });
   document.addEventListener("change", e => {
-    if (e.target.dataset?.ride) { const k = e.target.dataset.ride, def = RIDE_DEF[k]; if (!def) return; let o = {}; try { o = JSON.parse(localStorage.getItem("an3d-rides") || "{}") || {}; } catch {}
-      const v = e.target.value.trim() === "" ? NaN : +e.target.value; if (Number.isFinite(v)) o[k] = bsClamp(v, def[3], def[4]); else delete o[k];
-      try { localStorage.setItem("an3d-rides", JSON.stringify(o)); } catch {} e.target.value = rideSettings()[k]; toast(`${def[1]}: ${rideSettings()[k]} ${def[2].split(".")[0]}. It applies the next time you open Explore.`); return; }
     if (e.target.id === "setVoice") { store.set("brief.voice", e.target.value); aiBroken = false; dropClips(-1); toast("Voice changed. Tap Play a sample to hear it."); renderSettings(); return; }
     if (e.target.id === "setRegion") { S.region = e.target.value; saveSettings(); renderSettings(); loadWeather(); toast(state.mode === "claude" && !(state.status?.regions || []).some(r => r.id === S.region) ? `${regionLabel()} news arrives with the next update` : `Local news: ${regionLabel()}`); }
   });
@@ -5899,7 +5928,14 @@ const handle = async (m, post) => {
           <output id="bsHourOut" for="bsHourIn"></output>
         </div>
       </section>`;
-    $("bsFlyBtn").onclick = () => bsFlyOn();
+    // Explore from the weather screen opens the same 3D town as everywhere else (Ash, 15 November 2026: "Bring Inverloch in line
+    // with the other apps settings and layout"): Inverloch's weather scene used to open a fly-about of the weather's own scene,
+    // with its old buttons. The old fly-about stays for keeping a view for the weather (Admin with the passphrase, or Claude's copy).
+    // the same town model as the town's own Explore, for everyone, admins too (Ash, 15 November 2026: "Why when I launch via awesome
+    // news is the ui different. It should load the exact same thing": with the passphrase unlocked it used to open the old fly-about)
+    // (Brisbane opens Moorooka, Brisbane's own model; the motorway drive, Logan's: Ash, 15 November 2026)
+    $("bsFlyBtn").onclick = () => { const k = ({ invTown: "inv", invBeach: "inv", driveInv: "inv", moo: "moo", mooBowls: "moo", driveMoo: "moo", logan: "logan", bri: "moo", drive: "logan" })[BS.sceneKey];
+      if (k && TOWNS[k]) townModelOpen(true, k); else bsFlyOn(); };
     $("bsHourIn").addEventListener("change", () => { BS.view.play = true; });
     $("bsHourIn").addEventListener("input", e => { BS.view.play = false; BS.view.ms = bsMidnight(bsKey(BS.view.ms)) + (+e.target.value) * 60000; BS.view.day = bsKey(BS.view.ms); if (BS.view.mode === "live") BS.view.mode = "day"; bsApply(true); });
     bsApply(true); bsTick();
@@ -7797,7 +7833,7 @@ const handle = async (m, post) => {
       ti.oninput = () => { BS.view.ms = bsMidnight(BS.view.day) + (+ti.value) * 60000; to.textContent = bsTime(BS.view.ms); $("bsTimeBtnT").textContent = to.textContent; bsApply(true); }; }
     const F = BS.fly = { ...start, pos: start.pos.clone(), start, keys: new Set(), stick: { x: 0, y: 0 }, lookStick: { x: 0, y: 0 }, vert: 0, touches: new Map(), drag: null };
     const canvas = $("bsGl"), touch = matchMedia("(pointer: coarse)").matches;
-    document.body.classList.add("bsfly"); $("bsFly").hidden = false; try { bsWatchOn(); } catch {}
+    document.body.classList.add("bsfly"); $("bsFly").hidden = false;
     const tip = $("bsFlyTip"); tip.classList.remove("dim");
     if (touch) tip.textContent = "Left stick to move, right stick to look. Up and Down are top right.";
     else bsTip("Drag to look around\nW A S D or the arrows to move\nSpace to go up · C to go down\nShift to go faster\nR to start again · Esc to exit\n? to hide this list");
@@ -7842,7 +7878,7 @@ const handle = async (m, post) => {
       const h = {
         touchstart: e => { if (id !== null) return; const t = e.changedTouches[0]; id = t.identifier; set(t); tip.classList.add("dim"); },
         touchmove: e => { const t = mine(e); if (t) set(t); },
-        touchend: e => { if (mine(e)) end(); }, touchcancel: e => { if (mine(e)) { end(); bsLost("stick", e); } },
+        touchend: e => { if (mine(e)) end(); }, touchcancel: e => { if (mine(e)) end(); },
         pointerdown: e => { if (e.pointerType !== "mouse") return; id = "m"; try { el.setPointerCapture(e.pointerId); } catch {} set(e); tip.classList.add("dim"); e.preventDefault(); },
         pointermove: e => { if (e.pointerType === "mouse" && id === "m") set(e); },
         pointerup: e => { if (e.pointerType === "mouse" && id === "m") end(); },
@@ -7888,7 +7924,8 @@ const handle = async (m, post) => {
         if (e.code === "KeyF" && F.hot?.f) { F.hot.f(); return; }  // walk or fly (the town models)
         if (e.code === "KeyJ") { if (F.hot?.j) F.hot.j(); else if (!$("bsFlyJump").hidden) $("bsFlyJump").click(); return; }  // jump to a place
         if (e.code === "KeyN" && F.hot?.n) { F.hot.n(); return; }
-        if (e.code === "KeyE" && F.hot?.emotes?.()) return;  // the things to do to other players, when there is one about
+        if (e.code === "KeyE" && F.hot?.emotes?.()) return;
+        if (e.code === "KeyT" && F.hot?.chat?.()) { e.preventDefault(); return; }  // say something to the other players  // the things to do to other players, when there is one about
         if (/^Digit[1-7]$/.test(e.code) && F.hot?.emote?.(+e.code.slice(5) - 1)) return;  // street names on or off (the town models)
         if (e.code === "KeyR") { if (F.hot?.r) F.hot.r(); else { F.pos.copy(F.start.pos); F.yaw = F.start.yaw; F.pitch = F.start.pitch; } }
       },
@@ -7908,7 +7945,7 @@ const handle = async (m, post) => {
         t.x = e.clientX; t.y = e.clientY; e.preventDefault(); },
       pointerup: e => { F.drag = null; canvas.style.cursor = ""; const t = F.touches.get(e.pointerId); if (t?.move) { F.stick.x = 0; F.stick.y = 0; } F.touches.delete(e.pointerId); },
     };
-    F.on.pointercancel = e => { if (e.pointerType !== "mouse") bsLost("view", null); F.on.pointerup(e); };
+    F.on.pointercancel = e => F.on.pointerup(e);
     addEventListener("keydown", F.on.keydown); addEventListener("keyup", F.on.keyup); addEventListener("blur", F.on.blur);
     document.addEventListener("mousemove", F.on.mousemove);
     ["pointerdown", "pointermove", "pointerup", "pointercancel"].forEach(k => canvas.addEventListener(k, F.on[k]));
@@ -7942,25 +7979,9 @@ const handle = async (m, post) => {
     $("bsTownAskText").textContent = "Leave Explore?"; yes.textContent = "Leave"; no.textContent = "Stay"; ask.dataset.exit = "1"; ask.hidden = false;
     ask.onclick = e => { const b = e.target.closest("[data-ask]"); if (!b) return; close(); if (b.dataset.ask === "yes") bsFlyOff(); };
     yes.focus({ preventScroll: true }); }
-  // For Ash, while the sticks are being looked into: say when the phone takes a finger away (a "touchcancel") and what had the
-  // page selected, so the cause shows on the device itself. Selection is cleared straight away too.
-  document.addEventListener("selectionchange", () => { if (!BS.fly) return; try { const sel = getSelection(); if (sel && !sel.isCollapsed && !/^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName || "")) { bsLost.sel = String(sel).slice(0, 30); sel.removeAllRanges(); } } catch {} });
-  function bsLost(what, e) { if (!isAsh()) return; const now = performance.now(); if (now - (bsLost.at || 0) < 4000) return; bsLost.at = now;
-    // clues: the slowest frame in the last 3 seconds (a busy page), how many fingers were down, and what had just happened
-    const slow = (BS.gaps || []).filter(g => now - g[0] < 3000).reduce((a, g) => Math.max(a, g[1]), 0), fingers = e?.touches?.length ?? "?", recent = (BS.notes || []).filter(n => now - n[0] < 1500).slice(-6).map(n => n[1]).join(", ");
-    toast(`The phone took your finger off the ${what}${bsLost.sel ? ` (it selected "${bsLost.sel}")` : ""}. Slowest frame ${Math.round(slow)} ms, ${fingers} other finger${fingers === 1 ? "" : "s"}${recent ? ", after: " + recent : ""}. Screenshot this for Claude.`, 7000); bsLost.sel = ""; }
+  // If the page ever gets something selected while exploring (a long press), clear it straight away, so no Copy bar comes up.
+  document.addEventListener("selectionchange", () => { if (!BS.fly) return; try { const sel = getSelection(); if (sel && !sel.isCollapsed && !/^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName || "")) { sel.removeAllRanges(); } } catch {} });
   const bsNote = what => { const n = (BS.notes ||= []), now = performance.now(); if (n.length && n[n.length - 1][1] === what && now - n[n.length - 1][0] < 1000) { n[n.length - 1][0] = now; return; } n.push([now, what]); if (n.length > 20) n.shift(); };
-  // For Ash, while the dropped finger is looked into: note what on the page changed (shown, hidden, restyled, added), so the
-  // message can say what happened just before the phone let go. The sticks' own knobs and the place names are left out.
-  let bsWatch = null;
-  function bsWatchOn() { if (bsWatch || !isAsh() || !window.MutationObserver) return;
-    const name = el => el.id ? "#" + el.id : el.className && typeof el.className === "string" ? "." + el.className.trim().split(/\s+/)[0] : el.tagName?.toLowerCase();
-    bsWatch = new MutationObserver(list => { for (const m of list) { const t = m.target; if (!t || t.nodeType !== 1) continue;
-      if (t.closest?.(".bs-joy, #toast, .inv-embed-labels, .bs-peer, #verBadge") || t.id === "bsHeight" || t.id === "bsMeH") continue;
-      if (m.type === "attributes") { if (m.attributeName === "style" && /^(CANVAS)$/.test(t.tagName)) continue; bsNote(`${name(t)} ${m.attributeName}${m.attributeName === "hidden" ? (t.hidden ? " on" : " off") : ""}`); }
-      else if (m.addedNodes.length || m.removedNodes.length) bsNote(`${name(t)} ${m.addedNodes.length ? "+" : "-"}${name(m.addedNodes[0] || m.removedNodes[0]) || "text"}`); } });
-    bsWatch.observe($("bsFly"), { subtree: true, childList: true, attributes: true, attributeFilter: ["hidden", "class", "style"] });
-    bsWatch.observe(document.body, { attributes: true, attributeFilter: ["class", "style"] }); }
   function bsFlyTick(dt) {
     const F = BS.fly, k = F.keys, has = (...c) => c.some(x => k.has(x));
     if (F.drive) return F.drive(dt);  // driving a car in a town model (townCar): the car moves, and the view follows it
@@ -7989,7 +8010,6 @@ const handle = async (m, post) => {
     BS.raf = requestAnimationFrame(bsLoop);
     if (document.hidden) return;
     const t = performance.now() / 1000, real = bsClamp(t - BS.lastT, 0, 1), dt = Math.min(real, 0.1); BS.lastT = t;
-    if (real > 0.15) { (BS.gaps ||= []).push([t * 1000, real * 1000]); if (BS.gaps.length > 30) BS.gaps.shift(); }  // slow frames, for bsLost
     // Play through the forecast, 30 minutes a second, then round again from now.
     const v = BS.view;
     // Play through the day; at the end of it, replay the same day from 6am.
@@ -8149,15 +8169,15 @@ const handle = async (m, post) => {
   // latitude, longitude, metres back, tilt and bearing). A model with floods can also set floodOf (what its flooded area is a share
   // of: "Logan"), floodNote (the line under the list) and floodWarn (show the not-official notice first, and a banner while a flood is on).
   const TOWNS = {
-    inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=18", assets: TOWN3D, place: "inv", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
-    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=26", assets: TOWN3D + "moorooka/", place: "moo", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
+    inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=19", assets: TOWN3D, place: "inv", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
+    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=27", assets: TOWN3D + "moorooka/", place: "moo", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
       walkStart: { x: -269.8, z: -991.4, yaw: -1.623 },  // Ash's pick for where Moorooka starts: the Beaudesert Road footpath, looking at the house he chose
       // its floods: widest over the Oxley Creek flats along the model's western edge, seen from the east. floodWarn: the not-official notice has to be accepted
       // before the list opens, and a banner says the same while a flood is showing (Ash asked for both).
       floodLook: [-27.5375, 153.0115, 1100, 40, 100], floodOf: "this map", noFloodSlider: true,  // Ash: no water level slider ("At the peak") in Moorooka: a flood just rises to its peak
       floodWarn: { council: "Brisbane City Council", short: "BCC", how: "our own computer simulation of rain running over the ground and the creeks rising (and, in big river floods, Oxley Creek backing up), on a 5 m model of the terrain", map: "Brisbane City Council's Flood Awareness Map and FloodWise Property Report" },
       floodNote: "A guide only: our own simulation, from the terrain, the buildings and the Bureau's design rainfall for Moorooka. It includes water running over the ground to the creeks. No council flood mapping is used. For property, insurance or planning decisions, use Brisbane City Council's Flood Awareness Map and FloodWise Property Report." },
-    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=33", assets: TOWN3D + "logan/", place: "logan", pre: ["map.json", "height.png", "roads.bin", "buildings.bin", "ground.webp", "relief.webp", "lights.webp", "cover.png"], up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
+    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=36", assets: TOWN3D + "logan/", place: "logan", pre: ["map.json", "height.png", "roads.bin", "buildings.bin", "ground.webp", "relief.webp", "lights.webp", "cover.png"], up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
       start: "council", onFoot: true, noFloodSlider: true, flyTo: { id: "brownsplains", label: "Fly to Browns Plains" }, wait: 90000, ceil: 110000, fast: 600, far: 150000, out: 130000, stride: 0.02, pad: 80000, stand: [0.45, 400], floodLook: [-27.69, 153.17, 12000, 55, -35],
       // the same not-official notice and banner as Moorooka's (Ash, 12 November 2026)
       floodWarn: { council: "Logan City Council", short: "LCC", how: "the 2017 flood as mapped, and the others worked out from river gauge heights and rainfall over a terrain model", map: "Logan City Council's flood maps" } },  // shown small in the bottom right corner the whole time the model is open
@@ -8343,6 +8363,8 @@ const handle = async (m, post) => {
             return { x: P.x + dx, z: P.z + dz, yaw: Math.atan2(dx, dz), pitch: -0.06 }; })(), target: [P.x, P.z] });
         if (rides) for (const G of rides.cars) { if ((G.spare && m.nearestCar) || (G.gold && !isAsh())) continue; /* a red car of the app's own only where the model has no cars to hand over */ const dx = Math.sin(G.h) * (G.bus ? 13 : 5.5), dz = Math.cos(G.h) * (G.bus ? 13 : 5.5);  // in front of its nose (nearer to it than to a car parked beside it)
           mine.push({ name: G.name, group: "Things to drive and fly", what: G.what, walk: { x: G.x + dx, z: G.z + dz, yaw: Math.atan2(dx, dz), pitch: -0.1 }, target: [G.x, G.z] }); }
+        // the possum (Moorooka): on the footpath in Kingwell Street, a few steps from it
+        if (rides?.possum) { const S = rides.possum; mine.push({ name: S.name, group: "Things to drive and fly", what: S.what, walk: { ...S.stand, pitch: -0.12 }, target: [S.x, S.z] }); }
         // Places to jump to: each as somewhere to stand (walking) and a view from above (flying). Where the model knows a
         // spot on the kerb of the nearest street (Moorooka's does), you stand there; otherwise a few steps back from the place.
         // (Logan's list starts with the whole city, which is only ever seen from the air, like the water.)
@@ -8432,10 +8454,28 @@ const handle = async (m, post) => {
         list.innerHTML = (goTo ? `<button type="button" role="menuitem" class="bs-town-flyto" data-town-fly><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 13.5 21 4l-6.5 17-3-7.5z"/></svg>${esc(cfg.flyTo.label)}<small>Drawn in detail: houses, pools, yards and the park</small></button>` : "")
           + places.map((p, i) => p === goTo ? "" : (p.group && p.group !== places[i - 1]?.group ? `<p class="bs-town-group" role="presentation">${esc(p.group)}</p>` : "")
             + `<button type="button" role="menuitem" data-town-go="${i}"${p.what ? ` aria-label="${esc(p.name + ", " + p.what)}"` : ""}>${esc(p.name[0].toUpperCase() + p.name.slice(1))}${p.what ? `<small>${esc(p.what)}</small>` : ""}</button>`).join("");
-        const openList = on => { list.hidden = !on; jump.setAttribute("aria-expanded", String(on)); if (on) { fl.hidden = true; fb.setAttribute("aria-expanded", "false"); list.querySelector("button")?.focus({ preventScroll: true }); } };
+        // other players in town, nearest first, at the top of the list each time it opens (Ash, 15 November 2026: "In go to I want a
+        // thing that goes to another player near me"); one takes you to stand 6 m in front of them, looking at them
+        const players = () => { list.querySelectorAll(".bs-town-players").forEach(el => el.remove());
+          const GH = isAsh() && T.car?.goldHeli; if (GH) { const b = document.createElement("button"); b.type = "button"; b.setAttribute("role", "menuitem"); b.className = "bs-town-players"; b.dataset.townGoldheli = "1";
+            const sm = document.createElement("small"); sm.textContent = "Somewhere different each visit. Only you see this"; b.append("The golden helicopter", sm); list.prepend(b); }  // (Ash only)
+          const who = T.peers?.list?.() || []; if (!who.length) return;
+          const near = who.map(q => ({ ...q, d: Math.hypot(q.x - F.pos.x, q.z - F.pos.z) })).sort((a, b) => a.d - b.d);
+          const head = document.createElement("p"); head.className = "bs-town-group bs-town-players"; head.setAttribute("role", "presentation"); head.textContent = "Players in town";
+          const btns = near.map(q => { const b = document.createElement("button"); b.type = "button"; b.setAttribute("role", "menuitem"); b.className = "bs-town-players"; b.dataset.townPlayer = q.id;
+            const sm = document.createElement("small"); sm.textContent = q.d < 1000 ? `${Math.round(q.d)} m away` : `${(q.d / 1000).toFixed(1)} km away`; b.append(q.name, sm); return b; });
+          list.prepend(head, ...btns); };
+        const toPlayer = id => { const q = (T.peers?.list?.() || []).find(v => v.id === id); if (!q) return toast("They've just left.", 2200);
+          T.tween = null; if (!T.walk) setMode(true); const sx = Math.sin(q.h), sz = Math.cos(q.h); let x = q.x + sx * 6, z = q.z + sz * 6;
+          if (T.solid?.(x, z) || m.solidAt?.(x, z)) { x = q.x - sx * 6; z = q.z - sz * 6; }
+          F.pos.set(x, ground(x, z) + F.eye, z); F.yaw = Math.atan2(-(q.x - x), -(q.z - z)); F.pitch = -0.2; toast(`You're with ${q.name}.`, 2000); };
+        const openList = on => { if (on) players(); list.hidden = !on; jump.setAttribute("aria-expanded", String(on)); if (on) { fl.hidden = true; fb.setAttribute("aria-expanded", "false"); list.querySelector("button")?.focus({ preventScroll: true }); } };
         jump.hidden = !places.length; jump.textContent = "Jump to…"; jump.setAttribute("aria-haspopup", "menu"); openList(false);
         jump.onclick = () => openList(list.hidden);
         list.onclick = e => { if (e.target.closest("[data-town-fly]")) { openList(false); flyTo(); jump.focus({ preventScroll: true }); return; }
+          if (e.target.closest("[data-town-goldheli]")) { openList(false); const G = T.car?.goldHeli; if (G) { T.tween = null; if (!T.walk) setMode(true); const x = G.x + Math.cos(G.h) * 9, z = G.z - Math.sin(G.h) * 9;
+            F.pos.set(x, ground(x, z) + F.eye, z); F.yaw = Math.atan2(-(G.x - x), -(G.z - z)); F.pitch = -0.15; } jump.focus({ preventScroll: true }); return; }
+          const pl = e.target.closest("[data-town-player]"); if (pl) { openList(false); toPlayer(pl.dataset.townPlayer); jump.focus({ preventScroll: true }); return; }
           const bn = e.target.closest("[data-town-go]"); if (!bn) return; const p = places[+bn.dataset.townGo]; openList(false); go(p, T.walk && !p.water);  // the inlet and the strait are best seen from the air
           jump.focus({ preventScroll: true }); };
 
@@ -8479,7 +8519,7 @@ const handle = async (m, post) => {
               T.tween = { a: { x: F.pos.x, y: F.pos.y, z: F.pos.z, yaw: F.yaw, pitch: F.pitch }, b: lookFrom(...cfg.floodLook), t0: performance.now(), ms: 1800 }; };
             ask.querySelector('[data-ask="yes"]').focus({ preventScroll: true }); };
           // Logan's floods are for Ash only for now (Ash, 13 November 2026: "Just for logan hide the flood btn unless the users name is Ash or Ashley")
-          fb.hidden = cfg.place === "logan" && !/^ash(ley)?$/i.test((S.name || "").trim()); fb.setAttribute("aria-pressed", "false"); openFloods(false);
+          fb.hidden = cfg.place === "logan" && !isAsh(); fb.setAttribute("aria-pressed", "false"); openFloods(false);
           // the notice: Cancel has the focus to start with, Escape cancels, Tab stays inside it
           const closeWarn = () => { warn.hidden = true; warn.onclick = warn.onkeydown = null; fb.focus({ preventScroll: true }); };
           const openWarn = () => { openList(false); warn.hidden = false; const [no, yes] = warn.querySelectorAll("button"); no.focus({ preventScroll: true });
@@ -8522,9 +8562,10 @@ const handle = async (m, post) => {
         if (TOWN_TOGETHER.includes(cfg.place) && !OFF.has("players")) try { T.peers = townPeers(T, m, F, ground, cfg.place, box); } catch (e) { console.warn("Town model: other players couldn't start", e); }
         if (!OFF.has("me")) try { T.me = townMe(T, m, F, ground); } catch (e) { console.warn("Town model: the construction worker couldn't start", e); }
         if (!OFF.has("traffic")) try { T.traffic = townTraffic(T, m, F, ground, cfg); } catch (e) { console.warn("Town model: the traffic couldn't start", e); }
+        if (cfg.place === "moo" && !OFF.has("home6")) try { T.home6 = townHome6(T, m); } catch (e) { console.warn("Town model: Ash and Arlo couldn't start", e); }
         if (!OFF.has("animal")) try { T.critter = townCritter(T, m, ground, cfg.place); } catch (e) { console.warn("Town model: the animal couldn't start", e); }
         F.hot = { f: () => toMode(!T.walk),
-          enter: () => T.car?.enter(), keys: () => !!T.car?.keys?.(), undo: () => !!T.admin?.undo?.(), emotes: () => !!T.peers?.menu?.(), emote: i => !!T.peers?.emote?.(i), gold: () => isAsh() && !!T.car?.toGold?.(),
+          enter: () => T.car?.enter(), keys: () => !!T.car?.keys?.(), undo: () => !!T.admin?.undo?.(), emotes: () => !!T.peers?.menu?.(), chat: () => !!T.peers?.chat?.(), emote: i => !!T.peers?.emote?.(i), gold: () => isAsh() && !!T.car?.toGold?.(),
           n: () => T.namesToggle?.(),
           j: () => openList(list.hidden),
           esc: () => { if (!ask.hidden) { closeAsk(); return true; } if (!list.hidden) { openList(false); return true; } if (!fl.hidden) { fl.hidden = true; fb.setAttribute("aria-expanded", "false"); return true; } return false; },
@@ -9709,6 +9750,16 @@ const handle = async (m, post) => {
     { x: -14.4, z: -1551.6, h: Math.PI, gold: true, name: "The golden plane", at: "in the park by Ipswich Road", what: "On the open grass in the park beside Ipswich Road at Aubigny Street, Annerley. A fifth faster and quicker to turn, and the only plane with a boost" },
   ];
   const MOO_GOLD_CAR = { x: -250.8, z: -987.5, h: -1.718, gold: true, name: "The golden car", what: "In the driveway at 6 Beaudesert Road, backed in. A fifth faster than the others" };
+  // The possum, Moorooka only (Ash, 15 November 2026: "add a possum. The possum should be 3x faster than walking. It should
+  // travel up objects like light poles and buildings ... Add the possum at 16 kingwell street moorooka. You enter into the
+  // possum just like a car but then move around as a possum not a car. Add a teleport to kingwell street near this", "A
+  // brushtail possum"). It sits on number 16's front lawn (its address point and house from the Queensland address and
+  // building data), looking at the street light out the front. The model has no light poles of its own, so the app stands a
+  // street light on the even side of Kingwell Street every 40 m or so, 5.5 m off the middle of the road, clear of buildings.
+  // `arm` is the way each light's arm reaches (over the road).
+  const MOO_POSSUM = { x: 393.5, z: 48.4, h: -1.36, name: "Kingwell Street: the possum", what: "A brushtail possum on the front lawn of 16 Kingwell Street. Be the possum to run three times as fast as walking and climb the street lights and roofs",
+    stand: { x: 390.5, z: 44.5, yaw: Math.atan2(-3, -3.9) },
+    poles: [[415.7, -100.2], [408.7, -61.5], [401.8, -22.8], [394.8, 15.9], [388.8, 49.4]], arm: -1.749 };
   // What there is to drive and fly in each town (Ash, 14 November 2026: "Merge the car and the plane into inverloch and logan. Add
   // 1 plane near the players spawn point and another random plane. The 2nd plane should have a golden stripe and extra fast and
   // mobile"). Moorooka's are above, and its parked cars can be driven too. Inverloch and Logan have no cars of their own to hand
@@ -9716,7 +9767,7 @@ const handle = async (m, post) => {
   // (parks, ovals, a point) for the golden plane: it stands at one of them, a different one each visit, and is not in Jump to.
   const TOWN_RIDES = {
     moo: { planes: [...MOO_PLANES, { x: -464, z: -1533, h: 2.71, heli: true, name: "The helicopter", at: "on the field off School Road", what: "On the open grass off School Road, near Nathan Terrace. Walk up to it and get in" }],
-      cars: [MOO_GOLD_CAR, { x: -284.4, z: -959.4, h: -0.179, bus: true, name: "The bus", what: "At the bus stop on Beaudesert Road, just up from 6 Beaudesert Road. Slow, long and wide" }] },
+      cars: [MOO_GOLD_CAR, { x: -284.4, z: -959.4, h: -0.179, bus: true, name: "The bus", what: "At the bus stop on Beaudesert Road, just up from 6 Beaudesert Road. Slow, long and wide" }], possum: MOO_POSSUM },
     inv: { planes: [{ x: -210, z: -377, h: 1.571, name: "The plane", at: "on the lawn by The Hub", what: "On the lawn by The Hub, off A'Beckett Street. Walk up to it and get in" }],
       cars: [{ x: -228.5, z: -375.5, h: Math.PI, spare: true, name: "The red car", what: "On the lawn by The Hub, beside the plane" }, { x: -232.5, z: -375.5, h: Math.PI, gold: true, name: "The golden car", what: "On the lawn by The Hub. A fifth faster than the red one" }],
       more: { planes: [{ x: -1602.1, z: 422, h: 2.6, heli: true, name: "The helicopter", at: "behind 11 Norman Road", what: "On the grass behind 11 Norman Road" }], cars: [{ x: -214, z: -357, h: -1.571, bus: true, name: "The bus", what: "In A'Beckett Street, out the front of The Hub" }] },
@@ -9744,6 +9795,57 @@ const handle = async (m, post) => {
   // - Things to do to each other (Ash, 15 November 2026: "interact with other players like wave or dance or lots of fun things, no
   //   shooting no violence"): TOWN_EMOTES. While someone else is in the town and you are walking, the Emote button (E) opens
   //   them, and 1 to 7 do them straight off. Others see your figure do it for a few seconds, with its sign beside your name.
+  // how a figure moves for an emote, et seconds into it: up and down, a turn, a lean, and each arm out to the side and to the front
+  function townEmotePose(name, et, secs) { const ease = Math.min(1, et * 5, (secs - et) * 5), o = { up: 0, turn: 0, lean: 0, armR: 0, armL: 0, fwdR: 0, fwdL: 0 };
+    if (name === "wave") o.armR = (2.5 + 0.35 * Math.sin(et * 11)) * ease;
+    else if (name === "dance") { o.up = 0.1 * Math.abs(Math.sin(et * 7)); o.turn = 0.55 * Math.sin(et * 3.5) * ease; o.armR = (1.6 + 0.8 * Math.sin(et * 7)) * ease; o.armL = (1.6 - 0.8 * Math.sin(et * 7)) * ease; }
+    else if (name === "jump") { o.up = 0.8 * Math.abs(Math.sin(et * Math.PI * 1.5)); o.armR = o.armL = 2.7 * ease; }
+    else if (name === "cheer") { o.up = 0.15 * Math.abs(Math.sin(et * 9)); o.armR = (2.8 + 0.2 * Math.sin(et * 14)) * ease; o.armL = (2.8 - 0.2 * Math.sin(et * 14)) * ease; }
+    else if (name === "spin") { o.turn = et / secs * Math.PI * 4; o.armR = o.armL = 1.5 * ease; }
+    else if (name === "bow") o.lean = 0.75 * Math.sin(Math.PI * et / secs);
+    else if (name === "heart") { o.fwdR = o.fwdL = 1.3 * ease; o.armR = o.armL = 0.25 * ease; }
+    return o; }
+  // Explore's players meet through public MQTT brokers over secure websockets (port 443 first, so it gets through mobile data
+  // and work networks), every message sent to both and taken from whichever arrives (Ash, 15 November 2026: "Still can't see
+  // another player"; the phone-to-phone links (WebRTC) never got through on mobile data). It looks like the room the code had
+  // before: makeAction(name) gives [send, onReceive], onPeerJoin, onPeerLeave, leave. Only names, colours, where you are and
+  // emotes go through it, and only while you're in Explore.
+  const TOWN_BROKERS = [["wss://public.cloud.shiftr.io/", "public", "public"], ["wss://broker.emqx.io:8084/mqtt", "", ""]];
+  function townRelay(base) {
+    const me = Math.random().toString(36).slice(2, 10), enc = new TextEncoder(), dec = new TextDecoder(), acts = {}, seen = new Map(), socks = [];
+    let onJoin = () => {}, onLeave = () => {}, dead = false;
+    const str = t => { const b = enc.encode(t); return [b.length >> 8, b.length & 255, ...b]; };
+    const pkt = (type, body) => { const out = [type]; let n = body.length; do { let d = n % 128; n = Math.floor(n / 128); if (n) d |= 128; out.push(d); } while (n); return new Uint8Array([...out, ...body]); };
+    const broker = ([url, user, pass], k) => { const S = { url, ws: null, ok: false, buf: new Uint8Array(0), ping: 0, tries: 0 }; socks.push(S);
+      const open = () => { if (dead) return; let ws; try { ws = new WebSocket(url, "mqtt"); } catch { return later(); } S.ws = ws; ws.binaryType = "arraybuffer";
+        ws.onopen = () => { const flags = 0x02 | (user ? 0x80 | 0x40 : 0);
+          ws.send(pkt(0x10, [...str("MQTT"), 4, flags, 0, 60, ...str("an" + me + k), ...(user ? [...str(user), ...str(pass)] : [])]));
+          ws.send(pkt(0x82, [0, 1, ...str(base + "/#"), 0])); S.ping = setInterval(() => { try { ws.send(new Uint8Array([0xc0, 0])); } catch {} }, 30000); };
+        ws.onmessage = e => { const a = new Uint8Array(e.data), b = new Uint8Array(S.buf.length + a.length); b.set(S.buf); b.set(a, S.buf.length); let i = 0;
+          for (;;) { if (b.length - i < 2) break; let n = 0, m = 1, j = i + 1, c; do { c = b[j++]; n += (c & 127) * m; m *= 128; } while (c & 128 && j < b.length); if (c & 128 || j + n > b.length) break;
+            const hdr = b[i], type = hdr >> 4, body = b.subarray(j, j + n); i = j + n;
+            if (type === 2) { S.ok = body[1] === 0; S.tries = 0; }
+            else if (type === 3) { const tl = (body[0] << 8) | body[1], topic = dec.decode(body.subarray(2, 2 + tl)), qos = (hdr >> 1) & 3; got(topic, body.subarray(2 + tl + (qos ? 2 : 0))); } }
+          S.buf = b.slice(i); };
+        ws.onclose = () => { S.ok = false; clearInterval(S.ping); later(); }; ws.onerror = () => {}; };
+      const later = () => { if (dead) return; S.tries++; setTimeout(open, Math.min(30000, 1500 * S.tries)); };
+      open(); };
+    const got = (topic, body) => { const parts = topic.slice(base.length + 1).split("/"), id = parts[0], name = parts[1]; if (!id || id === me) return;
+      if (name === "bye") { if (seen.has(id)) { seen.delete(id); onLeave(id); } return; }
+      const now = performance.now(), was = seen.get(id); seen.set(id, now); if (!was) onJoin(id);
+      let data; try { data = JSON.parse(dec.decode(body)); } catch { return; } if (data && data.k && data.k !== me) return;  // sent to someone else
+      acts[name]?.(data?.d, id); };
+    const send = (name, data, to) => { const body = [...str(base + "/" + me + "/" + name), ...enc.encode(JSON.stringify(to ? { d: data, k: to } : { d: data }))];
+      for (const S of socks) if (S.ok) try { S.ws.send(pkt(0x30, body)); } catch {} };
+    TOWN_BROKERS.forEach(broker);
+    // say hello now and then so newcomers learn you're here, and let go of anyone not heard from in 15 s
+    const hello = setInterval(() => { send("hi", 1); const now = performance.now(); for (const [id, t] of seen) if (now - t > 15000) { seen.delete(id); onLeave(id); } }, 4000);
+    setTimeout(() => send("hi", 1), 1200);
+    const bye = () => send("bye", 1); addEventListener("pagehide", bye);
+    return { makeAction: name => [(data, to) => send(name, data, to), cb => { acts[name] = cb; }], onPeerJoin: f => { onJoin = f; }, onPeerLeave: f => { onLeave = f; },
+      count: () => socks.filter(S => S.ok).length,
+      leave() { bye(); dead = true; clearInterval(hello); removeEventListener("pagehide", bye); for (const S of socks) { clearInterval(S.ping); try { S.ws?.close(); } catch {} } } };
+  }
   const TOWN_EMOTES = [["wave", "Wave", "\ud83d\udc4b", "wave", 2.6], ["dance", "Dance", "\ud83d\udd7a", "dance", 4.5], ["jump", "Jump", "\u2b06\ufe0f", "jump", 2], ["cheer", "Cheer", "\ud83d\ude4c", "cheer", 2.8],
     ["spin", "Spin", "\ud83c\udf00", "spin", 2], ["bow", "Bow", "\ud83d\ude47", "bow", 2.2], ["heart", "Heart", "\u2764\ufe0f", "send a heart", 3]];
   const TOWN_TOGETHER = ["logan", "moo", "inv"];  // every town (Ash, 15 November 2026: "Copy the multiplayer to moorooka and Inverloch")
@@ -9768,8 +9870,11 @@ const handle = async (m, post) => {
       if (!parts) parts = m.addParts(townPlaneParts("#ff7a12", "builder").map(q => ({ ...q, matrix: NONE.slice() })));
       const now = performance.now(), x = F.pos.x, z = F.pos.z, y = ground(x, z), dt = last ? Math.min(0.1, (now - last[2]) / 1000) : 0, v = dt ? Math.hypot(x - last[0], z - last[1]) / dt : 0; last = [x, z, now];
       swing += v * dt * 2.4; amp += (Math.min(0.65, v * 0.22) - amp) * Math.min(1, dt * 8);
-      M.compose(V.set(x, y, z), Q.setFromEuler(E.set(0, F.yaw + Math.PI, 0, "YXZ")), ONE); parts.setMatrix(0, M.elements.slice());
-      const a = Math.sin(swing) * amp; parts.setMatrix(1, M.clone().multiply(SH[0]).multiply(R.makeRotationX(a)).elements); parts.setMatrix(2, M.clone().multiply(SH[1]).multiply(R.makeRotationX(-a)).elements); shown = true;
+      let em = { up: 0, turn: 0, lean: 0, armR: 0, armL: 0, fwdR: 0, fwdL: 0 };  // an emote you've just done, if any
+      if (P.emote) { const et = (now - P.emote.t0) / 1000, secs = P.emote.e[4]; if (et > secs) P.emote = null; else em = townEmotePose(P.emote.e[0], et, secs); }
+      M.compose(V.set(x, y + em.up, z), Q.setFromEuler(E.set(em.lean, F.yaw + Math.PI + em.turn, 0, "YXZ")), ONE); parts.setMatrix(0, M.elements.slice());
+      const a = Math.sin(swing) * amp; parts.setMatrix(1, M.clone().multiply(SH[0]).multiply(R.makeRotationZ(-em.armR)).multiply(new THREE.Matrix4().makeRotationX(a - em.fwdR)).elements);
+      parts.setMatrix(2, M.clone().multiply(SH[1]).multiply(R.makeRotationZ(em.armL)).multiply(new THREE.Matrix4().makeRotationX(-a - em.fwdL)).elements); shown = true;
       const fx = -Math.sin(F.yaw), fz = -Math.cos(F.yaw); let d = 4.8;
       if (m.solidAt) for (; d > 1.2; d -= 0.4) if (!m.solidAt(x - fx * d, z - fz * d) && !T.solid?.(x - fx * d, z - fz * d)) break;
       dist += (d - dist) * Math.min(1, dt * 6 || 1);
@@ -9792,7 +9897,11 @@ const handle = async (m, post) => {
     // fewer than at first (Ash, 15 November 2026: "too much traffic in moorooka and they overlap ... app getting a little laggy"):
     // Moorooka's model has cars of its own on Beaudesert Road
     // (fewer again, and on main roads only: Ash, 15 November 2026: "less cars. They cause lag and often look silly")
-    const home = T.spawn || [F.pos.x, F.pos.z], N = 3, NEAR = 300, FAR = 800, NONE = new THREE.Matrix4().makeScale(0, 0, 0).elements;
+    // none for a while (Ash, 15 November 2026: "Reduce traffic through the apps, they are a bit dumb and run into each other"), then
+    // four, the models' own moving cars being off (Ash: "Add back a few cars but not many. I want to be able to get into a moving
+    // car"): walk out in front of one and it stops for you; Get in the car takes it over (P.take) and it is yours from then on.
+    const home = T.spawn || [F.pos.x, F.pos.z], N = 4, NEAR = 300, FAR = 800, NONE = new THREE.Matrix4().makeScale(0, 0, 0).elements;
+    if (!N) return P;  // nothing to load or draw
     let roads = null, nodes = null, dead = false, last = 0;
     const key = (x, z) => Math.round(x / 2) + "," + Math.round(z / 2);
     const start = C => { // a random point on a street, mostly near the start
@@ -9834,7 +9943,7 @@ const handle = async (m, post) => {
         let want = C.top;
         // you: stop if you are in its way
         if (me) { const dx = me.x - cx, dz = me.z - cz, ahead = dx * fx + dz * fz, side = Math.abs(dx * fz - dz * fx);
-          if (ahead > 0 && ahead < 11 && side < 2.4) want = 0; }
+          if (ahead > 0 && ahead < 15 && side < 2.4) want = 0; }
         // another car ahead: follow it at a distance, or wait for one crossing (the one listed first goes first, so two never wait on each other)
         for (let di = 0; di < P.cars.length; di++) { const D = P.cars[di]; if (D === C || D.x == null) continue;
           const dx = D.x - cx, dz = D.z - cz, ahead = dx * fx + dz * fz, side = Math.abs(dx * fz - dz * fx); if (ahead <= 0 || ahead > 16 || side > 2.3) continue;
@@ -9855,6 +9964,9 @@ const handle = async (m, post) => {
         const y = (yf + yb + yr + yl) / 4 + 0.05, pt = Math.atan2(yf - yb, 2.6), rl = Math.atan2(yl - yr, 1.6), e = C.y == null ? 1 : Math.min(1, dt * 10);
         C.y = C.y == null ? y : C.y + (y - C.y) * e; C.p = C.p == null ? pt : C.p + (pt - C.p) * e; C.rl = C.rl == null ? rl : C.rl + (rl - C.rl) * e;
         M.compose(V.set(x, C.y, z), Q.setFromEuler(E.set(-C.p, C.h, C.rl, "YXZ")), ONE); C.parts.setMatrix(0, M.elements.slice()); }); };
+    // hand a car over to be driven: it leaves the traffic, and the driving code (townCar) keeps it as one of its own
+    P.take = C => { const i = P.cars.indexOf(C); if (i < 0) return null; P.cars.splice(i, 1);
+      return { x: C.x, z: C.z, h: C.h ?? 0, y: C.y ?? ground(C.x, C.z), p: C.p || 0, r: C.rl || 0, gold: false, bus: false, parts: C.parts }; };
     P.dispose = () => { dead = true; for (const C of P.cars) try { C.parts.remove(); } catch {} P.cars = []; };
     return P;
   }
@@ -9886,12 +9998,33 @@ const handle = async (m, post) => {
     const THREE = BS.B.THREE, M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), ONE = new THREE.Vector3(1, 1, 1), NONE = new THREE.Matrix4().makeScale(0, 0, 0).elements;
     const TOPS = ["#d1495b", "#2e86ab", "#3a9d5d", "#e08e2b", "#7b5ea7", "#1f9e9e", "#c2577a", "#5b7f2f"], wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
     const SHAPES = { walk: c => townPlaneParts(c, "person"), builder: c => townPlaneParts(c, "builder"), car: c => townPlaneParts(c, true), gold: () => townPlaneParts("#e8b923", true), bus: () => townPlaneParts("#2f7fc4", "bus"),
-      plane: () => townPlaneParts().slice(0, 1), goldplane: () => townPlaneParts("#e2ad1c").slice(0, 1), heli: () => townPlaneParts("#c8322b", "heli").slice(0, 2) };
+      plane: () => townPlaneParts().slice(0, 1), goldplane: () => townPlaneParts("#e2ad1c").slice(0, 1), heli: () => townPlaneParts("#c8322b", "heli").slice(0, 2), goldheli: () => townPlaneParts("#e2ad1c", "heli").slice(0, 2),
+      possum: () => townPlaneParts(undefined, "possum") };
     const peers = new Map(); let sendEmote = null, emoteAt = 0; const SH = [new THREE.Matrix4().makeTranslation(-0.31, 1.42, 0), new THREE.Matrix4().makeTranslation(0.31, 1.42, 0)], R1 = new THREE.Matrix4(), R2 = new THREE.Matrix4();
-    const emoteBtn = $("bsEmoteBtn"), emoteBox = $("bsEmotes");
+    const emoteBtn = $("bsEmoteBtn"), emoteBox = $("bsEmotes"), chatBtn = $("bsChatBtn"), chatBar = $("bsChatBar"), chatIn = $("bsChatIn");
+    // Chat (Ash, 15 November 2026: "Add chat, under emote chat. If I press chat then open up the keyboard. Show as cloud box above
+    // character for aprox 30 secs"): one line, up to 120 characters, to everyone in town; it shows over you for 30 s
+    let sendChat = null, myChat = null; const CHAT_MS = 30000, meEl = document.createElement("div"); meEl.className = "bs-peer said"; meEl.hidden = true; box.appendChild(meEl);
+    const clean = t => String(t || "").replace(/[\u0000-\u001f<>]/g, "").replace(/\s+/g, " ").trim().slice(0, 120);
+    P.chat = () => { if (chatBtn.hidden) return false; chatBar.hidden = false; emoteBox.hidden = true; chatIn.value = ""; chatIn.focus(); return true; };
+    const chatClose = () => { chatBar.hidden = true; chatIn.blur(); };
+    chatBtn.onclick = () => { if (chatBar.hidden) P.chat(); else chatClose(); };
+    chatIn.onkeydown = e => { e.stopPropagation(); if (e.key === "Escape") chatClose(); else if (e.key === "Enter") { e.preventDefault(); chatSend(); } }; chatIn.onkeyup = e => e.stopPropagation();
+    chatIn.onblur = () => setTimeout(() => { if (document.activeElement !== chatIn) chatBar.hidden = true; }, 150);
+    chatBar.onsubmit = e => { e.preventDefault(); chatSend(); };
+    const chatSend = () => { const t = clean(chatIn.value); chatIn.value = ""; chatClose(); if (!t) return;
+      if (off) return toast("Other players can't see you, so they can't see what you say either. Turn it on in Settings.", 3500);
+      myChat = { text: t, t: performance.now() }; try { sendChat?.(t); } catch {} if (!peers.size) toast("Said. No one else is here right now to see it.", 2600); };
+    const chatted = (t, id) => { const q = peers.get(id), text = clean(t); if (!q || !text) return; q.chat = { text, t: performance.now() }; if (q.name) toast(`${q.name}: ${text}`, 3500); };
+    // a label: the name, or a speech bubble while they've said something in the last 30 s
+    const sayIn = (el, name, chat, now, sign = "") => { const on = chat && now - chat.t < CHAT_MS, key = on ? name + "\u0000" + chat.text : name + sign;
+      if (el.dataset.k === key) return; el.dataset.k = key; el.classList.toggle("said", !!on);
+      if (on) { const b = document.createElement("b"); b.textContent = name; el.replaceChildren(b, chat.text); } else el.textContent = sign ? `${name} ${sign}` : name; };
+    P.list = () => [...peers].filter(([, q]) => q.shown && q.b && q.b.k !== "none").map(([id, q]) => ({ id, name: q.name || "A player", k: q.b.k, x: q.shown.x, y: q.shown.y, z: q.shown.z, h: q.shown.h, p: q.shown.p, r: q.shown.r }));
+    let sendRide = null; P.ride = (id, on) => { try { sendRide?.(on === 2 ? 2 : on ? 1 : 0, id); } catch {} };  // tell a driver you've got in with them, or out
     const emoted = (name, id) => { const q = peers.get(id), e = TOWN_EMOTES.find(v => v[0] === name); if (q && e) q.emote = { e, t0: performance.now() }; };
-    P.emote = n => { const e = typeof n === "number" ? TOWN_EMOTES[n] : TOWN_EMOTES.find(v => v[0] === n), now = performance.now(); if (!e || !sendEmote || !peers.size || now - emoteAt < 1200) return false;
-      emoteAt = now; try { sendEmote(e[0]); } catch {} toast(`${e[2]} You ${e[3]}.`, 1800); emoteBox.hidden = true; emoteBtn.setAttribute("aria-expanded", "false"); return true; };
+    P.emote = n => { const e = typeof n === "number" ? TOWN_EMOTES[n] : TOWN_EMOTES.find(v => v[0] === n), now = performance.now(); if (!e || now - emoteAt < 1200) return false;  // (it used to do nothing with no one else about)
+      emoteAt = now; if (sendEmote && peers.size) try { sendEmote(e[0]); } catch {} if (T.me) T.me.emote = { e, t0: now }; toast(`${e[2]} You ${e[3]}.`, 1800); emoteBox.hidden = true; emoteBtn.setAttribute("aria-expanded", "false"); return true; };
     P.menu = () => { if (emoteBtn.hidden) return false; emoteBox.hidden = !emoteBox.hidden; emoteBtn.setAttribute("aria-expanded", String(!emoteBox.hidden)); return true; };
     emoteBox.replaceChildren(...TOWN_EMOTES.map(([id, label, sign], i) => { const bn = document.createElement("button"); bn.type = "button"; bn.textContent = `${sign} ${label}`; bn.dataset.key = String(i + 1); bn.onclick = () => { P.emote(id); bn.blur(); }; return bn; }));
     emoteBtn.onclick = () => { P.menu(); emoteBtn.blur(); };
@@ -9908,7 +10041,7 @@ const handle = async (m, post) => {
     // a button on the right edge opens the player's name, the colour of their top, and whether others see them. A change goes
     // to everyone at once. Hidden, this device says nothing of where it is (and does not join at all if it opens that way).
     const meBtn = $("bsMeBtn"), meBox = $("bsMe"), myColour = () => { let c = NaN; try { c = parseInt(localStorage.getItem("an-player-colour"), 10); } catch {} return c >= 0 && c < TOPS.length ? c : -1; };
-    const tell = id => { try { sendName?.([playerName(), myColour()], id); } catch {} };
+    const tell = id => { if (off) return; try { sendName?.([playerName(), myColour()], id); } catch {} };  // hidden: your name isn't sent either
     const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
     const meClose = () => { meBox.hidden = true; meBtn.setAttribute("aria-expanded", "false"); };
     const meDraw = () => { meBox.replaceChildren();
@@ -9926,14 +10059,15 @@ const handle = async (m, post) => {
       for (const [v, label] of [["explorer", "Explorer"], ["builder", "Construction worker"]]) { const bn = el("button", "", label); bn.type = "button"; bn.setAttribute("aria-pressed", String(townRole() === v));
         bn.onclick = () => { if (townRole() === v) return; try { if (v === "builder") localStorage.setItem("an-player-role", "builder"); else localStorage.removeItem("an-player-role"); } catch {}
           lastSent = null; T.admin?.refresh?.(); meDraw();
-          toast(v === "builder" ? (isAsh() ? "Construction worker. The pencil (top right) edits the ground and Saves for everyone." : "You're a construction worker. Tap the pencil (top right) to change the ground, then Send it to the town planner.") : "You're exploring.", 5000); };
+          toast(v === "builder" ? (isAsh() ? "Construction worker. The pencil (bottom right) edits the ground and Saves for everyone." : "You're a construction worker. Tap the pencil (bottom right) to change the ground, then Send it to the town planner.") : "You're exploring.", 5000); };
         rl.append(bn); }
-      as.append(el("span", "bs-me-lbl", "Play as"), rl, el("p", "", townRole() !== "builder" ? "Walk, drive and fly anywhere in town. Pick Construction worker to get the pencil (top right) and help shape the model."
+      as.append(el("span", "bs-me-lbl", "Play as"), rl, el("p", "", townRole() !== "builder" ? "Walk, drive and fly anywhere in town. Pick Construction worker to get the pencil (bottom right) and help shape the model."
         : isAsh() ? "You see yourself from behind, and the pencil edits the ground. As the town planner, Save puts it in everyone's app, and Suggestions has what others sent."
         : "Help us build and shape this model! Your edits are sent to the town planner who can permanently update this model."));
       // whether other players see you
       const sw = el("button", "bs-me-show"); sw.type = "button"; sw.setAttribute("role", "switch"); sw.setAttribute("aria-checked", String(!off)); sw.append(el("span", "", "Other players can see me"), el("i"));
-      sw.onclick = () => { off = !off; try { if (off) localStorage.setItem("an-player-off", "1"); else localStorage.removeItem("an-player-off"); } catch {} if (!off && !room && !joining) join(0); lastSent = null; meDraw(); meBox.querySelector(".bs-me-show")?.focus(); toast(off ? "Other players can't see you now." : "Other players can see you.", 2500); };
+      const here = el("p", "", peers.size ? `${peers.size} other player${peers.size === 1 ? " is" : "s are"} in town now.` : room ? "No other players in town right now." : "Looking for other players\u2026");
+      sw.onclick = () => { off = !off; try { if (off) localStorage.setItem("an-player-off", "1"); else localStorage.removeItem("an-player-off"); } catch {} if (!off) tell(); lastSent = null; meDraw(); meBox.querySelector(".bs-me-show")?.focus(); toast(off ? "Other players can't see you now." : "Other players can see you.", 2500); };
       // the time of day (it was a button on the top bar)
       const tm = el("div", "bs-me-sec"), th = el("div", "bs-me-time"), tl = el("label", "bs-me-lbl", "Time of day"), tout = el("output", "", $("bsFlyTimeOut")?.textContent || ""), tr = el("input");
       tr.type = "range"; tr.id = "bsMeTime"; tl.htmlFor = "bsMeTime"; tr.min = "0"; tr.max = "1439"; tr.step = "5"; tr.value = $("bsFlyTime")?.value || "720";
@@ -9941,42 +10075,87 @@ const handle = async (m, post) => {
       th.append(tl, tout); tm.append(th, tr);
       // make the 3D model an app on the phone's home screen, from its own page (/<suburb>/explore/), which has its own manifest
       const app = el("div", "bs-me-sec"); app.append(el("span", "bs-me-lbl", "Make it an app"));
-      const alone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true, onEx = /\/explore\/?$/.test(location.pathname);
-      const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1), android = /Android/.test(navigator.userAgent);
-      if (alone) app.append(el("p", "", "You're using it as an app already."));
-      else if (onEx && window.anInstall) { const b = el("button", "bs-me-go", "Install the app"); b.type = "button"; b.onclick = async () => { try { await window.anInstall.prompt(); } catch {} window.anInstall = null; meDraw(); }; app.append(b, el("p", "", "It goes on your home screen and opens straight into the 3D model.")); }
-      else { const ol = el("ol"), step = t => ol.append(el("li", "", t));
-        if (!onEx) step(`Open the 3D model's own page (below)${ios ? " in Safari" : android ? " in Chrome" : ""}.`);
-        if (ios) { step("Tap Share (the square with an arrow)."); step("Tap Add to Home Screen, then Add."); }
-        else if (android) { step("Tap the \u22ee menu, top right."); step("Tap Add to Home screen (or Install app)."); }
-        else { step("Click the install icon at the right of the address bar (Chrome or Edge)."); step("Or on your phone, open the page and add it to your home screen."); }
-        app.append(ol);
-        if (!onEx) { const a = el("a", "bs-me-go", "Open the 3D model's page"); a.href = exploreLink().url; app.append(a); }
-        app.append(el("p", "", "It goes on your home screen and opens straight into the 3D model.")); }
+      // (Ash, 15 November 2026: "The make it an app instructions don't work". On an iPhone it has to be added from Safari itself,
+      // from the 3D model's own page; from inside the news app on the home screen there is no Share button, and on iOS 26 Share
+      // sits under the ••• button.)
+      const alone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true, onEx = /\/explore\/?$/.test(location.pathname), url = exploreLink().url;
+      const ua = navigator.userAgent, ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1), android = /Android/.test(ua);
+      const safari = ios && !/CriOS|FxiOS|EdgiOS|OPiOS|GSA\//.test(ua);
+      const copyBtn = () => { const b = el("button", "bs-me-go", "Copy the link"); b.type = "button";
+        b.onclick = async () => { let ok = false; try { await navigator.clipboard.writeText(url); ok = true; } catch { try { const ta = document.createElement("textarea"); ta.value = url; ta.setAttribute("readonly", ""); ta.style.cssText = "position:fixed;left:-9999px;top:0"; document.body.appendChild(ta); ta.select(); ok = document.execCommand("copy"); ta.remove(); } catch {} }
+          b.textContent = ok ? "Copied" : url; setTimeout(() => { b.textContent = "Copy the link"; }, 2500); }; return b; };
+      const steps = list => { const ol = el("ol"); list.filter(Boolean).forEach(t => ol.append(el("li", "", t))); return ol; };
+      const after = el("p", "", "It goes on your home screen as its own app, and opens straight into the 3D model.");
+      if (alone && onEx) app.append(el("p", "", "You're using it as an app already."));
+      else if (onEx && window.anInstall) { const b = el("button", "bs-me-go", "Install the app"); b.type = "button"; b.onclick = async () => { try { await window.anInstall.prompt(); } catch {} window.anInstall = null; meDraw(); }; app.append(b, after); }
+      else if (ios && (alone || !safari)) {  // inside the news app, or another browser: it has to be done in Safari
+        app.append(steps(["Copy the link (below).", "Open Safari, paste it in the address bar and go.", "Tap \u2022\u2022\u2022 (bottom right), then Share. (On older iPhones, Share is the square with an arrow.)", "Scroll down, tap Add to Home Screen, then Add."]), copyBtn(), after); }
+      else if (ios) {
+        app.append(steps([!onEx && "Tap Open the 3D model's page (below).", "Tap \u2022\u2022\u2022 (bottom right), then Share. (On older iPhones, Share is the square with an arrow.)", "Scroll down, tap Add to Home Screen, then Add."]));
+        if (!onEx) { const a = el("a", "bs-me-go", "Open the 3D model's page"); a.href = url; app.append(a); }
+        app.append(after); }
+      else if (android) {
+        app.append(steps([!onEx && "Tap Open the 3D model's page (below), in Chrome.", "Tap the \u22ee menu, top right.", "Tap Add to Home screen (or Install app), then Install."]));
+        if (!onEx) { const a = el("a", "bs-me-go", "Open the 3D model's page"); a.href = url; app.append(a); }
+        app.append(after); }
+      else { app.append(steps([!onEx && "Open the 3D model's page (below) in Chrome or Edge.", "Click the install icon at the right of the address bar.", "Or on your phone, open the same page and add it to your home screen."]));
+        if (!onEx) { const a = el("a", "bs-me-go", "Open the 3D model's page"); a.href = url; app.append(a); }
+        app.append(after); }
       const hi = el("div", "bs-me-h"), ho = el("span", "", F.hText || ""); ho.id = "bsMeH"; hi.append(el("span", "", "Height above the ground"), ho);
-      meBox.append(head, you, as, sw, tm, app, hi); };  // no Exit explore (Ash, 15 November 2026: "Remove exit explore"); Esc, or the browser's back, still leaves
+      // the other towns, plain links (Ash, 15 November 2026: "In settings I want to be able to change from Logan to Inverloch and
+      // moorooka. Nothing fancy. Just a hyperlink"): each opens that town's Explore page
+      const towns = el("div", "bs-me-sec bs-me-towns"); towns.append(el("span", "bs-me-lbl", "Other towns"));
+      { const root = exploreLink().url.replace(/(\/awesome-news\/).*$/, "$1"), row = el("p", "");
+        [["moo", "moorooka", "Moorooka"], ["inv", "inverloch", "Inverloch"], ["logan", "logan", "Logan"]].filter(([k]) => k !== T.cfg?.place).forEach(([, dir, name], i) => {
+          if (i) row.append(" \u00b7 "); const a = el("a", "", name); a.href = `${root}${dir}/explore/`; row.append(a); }); towns.append(row); }
+      // admins: fly around the weather's own scene, to keep a view for the weather there ("Use this view for the weather")
+      let wv = null; if (isAdmin()) { wv = el("button", "bs-me-exit", "Set the weather's view"); wv.type = "button";
+        wv.onclick = () => { meClose(); bsFlyOff(); setTimeout(() => { try { bsFlyOn(); } catch {} }, 400); }; }
+      const ver = el("p", "bs-me-ver", `Version ${document.querySelector('meta[name="an-commit"]')?.content || "dev"}`);  // (Ash, 15 November 2026: "Add the v number into settings")
+      meBox.append(head, you, as, sw, here, tm, app, ...(isAsh() ? exAshSecs(meDraw) : []), towns, ...(wv ? [wv] : []), hi, ver); };  // no Exit explore (Ash, 15 November 2026: "Remove exit explore"); Esc, or the browser's back, still leaves
     // closes with its \u00d7, the gear again, or a tap anywhere else
     const meOut = e => { if (!meBox.hidden && !meBox.contains(e.target) && !meBtn.contains(e.target)) meClose(); }; document.addEventListener("pointerdown", meOut, true);
     document.body.classList.add("bsme"); meBtn.hidden = false; meBtn.onclick = () => { meBox.hidden = !meBox.hidden; meBtn.setAttribute("aria-expanded", String(!meBox.hidden)); if (!meBox.hidden) meDraw(); meBtn.blur(); };
     // nothing is fetched or connected until the model has had a moment to itself
     let joining = null;
-    const join = wait => { joining = setTimeout(async () => { try { const lib = await import(new URL(TOWN3D + "vendor/trystero-nostr.js?v=1", document.baseURI).href); if (dead) return;
-        room = lib.joinRoom({ appId: "awesome-news-explore-1" }, "town-" + place);
+    const join = wait => { joining = setTimeout(async () => { try { if (dead) return;
+        // through public message brokers, not phone to phone (Ash, 15 November 2026: "Still can't see another player": phones on
+        // mobile data or behind some routers can't reach each other directly, and there was no relay for them)
+        room = townRelay("awesome-news-explore-1/town-" + place);
         const [sp, gp] = room.makeAction("pose"), [sn, gn] = room.makeAction("name"), [se, ge] = room.makeAction("emote"); sendPose = sp; sendName = sn; sendEmote = se; gp(got); gn(named); ge(emoted);
+        const [sc, gc] = room.makeAction("chat"); sendChat = sc; gc(chatted);
+        const [sr, gr] = room.makeAction("ride"); sendRide = sr; gr((on, id) => { const q = peers.get(id); if (q?.name) toast(on === 2 ? `${q.name}, the possum, is holding on to you!` : on ? `${q.name} has got in with you.` : `${q.name} has got out.`, 2600); });
         room.onPeerJoin(id => { try { tell(id); if (lastSent) sendPose(lastSent, id); } catch {} }); room.onPeerLeave(drop);
       } catch (e) { console.warn("Town model: other players couldn't connect", e); } }, wait); };
-    if (!off) join(2500);
+    // always in the room, so you see the others even while they can't see you (Ash, 15 November 2026: "I can't see the person
+    // I'm next to": with "Other players can see me" off you used to see no one either); hidden, you send no name and no place
+    join(2500);
     // what I am doing now, as seven small numbers
-    const mine = () => { const v = T.car?.in && !off ? T.car.pose?.() : null; if (v) return [v.x, v.y, v.z, v.h, v.k, v.p, v.r];
-      return T.walk && !off ? [F.pos.x, ground(F.pos.x, F.pos.z), F.pos.z, F.yaw + Math.PI, townRole() === "builder" ? "builder" : "walk", 0, 0] : [0, 0, 0, 0, "none", 0, 0]; };
+    const mine = () => { if (T.car?.riding?.()) return [0, 0, 0, 0, "none", 0, 0];  // riding with someone: they're what shows
+      const v = T.car?.in && !off ? T.car.pose?.() : null; if (v) return [v.x, v.y, v.z, v.h, v.k, v.p, v.r];
+      if (off) return [0, 0, 0, 0, "none", 0, 0];
+      if (T.walk) return [F.pos.x, ground(F.pos.x, F.pos.z), F.pos.z, F.yaw + Math.PI, townRole() === "builder" ? "builder" : "walk", 0, 0];
+      // flying low (under 60 m), others see you up there where your eyes are, rather than not at all
+      const gy = ground(F.pos.x, F.pos.z); return F.pos.y - gy < 60 ? [F.pos.x, F.pos.y - 1.6, F.pos.z, F.yaw + Math.PI, "walk", 0, 0] : [0, 0, 0, 0, "none", 0, 0]; };
+    // the Emote button: while you walk, when another player is about, or for Ash (Ash, 15 November 2026: "hide them unless name is ash or another player is near")
     P.frame = () => { const now = performance.now();
       if (sendPose && now - tick > 200) { tick = now; const a = mine().map(v => typeof v === "number" ? Math.round(v * 100) / 100 : v);
         const moved = !lastSent || a[4] !== lastSent[4] || Math.hypot(a[0] - lastSent[0], a[1] - lastSent[1], a[2] - lastSent[2]) > 0.04 || Math.abs(wrap(a[3] - lastSent[3])) > 0.02;
         if (moved || now - lastAt > 3000) { lastSent = a; lastAt = now; try { sendPose(a); } catch {} } }
-      const can = peers.size > 0 && T.walk && !T.car?.in; if (emoteBtn.hidden === can) { emoteBtn.hidden = !can; if (!can) emoteBox.hidden = true; }
-      if (!peers.size) return;
+      const can = !!T.walk && !T.car?.in && (peers.size > 0 || isAsh()); if (emoteBtn.hidden === can) { emoteBtn.hidden = !can; if (!can) emoteBox.hidden = true; }
+      const canChat = (!!T.walk || !!T.car?.in) && (peers.size > 0 || isAsh()); if (chatBtn.hidden === canChat) { chatBtn.hidden = !canChat; if (!canChat) chatBar.hidden = true; }
+      // what you just said: over you when you can see yourself (the worker view), otherwise at the top of the screen, for 30 s
+      // (Ash, 15 November 2026: "The speech bubble didn't work": in your own eyes' view there was no you to put it over)
+      const saying = myChat && now - myChat.t < CHAT_MS, mine3 = saying && T.me?.third?.();
+      if (saying && !mine3) { sayIn(meEl, "You said", myChat, now); meEl.hidden = false; meEl.classList.add("top"); meEl.style.transform = ""; }
+      else { meEl.classList.remove("top"); if (!mine3 && !meEl.hidden) meEl.hidden = true; }
+      if (!peers.size && !mine3) return;
       const cam = m.getCamera(), w = box.clientWidth, h = box.clientHeight, f = 1 / Math.tan(((m.fov ? m.fov() : 50) * Math.PI) / 360);
-      const cp = Math.cos(cam.pitch), fx = -Math.sin(cam.yaw) * cp, fy = Math.sin(cam.pitch), fz = -Math.cos(cam.yaw) * cp, rx = Math.cos(cam.yaw), rz = -Math.sin(cam.yaw), ux = -fy * rz, uy = fz * rx - fx * rz, uz = fy * rx;
+      const cp = Math.cos(cam.pitch), fx = -Math.sin(cam.yaw) * cp, fy = Math.sin(cam.pitch), fz = -Math.cos(cam.yaw) * cp, rx = Math.cos(cam.yaw), rz = -Math.sin(cam.yaw), ux = -fy * rz, uy = rz * fx - rx * fz, uz = fy * rx;  // up = right × forward (uy had its sign the wrong way round, so names sat mirrored above or below the player)
+      // what you just said, over you when you can see yourself (as a construction worker, from behind)
+      if (mine3) { const dx = F.pos.x - cam.x, dy = ground(F.pos.x, F.pos.z) + 2.35 - cam.y, dz = F.pos.z - cam.z, depth = dx * fx + dy * fy + dz * fz;
+        if (depth > 1) { sayIn(meEl, playerName(), myChat, now); meEl.hidden = false;
+          meEl.style.transform = `translate(${Math.round(w / 2 + (dx * rx + dz * rz) / depth * f * (h / 2))}px, ${Math.round(h / 2 - (dx * ux + dy * uy + dz * uz) / depth * f * (h / 2))}px) translate(-50%, -100%)`; } }
       for (const [id, q] of peers) { if (!q.b) continue;
         if (now - q.b.t > 12000) { drop(id); continue; }  // not heard from: gone
         const kind = q.b.k;
@@ -9988,25 +10167,19 @@ const handle = async (m, post) => {
         // what they are doing: up and down, a turn, a lean, and each arm's swing out to the side and to the front
         let up = 0, turn = 0, lean = 0, armR = 0, armL = 0, fwdR = 0, fwdL = 0, sign = "";
         if (q.emote && (kind === "walk" || kind === "builder")) { const et = (now - q.emote.t0) / 1000, [name, , sg, , secs] = q.emote.e, ease = Math.min(1, et * 5, (secs - et) * 5);
-          if (et > secs) q.emote = null; else { sign = sg;
-            if (name === "wave") armR = (2.5 + 0.35 * Math.sin(et * 11)) * ease;
-            else if (name === "dance") { up = 0.1 * Math.abs(Math.sin(et * 7)); turn = 0.55 * Math.sin(et * 3.5) * ease; armR = (1.6 + 0.8 * Math.sin(et * 7)) * ease; armL = (1.6 - 0.8 * Math.sin(et * 7)) * ease; }
-            else if (name === "jump") { up = 0.8 * Math.abs(Math.sin(et * Math.PI * 1.5)); armR = armL = 2.7 * ease; }
-            else if (name === "cheer") { up = 0.15 * Math.abs(Math.sin(et * 9)); armR = (2.8 + 0.2 * Math.sin(et * 14)) * ease; armL = (2.8 - 0.2 * Math.sin(et * 14)) * ease; }
-            else if (name === "spin") { turn = et / secs * Math.PI * 4; armR = armL = 1.5 * ease; }
-            else if (name === "bow") lean = 0.75 * Math.sin(Math.PI * et / secs);
-            else if (name === "heart") { fwdR = fwdL = 1.3 * ease; armR = armL = 0.25 * ease; } } }
+          if (et > secs) q.emote = null; else { sign = sg; ({ up, turn, lean, armR, armL, fwdR, fwdL } = townEmotePose(name, et, secs)); } }
         M.compose(V.set(s.x, s.y + up, s.z), Q.setFromEuler(E.set(lean - s.p, s.h + turn, s.r, "YXZ")), ONE); q.parts.setMatrix(0, M.elements.slice());
         if (kind === "walk" || kind === "builder") { q.parts.setMatrix(1, M.clone().multiply(SH[0]).multiply(R1.makeRotationZ(-armR)).multiply(R2.makeRotationX(-fwdR)).elements); q.parts.setMatrix(2, M.clone().multiply(SH[1]).multiply(R1.makeRotationZ(armL)).multiply(R2.makeRotationX(-fwdL)).elements); }
-        const shown = sign ? `${q.name} ${sign}` : q.name; if (q.el.textContent !== shown) q.el.textContent = shown;
-        if (kind === "heli") q.parts.setMatrix(1, M.clone().multiply(new THREE.Matrix4().makeTranslation(0, 2.45, 0.1)).multiply(new THREE.Matrix4().makeRotationY(now / 60)).elements);
+        sayIn(q.el, q.name, q.chat, now, sign);
+        if (kind === "heli" || kind === "goldheli") q.parts.setMatrix(1, M.clone().multiply(new THREE.Matrix4().makeTranslation(0, 2.45, 0.1)).multiply(new THREE.Matrix4().makeRotationY(now / 60)).elements);
+        if (kind === "possum") q.parts.setMatrix(1, M.clone().multiply(new THREE.Matrix4().makeTranslation(0, 0, -0.27)).multiply(new THREE.Matrix4().makeRotationY(0.22 * Math.sin(now / 160))).elements);  // its tail, swaying
         // their name over them, where they are on the screen
-        const top = kind === "walk" ? 2.1 : kind === "builder" ? 2.25 : kind === "bus" ? 3.7 : 2.9, dx = s.x - cam.x, dy = s.y + top - cam.y, dz = s.z - cam.z, depth = dx * fx + dy * fy + dz * fz;
+        const top = kind === "walk" ? 2.1 : kind === "builder" ? 2.25 : kind === "bus" ? 3.7 : kind === "possum" ? 0.9 : 2.9, dx = s.x - cam.x, dy = s.y + top - cam.y, dz = s.z - cam.z, depth = dx * fx + dy * fy + dz * fz;
         if (depth < 1 || depth > 600 || !q.name) { q.el.hidden = true; continue; }
         const sx = w / 2 + (dx * rx + dz * rz) / depth * f * (h / 2), sy = h / 2 - (dx * ux + dy * uy + dz * uz) / depth * f * (h / 2);
         if (sx < -40 || sx > w + 40 || sy < 0 || sy > h) { q.el.hidden = true; continue; }
         q.el.hidden = false; q.el.style.transform = `translate(${Math.round(sx)}px, ${Math.round(sy)}px) translate(-50%, -100%)`; } };
-    P.dispose = () => { document.removeEventListener("pointerdown", meOut, true); document.body.classList.remove("bsme"); meBtn.hidden = true; meBox.hidden = true; meBtn.onclick = null; clearTimeout(joining); emoteBtn.hidden = true; emoteBox.hidden = true; emoteBtn.onclick = null; dead = true; for (const id of [...peers.keys()]) drop(id); try { room?.leave(); } catch {} room = null; sendPose = null; };
+    P.dispose = () => { document.removeEventListener("pointerdown", meOut, true); document.body.classList.remove("bsme"); meBtn.hidden = true; meBox.hidden = true; meBtn.onclick = null; clearTimeout(joining); emoteBtn.hidden = true; emoteBox.hidden = true; emoteBtn.onclick = null; chatBtn.hidden = true; chatBar.hidden = true; chatBtn.onclick = null; chatBar.onsubmit = null; meEl.remove(); dead = true; for (const id of [...peers.keys()]) drop(id); try { room?.leave(); } catch {} room = null; sendPose = null; };
     return P;
   }
   // The numbers behind the cars and planes, which Ash can change in Settings > Admin (14 November 2026: "Allow me to edit all these
@@ -10061,6 +10234,53 @@ const handle = async (m, post) => {
   }
   // The plane: a small high-winged four-seater, white with a blue stripe. Nose to +Z, wheels on y = 0. Returns the body and, apart,
   // the propeller's blades and the blur they become when it spins (each about the propeller's own centre).
+  // Ash's place, 6 Beaudesert Road (Ash, 15 November 2026: "Add pandy a person out the front of this house ... without making it
+  // high cost for lag. Add Arlo onto 6 Beaudesert rd. A small cavapoo dog", then "Make the dude at 6 Beaudesert rd ash, make him
+  // look like me. Short curly brown hair"). Ash stands on the front path looking out to the street, turns to you and waves when you
+  // walk up; Arlo potters about the lawn, a few steps at a time, and wags when you're close.
+  // Two small pieces (about 900 triangles in all), only drawn within 260 m, and only moved while something is actually happening.
+  function townHome6(T, m) {
+    const P = { frame() {}, dispose() {} }; if (!m.addParts || !m.groundAt) return P;
+    const THREE = BS.B.THREE, g = (x, z) => m.groundAt(x, z), M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), ONE = new THREE.Vector3(1, 1, 1), R = new THREE.Matrix4();
+    const FAR = new THREE.Matrix4().makeTranslation(0, -1e5, 0).elements, SH = [new THREE.Matrix4().makeTranslation(-0.25, 1.36, 0), new THREE.Matrix4().makeTranslation(0.25, 1.36, 0)], TAIL = new THREE.Matrix4().makeTranslation(0, 0.33, -0.19);
+    const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
+    // who: on the front path at 6, facing the street (west); on the front lawn at 24 (Ash, 15 November 2026: "add pandy, female,
+    // 50 long brown hair, outside 24 Beaudesert rd"), 3.5 m in from the front boundary (lot 2 RP59613), facing the street
+    const folk = [{ kind: "ash", top: "#3f7f8c", x: -252.4, z: -993.6, yaw: -Math.PI / 2 }, { kind: "pandy", top: "#9b4f6b", x: -284.3, z: -907.0, yaw: -1.725 }].map(q => ({ ...q,
+      parts: m.addParts(townPlaneParts(q.top, q.kind).map(p => ({ ...p, matrix: FAR.slice() }))), look: q.yaw, waveT: -1, waved: false, shown: false }));
+    const LAWN = { x: -252.6, z: -997.2, r: 1.7 };  // Arlo's bit of number 6's front lawn
+    const ap = m.addParts(townPlaneParts("#e2b47c", "arlo").map(q => ({ ...q, matrix: FAR.slice() })));
+    let dogShown = false, last = performance.now(), t = 0;
+    const dog = { x: LAWN.x + LAWN.r, z: LAWN.z, h: 0, to: null, rest: 1.5, wag: 0 };
+    const draw = (q, arm) => { M.compose(V.set(q.x, g(q.x, q.z), q.z), Q.setFromEuler(E.set(0, q.look, 0, "YXZ")), ONE); q.parts.setMatrix(0, M.elements.slice());
+      q.parts.setMatrix(1, M.clone().multiply(SH[0]).multiply(R.makeRotationZ(-arm)).elements); q.parts.setMatrix(2, M.clone().multiply(SH[1]).multiply(R.makeRotationZ(0.06)).elements); };
+    const drawDog = wag => { M.compose(V.set(dog.x, g(dog.x, dog.z), dog.z), Q.setFromEuler(E.set(0, dog.h, 0, "YXZ")), ONE); ap.setMatrix(0, M.elements.slice());
+      ap.setMatrix(1, M.clone().multiply(TAIL).multiply(R.makeRotationX(-0.5)).multiply(new THREE.Matrix4().makeRotationZ(wag)).elements); };
+    P.frame = () => { const now = performance.now(), dt = Math.min(0.1, (now - last) / 1000); last = now; t += dt; const F = BS.fly; if (!F) return;
+      const up = F.pos.y - g(F.pos.x, F.pos.z);
+      for (const q of folk) { const dx = F.pos.x - q.x, dz = F.pos.z - q.z, d = Math.hypot(dx, dz);
+        if (d > 260 || up > 220) { if (q.shown) { for (let i = 0; i < 3; i++) q.parts.setMatrix(i, FAR.slice()); q.shown = false; } continue; }
+        let me = !q.shown; q.shown = true;
+        // turns to you as you come up (within 14 m, on foot), and waves the first time
+        const want = d < 14 && T.walk ? Math.atan2(dx, dz) : q.yaw, turn = wrap(want - q.look);
+        if (Math.abs(turn) > 0.01) { q.look += turn * Math.min(1, dt * 3); me = true; }
+        if (d < 12 && T.walk && !q.waved) { q.waved = true; q.waveT = 0; } else if (d > 25) q.waved = false;
+        let arm = 0.06; if (q.waveT >= 0) { q.waveT += dt; const k = Math.min(1, q.waveT * 4, (2.4 - q.waveT) * 4); arm = 0.06 + k * (2.5 + 0.35 * Math.sin(q.waveT * 11)); me = true; if (q.waveT > 2.4) q.waveT = -1; }
+        if (me) draw(q, arm); }
+      // Arlo: a few steps across the lawn, a sniff, then off again (only moved while he moves); his tail goes when you're near
+      const d = Math.hypot(F.pos.x - dog.x, F.pos.z - dog.z);
+      if (d > 260 || up > 220) { if (dogShown) { for (let i = 0; i < 2; i++) ap.setMatrix(i, FAR.slice()); dogShown = false; } return; }
+      let pet = !dogShown; dogShown = true;
+      if (dog.to) { const ex = dog.to[0] - dog.x, ez = dog.to[1] - dog.z, L = Math.hypot(ex, ez), st = Math.min(L, 0.9 * dt);
+        const hw = wrap(Math.atan2(ex, ez) - dog.h); dog.h += hw * Math.min(1, dt * 8); dog.x += ex / (L || 1) * st; dog.z += ez / (L || 1) * st; pet = true;
+        if (L < 0.05) { dog.to = null; dog.rest = 2 + Math.random() * 5; } }
+      else if ((dog.rest -= dt) <= 0) { const a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * LAWN.r; dog.to = [LAWN.x + Math.cos(a) * r, LAWN.z + Math.sin(a) * r]; }
+      else if (d < 7 && T.walk) { const hw = wrap(Math.atan2(F.pos.x - dog.x, F.pos.z - dog.z) - dog.h); if (Math.abs(hw) > 0.02) { dog.h += hw * Math.min(1, dt * 4); pet = true; } }
+      const wag = d < 9 ? 0.5 * Math.sin(t * 16) : 0; if (wag || dog.wag) pet = true; dog.wag = wag;
+      if (pet) drawDog(wag); };
+    P.dispose = () => { for (const q of folk) try { q.parts.remove(); } catch {} try { ap.remove(); } catch {} };
+    return P;
+  }
   function townPlaneParts(stripe = "#1f6fb2", car = false) {
     const lin = hex => { const v = parseInt(hex.slice(1), 16); return [((v >> 16) & 255) / 255, ((v >> 8) & 255) / 255, (v & 255) / 255].map(c => Math.pow(c, 2.2)); };
     const WHITE = lin("#f3f3ee"), BLUE = lin(stripe), GLASS = lin("#1c2a36"), DARK = lin("#2a2c30"), TYRE = lin("#17181a"), GREY = lin("#b9bcc0");
@@ -10078,6 +10298,81 @@ const handle = async (m, post) => {
           quad(p(a0, -1), p(a1, -1), p(a1, 1), p(a0, 1), TYRE); tri([x + w / 2, y, z], p(a0, 1), p(a1, 1), TYRE); tri([x - w / 2, y, z], p(a1, -1), p(a0, -1), TYRE); } };
       return { P, N, C, tri, quad, hull, box, wheel, part: extra => ({ positions: new Float32Array(P), normals: new Float32Array(N), colors: new Float32Array(C), color: [1, 1, 1], roughness: 0.55, doubleSide: true, ...extra }) }; };
     const b = mesh();
+    // a rough ball: ns round by nr down, each point pushed in or out a little (seeded, so it's the same every time)
+    const ball = (B, cx, cy, cz, rx, ry, rz, col, seed = 1, ns = 7, nr = 4, jit = 0.18) => { let sd = seed * 7919 + 13; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647, R = [];
+      for (let j = 0; j <= nr; j++) { R.push([]); for (let i = 0; i < ns; i++) { const ph = j / nr * Math.PI, th = (i + (j % 2) * 0.5) / ns * Math.PI * 2, k = j === 0 || j === nr ? 1 : 1 - jit / 2 + rnd() * jit;
+        R[j].push([cx + Math.sin(ph) * Math.sin(th) * rx * k, cy + Math.cos(ph) * ry * k, cz + Math.sin(ph) * Math.cos(th) * rz * k]); } }
+      for (let j = 0; j < nr; j++) for (let i = 0; i < ns; i++) { const a = R[j][i], b2 = R[j][(i + 1) % ns], c = R[j + 1][(i + 1) % ns], d = R[j + 1][i], cl = Array.isArray(col[0]) ? col[(i + j) % col.length] : col;
+        if (j === 0) B.tri(a, c, d, cl); else if (j === nr - 1) B.tri(a, b2, d, cl); else B.quad(a, b2, c, d, cl); } };
+    if (car === "ash" || car === "pandy") {  // Ash (6 Beaudesert Road: short curly brown hair) or Pandy (24 Beaudesert Road: long brown hair), about 1.7 m, feet on y = 0, facing +Z, a top in the colour given
+      const she = car === "pandy", TOP = lin(stripe), JEAN = lin(she ? "#33405a" : "#3d5878"), SHOE = lin(she ? "#7a5236" : "#ece9e2"), SOLE = lin("#9a948a"), SKIN = lin(she ? "#e8bd9e" : "#e2b393"),
+        HAIR = she ? [lin("#5b3a26"), lin("#664330"), lin("#4e3222")] : [lin("#5a3b24"), lin("#6b4529"), lin("#4c3220")], EYE = lin("#2a1f1a"), LIP = lin("#b06a64");
+      for (const sx of [-1, 1]) { b.box(sx * 0.1 - 0.06, sx * 0.1 + 0.06, 0, 0.035, -0.09, 0.15, SOLE); b.box(sx * 0.1 - 0.055, sx * 0.1 + 0.055, 0.035, 0.09, -0.085, 0.14, SHOE);
+        b.box(sx * 0.1 - 0.07, sx * 0.1 + 0.07, 0.09, 0.84, -0.075, 0.075, JEAN); }
+      b.box(-0.19, 0.19, 0.8, 0.9, -0.11, 0.11, JEAN);  // hips
+      if (she) { b.hull([0.115, 0.18, 0.88, 1.36], [-0.115, 0.18, 0.88, 1.36], TOP); b.box(-0.225, 0.225, 1.2, 1.38, -0.115, 0.115, TOP); }  // her top
+      else { b.hull([0.12, 0.2, 0.88, 1.38], [-0.12, 0.2, 0.88, 1.38], TOP); b.box(-0.255, 0.255, 1.2, 1.4, -0.125, 0.125, TOP); }  // his, broad at the shoulders
+      b.box(-0.06, 0.06, 1.39, 1.48, -0.055, 0.055, SKIN);
+      ball(b, 0, 1.575, 0.005, 0.098, 0.12, 0.108, SKIN, 3, 8, 5, 0.04);  // head
+      if (she) { ball(b, 0, 1.6, -0.018, 0.108, 0.108, 0.114, HAIR, 5, 8, 4, 0.06);  // long brown hair: over the top, down her back past the shoulders, and either side of her face
+        b.hull([-0.04, 0.115, 1.2, 1.62], [-0.13, 0.11, 1.18, 1.6], HAIR[0], HAIR[1]);
+        for (const sx of [-1, 1]) b.box(sx * 0.098 - 0.026, sx * 0.098 + 0.026, 1.3, 1.6, -0.06, 0.07, HAIR[2]);
+        b.box(-0.022, 0.022, 1.51, 1.52, 0.1, 0.108, LIP); }
+      else for (const [x, y, z, r, sd] of [[0, 1.69, 0, 0.075, 1], [-0.055, 1.675, 0.045, 0.05, 2], [0.055, 1.675, 0.045, 0.05, 3], [-0.06, 1.68, -0.045, 0.055, 4], [0.06, 1.68, -0.045, 0.055, 5],
+        [0, 1.685, 0.065, 0.048, 6], [-0.085, 1.63, -0.01, 0.042, 7], [0.085, 1.63, -0.01, 0.042, 8], [0, 1.66, -0.085, 0.05, 9], [-0.05, 1.62, -0.08, 0.042, 10], [0.05, 1.62, -0.08, 0.042, 11]])
+        ball(b, x, y, z, r, r * 0.85, r, HAIR, sd, 6, 3, 0.35);  // short curly hair: tight little curls over the top, sides and back
+      for (const sx of [-1, 1]) b.box(sx * 0.036 - 0.012, sx * 0.036 + 0.012, 1.575, 1.595, 0.102, 0.11, EYE);
+      // each arm a part of its own, from its shoulder (the body's part first, then right, then left), with a hand
+      const arm = () => { const a = mesh(); a.box(-0.06, 0.06, -0.26, 0.02, -0.065, 0.065, TOP); a.box(-0.045, 0.045, -0.6, -0.26, -0.045, 0.045, SKIN); a.box(-0.04, 0.04, -0.7, -0.6, -0.03, 0.05, SKIN); return a.part({ roughness: 0.75 }); };
+      return [b.part({ roughness: 0.75 }), arm(), arm()];
+    }
+    if (car === "possum") {  // a common brushtail possum: silver-grey, cream underneath, big dark eyes, tall rounded ears, a bushy tail
+      // black for most of its length; about 0.45 m nose to rump and 0.4 m of tail, drawn a third bigger so it reads from behind. Feet on y = 0, facing +Z
+      const FUR = [lin("#86827e"), lin("#77736f"), lin("#918d88")], BACK = [lin("#6a6662"), lin("#5d5955")], CREAM = [lin("#e9dfcf"), lin("#ddd0bb")], FACE = [lin("#9a9691"), lin("#8b8782")],
+        BLACK = [lin("#1d1b1a"), lin("#282524"), lin("#151413")], DARK = lin("#3a3633"), PINK = lin("#d99a95"), EAR = lin("#c98d88"), EYE = lin("#0d0c0c");
+      ball(b, 0, 0.17, -0.03, 0.11, 0.095, 0.2, FUR, 31, 8, 5, 0.12);  // body
+      ball(b, 0, 0.215, -0.05, 0.08, 0.05, 0.16, BACK, 32, 7, 3, 0.1);  // the darker back
+      ball(b, 0, 0.125, 0.0, 0.08, 0.055, 0.15, CREAM, 33, 7, 3, 0.08);  // belly
+      ball(b, 0, 0.19, 0.13, 0.085, 0.085, 0.08, [CREAM[0], FUR[0]], 34, 7, 4, 0.1);  // chest
+      ball(b, 0, 0.255, 0.22, 0.068, 0.064, 0.072, FACE, 35, 8, 5, 0.06);  // head
+      ball(b, 0, 0.237, 0.285, 0.036, 0.032, 0.046, FACE[0], 36, 7, 4, 0.05);  // snout
+      b.box(-0.013, 0.013, 0.236, 0.256, 0.322, 0.336, PINK);  // nose
+      b.box(-0.008, 0.008, 0.262, 0.31, 0.255, 0.3, DARK);  // the dark stripe down the face
+      for (const sx of [-1, 1]) {
+        b.box(sx * 0.036 - 0.015, sx * 0.036 + 0.015, 0.258, 0.284, 0.262, 0.274, EYE);  // big round eyes
+        ball(b, sx * 0.042, 0.322, 0.2, 0.024, 0.044, 0.016, FUR[1], 37 + sx, 6, 3, 0.05);  // tall rounded ears
+        b.box(sx * 0.042 - 0.012, sx * 0.042 + 0.012, 0.3, 0.348, 0.214, 0.218, EAR);
+        for (const z of [0.12, -0.15]) { b.box(sx * 0.068 - 0.022, sx * 0.068 + 0.022, 0.012, 0.11, z - 0.022, z + 0.022, FUR[1]); b.box(sx * 0.068 - 0.024, sx * 0.068 + 0.024, 0, 0.014, z - 0.02, z + 0.034, DARK); } }
+      // the tail: grey at the base, then thick black brush, curling up at the end (a part of its own, so it sways)
+      const tail = mesh();
+      for (const [y, z, r, c, sd] of [[0.15, -0.21, 0.042, FUR, 40], [0.13, -0.28, 0.045, BACK, 41], [0.11, -0.35, 0.052, BLACK, 42], [0.095, -0.42, 0.055, BLACK, 43], [0.09, -0.49, 0.052, BLACK, 44], [0.1, -0.55, 0.045, BLACK, 45], [0.13, -0.59, 0.035, BLACK, 46], [0.17, -0.6, 0.025, BLACK, 47]])
+        ball(tail, 0, y, z + 0.2, r, r, r * 1.2, c, sd, 6, 3, 0.25);  // (drawn about the tail's root, 0.2 m back from the middle)
+      const big = q => { for (let i = 0; i < q.positions.length; i++) q.positions[i] *= 1.35; return q; };
+      return [big(b.part({ roughness: 0.95 })), big(tail.part({ roughness: 0.95 }))];
+    }
+    if (car === "lightpole") {  // a street light: a grey steel pole 8.2 m tall on a concrete footing, its arm reaching 1.8 m along +Z with the lamp on the end
+      const STEEL = lin("#8e9396"), FOOT = lin("#a7a49c"), HEAD = lin("#4a4e52");
+      b.box(-0.17, 0.17, -0.3, 0.12, -0.17, 0.17, FOOT);
+      b.hull([0.085, 0.085, 0.12, 4.2], [-0.085, 0.085, 0.12, 4.2], STEEL); b.hull([0.065, 0.065, 4.2, 8.2], [-0.065, 0.065, 4.2, 8.2], STEEL);
+      b.box(-0.07, 0.07, 8.2, 8.24, -0.07, 0.07, STEEL);
+      b.hull([0.06, 0.035, 7.92, 8.0], [1.55, 0.035, 8.02, 8.08], STEEL);  // the arm, rising a little as it reaches out
+      b.box(-0.13, 0.13, 7.9, 8.06, 1.45, 2.15, HEAD);
+      const lens = mesh(); lens.box(-0.1, 0.1, 7.885, 7.9, 1.5, 2.1, lin("#fff2c6"));
+      return [b.part({ roughness: 0.6 }), lens.part({ unlit: true })];
+    }
+    if (car === "arlo") {  // Arlo, a cavoodle (cavapoo): small and curly, apricot, floppy ears; 0.34 m at the shoulder, paws on y = 0, facing +Z
+      const COAT = [lin(stripe), lin("#dba66c"), lin("#c88f52")], EAR = [lin("#b97d45"), lin("#c88a4e")], DARK = lin("#24170f"), TONGUE = lin("#d9737a");
+      ball(b, 0, 0.27, -0.02, 0.105, 0.1, 0.19, COAT, 11, 7, 4, 0.22);  // body
+      ball(b, 0, 0.29, 0.12, 0.1, 0.105, 0.09, COAT, 12, 7, 4, 0.22);  // chest
+      for (const [sx, z] of [[-1, 0.12], [1, 0.12], [-1, -0.13], [1, -0.13]]) { b.box(sx * 0.06 - 0.032, sx * 0.06 + 0.032, 0.03, 0.22, z - 0.032, z + 0.032, COAT[1]); ball(b, sx * 0.06, 0.035, z + 0.012, 0.04, 0.035, 0.05, COAT[0], 20 + sx, 6, 3, 0.2); }
+      ball(b, 0, 0.43, 0.2, 0.085, 0.085, 0.085, COAT, 13, 7, 4, 0.22);  // head
+      ball(b, 0, 0.4, 0.285, 0.045, 0.04, 0.055, COAT[1], 14, 6, 3, 0.15);  // muzzle
+      b.box(-0.017, 0.017, 0.408, 0.432, 0.33, 0.345, DARK);  // nose
+      for (const sx of [-1, 1]) { b.box(sx * 0.034 - 0.011, sx * 0.034 + 0.011, 0.442, 0.464, 0.266, 0.278, DARK); ball(b, sx * 0.08, 0.385, 0.19, 0.03, 0.075, 0.045, EAR, 15 + sx, 6, 3, 0.2); }
+      b.box(-0.015, 0.015, 0.355, 0.37, 0.3, 0.33, TONGUE);
+      const tail = mesh(); ball(tail, 0, 0.06, -0.03, 0.035, 0.07, 0.035, COAT, 16, 6, 3, 0.25);  // the tail, about its base (wags)
+      return [b.part({ roughness: 0.95 }), tail.part({ roughness: 0.95 })];
+    }
     if (car === "roo" || car === "emu" || car === "wombat") {  // an Australian animal, feet on y = 0, facing +Z
       if (car === "roo") { const F = lin("#a3693d"), L = lin("#dcb88c"), D = lin("#3b2a1e");
         for (const sx of [-1, 1]) { b.box(sx * 0.12 - 0.05, sx * 0.12 + 0.05, 0, 0.07, -0.08, 0.36, F); b.box(sx * 0.13 - 0.03, sx * 0.13 + 0.01, 1.24, 1.42, 0.02, 0.07, F); b.box(sx * 0.11 - 0.03, sx * 0.11 + 0.03, 0.66, 0.84, 0.14, 0.26, F); }
@@ -10105,9 +10400,9 @@ const handle = async (m, post) => {
       return [b.part({}), arm(), arm()];
     }
     if (car === "heli") {  // a small helicopter: a glass nose, a tail boom, skids on y = 0. The rotor and its blur are apart, about the mast
-      const COL = lin(stripe);
+      const COL = lin(stripe), BODY = stripe === "#e2ad1c" ? COL : WHITE;  // (the golden one is gold all over)
       const H = [[2.1, 0.22, 0.8, 1.2], [1.35, 0.72, 0.5, 1.8], [0.2, 0.82, 0.45, 2.02], [-1.0, 0.72, 0.6, 1.98], [-1.9, 0.26, 1.15, 1.72], [-5.3, 0.1, 1.4, 1.62]];
-      H.slice(0, -1).forEach((q, i) => b.hull(q, H[i + 1], i === 0 ? GLASS : i >= 3 ? COL : WHITE, i <= 1 ? GLASS : i >= 3 ? COL : WHITE, true));
+      H.slice(0, -1).forEach((q, i) => b.hull(q, H[i + 1], i === 0 ? GLASS : i >= 3 ? COL : BODY, i <= 1 ? GLASS : i >= 3 ? COL : BODY, true));
       for (const sx of [-1, 1]) { b.quad([sx * 0.83, 1.15, 1.2], [sx * 0.83, 1.15, -0.2], [sx * 0.83, 1.85, -0.2], [sx * 0.76, 1.7, 1.2], GLASS);
         b.box(sx * 0.95 - 0.05, sx * 0.95 + 0.05, 0, 0.09, -1.5, 1.7, DARK); for (const z of [-0.9, 1.0]) b.box(sx * 0.9 - 0.04, sx * 0.9 + 0.04, 0.09, 0.55, z - 0.04, z + 0.04, DARK); }
       b.hull([-4.6, 0.04, 1.5, 1.62], [-5.4, 0.04, 1.5, 2.6], COL); b.box(-0.6, 0.6, 1.47, 1.53, -5.25, -4.85, COL);  // fin and tailplane
@@ -10167,7 +10462,9 @@ const handle = async (m, post) => {
     const C = { in: false, enter() {}, frame() {}, dispose() {} };
     const RIDES = TOWN_RIDES[place]; if (!RIDES || !m.addParts) return C;
     // a model that knows its buildings and hands over its parked cars is asked; one that does not has neither (nothing is solid there)
-    const solid = (x, z) => (m.solidAt ? m.solidAt(x, z) : false) || !!T.solid?.(x, z), parked = (x, z, r) => m.nearestCar && m.driveCar ? m.nearestCar(x, z, r) : null;
+    // the possum's street lights (Moorooka: MOO_POSSUM) stand in the way of cars and planes too
+    const PS = RIDES.possum, POLE_TOP = 8.24, poles = (PS?.poles || []).map(([x, z]) => ({ x, z, y: m.groundAt(x, z) })), poleAt = (x, z, r = 0.45) => poles.find(q => Math.hypot(q.x - x, q.z - z) < r);
+    const solid = (x, z) => (m.solidAt ? m.solidAt(x, z) : false) || !!T.solid?.(x, z) || !!poleAt(x, z, 0.3), parked = (x, z, r) => m.nearestCar && m.driveCar ? m.nearestCar(x, z, r) : null;
     const THREE = BS.B.THREE, btn = $("bsCarBtn"), boostBtn = $("bsBoostBtn"), chip = $("bsHeight"), wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
     const R = rideSettings(), GOLD = 1 + R.gold / 100, VMAX = R.carTop / 3.6, VREV = 5.5, VBOOST = Math.max(R.carBoostTop, R.carTop) / 3.6, LIFT = R.planeLift / 3.6, CRUISE = Math.max(R.planeTop, R.planeLift * 1.4) / 3.6, JET = Math.max(R.planeBoostTop, R.planeTop) / 3.6, canBoost = P => !P.heli && (P.gold || !!R.planeBoost), touch = matchMedia("(pointer: coarse)").matches, snd = townSound();
     snd.level(R.volume / 100);
@@ -10194,17 +10491,68 @@ const handle = async (m, post) => {
     // the golden plane with no place of its own stands on open ground picked for this visit (dry, if any of it is)
     const roam = (RIDES.roam || []).filter(([x, z]) => ground(x, z) - m.groundAt(x, z) < 0.35), spot = roam.length ? roam[Math.floor(Math.random() * roam.length)] : null;
     const homes = RIDES.planes.some(q => q.gold) || !spot ? RIDES.planes : [...RIDES.planes, { x: spot[0], z: spot[1], h: Math.random() * Math.PI * 2, gold: true, name: "The golden plane", at: "" }];
+    // the golden helicopter (Ash, 15 November 2026: "Add a golden helicopter. Random location no go to btn unless name is ash. 40%
+    // faster"): on open ground picked at random each visit, from the town's open spots and the grass beside each plane and helicopter,
+    // dry and clear of buildings, and not where the golden plane is
+    { const near = homes.flatMap(q => [18, -18].map(d => [q.x + Math.cos(q.h) * d, q.z - Math.sin(q.h) * d])), all = [...roam, ...near]
+        .filter(([x, z]) => (!spot || Math.hypot(x - spot[0], z - spot[1]) > 40) && ground(x, z) - m.groundAt(x, z) < 0.35 && inside(x, z) && fits(CAR, x, z, 0) && fits(CAR, x, z, Math.PI / 2));
+      if (all.length) { const [x, z] = all[Math.floor(Math.random() * all.length)]; homes.push({ x, z, h: Math.random() * Math.PI * 2, heli: true, gold: true, name: "The golden helicopter", at: "" }); } }
     const planes = homes.map(home => { const P = { home, x: home.x, z: home.z, h: home.h, y: 0, p: 0, r: 0, v: 0, air: false, spin: 0, turn: 0, ang: 0 };
       const [y, p, r] = lie(P, 2, 1.2); P.y = y; P.p = p; P.r = r;
       P.gold = !!home.gold; P.k = P.gold ? GOLD : 1;  // the golden one: a fifth more push, speed and quickness on the controls, and the only one with a boost
       P.heli = !!home.heli;
-      P.parts = m.addParts((P.heli ? townPlaneParts("#c8322b", "heli") : townPlaneParts(P.gold ? "#e2ad1c" : undefined)).map(q => ({ ...q, matrix: M.identity().elements.slice() }))); showPlane(P); return P; });
+      P.parts = m.addParts((P.heli ? townPlaneParts(P.gold ? "#e2ad1c" : "#c8322b", "heli") : townPlaneParts(P.gold ? "#e2ad1c" : undefined)).map(q => ({ ...q, matrix: M.identity().elements.slice() }))); showPlane(P); return P; });
     // ---- the golden car, the app's own mesh too: twice the top speed and the acceleration of a parked car
     const showOwn = G => { M.compose(V.set(G.x, G.y, G.z), Q.setFromEuler(E.set(-G.p, G.h, G.r, "YXZ")), ONE); G.parts.setMatrix(0, M.elements.slice()); };
     const owns = RIDES.cars.filter(home => !home.spare || !m.nearestCar).map(home => { const G = { x: home.x, z: home.z, h: home.h, y: 0, p: 0, r: 0, gold: !!home.gold, bus: !!home.bus };
       const [y, p, r] = G.bus ? lie(G, 3.6, 1.1) : lie(G, 1.3, 0.8); G.y = y; G.p = p; G.r = r;
       G.parts = m.addParts((G.bus ? townPlaneParts("#2f7fc4", "bus") : townPlaneParts(G.gold ? "#e8b923" : "#c8322b", true)).map(q => ({ ...q, matrix: M.identity().elements.slice() }))); showOwn(G); return G; });
     const gold = owns.find(G => G.gold) || owns[0];
+    // ---- the possum (Moorooka only): the app's own brushtail possum, and the street lights it can climb. Being the possum,
+    // W and S run forward and back at three times walking pace (half as fast again on the boost), A and D turn, Space jumps.
+    // Run into a street light or a building and it climbs it (keep pushing forward); at the top it steps on to the roof or
+    // sits on the light, runs about up there, and drops off an edge. S (or Down, or C) lets go of a wall.
+    // Loaded lazily (Ash, 15 November 2026: "Lazy load things as appropriate like the possum, if necessary this can bring up
+    // loading when the person enters the possum"): the possum and the lights are only built once you come within 400 m of
+    // Kingwell Street, and the roofs only fetched once you are within 80 m of the possum (or when you become it, with a word
+    // while they load). Until then the lights are still solid to cars, which costs nothing.
+    let poleMesh = null, possumMesh = null;
+    // the roofs: each of Moorooka's buildings with its eave and ridge (town.json, which the model has already loaded, so the
+    // browser has it), fetched the first time you are the possum. A roof is drawn as rising from the eave at its edges towards
+    // the ridge; until they are in, a building counts as 4.5 m tall.
+    let roofs = null, roofsIn = null;
+    const loadRoofs = () => { if (roofs || !T.cfg) return roofsIn; roofs = new Map();
+      return roofsIn = townStreetData(T.cfg).then(d => { const s = d.town?.buildings; if (typeof s !== "string") return; const b = atob(s), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i);
+        const B = new Int16Array(u.buffer, 0, u.length >> 1);
+        for (let i = 0; i < B.length; i += 7 + 2 * B[i]) { const k = B[i]; if (k < 3) continue; const p = new Float32Array(k * 2); let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
+          for (let q = 0; q < k; q++) { const x = p[q * 2] = B[i + 7 + q * 2] / 10, z = p[q * 2 + 1] = B[i + 8 + q * 2] / 10; x0 = Math.min(x0, x); x1 = Math.max(x1, x); z0 = Math.min(z0, z); z1 = Math.max(z1, z); }
+          const R = { p, eave: B[i + 1] / 10, ridge: B[i + 2] / 10, top: null };
+          for (let a = Math.floor(x0 / 16); a <= Math.floor(x1 / 16); a++) for (let c = Math.floor(z0 / 16); c <= Math.floor(z1 / 16); c++) { const key = a * 65536 + c; let L = roofs.get(key); if (!L) roofs.set(key, L = []); L.push(R); } } }).catch(() => {}).then(() => { roofsIn = null; }); };
+    const roofAt = (x, z) => { const L = roofs?.get(Math.floor(x / 16) * 65536 + Math.floor(z / 16)); if (!L) return null;
+      for (const R of L) { const p = R.p, n = p.length / 2; let inn = false, edge = Infinity;
+        for (let i = 0, j = n - 1; i < n; j = i++) { const ax = p[j * 2], az = p[j * 2 + 1], bx = p[i * 2], bz = p[i * 2 + 1];
+          if ((bz > z) !== (az > z) && x < (ax - bx) * (z - bz) / (az - bz) + bx) inn = !inn;
+          const ex = ax - bx, ez = az - bz, t = bsClamp(((x - bx) * ex + (z - bz) * ez) / (ex * ex + ez * ez || 1), 0, 1); edge = Math.min(edge, Math.hypot(x - bx - ex * t, z - bz - ez * t)); }
+        if (!inn) continue;
+        if (R.top == null) { let lo = Infinity, hi = -Infinity, cx = 0, cz = 0; for (let i = 0; i < n; i++) { const g = m.groundAt(p[i * 2], p[i * 2 + 1]); lo = Math.min(lo, g); hi = Math.max(hi, g); cx += p[i * 2] / n; cz += p[i * 2 + 1] / n; }
+          const g = Math.min(hi, Math.max(lo, m.groundAt(cx, cz))) + 0.1; R.top = Math.max(R.eave, g + 2.4, hi + 1.5); }  // the walls' height, as the model raises them
+        return R.top + Math.min(Math.max(0, R.ridge - R.top), edge * 0.55); }
+      return null; };
+    // what the possum stands on there: the ground, the top of a street light, or a roof
+    const surf = (x, z) => { let y = ground(x, z); const q = poleAt(x, z); if (q) y = Math.max(y, q.y + POLE_TOP);
+      if (m.solidAt?.(x, z) || T.solid?.(x, z)) y = Math.max(y, roofAt(x, z) ?? m.groundAt(x, z) + 4.5);
+      return y; };
+    const pos = PS ? { x: PS.x, z: PS.z, h: PS.h, y: 0, p: 0, r: 0, v: 0, vy: 0, t: 0, mode: "ground", wall: null, jumped: false } : null;
+    const TAIL = new THREE.Matrix4(), TURN = new THREE.Matrix4();
+    const showPossum = () => { if (!possumMesh) return; const bob = pos.mode === "ground" ? Math.min(0.06, Math.abs(pos.v) / 400) * Math.abs(Math.sin(pos.t * 16)) : 0;
+      M.compose(V.set(pos.x, pos.y + bob, pos.z), Q.setFromEuler(E.set(-pos.p, pos.h, pos.r, "YXZ")), ONE); possumMesh.setMatrix(0, M.elements.slice());
+      const sway = pos.mode === "climb" ? 0.18 * Math.sin(pos.t * 4) : Math.min(0.45, Math.abs(pos.v) / 50) * Math.sin(pos.t * 13) + 0.1 * Math.sin(pos.t * 1.7);
+      possumMesh.setMatrix(1, M.clone().multiply(TAIL.makeTranslation(0, 0, -0.27)).multiply(TURN.makeRotationY(sway)).elements.slice()); };
+    const possumHome = () => { Object.assign(pos, { x: PS.x, z: PS.z, h: PS.h, p: 0, r: 0, v: 0, vy: 0, mode: "ground", wall: null, sit: false }); pos.y = surf(pos.x, pos.z); showPossum(); };
+    if (pos) possumHome();
+    const wake = () => { if (possumMesh || !pos) return;  // the possum and the lights, built the first time you come near
+      poleMesh = m.addParts(poles.flatMap(q => townPlaneParts(undefined, "lightpole").map(part => ({ ...part, matrix: M.compose(V.set(q.x, q.y, q.z), Q.setFromEuler(E.set(0, PS.arm, 0, "YXZ")), ONE).elements.slice() }))));
+      possumMesh = m.addParts(townPlaneParts(undefined, "possum").map(q => ({ ...q, matrix: M.identity().elements.slice() }))); showPossum(); };
     // ---- what the keys do, shown while you are in something (the list on a desktop, the line that says what to do next on both)
     const keysBox = $("bsKeys"), keysNow = $("bsKeysNow"), keysList = $("bsKeysList"), keysQ = keysBox.querySelector(".bs-keys-q");
     const joyName = document.querySelector('#bsFly .bs-joy[data-joy="move"] span'), udName = [...document.querySelectorAll("#bsFly .bs-udb span")];
@@ -10212,14 +10560,15 @@ const handle = async (m, post) => {
       car: [[["W", "S"], "Go, and brake or reverse (\u2191 and \u2193 too)"], [["A", "D"], "Steer (\u2190 and \u2192 too)"], [["Space"], "Handbrake: swings the tail round"], [["Shift"], "Mega boost"], [["Drag"], "Look around"], [["Enter"], "Get out"]] };
     KEYS.heli = [[["W", "S"], "Forward, back"], [["A", "D"], "Turn (\u2190 and \u2192 too)"], [["\u2193"], "Up (Space too)"], [["\u2191"], "Down (C too)"], [["Drag"], "Look around"], [["Enter"], "Get out, once you have landed"]];
     KEYS.bus = KEYS.car;
+    KEYS.possum = [[["W", "A", "S", "D"], "Run that way, from where you're looking (the arrows too)"], [["W"], "Into a street light or a wall: climb it"], [["S"], "On a wall: let go"], [["Space"], "Jump (off a wall too)"], [["Drag"], "Look around"], [["Enter"], "Hop out"]];
     const hint = text => { if (keysNow.textContent !== text) { keysNow.textContent = text; if (touch) keysBox.hidden = !text; } };
     const keysOff = off => { keysBox.classList.toggle("off", off); keysQ.textContent = off ? "? to show the controls" : "? to hide this list"; };
     const showKeys = kind => { keysNow.textContent = ""; keysOff(false); keysBox.hidden = !kind || touch;  // (on a phone it shows once there is something to say)
       keysList.replaceChildren(...(KEYS[kind] || []).filter(([ks]) => !(kind === "plane" && plane && !canBoost(plane) && ks[0] === "Shift")).flatMap(([ks, what]) => { const dt = document.createElement("dt"), dd = document.createElement("dd");
         for (const key of ks) { const kb = document.createElement("kbd"); kb.textContent = key; dt.append(kb); } dd.textContent = what; return [dt, dd]; }));
       // the stick and the Up and Down buttons say what they do in it
-      if (joyName) joyName.textContent = kind === "plane" ? "Power and turn" : kind === "heli" ? "Go and turn" : kind === "car" ? "Drive" : "Move";
-      if (udName.length === 2) { udName[0].textContent = kind === "plane" ? "Climb" : "Up"; udName[1].textContent = kind === "plane" ? "Dive" : "Down"; } };
+      if (joyName) joyName.textContent = kind === "plane" ? "Power and turn" : kind === "heli" ? "Go and turn" : kind === "car" ? "Drive" : kind === "possum" ? "Run and turn" : "Move";
+      if (udName.length === 2) { udName[0].textContent = kind === "plane" ? "Climb" : kind === "possum" ? "Jump" : "Up"; udName[1].textContent = kind === "plane" ? "Dive" : kind === "possum" ? "Let go" : "Down"; } };
     C.keys = () => { if (!veh) return false; keysOff(!keysBox.classList.contains("off")); return true; };  // "?" hides the list and brings it back
     // ---- the boost's charge: a fine ring of 48 slanted ticks on the ground round the car, lit as far round as there is charge
     // left, running from red-orange (nearly out) through gold to pale (full), between two hairlines. It shows while the boost is
@@ -10242,14 +10591,23 @@ const handle = async (m, post) => {
       if (on && car) M.compose(V.set(car.x, car.y, car.z), Q.setFromEuler(E.set(-car.p, car.h, car.r, "YXZ")), BEAT.set(beat * (car.bus ? 2.1 : 1), 1, beat * (car.bus ? 2.1 : 1)));
       for (let i = 0; i <= RING; i++) { const show = !!on && !!car && (i === 0 || i <= full); if (show || lit[i]) { ring.setMatrix(i, show ? M.elements.slice() : NONE); lit[i] = show; } }
       const pc = Math.round(charge * 100) + "%"; if (boostBtn.style.getPropertyValue("--charge") !== pc) boostBtn.style.setProperty("--charge", pc); };
-    const leave = step => { if (!veh) return; const was = veh; snd.door(); snd.stop();
-      if (was === "car") { car.v = 0; sit(0); showRing(false); if (step) { F.pos.x = car.x - Math.cos(car.h) * (car.bus ? 2.6 : 1.8); F.pos.z = car.z + Math.sin(car.h) * (car.bus ? 2.6 : 1.8); F.yaw = car.h + Math.PI; F.pitch = -0.04; } }  // out of the driver's door, on the right, facing the way the car does
+    const leave = step => { if (!veh) return; const was = veh; if (was !== "possum" && was !== "ride") snd.door(); snd.stop();
+      if (was === "ride") { const q = ride.q; T.peers?.ride?.(ride.id, false);
+        if (step && q) { const back = RIDE_UP[q.k] > 1 ? 2.4 : 1.2; F.pos.x = q.x - Math.cos(q.h) * back; F.pos.z = q.z + Math.sin(q.h) * back; F.yaw = q.h + Math.PI; F.pitch = -0.04; }
+        ride = null; }
+      else if (was === "possum") { const P = pos; P.v = 0;
+        if (!step) possumHome();  // flying off, a jump to a place or starting again: it goes home to number 16
+        else { if (P.mode === "air") { P.y = surf(P.x, P.z); P.vy = 0; P.mode = "ground"; } if (P.mode !== "climb") P.p = 0; showPossum();  // left where it is, even halfway up a wall
+          // you stand where the view was (behind it, clear of the building it is on); facing it
+          if (solid(F.pos.x, F.pos.z) || !inside(F.pos.x, F.pos.z)) { F.pos.x = PS.stand.x; F.pos.z = PS.stand.z; }
+          F.yaw = Math.atan2(F.pos.x - P.x, F.pos.z - P.z); F.pitch = -0.08; } }
+      else if (was === "car") { car.v = 0; sit(0); showRing(false); if (step) { F.pos.x = car.x - Math.cos(car.h) * (car.bus ? 2.6 : 1.8); F.pos.z = car.z + Math.sin(car.h) * (car.bus ? 2.6 : 1.8); F.yaw = car.h + Math.PI; F.pitch = -0.04; } }  // out of the driver's door, on the right, facing the way the car does
       else { const P = plane; if (P.air) { P.x = P.home.x; P.z = P.home.z; P.h = P.home.h; P.air = false; }  // left in the air (you flew off as the camera, or jumped somewhere): it is back where it lives
         P.v = 0; P.spin = 0; const [y, p, r] = lie(P, 2, 1.2); P.y = y; P.p = p; P.r = r;
         if (step) { F.pos.x = P.x + Math.cos(P.h) * 1.9; F.pos.z = P.z - Math.sin(P.h) * 1.9; F.yaw = P.h + Math.PI; F.pitch = -0.04; }  // out of the left door
         plane = null; showPlane(P); }
       veh = null; car = null; plane = null; showKeys(null); C.in = false; F.drive = null; F.boost = false; F.hText = ""; F.vert = 0; F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.keys.clear();
-      document.body.classList.remove("bsdrive", "bsplane"); boostBtn.hidden = true; handBtn.hidden = true; handBtn.classList.remove("on"); F.hand = false; at = 0; C.frame(); };
+      document.body.classList.remove("bsdrive", "bsplane", "bspossum", "bsride"); boostBtn.hidden = true; boostBtn.textContent = "Boost"; handBtn.hidden = true; handBtn.classList.remove("on"); F.hand = false; at = 0; C.frame(); };
     const tick = dt0 => { const dt = Math.min(dt0, 0.1), k = F.keys, has = (...c) => c.some(x => k.has(x));
       // flying the camera, a jump to a place or starting again has moved the view: that is getting out
       if (!T.walk || T.tween || BS.town !== T || Math.abs(F.pos.x - last[0]) + Math.abs(F.pos.y - last[1]) + Math.abs(F.pos.z - last[2]) > 1e-3) return leave(false);
@@ -10258,10 +10616,16 @@ const handle = async (m, post) => {
       const dy = wrap(F.yaw - last[3]), dp = F.pitch - last[4]; idle = Math.abs(dy) + Math.abs(dp) > 1e-4 ? 0 : idle + dt;
       off[0] = wrap(off[0] + dy); off[1] = bsClamp(off[1] + dp, -1, 0.55);
       // (in a plane the up and down arrows work the nose, not the power: see below)
-      const fly = veh !== "car", thr = bsClamp((has("KeyW") || (!fly && has("ArrowUp")) ? 1 : 0) - (has("KeyS") || (!fly && has("ArrowDown")) ? 1 : 0) + F.stick.y, -1, 1), str = bsClamp((has("KeyD", "ArrowRight") ? 1 : 0) - (has("KeyA", "ArrowLeft") ? 1 : 0) + F.stick.x, -1, 1);
+      const fly = veh === "plane", thr = bsClamp((has("KeyW") || (!fly && has("ArrowUp")) ? 1 : 0) - (has("KeyS") || (!fly && has("ArrowDown")) ? 1 : 0) + F.stick.y, -1, 1), str = bsClamp((has("KeyD", "ArrowRight") ? 1 : 0) - (has("KeyA", "ArrowLeft") ? 1 : 0) + F.stick.x, -1, 1);
       const boost = has("ShiftLeft", "ShiftRight") || !!F.boost;
       let o, D, text;  // what the view follows, how far back, and what the chip says
-      if (veh === "car") { let v = car.v; const brake = has("Space") || !!F.hand;
+      if (veh === "ride") { const q = (T.peers?.list?.() || []).find(v => v.id === ride.id);
+        if (!q || !RIDE_REACH[q.k]) { toast(q ? `${ride.name} has got out.` : `${ride.name} has gone.`, 2600); return leave(true); }
+        const now = performance.now(), [x0, , z0, t0] = ride.at, sp = now - t0 > 0 ? Math.hypot(q.x - x0, q.z - z0) / ((now - t0) / 1000) : 0;
+        ride.v += (sp - ride.v) * Math.min(1, dt * 3); ride.at = [q.x, q.y, q.z, now]; ride.k = q.k; ride.q = q;
+        o = { x: q.x, y: q.y, z: q.z, h: q.h, v: ride.v, air: q.y - ground(q.x, q.z) > 3 }; D = RIDE_BACK[q.k] + Math.min(10, ride.v / 8);
+        text = `With ${ride.name} \u00b7 ${Math.round(ride.v * 3.6)} km/h`; hint("");
+      } else if (veh === "car") { let v = car.v; const brake = has("Space") || !!F.hand;
         // the boost runs on a charge: about four seconds' worth, back in ten. Run right out, it waits until a fifth is back
         const boosting = boost && thr > 0.05 && !brake && charge > 0 && !spent;
         // (the golden car has its own boost, handbrake spin and handbrake drag: Settings > Admin > Cars and planes)
@@ -10291,15 +10655,62 @@ const handle = async (m, post) => {
         snd.set(0.18 + 0.82 * bsClamp((a - G[g]) / (top - G[g]), 0, 1), Math.abs(thr) > 0.05 && !brake ? 0.35 + 0.65 * Math.abs(thr) : 0.08, a, boosting, slide ? 1 : Math.min(1, Math.abs(wrap(car.h - car.dir)) * 2.5));
         showRing(boosting || charge < 0.999, boosting);
         o = car; D = (car.bus ? 15 : 7.5) + Math.min(5, a / 9); text = Math.round(a * 3.6) + " km/h";
+      } else if (veh === "possum") { const P = pos, top = 11 * 3 * 0.8, jump = has("Space") || !!F.boost, drop = has("KeyC");  // walking is 11 m/s: three times that, less a fifth (Ash, 15 November 2026: "speed down by 20%"); no boost, the button is Jump
+        P.t += dt;
+        // holding on to another player's plane or helicopter (Ash, 15 November 2026: "when a player is in the possum and a player is in
+        // the plane that the possum can hold onto the plane"): it rides on top where it grabbed, until Jump springs it off
+        const CL = P.cling, cq = CL && (T.peers?.list?.() || []).find(v => v.id === CL.id);
+        if (CL && (!cq || !CLING[cq.k])) { P.cling = null; P.mode = "air"; P.vy = 0; toast(`${CL.name} has gone. You're off.`, 2200); }
+        if (P.cling) { const q = cq, sn = Math.sin(q.h), cs = Math.cos(q.h), x = q.x + sn * CL.along + cs * CL.side, z = q.z + cs * CL.along - sn * CL.side;
+          P.v = Math.hypot(x - P.x, z - P.z) / Math.max(dt, 1e-3); P.x = x; P.z = z; P.y = q.y + CLING[q.k]; P.h = q.h + CL.dh; P.mode = "ground"; P.vy = 0;
+          if (jump && !P.jumped) { P.cling = null; P.mode = "air"; P.vy = 8; T.peers?.ride?.(CL.id, false); toast("You've let go.", 1800); } }
+        else if (P.mode === "climb") { const W = P.wall; P.v = 0;
+          if (thr < -0.1 || drop || (jump && !P.jumped)) { P.mode = "air"; P.vy = jump ? 6 : 0; P.h += Math.PI; P.wall = null; }  // lets go (stick back, or Jump to spring off), turning round as it drops
+          else if (thr > 0.1 || jump) { P.y += 12 * dt * Math.max(thr, jump ? 1 : 0);
+            if (P.y >= W.top - 0.05) { P.mode = "ground"; P.wall = null;  // over the top: on to the light, or a step on to the roof
+              if (W.pole) { P.x = W.pole.x; P.z = W.pole.z; P.sit = true; } else { P.x += Math.sin(P.h) * 0.7; P.z += Math.cos(P.h) * 0.7; }
+              P.y = surf(P.x, P.z); } } }
+        else {
+          if (P.sit && thr < 0.1) P.sit = false;  // on top of a light it sits until W (or the stick) is let go and pushed again
+          // the stick points the way to run, seen from where you're looking (not steered like a car: Ash, 15 November 2026: "The
+          // possum handles a bit too much like a car"): it whips round to face that way and scampers off, quick to start and stop
+          const mag = Math.min(1, Math.hypot(str, thr)), goH = mag > 0.15 ? F.yaw + Math.PI + Math.atan2(-str, thr) : P.h, turn = wrap(goH - P.h);
+          if (mag > 0.15) P.h += Math.sign(turn) * Math.min(Math.abs(turn), (P.mode === "air" ? 4 : 11) * dt);
+          const want = P.sit || mag <= 0.15 ? 0 : top * mag * Math.max(0.2, Math.cos(turn)); P.v += (want - P.v) * Math.min(1, dt * (want > P.v ? 10 : 14));
+          for (let n = Math.max(1, Math.ceil(Math.abs(P.v) * dt / 0.4)), i = 0, st = dt / n; i < n; i++) {  // in steps of 40 cm, so it cannot skip through a wall or past a light
+            const x = P.x + Math.sin(P.h) * P.v * st, z = P.z + Math.cos(P.h) * P.v * st;
+            if (!inside(x, z)) { P.v = 0; break; }
+            const s = surf(x, z);
+            if (s > P.y + 0.6) {  // a street light or a wall in the way: running at it, it starts up it (a wall met in the air too: it grabs on)
+              if (P.v > 0) { const q = poleAt(x, z); P.mode = "climb"; P.vy = 0; P.wall = { top: s, pole: q };
+                if (q) { P.h = Math.atan2(q.x - P.x, q.z - P.z); P.x = q.x - Math.sin(P.h) * 0.32; P.z = q.z - Math.cos(P.h) * 0.32; } }
+              P.v = 0; break; }
+            P.x = x; P.z = z;
+            if (P.mode === "ground" && s < P.y - 0.6) { P.mode = "air"; P.vy = 0; } }  // off the edge of a roof or the top of a light: it drops
+          if (P.mode === "air") { P.vy -= 22 * dt; P.y += P.vy * dt; const s = surf(P.x, P.z);
+            if (P.y <= s) { if (P.vy < -9) snd.thud(Math.min(1.2, -P.vy / 18)); P.y = s; P.vy = 0; P.mode = "ground"; } }
+          else if (P.mode === "ground") { P.y += (surf(P.x, P.z) - P.y) * Math.min(1, dt * 20); if (jump && !P.jumped) { P.mode = "air"; P.vy = 11.1; } } }  // two and a half times as high as it was (Ash, 15 November 2026)
+        P.jumped = jump;  // (one jump a press)
+        // touching a plane or helicopter someone's flying (running into it, or landing on it): it grabs on
+        if (!P.cling && P.mode !== "climb") for (const q of T.peers?.list?.() || []) { if (!CLING[q.k]) continue;
+          const dx = P.x - q.x, dz = P.z - q.z, along = dx * Math.sin(q.h) + dz * Math.cos(q.h), side = dx * Math.cos(q.h) - dz * Math.sin(q.h);
+          if (Math.abs(along) < 3.4 && Math.abs(side) < 1.7 && P.y > q.y - 0.6 && P.y < q.y + CLING[q.k] + 1.5) {
+            P.cling = { id: q.id, name: q.name, along: bsClamp(along, -2.4, 2.4), side: bsClamp(side, -0.5, 0.5), dh: wrap(P.h - q.h) }; P.v = 0;
+            T.peers?.ride?.(q.id, 2); toast(`Holding on to ${q.name}! Jump to let go.`, 2600); break; } }
+        P.p += ((P.mode === "climb" ? 1.45 : P.mode === "air" ? bsClamp(P.vy * 0.03, -0.35, 0.35) : 0) - P.p) * Math.min(1, dt * 12); showPossum();
+        const up = P.y - ground(P.x, P.z);
+        hint(P.mode === "climb" ? (touch ? "Climbing. Stick forward to go up, back to let go" : "Climbing. W goes up, S lets go") : "");
+        o = P; D = P.cling ? 9 : 3.4 + Math.min(3, Math.abs(P.v) / 12); text = P.cling ? `Holding on to ${P.cling.name} \u00b7 ${Math.round(P.v * 3.6)} km/h` : P.mode === "climb" ? "Climbing \u00b7 " + Math.round(up) + " m" : Math.round(Math.abs(P.v) * 3.6) + " km/h" + (up > 1.5 ? " \u00b7 " + Math.round(up) + " m up" : "");
       } else { const P = plane, K = P.k, jet = boost && canBoost(P), top = (jet ? JET : CRUISE) * K;  // (only the golden plane has a boost)
         // the nose: the down arrow lifts it and the up arrow lowers it, as pulling back and pushing on a plane's stick does
         // (Ash, 14 November 2026: "if i press down my plane shifts upwards and vica versa"). Space and C, and Climb and Dive, too.
         const climb = bsClamp((has("ArrowDown", "Space") ? 1 : 0) - (has("ArrowUp", "KeyC") ? 1 : 0) + F.vert, -1, 1);
         if (P.heli) {  // the helicopter: the rotor spins up, then it lifts straight off. W and S go forward and back, A and D turn it on the spot, and it sets down wherever it meets open ground
           P.spin += (1 - P.spin) * Math.min(1, dt * 0.9); const up = P.spin > 0.8, e = Math.min(1, dt * 3);
-          P.v += ((P.air ? (thr >= 0 ? thr * 50 : thr * 14) : 0) - P.v) * Math.min(1, dt * (P.air ? 0.9 : 4));
+          const HK = P.gold ? 1.4 : 1;  // the golden helicopter: 40% faster, forward and up
+          P.v += ((P.air ? (thr >= 0 ? thr * 50 * HK : thr * 14 * HK) : 0) - P.v) * Math.min(1, dt * (P.air ? 0.9 : 4));
           P.turn += (str - P.turn) * Math.min(1, dt * 5); P.h -= P.turn * 1.25 * dt;
-          P.vy = (P.vy || 0) + ((up ? climb * 11 : -3) - (P.vy || 0)) * Math.min(1, dt * 2.2);
+          P.vy = (P.vy || 0) + ((up ? climb * 11 * HK : -3) - (P.vy || 0)) * Math.min(1, dt * 2.2);
           if (!P.air) { if (up && climb > 0.05) P.air = true; else { P.vy = 0; const [y, p, r] = lie(P, 1.5, 0.9); P.y = y; P.p += (p - P.p) * e; P.r += (r - P.r) * e; } }
           if (P.air) { P.p += (-0.3 * P.v / 50 - P.p) * e; P.r += (P.turn * 0.3 * Math.min(1, Math.abs(P.v) / 20) - P.r) * e;
             P.x = bsClamp(P.x + Math.sin(P.h) * P.v * dt, F.lim[0], F.lim[1]); P.z = bsClamp(P.z + Math.cos(P.h) * P.v * dt, F.lim[2], F.lim[3]); P.y = Math.min(P.y + P.vy * dt, ground(P.x, P.z) + 1500);
@@ -10345,54 +10756,78 @@ const handle = async (m, post) => {
       if (idle > 1.2 && o.v > 1) { const e = Math.min(1, dt * 2.5); off[0] -= off[0] * e; off[1] -= off[1] * e; }  // left alone, the view settles back behind
       // the view: behind and above, swinging round after it; closer in where a building is behind, so it is not from inside one
       camYaw += wrap(o.h + Math.PI - camYaw) * Math.min(1, dt * 3.5);
-      const yaw = camYaw + off[0], pitch = bsClamp(-0.2 + off[1], -1.2, 0.35), cp = Math.cos(pitch), sx = Math.sin(yaw) * cp, sz = Math.cos(yaw) * cp;
-      if (!o.air) while (D > 2.5 && (solid(o.x + sx * D, o.z + sz * D) || solid(o.x + sx * D * 0.55, o.z + sz * D * 0.55))) D -= 1.25;
-      const px = o.x + sx * D, pz = o.z + sz * D, py = Math.max(o.y + (veh === "car" ? (car.bus ? 3.4 : 1.5) : 2.4) - Math.sin(pitch) * D, ground(px, pz) + 0.7), e = Math.min(1, dt * (9 + Math.abs(o.v) / 6));
+      const critter = veh === "possum" || (veh === "ride" && ride.k === "possum"), high = critter && o.y - ground(o.x, o.z) > 1.2;  // (the possum: close behind it, looking up a wall it is climbing)
+      const yaw = camYaw + off[0], pitch = bsClamp((veh === "possum" && pos.mode === "climb" ? 0.3 : -0.2) + off[1], -1.2, 0.35), cp = Math.cos(pitch), sx = Math.sin(yaw) * cp, sz = Math.cos(yaw) * cp;
+      if (!o.air && !high) while (D > 2.5 && (solid(o.x + sx * D, o.z + sz * D) || solid(o.x + sx * D * 0.55, o.z + sz * D * 0.55))) D -= 1.25;
+      const px = o.x + sx * D, pz = o.z + sz * D, py = Math.max(o.y + (veh === "ride" ? RIDE_UP[ride.k] : veh === "car" ? (car.bus ? 3.4 : 1.5) : critter ? 0.9 : 2.4) - Math.sin(pitch) * D, critter ? surf(px, pz) + 0.5 : ground(px, pz) + 0.7), e = Math.min(1, dt * (9 + Math.abs(o.v) / 6));
       F.pos.x += (px - F.pos.x) * e; F.pos.y += (py - F.pos.y) * e; F.pos.z += (pz - F.pos.z) * e; F.yaw = yaw; F.pitch = pitch;
       last = [F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch]; };
     // what is in reach of where you stand: a plane within 11 m, a parked car within 8 m, whichever is nearer
     const nearPlane = () => { let best = null, far = Infinity; for (const P of planes) { const d = Math.hypot(P.x - F.pos.x, P.z - F.pos.z); if (d < far) { far = d; best = P; } } return [best, far]; };
-    const nearOwn = () => { let best = null, far = Infinity; for (const G of owns) { const d = Math.hypot(G.x - F.pos.x, G.z - F.pos.z); if (d < far) { far = d; best = G; } } return [best, far]; };
-    const reach = () => { const c0 = parked(F.pos.x, F.pos.z, 8), [G, dg] = nearOwn(), c = G && dg < (G.bus ? 15 : 8) && (!c0 || dg < c0.distance) ? { own: G, gold: G.gold, distance: dg } : c0, [P, d] = nearPlane(); return d < 11 && (!c || d - 2 < c.distance) ? { plane: P } : c; };
+    // (the moving cars count too: getting into one takes it out of the traffic)
+    const nearOwn = () => { let best = null, far = Infinity; for (const G of [...owns, ...(T.traffic?.cars || []).filter(D => D.x != null && !D.away)]) { const d = Math.hypot(G.x - F.pos.x, G.z - F.pos.z); if (d < far) { far = d; best = G; } } return [best, far]; };
+    const reach = () => { const c0 = parked(F.pos.x, F.pos.z, 8), [G, dg] = nearOwn(), c = G && dg < (G.bus ? 15 : 8) && (!c0 || dg < c0.distance) ? { own: G, gold: G.gold, distance: dg } : c0, [P, d] = nearPlane(), r = d < 11 && (!c || d - 2 < c.distance) ? { plane: P } : c;
+      const dp = possumMesh ? Math.hypot(pos.x - F.pos.x, pos.z - F.pos.z) : Infinity, r2 = dp < 6 && (!r || r.plane || dp < r.distance) ? { possum: pos, distance: dp } : r;  // the possum, within 6 m
+      // another player's car, bus, plane, helicopter or possum, near enough, and not up in the air (Ash, 15 November 2026: "Make it so
+      // I can get into a car or plane or possum that another player is driving")
+      let best = null; for (const q of T.peers?.list?.() || []) { if (!RIDE_REACH[q.k]) continue; const d = Math.hypot(q.x - F.pos.x, q.z - F.pos.z);
+        if (d < RIDE_REACH[q.k] && q.y - ground(q.x, q.z) < 3 && (!best || d < best.distance)) best = { ride: q, distance: d }; }
+      return best && (!r2 || best.distance < (r2.distance ?? 11) + 4) ? best : r2; };  // (someone in it wins over an empty one beside it, such as your own copy of the golden car they drove off in)
+    const RIDE_REACH = { car: 8, gold: 8, bus: 15, plane: 11, goldplane: 11, heli: 11, goldheli: 11, possum: 6 }, RIDE_BACK = { car: 7, gold: 7, bus: 13, plane: 15, goldplane: 15, heli: 14, goldheli: 14, possum: 3.6 },
+      RIDE_UP = { car: 1.5, gold: 1.5, bus: 3.4, plane: 2.4, goldplane: 2.4, heli: 2.4, goldheli: 2.4, possum: 0.9 };
+    let ride = null, shownRide = null;  // the player you're riding with: { id, name, k, at: [x, y, z, t] }; who the button last offered
+    const CLING = { plane: 1.95, goldplane: 1.95, heli: 2.05, goldheli: 2.05 };  // what the possum can hold on to, and how high its top is
     C.enter = () => { if (veh) { if (veh === "plane" && plane.heli && plane.air) return toast(touch ? "Land first: hold Down until it is on the ground." : "Land first: hold the up arrow (or C) until it is on the ground."), true;
       if (veh === "plane" && (plane.air || plane.v > 6)) return toast(touch ? "Land and stop first: pull the left stick back to slow down, and it comes down as it slows (or hold Dive)." : "Land and stop first: S slows the plane, and it comes down as it slows (or hold the up arrow)."), true; return leave(true), true; }
       if (!T.walk || T.tween) return false;
-      const c = reach();
+      let c = reach();
+      if (shownRide && performance.now() - shownRide.t < 2000 && !c?.ride) { const q = (T.peers?.list?.() || []).find(v => v.id === shownRide.id);
+        if (q && RIDE_REACH[q.k] && Math.hypot(q.x - F.pos.x, q.z - F.pos.z) < RIDE_REACH[q.k] * 2.5) c = { ride: q, distance: 0 }; }
       if (!c) { const far = parked(F.pos.x, F.pos.z, 5000) || (owns.length ? { distance: nearOwn()[1] } : null), [P, d] = nearPlane(), home = P && Math.hypot(P.x - P.home.x, P.z - P.home.z) < 30;
         toast(`Nothing close enough to get into. ${far ? `The nearest car is ${Math.round(far.distance)} m away` : ""}${far && P ? ", and t" : P ? "T" : "."}${P ? `he nearest plane is ${Math.round(d)} m away${home && P.home.at ? ", " + P.home.at : ""}.` : ""}`, 4500); return true; }
-      if (c.plane) { plane = c.plane; veh = "plane"; plane.v = 0; plane.spin = 0; plane.turn = 0; camYaw = plane.h + Math.PI; document.body.classList.add("bsdrive", "bsplane"); boostBtn.style.setProperty("--charge", "100%"); }
-      else { car = c.own ? { own: c.own, gold: c.own.gold, bus: c.own.bus, x: c.own.x, z: c.own.z, h: c.own.h, dir: c.own.h, y: c.own.y, p: c.own.p, r: c.own.r, v: 0, steer: 0 } : { id: c.id, bus: !!c.bus, x: c.x, z: c.z, h: c.heading, dir: c.heading, y: ground(c.x, c.z) + 0.05, p: 0, r: 0, v: 0, steer: 0 };
+      if (c.ride) { const q = c.ride; ride = { id: q.id, name: q.name, k: q.k, at: [q.x, q.y, q.z, performance.now()], v: 0 }; veh = "ride"; camYaw = q.h + Math.PI;
+        document.body.classList.add("bsdrive", "bsride"); T.peers?.ride?.(q.id, true); toast(`You're riding with ${q.name}. Look around with the right stick.`, 3000); }
+      else if (c.possum) { veh = "possum"; pos.v = 0; pos.jumped = true; camYaw = pos.h + Math.PI; document.body.classList.add("bsdrive", "bspossum");
+        const wait = loadRoofs(); if (wait) { toast("Loading the roofs the possum can climb\u2026", 8000); wait.then(() => { if (veh === "possum") toast("Ready. Run at a wall or a street light to climb it.", 2500); }); } }  // (no Up and Down: Jump sits where Boost does, over the right stick)
+      else if (c.plane) { plane = c.plane; veh = "plane"; plane.v = 0; plane.spin = 0; plane.turn = 0; camYaw = plane.h + Math.PI; document.body.classList.add("bsdrive", "bsplane"); boostBtn.style.setProperty("--charge", "100%"); }
+      else { if (c.own && !owns.includes(c.own)) { const G = T.traffic?.take?.(c.own); if (!G) return true; owns.push(G); c.own = G; }
+        car = c.own ? { own: c.own, gold: c.own.gold, bus: c.own.bus, x: c.own.x, z: c.own.z, h: c.own.h, dir: c.own.h, y: c.own.y, p: c.own.p, r: c.own.r, v: 0, steer: 0 } : { id: c.id, bus: !!c.bus, x: c.x, z: c.z, h: c.heading, dir: c.heading, y: ground(c.x, c.z) + 0.05, p: 0, r: 0, v: 0, steer: 0 };
         if (!car.own && !m.driveCar(c.id[0], c.id[1], car.x, car.y, car.z, car.h, 0, 0)) { car = null; toast("That car won't start. Try another one."); return true; }
         veh = "car"; camYaw = car.h + Math.PI; document.body.classList.add("bsdrive"); showRing(charge < 0.999); }
       C.in = true; off = [wrap(F.yaw - camYaw), bsClamp(F.pitch + 0.2, -1, 0.55)]; idle = 0; last = [F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch];
       F.stick.x = F.stick.y = F.lookStick.x = F.lookStick.y = 0; F.vert = 0; F.boost = false; F.keys.clear(); F.drive = tick;
-      btn.textContent = "Get out"; btn.hidden = false; handBtn.hidden = veh !== "car"; boostBtn.hidden = veh === "plane" && !canBoost(plane);
-      snd.door(); snd.start(veh); showKeys(veh === "plane" && plane.heli ? "heli" : veh);
+      btn.textContent = veh === "possum" ? "Hop out" : "Get out"; btn.hidden = false; handBtn.hidden = veh !== "car"; boostBtn.hidden = veh === "ride" || (veh === "plane" && !canBoost(plane));
+      boostBtn.textContent = veh === "possum" ? "Jump" : "Boost";
+      if (veh === "ride") { if (RIDE_UP[ride.k] > 1) snd.door(); } else if (veh !== "possum") { snd.door(); snd.start(veh); } showKeys(veh === "plane" && plane.heli ? "heli" : veh === "ride" ? null : veh);
       // on a phone, a word about the sticks (on a desktop the list of keys has just come up, bottom left)
-      if (touch) toast(veh === "plane" && plane.heli ? "Hold Up to lift off. Left stick: forward to go, sideways to turn. Down lands it." : veh === "plane" ? "Left stick: forward for power, sideways to turn. Climb lifts the nose once you are fast." : "Left stick to drive, right stick to look around. Hold Boost for the mega boost.", 5500);
+      if (touch && veh !== "ride" && !(veh === "possum" && roofsIn)) toast(veh === "possum" ? "You're the possum. Push the left stick the way to run. Run at a street light or a wall to climb it, pull back to let go. Jump springs up." : veh === "plane" && plane.heli ? "Hold Up to lift off. Left stick: forward to go, sideways to turn. Down lands it." : veh === "plane" ? "Left stick: forward for power, sideways to turn. Climb lifts the nose once you are fast." : "Left stick to drive, right stick to look around. Hold Boost for the mega boost.", 5500);
       return true; };
     // the Get in button: there while something is in reach of where you are walking (looked for a few times a second)
     C.frame = () => { if (veh) return; const now = performance.now(); if (now - at < 300) return; at = now;
-      const near = T.walk && !T.tween ? reach() : null, say = near?.plane ? (near.plane.heli ? "Get in the helicopter" : "Get in the plane") : near?.own?.bus || near?.bus ? "Get in the bus" : near?.gold ? "Get in the golden car" : "Get in the car";
+      if (pos) { const d = Math.hypot(pos.x - F.pos.x, pos.z - F.pos.z), dh = Math.hypot(PS.x - F.pos.x, PS.z - F.pos.z);
+        if (!possumMesh && Math.min(d, dh) < 400) wake(); if (d < 80) loadRoofs();
+        if ((pos.x !== PS.x || pos.z !== PS.z) && d > 150) possumHome(); }  // left behind, the possum goes home to number 16
+      const near = T.walk && !T.tween ? reach() : null; shownRide = near?.ride ? { id: near.ride.id, t: now } : null; const say = near?.ride ? `Ride with ${near.ride.name}` : near?.possum ? "Be the possum" : near?.plane ? (near.plane.heli ? (near.plane.gold ? "Get in the golden helicopter" : "Get in the helicopter") : "Get in the plane") : near?.own?.bus || near?.bus ? "Get in the bus" : near?.gold ? "Get in the golden car" : "Get in the car";
       if (btn.hidden !== !near) btn.hidden = !near; if (near && btn.textContent !== say) btn.textContent = say; };
     btn.onclick = () => { C.enter(); btn.blur(); };
     const hold = on => e => { F.boost = on && !!veh; boostBtn.classList.toggle("on", F.boost); e.preventDefault(); };
-    const press = { pointerdown: hold(true), pointerup: hold(false), pointercancel: e => { bsLost("boost", null); hold(false)(e); }, pointerleave: hold(false), contextmenu: e => e.preventDefault() };
+    const press = { pointerdown: hold(true), pointerup: hold(false), pointercancel: hold(false), pointerleave: hold(false), contextmenu: e => e.preventDefault() };
     Object.entries(press).forEach(([k, f]) => boostBtn.addEventListener(k, f));
     const handBtn = $("bsHandBtn"), pull = on => e => { F.hand = on && veh === "car"; handBtn.classList.toggle("on", !!F.hand); e.preventDefault(); };
-    const handPress = { pointerdown: pull(true), pointerup: pull(false), pointercancel: e => { bsLost("handbrake", null); pull(false)(e); }, pointerleave: pull(false), contextmenu: e => e.preventDefault() };
+    const handPress = { pointerdown: pull(true), pointerup: pull(false), pointercancel: pull(false), pointerleave: pull(false), contextmenu: e => e.preventDefault() };
     Object.entries(handPress).forEach(([k, f]) => handBtn.addEventListener(k, f));
     const hidden = () => snd.quiet(document.hidden); document.addEventListener("visibilitychange", hidden);
-    C.pose = () => veh === "car" ? { k: car.bus ? "bus" : car.gold ? "gold" : "car", x: car.x, y: car.y, z: car.z, h: car.h, p: car.p, r: car.r }
-      : veh ? { k: plane.heli ? "heli" : plane.gold ? "goldplane" : "plane", x: plane.x, y: plane.y, z: plane.z, h: plane.h, p: plane.p, r: plane.r } : null;
-    C.where = () => veh === "car" ? { kind: "car", gold: !!car.gold, bus: !!car.bus, x: car.x, z: car.z, heading: car.h, dir: car.dir, speed: car.v, charge } : veh ? { kind: "plane", heli: !!plane.heli, x: plane.x, y: plane.y, z: plane.z, heading: plane.h, pitch: plane.p, speed: plane.v, air: plane.air } : null;  // for checking
-    C.planes = planes; C.gold = gold;
+    C.riding = () => veh === "ride";
+    C.pose = () => veh === "ride" ? null : veh === "possum" ? { k: "possum", x: pos.x, y: pos.y, z: pos.z, h: pos.h, p: pos.p, r: 0 } : veh === "car" ? { k: car.bus ? "bus" : car.gold ? "gold" : "car", x: car.x, y: car.y, z: car.z, h: car.h, p: car.p, r: car.r }
+      : veh ? { k: plane.heli ? (plane.gold ? "goldheli" : "heli") : plane.gold ? "goldplane" : "plane", x: plane.x, y: plane.y, z: plane.z, h: plane.h, p: plane.p, r: plane.r } : null;
+    C.where = () => veh === "ride" ? { kind: "ride", with: ride.name } : veh === "possum" ? { kind: "possum", x: pos.x, y: pos.y, z: pos.z, heading: pos.h, speed: pos.v, mode: pos.mode, up: pos.y - ground(pos.x, pos.z) } : veh === "car" ? { kind: "car", gold: !!car.gold, bus: !!car.bus, x: car.x, z: car.z, heading: car.h, dir: car.dir, speed: car.v, charge } : veh ? { kind: "plane", heli: !!plane.heli, x: plane.x, y: plane.y, z: plane.z, heading: plane.h, pitch: plane.p, speed: plane.v, air: plane.air } : null;  // for checking
+    C.planes = planes; C.gold = gold; C.goldHeli = planes.find(P => P.heli && P.gold) || null;
     // to the golden plane (a key of Ash's own, not shown anywhere)
     C.toGold = () => { const G = planes.find(P => P.gold); if (!G) return false; if (veh) leave(false);
       const sn = Math.sin(G.h), cs = Math.cos(G.h), dx = sn * 7 - cs * 5, dz = cs * 7 + sn * 5; T.tween = null;
       F.pos.x = G.x + dx; F.pos.z = G.z + dz; F.pos.y = ground(F.pos.x, F.pos.z) + (T.walk ? F.eye : 14); F.yaw = Math.atan2(dx, dz); F.pitch = T.walk ? -0.06 : -0.6; at = 0; return true; };
     C.dispose = () => { if (veh) leave(false); btn.onclick = null; btn.hidden = boostBtn.hidden = handBtn.hidden = true; F.hand = false; Object.entries(press).forEach(([k, f]) => boostBtn.removeEventListener(k, f)); Object.entries(handPress).forEach(([k, f]) => handBtn.removeEventListener(k, f));
-      document.removeEventListener("visibilitychange", hidden); document.body.classList.remove("bsdrive", "bsplane"); snd.dispose(); showKeys(null); try { for (const P of planes) P.parts.remove(); for (const G of owns) G.parts.remove(); ring.remove(); } catch {} };
+      document.removeEventListener("visibilitychange", hidden); document.body.classList.remove("bsdrive", "bsplane"); snd.dispose(); showKeys(null); try { for (const P of planes) P.parts.remove(); for (const G of owns) G.parts.remove(); ring.remove(); possumMesh?.remove(); poleMesh?.remove(); } catch {} };
     return C;
   }
   function townStreetNames(T, cfg, box, m) {
@@ -10484,7 +10919,7 @@ const handle = async (m, post) => {
     m.setCamera(F.pos.x, F.pos.y, F.pos.z, F.yaw, F.pitch);
     m.setMinutes(bsMins(BS.view.ms));
     T.streets?.update();
-    T.car?.frame(); T.peers?.frame(); T.me?.frame(); T.traffic?.frame(); T.critter?.frame(); T.no6?.frame();
+    T.car?.frame(); T.me?.frame(); T.peers?.frame();  // (the worker view sets the camera first, so names and bubbles are placed from where you really look) T.traffic?.frame(); T.critter?.frame(); T.no6?.frame(); T.home6?.frame();
     // flying: held down at the lowest you can fly (Down, or C) for a moment, and you are on foot there
     if (!T.walk && !T.tween && !F.drive && F.floor && F.hot?.f) { const low = F.pos.y <= F.floor() + 0.1, down = F.vert < -0.3 || F.keys.has("KeyC"), now = performance.now();
       if (!(low && down)) T.downAt = 0; else if (!T.downAt) T.downAt = now; else if (now - T.downAt > 1200) { T.downAt = 0; F.hot.f(); } }
@@ -10502,7 +10937,7 @@ const handle = async (m, post) => {
     BS.town = null; T.dead = true; T.on = false; T.ungest?.(); T.unlay?.(); T.unflood?.();
     T.streets?.dispose(); T.streets = null; $("bsNamesBtn").hidden = true;
     T.admin?.dispose(); T.admin = null;
-    T.car?.dispose(); T.car = null; T.peers?.dispose(); T.peers = null; T.me?.dispose(); T.me = null; T.traffic?.dispose(); T.traffic = null; T.critter?.dispose(); T.critter = null;
+    T.car?.dispose(); T.car = null; T.peers?.dispose(); T.peers = null; T.me?.dispose(); T.me = null; T.traffic?.dispose(); T.traffic = null; T.critter?.dispose(); T.critter = null; T.home6?.dispose(); T.home6 = null;
     T.unbar?.();
     if (BS.fly) { const F = BS.fly; F.walk = F.speed = F.floor = F.hot = F.drive = null; F.ceil = 0; F.lim = null; }  // Explore, if it carries on, is its old self
     try { T.model?.dispose(); } catch {}
@@ -10804,7 +11239,9 @@ const handle = async (m, post) => {
   // Rod: the middle of Norman Road, Inverloch, into Inverloch's town centre.
   const ROD_DRIVE = { home: { q: "Norman Road, Inverloch", label: "Norman Road", sign: "Norman Rd", lat: -38.64062, lon: 145.71191 },
     work: { q: "Inverloch", label: "Inverloch town centre", sign: "Inverloch", lat: -38.63316, lon: 145.72795 }, leave: "07:45", toName: "Drive into Inverloch", toWord: "into Inverloch" };
-  const isAsh = () => /^ash(ley)?$/i.test((S.name || "").trim());
+  // Ash: by the news app's name, or by the player name in Explore's Settings (Ash, 15 November 2026: "I think player name is not giving
+  // me admin": each town's app keeps its own news name, but the player name is the same in all of them)
+  function isAsh() { if (/^ash(ley)?$/i.test((S.name || "").trim())) return true; try { return /^ash(ley)?$/i.test((localStorage.getItem("an-player") || "").trim()); } catch { return false; } }
   const isRod = () => /^rod(ney)?$/i.test((S.name || "").trim());
   const commuteOK = () => !!DEFAULT_COMMUTE || !!A.unlocked || isAsh() || isRod();
   // What the drive is called: "Drive to work" (or Rod's "Drive into Inverloch"), "Drive home".
@@ -11081,7 +11518,7 @@ const handle = async (m, post) => {
         <form class="adminpass" id="ghForm" style="margin-top:0"><input type="password" id="ghTok" placeholder="${gh ? "Saved. Paste to replace" : "GitHub key"}" aria-label="GitHub key" autocomplete="off"><button type="submit">Save</button></form></div>`;
   }
   // ---- Admin (Ash and Rod by name, the passphrase, or the private copy): its own tab in Settings, and a button beside Settings ----
-  function isAdmin() { return /^(rod|rodney|ash|ashley)$/i.test((S.name || "").trim()) || !!A.unlocked || state.mode === "claude"; }
+  function isAdmin() { return /^(rod|rodney|ash|ashley)$/i.test((S.name || "").trim()) || isAsh() || !!A.unlocked || state.mode === "claude"; }
   function adminHTML() {
     if (!isAdmin()) return "";
     const kept = Object.keys({ ...WX_CAMS, ...(state.wxCams || {}) }).length;
@@ -11103,23 +11540,41 @@ const handle = async (m, post) => {
       <div class="beta-chips"><button type="button" class="bchip" data-tv-new>Awesome News TV (no ads)</button><button type="button" class="bchip" data-open-tv>Old TV (YouTube clips)</button></div>
       ${state.mode === "claude" ? "" : `<div class="beta-tog">${toggle("data-skipads", "1", S.skipAds, "Hide YouTube ads", "Old TV: sound off and headlines on screen while an ad plays")}</div>`}
     </div></div>
-    ${isAsh() ? ridesHTML() + exPartsHTML() : ""}
     ${state.mode === "claude" ? "" : `<div class="group"><h2>Updates</h2><div class="card">${ghFieldHTML()}</div></div>`}`;
   }
-  // Explore's parts, each switched on or off on this device, for Ash to find what makes an iPhone let go of the stick (Ash,
-  // 15 November 2026: the stick, Boost and looking round stop at random, since a change made this morning). Read when a town opens.
-  const EX_PARTS = [["traffic", "Moving traffic"], ["animal", "The animal by Norman Road's helicopter"], ["rides", "Cars, planes, helicopter and bus to drive"], ["admin", "Map editing (the pencil)"],
-    ["players", "Other players and the Settings gear"], ["me", "Construction worker view"], ["no6", "6 Beaudesert Road's street detail"], ["streets", "Street names"], ["places", "Place names on the model"]];
+  // Explore's parts, each switched on or off on this device by Ash (they were for finding what made an iPhone let go of the
+  // stick, 15 November 2026). Read when a town opens.
+  const EX_PARTS = [["traffic", "A few moving cars"], ["animal", "The animal by Norman Road's helicopter"], ["rides", "Cars, planes, helicopter and bus to drive"], ["admin", "Map editing (the pencil)"],
+    ["players", "Other players and the Settings gear"], ["me", "Construction worker view"], ["no6", "6 Beaudesert Road's street detail"], ["home6", "Ash, Arlo and Pandy on Beaudesert Road"], ["streets", "Street names"], ["places", "Place names on the model"]];
   const exOff = () => { try { return new Set(JSON.parse(localStorage.getItem("an3d-off") || "[]")); } catch { return new Set(); } };
-  function exPartsHTML() { const off = exOff();
-    return `<div class="group"><h2>Explore parts</h2><div class="card">${EX_PARTS.map(([k, name]) => `<button class="field" type="button" role="switch" aria-checked="${!off.has(k)}" data-ex-part="${k}"><span class="lbl">${name}<span class="sub">${off.has(k) ? "Off" : "On"}</span></span><span class="track"></span></button>`).join("")}
-    </div><p class="hint">For Ash, to find what makes the phone let go of the stick. Turn one off, close Explore and open it again, and try. On this device only.</p></div>`; }
-  // Cars and planes: the numbers Ash can change (RIDE_DEF). Kept on this device; a model reads them when it opens
-  function ridesHTML() { const r = rideSettings();
-    return `<div class="group"><h2>Cars and planes</h2><div class="card">${Object.entries(RIDE_DEF).map(([k, [d, name, unit, lo, hi]]) =>
-      `<label class="field"><span class="lbl">${name}<span class="sub">${unit}. Usually ${d} (${lo} to ${hi})</span></span><input type="number" inputmode="decimal" data-ride="${k}" min="${lo}" max="${hi}" step="any" value="${r[k]}" style="flex:none;width:5.5em;margin-left:10px;text-align:right;font:inherit;padding:6px 8px;border-radius:8px;border:1px solid var(--line, #8886);background:transparent;color:inherit" aria-label="${name}, ${unit}"></label>`).join("")}
-      <button class="field" type="button" data-ride-reset><span class="lbl">Put them all back<span class="sub">The usual numbers for every car and plane</span></span><span class="chev" aria-hidden="true">\u203a</span></button>
-    </div><p class="hint">For Ash. These change the cars and planes in Explore on this device only, in every town, the next time you open Explore.</p></div>`; }
+  // Ash's own Explore settings, in Explore's Settings panel (Ash, 15 November 2026: "Move the settings for explore into the
+  // settings for explore rather than in the main awesome news"): the cars and planes numbers (RIDE_DEF) and Explore's parts.
+  // On this device only; a model reads them when it opens.
+  function exAshSecs(redraw) {
+    const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+    const cars = el("div", "bs-me-sec"), r = rideSettings(); cars.append(el("span", "bs-me-lbl", "Cars and planes (just you)"));
+    for (const [k, [d, name, unit, lo, hi]] of Object.entries(RIDE_DEF)) { const row = el("label", "bs-me-num"), t = el("span", "", name), inp = el("input");
+      t.append(el("small", "", `${unit.split(".")[0]}, usually ${d}`)); inp.type = "number"; inp.inputMode = "decimal"; inp.min = lo; inp.max = hi; inp.step = "any"; inp.value = r[k];
+      inp.onchange = () => { let o = {}; try { o = JSON.parse(localStorage.getItem("an3d-rides") || "{}") || {}; } catch {}
+        const v = inp.value.trim() === "" ? NaN : +inp.value; if (Number.isFinite(v)) o[k] = bsClamp(v, lo, hi); else delete o[k];
+        try { localStorage.setItem("an3d-rides", JSON.stringify(o)); } catch {} inp.value = rideSettings()[k]; toast(`${name}: ${rideSettings()[k]}. It applies the next time you open Explore.`, 2600); };
+      row.append(t, inp); cars.append(row); }
+    const back = el("button", "bs-me-exit", "Put the usual numbers back"); back.type = "button";
+    back.onclick = () => { try { localStorage.removeItem("an3d-rides"); } catch {} redraw(); toast("Cars and planes are back to their usual numbers.", 2200); };
+    cars.append(back);
+    const parts = el("div", "bs-me-sec"), off = exOff(); parts.append(el("span", "bs-me-lbl", "Explore parts (just you)"));
+    for (const [k, name] of EX_PARTS) { const sw = el("button", "bs-me-show"); sw.type = "button"; sw.setAttribute("role", "switch"); sw.setAttribute("aria-checked", String(!off.has(k))); sw.append(el("span", "", name), el("i"));
+      sw.onclick = () => { if (off.has(k)) off.delete(k); else off.add(k); try { localStorage.setItem("an3d-off", JSON.stringify([...off])); } catch {} redraw();
+        toast(`${name}: ${off.has(k) ? "off" : "on"}. It applies the next time you open Explore.`, 2600); };
+      parts.append(sw); }
+    parts.append(el("p", "", "Only you see these, and only on this device."));
+    // the GitHub key that puts your map edits and kept views in everyone's app (the same key as in the news app's Settings > Admin)
+    const key = el("div", "bs-me-sec"), has = !!store.get("brief.ghToken", ""); key.append(el("span", "bs-me-lbl", "GitHub key (just you)"));
+    const kf = el("form", "bs-me-key"), ki = el("input"), kb = el("button", "bs-me-go", "Save"); ki.type = "password"; ki.autocomplete = "off"; ki.placeholder = has ? "Saved. Paste to replace" : "Paste your GitHub key"; ki.setAttribute("aria-label", "GitHub key"); kb.type = "submit";
+    kf.append(ki, kb); kf.onsubmit = e => { e.preventDefault(); const v = ki.value.trim(); if (!v) return; store.set("brief.ghToken", v); A.ghBad = false; saveAdmin(); redraw(); toast("Saved. Map edits and kept views now go to everyone.", 2600); };
+    key.append(kf, el("p", "", has ? (A.ghBad ? "The saved key isn't working. Paste a new one." : "Saved. Save in map editing puts your edits in everyone's app.") : "Without it, your map edits stay on this device."));
+    for (const sec of [cars, parts, key]) { sec.addEventListener("keydown", e => e.stopPropagation()); sec.addEventListener("keyup", e => e.stopPropagation()); }
+    return [cars, parts, key]; }
   function previewGo() {
     const p = state.prevSel;
     BS.prev = { place: p.place === "bowls" ? "moo" : p.place === "invbeach" ? "inv" : p.place, sky: p.sky };
@@ -11152,7 +11607,7 @@ const handle = async (m, post) => {
   function showVersion() {
     // Ash: the commit id, small and blue in the bottom right corner of every screen, Explore included (Ash, 15 November 2026:
     // "If in as ash show the v number in blue small bottom right"). It lets taps through to whatever is under it.
-    { const ash = /^ash(ley)?$/i.test((S.name || "").trim()), commit = document.querySelector('meta[name="an-commit"]')?.content || "";
+    { const ash = isAsh(), commit = document.querySelector('meta[name="an-commit"]')?.content || "";
       let b = $("verBadge"); if (ash && !b) { b = document.createElement("div"); b.id = "verBadge"; b.setAttribute("aria-hidden", "true"); document.body.appendChild(b); }
       if (b) { b.hidden = !ash; b.textContent = commit || "dev"; } }
     const el = $("appVer"); if (!el) return;
@@ -11164,7 +11619,7 @@ const handle = async (m, post) => {
     el.textContent = !built ? "v dev" : `${d} ${m}` === today ? `v ${hm}` : `v ${d} ${m}`;
     // Ash: the commit it was built from instead (the same short id as in the update notes), to check it's the latest
     const commit = document.querySelector('meta[name="an-commit"]')?.content || "";
-    if (commit && /^ash(ley)?$/i.test((S.name || "").trim())) el.textContent = commit;
+    if (commit && isAsh()) el.textContent = commit;
     el.title = `Version built ${built || "here"}${id ? " (" + id + ")" : ""}`;
   }
   // The page's build (stamped by build.py) against the latest on the site. Never mid-listen: it waits until you stop.
