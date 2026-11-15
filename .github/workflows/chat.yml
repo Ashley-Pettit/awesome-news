@@ -37,9 +37,12 @@ jobs:
           # suggestions from construction workers in the town models (tools/plans.py); a hiccup here never stops the chat
           git show origin/chat:chat/plans.json > /tmp/chat/chat/plans.json 2>/dev/null || true
           python3 tools/plans.py /tmp/chat/chat/plans.json || true
+          # letters between players at the Moorooka Post Office (tools/mail.py), kept 30 days
+          git show origin/chat:chat/mail.json > /tmp/chat/chat/mail.json 2>/dev/null || true
+          python3 tools/mail.py /tmp/chat/chat/mail.json || true
       - name: Save to the chat branch
         run: |
           cd /tmp/chat
           git init -q -b chat && git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add chat/moo.json && { [ -f chat/plans.json ] && git add chat/plans.json || true; } && git commit -qm "Neighbourhood chat [skip ci]"
+          git add chat/moo.json && { [ -f chat/plans.json ] && git add chat/plans.json || true; } && { [ -f chat/mail.json ] && git add chat/mail.json || true; } && git commit -qm "Neighbourhood chat [skip ci]"
           git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" chat:chat
