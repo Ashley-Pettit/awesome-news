@@ -1118,3 +1118,15 @@ driving it, other players starting, and the ordinary weather view. Not checked o
 - **Pandy** (`townPlaneParts(_, "pandy")`): long brown hair, a plum top, on the front lawn of 24 Beaudesert Road (lot
   2 RP59613, 1,037 m2; the cadastre has no street numbers, so the lot was matched by its 1,033 m2 listing), 3.5 m in from
   the front boundary, facing the street. Like Ash at number 6, she turns to you and waves when you walk up.
+
+## Players meet through message brokers, Jump to a player, names over heads (15 November 2026)
+
+- **Multiplayer no longer goes phone to phone** (Ash: "Still can't see another player"). The WebRTC links Trystero made
+  need both phones to reach each other directly, which mobile data and many routers don't allow, and there was no relay.
+  Now `townRelay` sends names, places and emotes through public MQTT brokers over secure websockets
+  (`TOWN_BROKERS`: shiftr.io's public broker on port 443, and EMQX's on 8084), to both at once, so it gets through
+  any network. Same room shape as before (`makeAction`, `onPeerJoin`, `onPeerLeave`, `leave`); a hello every 4 s, and
+  anyone not heard from in 15 s is gone. `vendor/trystero-nostr.js` is no longer loaded.
+- **Name labels were upside down**: the label's up vector had `uy` with the wrong sign, so a name sat mirrored about
+  the middle of the screen (far above someone below your eyes). Fixed.
+- **Jump to lists other players first** (nearest first, with how far): one stands you 6 m in front of them, facing them.
