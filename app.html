@@ -1344,6 +1344,7 @@ body.bsdrive:not(.bsplane) .bs-fly-x.bs-boost { bottom: calc(240px + env(safe-ar
 .bs-fly-x.bs-me-btn[aria-expanded="true"] { background: #fff; color: #1b1830; }
 body.bsme #bsFlyX, body.bsme #bsTimeBtn, body.bsme #bsFlyTimeBox { display: none !important; }
 body.bstown.bswalk:not(.bsdrive) .bs-ud { display: none !important; }
+body.bsnoplaces #bsTown .inv-embed-labels { display: none !important; }
 /* Place names keep clear of the buttons along the top (and of the sticks on a touch screen) by a fixed clip on their layer:
    nothing on the page changes as they move. (It was a check that faded each name a few times a second; that was dropped while
    chasing the stick losing its finger, Ash, 15 November 2026.) */
@@ -5495,6 +5496,7 @@ const handle = async (m, post) => {
     const adm = t.closest("[data-admin]");
     if (adm) { A.full = !A.full; saveAdmin(); adm.setAttribute("aria-checked", String(A.full)); const sb = adm.querySelector(".sub"); if (sb) sb.textContent = A.full ? "On. Every story opens in full right here." : "Off. Stories show the publisher's preview."; toast(A.full ? "Full articles on" : "Full articles off"); applyVault(); for (const k in textCache) delete textCache[k]; store.set("brief.offlineAt", ""); saveOffline(); render(true); return; }
     if (t.closest("[data-player-show]")) { try { if (localStorage.getItem("an-player-off") === "1") localStorage.removeItem("an-player-off"); else localStorage.setItem("an-player-off", "1"); } catch {} renderSettings(); return; }
+    { const xp = t.closest("[data-ex-part]"); if (xp) { const off = exOff(), k = xp.dataset.exPart; if (off.has(k)) off.delete(k); else off.add(k); try { localStorage.setItem("an3d-off", JSON.stringify([...off])); } catch {} renderSettings(); toast(`${EX_PARTS.find(p => p[0] === k)[1]}: ${off.has(k) ? "off" : "on"} next time Explore opens.`, 3000); return; } }
     if (t.closest("[data-ride-reset]")) { try { localStorage.removeItem("an3d-rides"); } catch {} renderSettings(); toast("Cars and planes are back to their usual numbers."); return; }
     if (t.closest("#adminLock")) { A.unlocked = false; saveAdmin(); keepSecret(""); store.set("brief.ghToken", ""); vaultKey = null; applyVault(); renderSettings(); render(true); return; }
     if (t.closest("#weather") && bsClick(t)) return;
@@ -8331,7 +8333,8 @@ const handle = async (m, post) => {
         // the town centre round the Rotary clock and number 11 Norman Road, stood in the model where they really are
         let mine = []; if (inv) try { mine = townModelGuests(T, m); } catch (e) { console.warn("Town model: the town centre and Norman Road couldn't be added", e); }
         if (cfg.place === "moo") try { mine = mine.concat(townShops(T, m)); } catch (e) { console.warn("Town model: Moorooka's shops couldn't be added", e); }
-        if (cfg.place === "moo" && m.addParts) T.no6 = townNo6(T, m);  // 6 Beaudesert Road's street, from Ash's photos (it catches its own errors)
+        const OFF = exOff(); document.body.classList.toggle("bsnoplaces", OFF.has("places"));
+        if (cfg.place === "moo" && m.addParts && !OFF.has("no6")) T.no6 = townNo6(T, m);  // 6 Beaudesert Road's street, from Ash's photos (it catches its own errors)
         // the planes (townCar), each with somewhere to stand beside it
         const rides = m.addParts ? TOWN_RIDES[cfg.place] : null;
         // golden ones only for Ash (Ash, 15 November 2026: "Only show the teleport to the golden objects if user name is ash or Ashley")
@@ -8508,18 +8511,18 @@ const handle = async (m, post) => {
         { const fly = $("bsFly"), ex = $("bsFlyX"), jb = $("bsFlyJump"), ro = new ResizeObserver(() => { if (ex.offsetWidth) fly.style.setProperty("--bs-exitw", ex.offsetWidth + "px"); if (jb.offsetWidth) fly.style.setProperty("--bs-jumpw", jb.offsetWidth + "px"); });
           ro.observe(ex); ro.observe(jb); T.unbar = () => ro.disconnect(); }
         // street names: on or off with the signpost button or N, remembered on this device (off to start with)
-        T.streets = townStreetNames(T, cfg, box, m);
-        { const nb = $("bsNamesBtn"), show = on => { T.streets.set(on); nb.setAttribute("aria-pressed", String(on)); nb.title = on ? "Hide street names (N)" : "Show street names (N)"; };
+        if (!OFF.has("streets")) T.streets = townStreetNames(T, cfg, box, m);
+        if (T.streets) { const nb = $("bsNamesBtn"), show = on => { T.streets.set(on); nb.setAttribute("aria-pressed", String(on)); nb.title = on ? "Hide street names (N)" : "Show street names (N)"; };
           show(streetsPref()); nb.hidden = false; nb.onclick = () => { const on = nb.getAttribute("aria-pressed") !== "true"; show(on); streetsSave(on); };
           T.namesToggle = () => nb.click(); }
         // admin mode: published edits for everyone, the editing tools for Ash (townAdmin)
-        try { T.admin = townAdmin(T, cfg, box, m, { ptrs }); } catch (e) { console.warn("Town model: admin mode couldn't start", e); }
+        if (!OFF.has("admin")) try { T.admin = townAdmin(T, cfg, box, m, { ptrs }); } catch (e) { console.warn("Town model: admin mode couldn't start", e); }
         // driving: Enter, or the Get in button, when a parked car is close (townCar)
-        try { T.car = townCar(T, m, F, ground, cfg.place); } catch (e) { console.warn("Town model: driving couldn't start", e); }
-        if (TOWN_TOGETHER.includes(cfg.place)) try { T.peers = townPeers(T, m, F, ground, cfg.place, box); } catch (e) { console.warn("Town model: other players couldn't start", e); }
-        try { T.me = townMe(T, m, F, ground); } catch (e) { console.warn("Town model: the construction worker couldn't start", e); }
-        try { T.traffic = townTraffic(T, m, F, ground, cfg); } catch (e) { console.warn("Town model: the traffic couldn't start", e); }
-        try { T.critter = townCritter(T, m, ground, cfg.place); } catch (e) { console.warn("Town model: the animal couldn't start", e); }
+        if (!OFF.has("rides")) try { T.car = townCar(T, m, F, ground, cfg.place); } catch (e) { console.warn("Town model: driving couldn't start", e); }
+        if (TOWN_TOGETHER.includes(cfg.place) && !OFF.has("players")) try { T.peers = townPeers(T, m, F, ground, cfg.place, box); } catch (e) { console.warn("Town model: other players couldn't start", e); }
+        if (!OFF.has("me")) try { T.me = townMe(T, m, F, ground); } catch (e) { console.warn("Town model: the construction worker couldn't start", e); }
+        if (!OFF.has("traffic")) try { T.traffic = townTraffic(T, m, F, ground, cfg); } catch (e) { console.warn("Town model: the traffic couldn't start", e); }
+        if (!OFF.has("animal")) try { T.critter = townCritter(T, m, ground, cfg.place); } catch (e) { console.warn("Town model: the animal couldn't start", e); }
         F.hot = { f: () => toMode(!T.walk),
           enter: () => T.car?.enter(), keys: () => !!T.car?.keys?.(), undo: () => !!T.admin?.undo?.(), emotes: () => !!T.peers?.menu?.(), emote: i => !!T.peers?.emote?.(i), gold: () => isAsh() && !!T.car?.toGold?.(),
           n: () => T.namesToggle?.(),
@@ -11100,9 +11103,17 @@ const handle = async (m, post) => {
       <div class="beta-chips"><button type="button" class="bchip" data-tv-new>Awesome News TV (no ads)</button><button type="button" class="bchip" data-open-tv>Old TV (YouTube clips)</button></div>
       ${state.mode === "claude" ? "" : `<div class="beta-tog">${toggle("data-skipads", "1", S.skipAds, "Hide YouTube ads", "Old TV: sound off and headlines on screen while an ad plays")}</div>`}
     </div></div>
-    ${isAsh() ? ridesHTML() : ""}
+    ${isAsh() ? ridesHTML() + exPartsHTML() : ""}
     ${state.mode === "claude" ? "" : `<div class="group"><h2>Updates</h2><div class="card">${ghFieldHTML()}</div></div>`}`;
   }
+  // Explore's parts, each switched on or off on this device, for Ash to find what makes an iPhone let go of the stick (Ash,
+  // 15 November 2026: the stick, Boost and looking round stop at random, since a change made this morning). Read when a town opens.
+  const EX_PARTS = [["traffic", "Moving traffic"], ["animal", "The animal by Norman Road's helicopter"], ["rides", "Cars, planes, helicopter and bus to drive"], ["admin", "Map editing (the pencil)"],
+    ["players", "Other players and the Settings gear"], ["me", "Construction worker view"], ["no6", "6 Beaudesert Road's street detail"], ["streets", "Street names"], ["places", "Place names on the model"]];
+  const exOff = () => { try { return new Set(JSON.parse(localStorage.getItem("an3d-off") || "[]")); } catch { return new Set(); } };
+  function exPartsHTML() { const off = exOff();
+    return `<div class="group"><h2>Explore parts</h2><div class="card">${EX_PARTS.map(([k, name]) => `<button class="field" type="button" role="switch" aria-checked="${!off.has(k)}" data-ex-part="${k}"><span class="lbl">${name}<span class="sub">${off.has(k) ? "Off" : "On"}</span></span><span class="track"></span></button>`).join("")}
+    </div><p class="hint">For Ash, to find what makes the phone let go of the stick. Turn one off, close Explore and open it again, and try. On this device only.</p></div>`; }
   // Cars and planes: the numbers Ash can change (RIDE_DEF). Kept on this device; a model reads them when it opens
   function ridesHTML() { const r = rideSettings();
     return `<div class="group"><h2>Cars and planes</h2><div class="card">${Object.entries(RIDE_DEF).map(([k, [d, name, unit, lo, hi]]) =>
