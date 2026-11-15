@@ -71,6 +71,9 @@ button, input, select { font: inherit; color: inherit; }
 /* No accidental zooming on phones: double-taps don't zoom, and text boxes are big enough that iPhones
    don't zoom in when you tap into them. Pinch zoom still works. */
 html, body { touch-action: manipulation; }
+#verBadge { position: fixed; right: calc(6px + env(safe-area-inset-right)); bottom: calc(4px + env(safe-area-inset-bottom)); z-index: 2147483000; pointer-events: none; padding: 1px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.82); color: #1f5fd1; font: 700 10px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.02em; }
+#verBadge[hidden] { display: none; }
+@media (prefers-color-scheme: dark) { #verBadge { background: rgba(14, 13, 22, 0.78); color: #7fb0ff; } }
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }  /* iPhone: don't enlarge the text when turned sideways (it stays wrong when turned back) */
 /* No rubber-band bounce: on iPhone it dragged the whole page down and lifted the bottom bar off the bottom (pull to refresh still works) */
 html, body { overscroll-behavior-y: none; }
@@ -1341,6 +1344,12 @@ body.bsdrive:not(.bsplane) .bs-fly-x.bs-boost { bottom: calc(240px + env(safe-ar
 .bs-fly-x.bs-me-btn[aria-expanded="true"] { background: #fff; color: #1b1830; }
 body.bsme #bsFlyX, body.bsme #bsTimeBtn, body.bsme #bsFlyTimeBox { display: none !important; }
 body.bstown.bswalk:not(.bsdrive) .bs-ud { display: none !important; }
+body.bsnoplaces #bsTown .inv-embed-labels { display: none !important; }
+/* Place names keep clear of the buttons along the top (and of the sticks on a touch screen) by a fixed clip on their layer:
+   nothing on the page changes as they move. (It was a check that faded each name a few times a second; that was dropped while
+   chasing the stick losing its finger, Ash, 15 November 2026.) */
+#bsTown .inv-embed-labels { clip-path: inset(calc(112px + env(safe-area-inset-top)) 0 0 0); }
+@media (pointer: coarse) { #bsTown .inv-embed-labels { clip-path: inset(calc(112px + env(safe-area-inset-top)) 0 calc(300px + env(safe-area-inset-bottom)) 0); } }
 /* No text selection or iPhone copy menu anywhere in Explore (Ash, 15 November 2026: a held finger on the stick selected "Get out",
    the Copy / Look Up bar came up, and the selection took the touch off the stick so the car stopped). Typing boxes still select. */
 .bs-fly, .bs-fly * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
@@ -5487,6 +5496,7 @@ const handle = async (m, post) => {
     const adm = t.closest("[data-admin]");
     if (adm) { A.full = !A.full; saveAdmin(); adm.setAttribute("aria-checked", String(A.full)); const sb = adm.querySelector(".sub"); if (sb) sb.textContent = A.full ? "On. Every story opens in full right here." : "Off. Stories show the publisher's preview."; toast(A.full ? "Full articles on" : "Full articles off"); applyVault(); for (const k in textCache) delete textCache[k]; store.set("brief.offlineAt", ""); saveOffline(); render(true); return; }
     if (t.closest("[data-player-show]")) { try { if (localStorage.getItem("an-player-off") === "1") localStorage.removeItem("an-player-off"); else localStorage.setItem("an-player-off", "1"); } catch {} renderSettings(); return; }
+    { const xp = t.closest("[data-ex-part]"); if (xp) { const off = exOff(), k = xp.dataset.exPart; if (off.has(k)) off.delete(k); else off.add(k); try { localStorage.setItem("an3d-off", JSON.stringify([...off])); } catch {} renderSettings(); toast(`${EX_PARTS.find(p => p[0] === k)[1]}: ${off.has(k) ? "off" : "on"} next time Explore opens.`, 3000); return; } }
     if (t.closest("[data-ride-reset]")) { try { localStorage.removeItem("an3d-rides"); } catch {} renderSettings(); toast("Cars and planes are back to their usual numbers."); return; }
     if (t.closest("#adminLock")) { A.unlocked = false; saveAdmin(); keepSecret(""); store.set("brief.ghToken", ""); vaultKey = null; applyVault(); renderSettings(); render(true); return; }
     if (t.closest("#weather") && bsClick(t)) return;
@@ -6332,6 +6342,7 @@ const handle = async (m, post) => {
         hands.forEach(([hh, mm]) => { hh.rotation.z = -h / 12 * Math.PI * 2; mm.rotation.z = -m / 60 * Math.PI * 2; });
         faceMat.emissiveIntensity = lit * 0.85;
         if (W.invGlass) W.invGlass.emissiveIntensity = lit * 0.55;
+        if (W.invShopWin) W.invShopWin.emissiveIntensity = lit * 0.8;
         if (W.invLibGlow) W.invLibGlow.emissiveIntensity = lit * 0.6;
       };
     }
@@ -6417,7 +6428,7 @@ const handle = async (m, post) => {
       done(road, { roughness: .95 }); done(foot, { roughness: 1 }); done(mark, { roughness: 1 });
       // ---- buildings. The Hub, library and hall: timber battens over charcoal, with a deep roof edge. Everything else in one mesh.
       const WALL = [[0xe9dcc0, 0x9b5743, 0xf2efe6, 0xc9b79a, 0xd8cdb5, 0xa86a52], [0x8e9498], [0xece4d6, 0xe3dccd, 0xd9d2c0, 0xf2ece0], [0xc9b08a], [0xe8c35a], [0xd8d6cf], [0xeee2c2]];
-      const bld = bag(), roofEdge = bag();
+      const bld = bag(), roofEdge = bag(), ROOFS = [0x7a8085, 0x8f969b, 0xa9adaf, 0x6c767d, 0x9c968b, 0x84908f, 0xb7b9b6, 0x737b86];  // sheeting colours, building by building
       const batt = (() => { const c = document.createElement("canvas"); c.width = c.height = 256; const g = c.getContext("2d"); g.fillStyle = "#47586c"; g.fillRect(0, 0, 256, 256);  // blue-grey cladding panels
         for (let x = 0; x < 256; x += 64) { g.fillStyle = "#3b4a5c"; g.fillRect(x, 0, 3, 256); } g.fillStyle = "#3b4a5c"; g.fillRect(0, 128, 256, 3); g.fillStyle = "rgba(255,255,255,.05)"; g.fillRect(0, 0, 256, 60);
         const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(0.5, 0.5); if ("colorSpace" in t) t.colorSpace = THREE.SRGBColorSpace; return t; })();
@@ -6427,10 +6438,20 @@ const handle = async (m, post) => {
           const pts = pts2(f), cx = pts.reduce((a, p) => a + p[0], 0) / pts.length, cz = pts.reduce((a, p) => a + p[1], 0) / pts.length;
           const eg = new THREE.ExtrudeGeometry(new THREE.Shape(pts.map(([x, z]) => new THREE.Vector2(cx + (x - cx) * 1.04, -(cz + (z - cz) * 1.04)))), { depth: 0.35, bevelEnabled: false }); eg.applyMatrix4(flatDown);
           put(roofEdge, eg, 0x2e3236, mtx(0, G0 + h, 0, 0)); return; }
-        const pal = WALL[k] || WALL[0]; put(bld, g, pal[i % pal.length], mtx(0, G0, 0, 0), k === 2 ? 0x55606a : 0x7a8085); });
+        const pal = WALL[k] || WALL[0]; put(bld, g, pal[i % pal.length], mtx(0, G0, 0, 0), k === 2 ? 0x55606a : ROOFS[(i * 5 + 2) % ROOFS.length]);
+        // seen from the air: each roof its own sheeting colour, with the air conditioners and skylights a shop roof has
+        if (k === 2) return; const q = pts2(f), hs = n => { const v = Math.sin(n * 91.7 + i * 13.3) * 43758.5453; return v - Math.floor(v); };
+        let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9, area = 0; q.forEach(([x, z], j) => { const [bx, bz] = q[(j + 1) % q.length]; area += x * bz - bx * z; x0 = Math.min(x0, x); x1 = Math.max(x1, x); z0 = Math.min(z0, z); z1 = Math.max(z1, z); }); area = Math.abs(area) / 2;
+        const inP = (x, z) => { let c = false; for (let a = 0, b = q.length - 1; a < q.length; b = a++) { const [xi, zi] = q[a], [xj, zj] = q[b]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; };
+        const edge = (x, z) => { let d = 1e9; for (let a = 0, b = q.length - 1; a < q.length; b = a++) { const [ax, az] = q[b], [bx, bz] = q[a], dx = bx - ax, dz = bz - az, t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz || 1))); d = Math.min(d, Math.hypot(x - ax - dx * t, z - az - dz * t)); } return d; };
+        const want = area < 110 ? 0 : Math.min(7, 1 + Math.round(area / 230)), ry = Math.atan2(q[1][0] - q[0][0], q[1][1] - q[0][1]);
+        for (let n = 0, made = 0; n < want * 12 && made < want; n++) { const x = x0 + hs(n * 2 + 1) * (x1 - x0), z = z0 + hs(n * 2 + 2) * (z1 - z0); if (!inP(x, z) || edge(x, z) < 2.6) continue;
+          if (made % 3 === 2) put(bld, new THREE.BoxGeometry(1.1, 0.14, 2.3), 0x9fb3bf, mtx(x, G0 + h + 0.07, z, ry), 0xcfe0ea);  // a skylight
+          else { put(bld, new THREE.BoxGeometry(1.5, 0.95, 0.9), 0xc6cacc, mtx(x, G0 + h + 0.475, z, ry), 0x8d9398); put(bld, new THREE.BoxGeometry(1.1, 0.06, 0.6), 0x55595d, mtx(x, G0 + h + 0.98, z, ry)); }
+          made++; } });
       // ---- shopfronts: each its own parapet and colour, a cornice, shop window and door, a sign above the verandah
       const FAC = [0xefe6d2, 0xa4573f, 0xf6f4ee, 0xb9c8cf, 0x9fb09a, 0xe0c99a, 0xc0674a, 0x4a4f55, 0xf0d98a, 0xc8102e], glassB = bag(), frame = bag();
-      const fac = bag(), signsUp = [];
+      const fac = bag(), signsUp = [], shopWins = [], shopDoors = [];
       D.u.forEach(([x1, z1, x2, z2, nx, nz, h, c, style, name]) => { const L = Math.hypot(x2 - x1, z2 - z1), r = Math.atan2(x2 - x1, z2 - z1), mx = (x1 + x2) / 2, mz = (z1 + z2) / 2, colr = FAC[c];
         const at = (t, out) => along(x1, z1, x2, z2, t, out, nx, nz);
         let [x, z] = at(0.5, 0.2); put(fac, new THREE.BoxGeometry(0.4, h, L - 0.12), colr, mtx(x, G0 + h / 2, z, r));                     // the front wall up to the parapet
@@ -6442,6 +6463,7 @@ const handle = async (m, post) => {
         // the window and the door, in dark aluminium frames
         [x, z] = at(0.42, 0.44); put(glassB, new THREE.BoxGeometry(0.06, 2.35, (L - 0.5) * 0.66), 0x2c3a48, mtx(x, G0 + 1.6, z, r));
         [x, z] = at(0.86, 0.44); put(glassB, new THREE.BoxGeometry(0.06, 2.3, 1.05), 0x1f2a34, mtx(x, G0 + 1.55, z, r));
+        shopWins.push([...at(0.42, 0.478), nx, nz, (L - 0.5) * 0.66, name || ""]); shopDoors.push([...at(0.86, 0.478), nx, nz]);  // what shows through them: below
         for (const t of [0.08, 0.42, 0.76, 0.8, 0.92]) { [x, z] = at(t, 0.47); put(frame, new THREE.BoxGeometry(0.08, 2.4, 0.07), 0x3a3d40, mtx(x, G0 + 1.6, z, r)); }
         [x, z] = at(0.5, 0.47); put(frame, new THREE.BoxGeometry(0.08, 0.08, L - 0.5), 0x3a3d40, mtx(x, G0 + 2.8, z, r));
         if (name) signsUp.push([...at(0.5, 0.5), nx, nz, /PIEMAN/.test(name) ? L - 1 : Math.min(L - 1, 6.5), name, c, h]);  // the bakery's sign runs right across its wide front
@@ -6452,6 +6474,97 @@ const handle = async (m, post) => {
         put(glassB, new THREE.BoxGeometry(0.08, 3.6, L * 0.8), 0x2c3a48, mtx((x1 + x2) / 2 + nx * 0.06, G0 + 2.7, (z1 + z2) / 2 + nz * 0.06, r));
         for (let s = 0.1; s < 0.92; s += 0.1) put(frame, new THREE.BoxGeometry(0.1, 3.6, 0.1), 0x2b2e31, mtx(x1 + (x2 - x1) * s + nx * 0.1, G0 + 2.7, z1 + (z2 - z1) * s + nz * 0.1, r)); });
       W.invGlass = done(glassB, { roughness: .2, metalness: .4, emissive: 0xffc98a, emissiveIntensity: 0 }).material;  // lit from inside at night
+      // ---- what's in the shop windows and doors (Ash, 15 November 2026: "Make it higher res but always consider open time and
+      // lag"): one small picture of seven window displays, the library's shelves, the Hub's foyer and four doors, cut up across every
+      // shopfront and the Hub's glass in one mesh, so the whole town centre's worth costs one picture and one draw. It glows from
+      // inside at night with the rest of the glass.
+      { const c = document.createElement("canvas"); c.width = 2048; c.height = 768; const g = c.getContext("2d"), TW = 512, TH = 256;
+        const hsh = n => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
+        const box = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
+        const oval = (x, y, rx, ry, col) => { g.fillStyle = col; g.beginPath(); g.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); g.fill(); };
+        const shelf = (y, col = "#d9cdb8") => { box(14, y, TW - 28, 5, col); box(14, y + 5, TW - 28, 3, "rgba(0,0,0,.28)"); };
+        const lamp = (x, y, col = "#ffe2a3") => { box(x - 1, 0, 2, y - 10, "#1c1c1c"); g.fillStyle = "#26282b"; g.beginPath(); g.moveTo(x - 14, y); g.lineTo(x + 14, y); g.lineTo(x + 6, y - 14); g.lineTo(x - 6, y - 14); g.fill(); oval(x, y + 2, 9, 4, col);
+          const gr = g.createRadialGradient(x, y + 6, 2, x, y + 6, 60); gr.addColorStop(0, "rgba(255,226,163,.34)"); gr.addColorStop(1, "rgba(255,226,163,0)"); g.fillStyle = gr; g.fillRect(x - 60, y - 54, 120, 120); };
+        const tile = (k, top, bot, floor, draw, w = TW, x0 = (k & 3) * TW) => { g.save(); g.translate(x0, (k >> 2) * TH); g.beginPath(); g.rect(0, 0, w, TH); g.clip();
+          const bg = g.createLinearGradient(0, 0, 0, TH); bg.addColorStop(0, top); bg.addColorStop(1, bot); g.fillStyle = bg; g.fillRect(0, 0, w, TH); box(0, TH - 26, w, 26, floor);
+          draw(w);
+          const sky = g.createLinearGradient(0, 0, 0, TH * 0.5); sky.addColorStop(0, "rgba(176,208,236,.34)"); sky.addColorStop(1, "rgba(176,208,236,0)"); g.fillStyle = sky; g.fillRect(0, 0, w, TH * 0.5);  // the sky in the glass
+          g.fillStyle = "rgba(255,255,255,.07)"; g.beginPath(); g.moveTo(w * 0.52, 0); g.lineTo(w * 0.7, 0); g.lineTo(w * 0.34, TH); g.lineTo(w * 0.16, TH); g.fill();
+          g.beginPath(); g.moveTo(w * 0.76, 0); g.lineTo(w * 0.8, 0); g.lineTo(w * 0.44, TH); g.lineTo(w * 0.4, TH); g.fill();
+          g.restore(); };
+        // 0 the bakery: loaves on timber shelves, a glass counter of cakes and pies, the blackboard
+        tile(0, "#6b4a33", "#3d2b20", "#2a211c", () => { [58, 104].forEach((y, r) => { shelf(y, "#c79a62"); for (let i = 0; i < 13; i++) { const x = 34 + i * 35 + hsh(i + r * 40) * 8, big = hsh(i * 3 + r) > 0.45;
+              oval(x, y - (big ? 11 : 8), big ? 15 : 11, big ? 11 : 8, ["#d9a253", "#c98a3c", "#e3b76a", "#b87333"][Math.floor(hsh(i * 7 + r * 13) * 4)]); if (big) box(x - 9, y - 16, 18, 2, "rgba(120,70,20,.5)"); } });
+          box(20, 150, TW - 40, 84, "#e9e2d2"); box(26, 156, TW - 52, 48, "#31261f"); box(20, 150, TW - 40, 5, "#b9b0a0");
+          for (let i = 0; i < 22; i++) { const x = 40 + i * 20.5, col = ["#f2c6cf", "#f6e7c1", "#6b3f2a", "#e8a23f", "#fff4e2", "#c0392b"][Math.floor(hsh(i * 5.3) * 6)]; oval(x, 180, 8, 6, col); oval(x, 196, 8, 5, ["#c98a3c", "#d9a253"][i % 2]); }
+          box(360, 12, 120, 36, "#1f2321"); g.fillStyle = "#e9e6dc"; g.font = "700 13px Georgia, serif"; g.fillText("PIES  ·  BREAD", 372, 28); g.font = "11px Georgia, serif"; g.fillText("coffee  ·  cakes", 378, 42);
+          [90, 250].forEach(x => lamp(x, 30)); });
+        // 1 a café or takeaway: the counter and coffee machine, a menu board, tables in the window
+        tile(1, "#3f5a57", "#22302f", "#2b2622", () => { box(30, 20, 190, 52, "#1b1f1e"); g.fillStyle = "#efe9da"; for (let r = 0; r < 4; r++) for (let q = 0; q < 2; q++) g.fillRect(42 + q * 92, 30 + r * 10, 50 + hsh(r * 2 + q) * 26, 3);
+          box(250, 118, 240, 116, "#8a6a4a"); box(250, 112, 240, 8, "#d8cdb8"); box(292, 74, 70, 40, "#b9bec2"); box(300, 82, 54, 14, "#2a2d30"); box(384, 86, 26, 28, "#f2efe6"); box(420, 92, 22, 22, "#f2efe6"); box(452, 96, 20, 18, "#c0392b");
+          [60, 170].forEach((x, i) => { box(x - 34, 176, 68, 5, "#d9c7a6"); box(x - 3, 181, 6, 52, "#1d1d1d"); [-1, 1].forEach(s => { box(x + s * 50 - 12, 196, 24, 4, ["#c0392b", "#2f6f6a"][i]); box(x + s * 50 - 12 + (s > 0 ? 20 : 0), 164, 4, 34, ["#c0392b", "#2f6f6a"][i]); box(x + s * 50 - 10, 200, 3, 34, "#1d1d1d"); box(x + s * 50 + 7, 200, 3, 34, "#1d1d1d"); }); oval(x - 10, 172, 6, 4, "#f4f1ea"); });
+          [120, 330, 430].forEach(x => lamp(x, 34)); });
+        // 2 clothes: mannequins, a rail of things on hangers
+        tile(2, "#c9bfb1", "#8d8377", "#5e564d", () => { box(250, 60, 240, 4, "#2b2b2b"); for (let i = 0; i < 14; i++) { const x = 262 + i * 16.5, col = ["#e8dcc4", "#2f4f6f", "#c96a5a", "#f2f0ea", "#7a8f6a", "#d9a441", "#394047", "#b9d3e0"][Math.floor(hsh(i * 2.7) * 8)], h = 70 + hsh(i) * 46;
+            g.fillStyle = col; g.beginPath(); g.moveTo(x - 2, 64); g.lineTo(x + 2, 64); g.lineTo(x + 9, 78); g.lineTo(x + 8, 64 + h); g.lineTo(x - 8, 64 + h); g.lineTo(x - 9, 78); g.fill(); }
+          [[60, "#2f6f8f", "#e9e2d0"], [130, "#f2efe6", "#39424c"], [200, "#d9794f", "#2f4f6f"]].forEach(([x, a, b2]) => { oval(x, 62, 10, 12, "#e3d6c4"); box(x - 3, 72, 6, 8, "#e3d6c4");
+            g.fillStyle = a; g.beginPath(); g.moveTo(x - 22, 82); g.lineTo(x + 22, 82); g.lineTo(x + 18, 150); g.lineTo(x - 18, 150); g.fill(); box(x - 30, 84, 9, 46, a); box(x + 21, 84, 9, 46, a);
+            g.fillStyle = b2; g.beginPath(); g.moveTo(x - 18, 150); g.lineTo(x + 18, 150); g.lineTo(x + 22, 222); g.lineTo(x - 22, 222); g.fill(); box(x - 16, 222, 32, 10, "#1f1f1f"); });
+          box(262, 196, 220, 36, "#efe9dc"); for (let i = 0; i < 9; i++) box(270 + i * 23, 184 - (i % 3) * 5, 19, 12 + (i % 3) * 5, ["#2f4f6f", "#c96a5a", "#e8dcc4", "#7a8f6a"][i % 4]); });
+        // 3 a real estate agent: rows of listings on lit cards
+        tile(3, "#59626b", "#333a41", "#24282c", () => { for (let r = 0; r < 3; r++) for (let q = 0; q < 6; q++) { const x = 22 + q * 80, y = 26 + r * 68; box(x, y, 68, 56, "#f6f4ee");
+            box(x + 4, y + 4, 60, 28, ["#7fb3d5", "#9cc38a", "#d9b98a", "#8fa6b8", "#c9d6a0"][Math.floor(hsh(q * 3.1 + r * 7.7) * 5)]); box(x + 4, y + 20, 60, 12, "rgba(70,110,60,.55)");
+            g.fillStyle = "#c8553d"; g.beginPath(); g.moveTo(x + 20, y + 22); g.lineTo(x + 34, y + 10); g.lineTo(x + 48, y + 22); g.fill(); box(x + 23, y + 22, 22, 9, "#efe6d2");
+            box(x + 4, y + 36, 44, 4, "#3a3d40"); box(x + 4, y + 44, 30, 3, "#9aa0a6"); box(x + 50, y + 42, 14, 8, "#c8102e"); } });
+        // 4 the chemist and other shelves of small things
+        tile(4, "#e9eeee", "#aeb9ba", "#6f7a7c", () => { [52, 96, 140, 184].forEach((y, r) => { shelf(y, "#f4f6f6"); for (let i = 0; i < 30; i++) { const w = 9 + hsh(i * 1.7 + r * 9) * 7, h = 16 + hsh(i * 4.1 + r * 3) * 20;
+              box(22 + i * 15.8, y - h, w, h, ["#2e8b57", "#f2f2ee", "#3a7bbf", "#e9c46a", "#d9534f", "#7d5ba6", "#f4a261", "#8ecae6"][Math.floor(hsh(i * 9.3 + r * 5.1) * 8)]); } });
+          oval(256, 24, 20, 20, "#f6f8f8"); box(250, 10, 12, 28, "#2e8b57"); box(242, 18, 28, 12, "#2e8b57"); box(14, 192, TW - 28, 42, "#dfe5e5"); });
+        // 5 surf, gifts and homewares: boards on end, things hung and stacked
+        tile(5, "#4d6f86", "#2c4253", "#39332c", () => { [[40, "#f4f1ea", "#e76f51"], [84, "#ffd166", "#2a9d8f"], [128, "#8ecae6", "#f4f1ea"], [172, "#f4f1ea", "#264653"], [216, "#ef476f", "#f4f1ea"]].forEach(([x, a, b2]) => { oval(x, 128, 17, 96, a); box(x - 2, 40, 4, 176, b2); oval(x, 80, 7, 7, b2); });
+          [70, 130, 190].forEach((y, r) => { box(262, y, 226, 5, "#d9cdb8"); for (let i = 0; i < 9; i++) { const x = 272 + i * 24, k2 = Math.floor(hsh(i * 3.3 + r * 11) * 4), col = ["#e9c46a", "#f4f1ea", "#2a9d8f", "#e76f51", "#8ecae6", "#b5838d"][Math.floor(hsh(i * 6.1 + r * 2.9) * 6)];
+              if (k2 === 0) oval(x + 8, y - 10, 9, 10, col); else if (k2 === 1) box(x, y - 26, 15, 26, col); else if (k2 === 2) { box(x + 2, y - 14, 12, 14, col); oval(x + 8, y - 16, 8, 5, col); } else box(x - 1, y - 12, 19, 12, col); } });
+          box(262, 196, 226, 38, "#b08968"); });
+        // 6 the supermarket: specials in the window, fruit and vegetables stacked behind
+        tile(6, "#dfe6da", "#9aa894", "#50584e", () => { [[20, 16, 150, 92, "#f9d423", "#c8102e"], [186, 16, 130, 60, "#c8102e", "#ffffff"], [334, 16, 156, 92, "#ffffff", "#1d4d32"]].forEach(([x, y, w, h, a, b2]) => { box(x, y, w, h, a); box(x + 10, y + 10, w - 20, h * 0.3, b2); box(x + 10, y + h * 0.52, w * 0.6, 6, b2); box(x + 10, y + h * 0.7, w * 0.4, 6, b2); });
+          for (let q = 0; q < 6; q++) { const x = 20 + q * 80; box(x, 150, 72, 84, "#8a6a4a"); box(x + 3, 153, 66, 6, "#6f5236"); const col = ["#e67e22", "#c0392b", "#7fb069", "#f4d35e", "#8e3b46", "#a3c66b"][q];
+            for (let r = 0; r < 3; r++) for (let i = 0; i < 6; i++) oval(x + 10 + i * 10.5 + (r % 2) * 4, 148 - r * 9, 6.5, 6, col); } });
+        // 7 a newsagent or gift shop: cards and magazines in racks, papers stacked out the front
+        tile(7, "#7a6a8a", "#463c52", "#2f2a33", () => { [44, 84, 124].forEach((y, r) => { for (let i = 0; i < 17; i++) { const x = 22 + i * 28; box(x, y - 30, 23, 32, ["#f4f1ea", "#e63946", "#ffd166", "#457b9d", "#f4a261", "#a8dadc", "#2a9d8f", "#ef476f"][Math.floor(hsh(i * 2.9 + r * 6.3) * 8)]);
+              box(x + 3, y - 26, 17, 5, "rgba(20,20,30,.55)"); box(x + 3, y - 14, 17, 10, "rgba(255,255,255,.35)"); } box(14, y + 2, TW - 28, 4, "#2b2630"); });
+          for (let q = 0; q < 5; q++) { const x = 30 + q * 96; box(x, 168, 80, 66, "#d8d2c4"); for (let r = 0; r < 7; r++) box(x, 168 + r * 9, 80, 1.5, "rgba(0,0,0,.25)"); box(x + 8, 150, 64, 18, ["#f4f1ea", "#ffd166", "#f4f1ea", "#a8dadc", "#f4f1ea"][q]); box(x + 12, 154, 40, 4, "#22252a"); } });
+        // 8 the library: shelves of books, a reading table and lamps
+        tile(8, "#d8cdb6", "#9c8f78", "#6b5d4a", () => { [46, 86, 126, 166].forEach((y, r) => { box(10, y, TW - 20, 5, "#8a6a4a"); let x = 14; let i = 0; while (x < TW - 20) { const w = 4 + hsh(i * 1.31 + r * 17) * 6, h = 24 + hsh(i * 2.77 + r * 5) * 12, lean = hsh(i * 7.7 + r) > 0.93;
+                if (lean) { x += 9; } else box(x, y - h, w, h, ["#8e3b46", "#2f4f6f", "#d9a441", "#3a6351", "#b5651d", "#e9e2d0", "#5b4b8a", "#c96a5a", "#264653", "#a3b18a"][Math.floor(hsh(i * 3.9 + r * 2.3) * 10)]); x += w + 1; i++; } });
+          [10, 172, 334, TW - 16].forEach(x => box(x, 14, 6, 160, "#7a5c3e"));
+          box(120, 198, 270, 8, "#b08968"); box(134, 206, 8, 28, "#5a4632"); box(368, 206, 8, 28, "#5a4632"); [170, 250, 330].forEach(x => { box(x - 12, 190, 24, 8, "#f4f1ea"); }); [200, 300].forEach(x => lamp(x, 30)); });
+        // 9 the Hub's foyer: the visitor information desk, racks of brochures, a noticeboard
+        tile(9, "#b9c4c9", "#7f8c92", "#555d61", () => { box(24, 30, 150, 96, "#b08968"); for (let r = 0; r < 3; r++) for (let q = 0; q < 4; q++) box(34 + q * 35, 40 + r * 28, 26, 20, ["#f4f1ea", "#ffd166", "#a8dadc", "#f4a261", "#cdeac0"][Math.floor(hsh(q * 3.3 + r * 8.1) * 5)]);
+          box(210, 150, 200, 84, "#2f5d7c"); box(204, 144, 212, 8, "#e9e6dc"); oval(310, 96, 26, 26, "#f6c945"); g.fillStyle = "#1b2a41"; g.font = "800 36px Georgia, serif"; g.fillText("i", 304, 109);
+          for (let r = 0; r < 4; r++) for (let q = 0; q < 3; q++) box(432 + q * 22, 40 + r * 40, 17, 32, ["#2a9d8f", "#e76f51", "#f4f1ea", "#e9c46a", "#457b9d"][Math.floor(hsh(q * 5.7 + r * 4.3) * 5)]);
+          [110, 310].forEach(x => lamp(x, 28)); });
+        // 10 four doors: glass in a dark frame, a push bar, an OPEN sign or the hours
+        for (let d = 0; d < 4; d++) tile(10, ["#3b4a52", "#4a4038", "#35424f", "#474a3f"][d], ["#1e262b", "#221c18", "#1a2129", "#20231c"][d], "#161616", w => { box(0, 0, w, 6, "#2b2e31"); box(0, 0, 6, TH, "#2b2e31"); box(w - 6, 0, 6, TH, "#2b2e31"); box(0, TH - 14, w, 14, "#2b2e31");
+          box(w - 26, 96, 6, 70, "#c9ced2"); const gl = g.createRadialGradient(w / 2, 70, 4, w / 2, 70, 90); gl.addColorStop(0, "rgba(255,222,160,.30)"); gl.addColorStop(1, "rgba(255,222,160,0)"); g.fillStyle = gl; g.fillRect(0, 0, w, 170);
+          if (d % 2 === 0) { box(30, 74, 56, 24, "#c8202a"); g.fillStyle = "#ffffff"; g.font = "800 17px system-ui, sans-serif"; g.fillText("OPEN", 35, 92); }
+          else { box(34, 70, 48, 40, "#f4f1ea"); for (let r = 0; r < 5; r++) box(40, 77 + r * 6, 36 - (r % 2) * 10, 2, "#3a3d40"); } }, 128, 2 * TW + d * 128);
+        const map = new THREE.CanvasTexture(c); if ("colorSpace" in map) map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = 8;
+        const KIND = (n, i) => /PIEMAN|BAKERY/.test(n) ? 0 : /LARDER|CAFE|PIZZA|SLICE|BENNY|FISH|THAI|DEVOUR|LOCAL/.test(n) ? 1 : /CLOTH|BLISS|DOT|SUNNI|DRIFT|TEEPEES/.test(n) ? 2 : /BARRY|STOCKDALE|HOMES|ALEX/.test(n) ? 3 : /CHEM|PHARM/.test(n) ? 4
+          : /SURF|BARGAIN|ECO/.test(n) ? 5 : /FOODWORKS/.test(n) ? 6 : /PAPER/.test(n) ? 7 : [2, 7, 1, 5, 3, 4, 2, 1][i % 8];
+        const P3 = [], N3 = [], UV = [], EU = 3 / 2048, EV = 3 / 768, ROW = 1 / 3, FLIP = [2, 4, 5, 8];  // (the ones with nothing to read can be mirrored, so neighbours differ)
+        const pane = (x, z, nx, nz, w, y0, y1, u0, u1, v0, v1) => { const rx = nz, rz = -nx, a = [x - rx * w / 2, z - rz * w / 2], b = [x + rx * w / 2, z + rz * w / 2];  // left to right as you face it
+          for (const [p, y, u, v] of [[a, y0, u0, v0], [b, y0, u1, v0], [b, y1, u1, v1], [a, y0, u0, v0], [b, y1, u1, v1], [a, y1, u0, v1]]) { P3.push(p[0], y, p[1]); N3.push(nx, 0, nz); UV.push(u, v); } };
+        shopWins.forEach(([x, z, nx, nz, w, name], i) => { const k = KIND(name, i), n = Math.max(1, Math.round(w / 5.2)), sw = w / n, u0 = (k & 3) / 4 + EU, u1 = (k & 3) / 4 + 0.25 - EU, v1 = 1 - (k >> 2) * ROW - EV, v0 = v1 - ROW + 2 * EV, mir = FLIP.includes(k) && i % 2;
+          for (let j = 0; j < n; j++) { const o = (j + 0.5) * sw - w / 2; pane(x + nz * o, z - nx * o, nx, nz, sw, G0 + 0.425, G0 + 2.775, mir ? u1 : u0, mir ? u0 : u1, v0, v1); } });
+        shopDoors.forEach(([x, z, nx, nz], i) => { const d = i % 4, u0 = 0.5 + d / 16 + EU, u1 = 0.5 + (d + 1) / 16 - EU; pane(x, z, nx, nz, 1.05, G0 + 0.4, G0 + 2.7, u0, u1, EV, ROW - EV); });
+        // the Hub's and the library's glass onto the street: books on the library's side, the foyer and the visitor information desk on the Hub's
+        (D.g || []).forEach(([x1, z1, x2, z2, nx, nz, k], i) => { if (k !== 1) return; const L = Math.hypot(x2 - x1, z2 - z1) * 0.8, n = Math.max(1, Math.round(L / 5.5)), sw = L / n, ux = (x2 - x1) / (L / 0.8), uz = (z2 - z1) / (L / 0.8);
+          const lib = D.lib && Math.hypot((x1 + x2) / 2 - (D.lib[0] + D.lib[2]) / 2, (z1 + z2) / 2 - (D.lib[1] + D.lib[3]) / 2) < 20;
+          for (let j = 0; j < n; j++) { const o = (j + 0.5) * sw - L / 2, t = lib ? 8 : 9, u0 = (t & 3) / 4 + EU, u1 = u0 + 0.25 - 2 * EU, mir = lib && (i + j) % 2;
+            pane((x1 + x2) / 2 + ux * o + nx * 0.105, (z1 + z2) / 2 + uz * o + nz * 0.105, nx, nz, sw, G0 + 0.9, G0 + 4.5, mir ? u1 : u0, mir ? u0 : u1, EV, ROW - EV); } });
+        const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.Float32BufferAttribute(P3, 3)); geo.setAttribute("normal", new THREE.Float32BufferAttribute(N3, 3)); geo.setAttribute("uv", new THREE.Float32BufferAttribute(UV, 2));
+        W.invShopWin = new THREE.MeshStandardMaterial({ map, roughness: .28, metalness: .1, emissive: 0xffe0b0, emissiveMap: map, emissiveIntensity: 0 });
+        TG.add(new THREE.Mesh(geo, W.invShopWin)); }
       done(roofEdge, { roughness: .6 });
       // ---- verandahs: corrugated iron sloping to a white fascia, on teal posts with little brackets
       const vb = bag();
@@ -6772,7 +6885,9 @@ const handle = async (m, post) => {
         [body, cabin, ute].forEach(g => g.translate(0, 0, -(g === body ? 0.88 : g === cabin ? 0.75 : 0.775)));
         return { body, cabin, ute }; })();
       const wheel = new THREE.CylinderGeometry(0.33, 0.33, 0.24, 12).rotateX(Math.PI / 2), hub = new THREE.CylinderGeometry(0.18, 0.18, 0.26, 8).rotateX(Math.PI / 2);
+      W.invParked = [];  // where each stands (the whole-town model stands its own there instead, so they can be driven: townModelGuests)
       const carAt = (x, z, yaw, c, kind) => { const m = mtx(x, G0 + 0.08, z, yaw - Math.PI / 2);  // the shapes run along x: turned to face yaw
+        W.invParked.push([x, z, yaw, c, kind ? 2 : W.invParked.length % 2]);
         put(cars, carGeo.body, c, m); put(cars, kind ? carGeo.ute : carGeo.cabin, 0x1d2630, m);
         put(cars, new THREE.BoxGeometry(kind ? 1.4 : 2.3, 0.06, kind ? 1.45 : 1.38), c, m.clone().multiply(new THREE.Matrix4().makeTranslation(kind ? 0.15 : -0.6, kind ? 1.5 : 1.45, 0)));  // roof
         [[1.35, 0.92], [1.35, -0.92], [-1.4, 0.92], [-1.4, -0.92]].forEach(([a, b]) => { const mm = m.clone().multiply(new THREE.Matrix4().makeTranslation(a, 0.33, b));
@@ -6784,7 +6899,7 @@ const handle = async (m, post) => {
           const x = ax + ux * (s + 1.4) - uz * (ab.w / 2 - 2.6) * sd, z = az + uz * (s + 1.4) + ux * (ab.w / 2 - 2.6) * sd;
           if (Math.hypot(x - D.c[0], z - D.c[1]) > 140 || Math.hypot(x - D.c[0], z - D.c[1]) < 16 || nearOther(x, z, ab, 3)) return;
           carAt(x, z, r - sd * (Math.PI / 2 - 0.5), CARS[(n * 31) % CARS.length], n % 6 === 0); }); }); }
-      done(cars, { roughness: .35, metalness: .3 });
+      W.invParkedMesh = done(cars, { roughness: .35, metalness: .3 });
       // ---- two cars driving along A'Beckett, one each way, on the left as in Australia; they loop back round when they reach the end
       W.invDrive = null;
       if (ab) { const P = ab.pts, segs = []; let tot = 0;
@@ -6845,7 +6960,7 @@ const handle = async (m, post) => {
         if (R.badge && tw < span * 0.8) { g.textAlign = "left"; const sx = Math.min(1.7, span / tw), ws = [...text].map(ch => g.measureText(ch).width), gap = (span / sx - tw) / (ws.length - 1);  // a long sign: broad letters, spaced right across it
           g.save(); g.translate((c.width - span) / 2, c.height / 2 + 1); g.scale(sx, 1); let x = 0; [...text].forEach((ch, i) => { g.fillText(ch, x, 0); x += ws[i] + gap; }); g.restore(); }
         else g.fillText(text, c.width / 2, c.height / 2 + 1);
-        const t = new THREE.CanvasTexture(c); if ("colorSpace" in t) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; };
+        const t = new THREE.CanvasTexture(c); if ("colorSpace" in t) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };  // (8: a sign read from along the footpath stays sharp)
       D.s.forEach(([x, z, a, w, text, pal, onV]) => { const [bg, fg] = SIGN[pal] || SIGN[6], fh = /PIEMAN/.test(text) ? 0.55 : 0.36;
         const m = new THREE.Mesh(new THREE.PlaneGeometry(w, fh), new THREE.MeshStandardMaterial({ map: signTex(text, bg, fg, w, fh, true), roughness: .6 }));
         if (onV) { m.position.set(x + Math.sin(a) * 0.4, G0 + 3.05, z + Math.cos(a) * 0.4); } else m.position.set(x, G0 + 3.9, z);
@@ -6863,7 +6978,7 @@ const handle = async (m, post) => {
           g.fillStyle = "#ffffff"; g.font = "600 52px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; "Library".split("").forEach((ch, i) => g.fillText(ch, w / 2, 50 + i * 56)); }), x, G0 + 2.4, z, r, { emissive: 0xffffff, emissiveIntensity: 0 }); W.invLibGlow = TG.children[TG.children.length - 1].material; W.invLibGlow.emissiveMap = W.invLibGlow.map;
         // the porthole: a white ring round a dark round window
         [x, z] = at(0.5, 0.14); const ring = new THREE.Mesh(new THREE.TorusGeometry(1.15, 0.12, 10, 36), new THREE.MeshStandardMaterial({ color: 0xf2f2f0, roughness: .4 })); ring.position.set(x, G0 + 2.5, z); ring.rotation.y = r; TG.add(ring);
-        const port = new THREE.Mesh(new THREE.CircleGeometry(1.08, 36), W.invGlass); port.position.set(x - nx * 0.04, G0 + 2.5, z - nz * 0.04); port.rotation.y = r; TG.add(port);
+        const port = new THREE.Mesh(new THREE.CircleGeometry(1.08, 36), W.invGlass); port.position.set(x - nx * 0.015, G0 + 2.5, z - nz * 0.015); port.rotation.y = r; TG.add(port);
         // the Hub's name over the entrance
         [x, z] = at(0.82, 0.14); plane(3.2, 0.5, tex(512, 80, (g, w, h) => { g.fillStyle = "#26323f"; g.fillRect(0, 0, w, h); g.fillStyle = "#e8edf2"; g.font = "600 34px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("Inverloch Community Hub", w / 2, h / 2 + 2); }), x, G0 + 3.3, z, r);
         // the flags: Aboriginal and Australian, on white poles out the front
@@ -7682,7 +7797,7 @@ const handle = async (m, post) => {
       ti.oninput = () => { BS.view.ms = bsMidnight(BS.view.day) + (+ti.value) * 60000; to.textContent = bsTime(BS.view.ms); $("bsTimeBtnT").textContent = to.textContent; bsApply(true); }; }
     const F = BS.fly = { ...start, pos: start.pos.clone(), start, keys: new Set(), stick: { x: 0, y: 0 }, lookStick: { x: 0, y: 0 }, vert: 0, touches: new Map(), drag: null };
     const canvas = $("bsGl"), touch = matchMedia("(pointer: coarse)").matches;
-    document.body.classList.add("bsfly"); $("bsFly").hidden = false;
+    document.body.classList.add("bsfly"); $("bsFly").hidden = false; try { bsWatchOn(); } catch {}
     const tip = $("bsFlyTip"); tip.classList.remove("dim");
     if (touch) tip.textContent = "Left stick to move, right stick to look. Up and Down are top right.";
     else bsTip("Drag to look around\nW A S D or the arrows to move\nSpace to go up · C to go down\nShift to go faster\nR to start again · Esc to exit\n? to hide this list");
@@ -7725,14 +7840,18 @@ const handle = async (m, post) => {
       const end = () => { id = null; knob.style.transform = ""; v.x = 0; v.y = 0; };
       const mine = e => [...e.changedTouches].find(t => t.identifier === id);
       const h = {
-        touchstart: e => { e.preventDefault(); if (id !== null) return; const t = e.changedTouches[0]; id = t.identifier; set(t); tip.classList.add("dim"); },
-        touchmove: e => { e.preventDefault(); const t = mine(e); if (t) set(t); },
-        touchend: e => { if (mine(e)) end(); }, touchcancel: e => { if (mine(e)) { end(); bsLost("stick"); } },
+        touchstart: e => { if (id !== null) return; const t = e.changedTouches[0]; id = t.identifier; set(t); tip.classList.add("dim"); },
+        touchmove: e => { const t = mine(e); if (t) set(t); },
+        touchend: e => { if (mine(e)) end(); }, touchcancel: e => { if (mine(e)) { end(); bsLost("stick", e); } },
         pointerdown: e => { if (e.pointerType !== "mouse") return; id = "m"; try { el.setPointerCapture(e.pointerId); } catch {} set(e); tip.classList.add("dim"); e.preventDefault(); },
         pointermove: e => { if (e.pointerType === "mouse" && id === "m") set(e); },
         pointerup: e => { if (e.pointerType === "mouse" && id === "m") end(); },
       };
-      Object.entries(h).forEach(([k, f]) => el.addEventListener(k, f, { passive: false }));
+      // The touch listeners are passive (the stick's touch-action: none keeps the page still instead of preventDefault). A
+      // listener that could cancel makes an iPhone wait for the page before it moves each finger, and when the page was busy
+      // for a moment (loading tiles, the traffic) it gave up and cancelled the finger: the stick went back to the middle
+      // (Ash, 15 November 2026, in all three towns)
+      Object.entries(h).forEach(([k, f]) => el.addEventListener(k, f, { passive: /^touch/.test(k) }));
       return { el, h, end };
     });
     F.uds = [...document.querySelectorAll("#bsFly .bs-udb")].map(el => {
@@ -7740,13 +7859,13 @@ const handle = async (m, post) => {
       const go = () => { F.vert = +el.dataset.ud; el.classList.add("on"); };
       const stop = () => { on = null; if (F.vert === +el.dataset.ud) F.vert = 0; el.classList.remove("on"); };
       const h = {
-        touchstart: e => { e.preventDefault(); on = e.changedTouches[0].identifier; go(); },
+        touchstart: e => { on = e.changedTouches[0].identifier; go(); },
         touchend: e => { if ([...e.changedTouches].some(t => t.identifier === on)) stop(); }, touchcancel: e => stop(),
         pointerdown: e => { if (e.pointerType !== "mouse") return; on = "m"; go(); try { el.setPointerCapture(e.pointerId); } catch {} e.preventDefault(); },
         pointerup: e => { if (on === "m") stop(); }, lostpointercapture: () => { if (on === "m") stop(); },
         contextmenu: e => e.preventDefault(),
       };
-      Object.entries(h).forEach(([k, f]) => el.addEventListener(k, f, { passive: false }));
+      Object.entries(h).forEach(([k, f]) => el.addEventListener(k, f, { passive: /^touch/.test(k) }));  // passive, as the sticks
       return { el, h, end: stop };
     });
     // No pinch-zoom or page scroll while flying (iPhone Safari)
@@ -7789,7 +7908,7 @@ const handle = async (m, post) => {
         t.x = e.clientX; t.y = e.clientY; e.preventDefault(); },
       pointerup: e => { F.drag = null; canvas.style.cursor = ""; const t = F.touches.get(e.pointerId); if (t?.move) { F.stick.x = 0; F.stick.y = 0; } F.touches.delete(e.pointerId); },
     };
-    F.on.pointercancel = e => { if (e.pointerType !== "mouse") bsLost("view"); F.on.pointerup(e); };
+    F.on.pointercancel = e => { if (e.pointerType !== "mouse") bsLost("view", null); F.on.pointerup(e); };
     addEventListener("keydown", F.on.keydown); addEventListener("keyup", F.on.keyup); addEventListener("blur", F.on.blur);
     document.addEventListener("mousemove", F.on.mousemove);
     ["pointerdown", "pointermove", "pointerup", "pointercancel"].forEach(k => canvas.addEventListener(k, F.on[k]));
@@ -7826,8 +7945,22 @@ const handle = async (m, post) => {
   // For Ash, while the sticks are being looked into: say when the phone takes a finger away (a "touchcancel") and what had the
   // page selected, so the cause shows on the device itself. Selection is cleared straight away too.
   document.addEventListener("selectionchange", () => { if (!BS.fly) return; try { const sel = getSelection(); if (sel && !sel.isCollapsed && !/^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName || "")) { bsLost.sel = String(sel).slice(0, 30); sel.removeAllRanges(); } } catch {} });
-  function bsLost(what) { if (!isAsh()) return; const now = performance.now(); if (now - (bsLost.at || 0) < 4000) return; bsLost.at = now;
-    toast(`The phone took your finger off the ${what}${bsLost.sel ? ` (it selected "${bsLost.sel}")` : ""}. Screenshot this for Claude.`, 5000); bsLost.sel = ""; }
+  function bsLost(what, e) { if (!isAsh()) return; const now = performance.now(); if (now - (bsLost.at || 0) < 4000) return; bsLost.at = now;
+    // clues: the slowest frame in the last 3 seconds (a busy page), how many fingers were down, and what had just happened
+    const slow = (BS.gaps || []).filter(g => now - g[0] < 3000).reduce((a, g) => Math.max(a, g[1]), 0), fingers = e?.touches?.length ?? "?", recent = (BS.notes || []).filter(n => now - n[0] < 1500).slice(-6).map(n => n[1]).join(", ");
+    toast(`The phone took your finger off the ${what}${bsLost.sel ? ` (it selected "${bsLost.sel}")` : ""}. Slowest frame ${Math.round(slow)} ms, ${fingers} other finger${fingers === 1 ? "" : "s"}${recent ? ", after: " + recent : ""}. Screenshot this for Claude.`, 7000); bsLost.sel = ""; }
+  const bsNote = what => { const n = (BS.notes ||= []), now = performance.now(); if (n.length && n[n.length - 1][1] === what && now - n[n.length - 1][0] < 1000) { n[n.length - 1][0] = now; return; } n.push([now, what]); if (n.length > 20) n.shift(); };
+  // For Ash, while the dropped finger is looked into: note what on the page changed (shown, hidden, restyled, added), so the
+  // message can say what happened just before the phone let go. The sticks' own knobs and the place names are left out.
+  let bsWatch = null;
+  function bsWatchOn() { if (bsWatch || !isAsh() || !window.MutationObserver) return;
+    const name = el => el.id ? "#" + el.id : el.className && typeof el.className === "string" ? "." + el.className.trim().split(/\s+/)[0] : el.tagName?.toLowerCase();
+    bsWatch = new MutationObserver(list => { for (const m of list) { const t = m.target; if (!t || t.nodeType !== 1) continue;
+      if (t.closest?.(".bs-joy, #toast, .inv-embed-labels, .bs-peer, #verBadge") || t.id === "bsHeight" || t.id === "bsMeH") continue;
+      if (m.type === "attributes") { if (m.attributeName === "style" && /^(CANVAS)$/.test(t.tagName)) continue; bsNote(`${name(t)} ${m.attributeName}${m.attributeName === "hidden" ? (t.hidden ? " on" : " off") : ""}`); }
+      else if (m.addedNodes.length || m.removedNodes.length) bsNote(`${name(t)} ${m.addedNodes.length ? "+" : "-"}${name(m.addedNodes[0] || m.removedNodes[0]) || "text"}`); } });
+    bsWatch.observe($("bsFly"), { subtree: true, childList: true, attributes: true, attributeFilter: ["hidden", "class", "style"] });
+    bsWatch.observe(document.body, { attributes: true, attributeFilter: ["class", "style"] }); }
   function bsFlyTick(dt) {
     const F = BS.fly, k = F.keys, has = (...c) => c.some(x => k.has(x));
     if (F.drive) return F.drive(dt);  // driving a car in a town model (townCar): the car moves, and the view follows it
@@ -7856,6 +7989,7 @@ const handle = async (m, post) => {
     BS.raf = requestAnimationFrame(bsLoop);
     if (document.hidden) return;
     const t = performance.now() / 1000, real = bsClamp(t - BS.lastT, 0, 1), dt = Math.min(real, 0.1); BS.lastT = t;
+    if (real > 0.15) { (BS.gaps ||= []).push([t * 1000, real * 1000]); if (BS.gaps.length > 30) BS.gaps.shift(); }  // slow frames, for bsLost
     // Play through the forecast, 30 minutes a second, then round again from now.
     const v = BS.view;
     // Play through the day; at the end of it, replay the same day from 6am.
@@ -8015,15 +8149,15 @@ const handle = async (m, post) => {
   // latitude, longitude, metres back, tilt and bearing). A model with floods can also set floodOf (what its flooded area is a share
   // of: "Logan"), floodNote (the line under the list) and floodWarn (show the not-official notice first, and a banner while a flood is on).
   const TOWNS = {
-    inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=17", assets: TOWN3D, place: "inv", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
-    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=24", assets: TOWN3D + "moorooka/", place: "moo", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
+    inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=18", assets: TOWN3D, place: "inv", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
+    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=26", assets: TOWN3D + "moorooka/", place: "moo", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
       walkStart: { x: -269.8, z: -991.4, yaw: -1.623 },  // Ash's pick for where Moorooka starts: the Beaudesert Road footpath, looking at the house he chose
       // its floods: widest over the Oxley Creek flats along the model's western edge, seen from the east. floodWarn: the not-official notice has to be accepted
       // before the list opens, and a banner says the same while a flood is showing (Ash asked for both).
       floodLook: [-27.5375, 153.0115, 1100, 40, 100], floodOf: "this map", noFloodSlider: true,  // Ash: no water level slider ("At the peak") in Moorooka: a flood just rises to its peak
       floodWarn: { council: "Brisbane City Council", short: "BCC", how: "our own computer simulation of rain running over the ground and the creeks rising (and, in big river floods, Oxley Creek backing up), on a 5 m model of the terrain", map: "Brisbane City Council's Flood Awareness Map and FloodWise Property Report" },
       floodNote: "A guide only: our own simulation, from the terrain, the buildings and the Bureau's design rainfall for Moorooka. It includes water running over the ground to the creeks. No council flood mapping is used. For property, insurance or planning decisions, use Brisbane City Council's Flood Awareness Map and FloodWise Property Report." },
-    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=32", assets: TOWN3D + "logan/", place: "logan", pre: ["map.json", "height.png", "roads.bin", "buildings.bin", "ground.webp", "relief.webp", "lights.webp", "cover.png"], up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
+    logan: { lib: "LoganModel", src: TOWN3D + "logan/logan-model.js?v=33", assets: TOWN3D + "logan/", place: "logan", pre: ["map.json", "height.png", "roads.bin", "buildings.bin", "ground.webp", "relief.webp", "lights.webp", "cover.png"], up: () => !!BS.W?.logan, air: [5680, 218, -13486, -2.618, -0.559],
       start: "council", onFoot: true, noFloodSlider: true, flyTo: { id: "brownsplains", label: "Fly to Browns Plains" }, wait: 90000, ceil: 110000, fast: 600, far: 150000, out: 130000, stride: 0.02, pad: 80000, stand: [0.45, 400], floodLook: [-27.69, 153.17, 12000, 55, -35],
       // the same not-official notice and banner as Moorooka's (Ash, 12 November 2026)
       floodWarn: { council: "Logan City Council", short: "LCC", how: "the 2017 flood as mapped, and the others worked out from river gauge heights and rainfall over a terrain model", map: "Logan City Council's flood maps" } },  // shown small in the bottom right corner the whole time the model is open
@@ -8109,7 +8243,7 @@ const handle = async (m, post) => {
       const v = cur[k]; if (typeof v !== "function") return v;
       return (...a) => { const r = v.apply(cur, a);
         if (k === "addParts") { const H = handle(r); handles.push(H); log.push(["addParts", a, H]); return H.proxy; }
-        if (k === "addPad") log.push(["addPad", a]); else if (LAST.includes(k)) last[k] = a;
+        if (k === "addPad" || k === "addCars") log.push([k, a]); else if (LAST.includes(k)) last[k] = a;
         if ((k === "setCamera" || k === "setMinutes") && next) try { next[k](...a); } catch {}  // the one being built out of sight looks the same way
         return r; }; } });
     const drop = () => { const n = next; next = null; hiBox.hidden = true; if (n) try { n.dispose(); } catch {} };
@@ -8117,8 +8251,8 @@ const handle = async (m, post) => {
     tag(cur);
     // frames a second over a short while
     const fps = ms => new Promise(ok => { let n = 0, t0 = 0; const f = t => { if (dead) return ok(0); if (!t0) t0 = t; n++; if (t - t0 < ms) requestAnimationFrame(f); else ok(n * 1000 / (t - t0)); }; requestAnimationFrame(f); });
-    const swapTo = async (to, q) => {
-      for (const [name, a, H] of log) { if (name === "addParts") H.real = to.addParts(...a); else to.addPad(...a); }
+    const swapTo = async (to, q) => { bsNote("sharper model swapped in");
+      for (const [name, a, H] of log) { if (name === "addParts") H.real = to.addParts(...a); else to[name]?.(...a); }
       for (const H of handles) for (const [ck, a] of H.calls) { const fn = ck.split(":")[0]; try { H.real[fn](...a); } catch {} }
       for (const k of LAST) if (last[k]) { try { const r = to[k](...last[k]); if (r?.then) await r; } catch {} }
       await new Promise(ok => requestAnimationFrame(() => requestAnimationFrame(ok)));
@@ -8199,7 +8333,8 @@ const handle = async (m, post) => {
         // the town centre round the Rotary clock and number 11 Norman Road, stood in the model where they really are
         let mine = []; if (inv) try { mine = townModelGuests(T, m); } catch (e) { console.warn("Town model: the town centre and Norman Road couldn't be added", e); }
         if (cfg.place === "moo") try { mine = mine.concat(townShops(T, m)); } catch (e) { console.warn("Town model: Moorooka's shops couldn't be added", e); }
-        if (cfg.place === "moo" && m.addParts) T.no6 = townNo6(T, m);  // 6 Beaudesert Road's street, from Ash's photos (it catches its own errors)
+        const OFF = exOff(); document.body.classList.toggle("bsnoplaces", OFF.has("places"));
+        if (cfg.place === "moo" && m.addParts && !OFF.has("no6")) T.no6 = townNo6(T, m);  // 6 Beaudesert Road's street, from Ash's photos (it catches its own errors)
         // the planes (townCar), each with somewhere to stand beside it
         const rides = m.addParts ? TOWN_RIDES[cfg.place] : null;
         // golden ones only for Ash (Ash, 15 November 2026: "Only show the teleport to the golden objects if user name is ash or Ashley")
@@ -8246,20 +8381,18 @@ const handle = async (m, post) => {
 
         // ---- flying: drag the view to move, pinch (or scroll) to zoom, two fingers (or right-drag) to turn ----
         const look3 = () => { const cp = Math.cos(F.pitch); return [-Math.sin(F.yaw) * cp, Math.sin(F.pitch), -Math.cos(F.yaw) * cp]; };
-        const reach = () => { const d = look3(), h = Math.max(2, F.pos.y - ground()); return bsClamp(d[1] < -0.08 ? h / -d[1] : h * 6, 25, far); };  // how far off the ground you're looking at is
+        const reach = () => { const d = look3(), h = Math.max(2, F.pos.y - ground()); return bsClamp(d[1] < -0.08 ? h / -d[1] : h * 6, 6, far); };  // how far off the ground you're looking at is
         const fovK = m.fov ? () => 2 * Math.tan(m.fov() * Math.PI / 360) : () => 1.1547;  // the model's own field of view where it gives one, so the ground stays under your finger
         const pan = (dx, dy) => { const k = fovK() * reach() / (box.clientHeight || 600), sy = Math.sin(F.yaw), cy = Math.cos(F.yaw), up = k / Math.max(0.35, Math.sin(-F.pitch));
           F.pos.x += -cy * dx * k - sy * dy * up; F.pos.z += sy * dx * k - cy * dy * up; keepIn(); };
-        // zooming on in once as close as flying goes puts you on foot where you are looking (Ash, 15 November 2026: "If I'm on fly
-        // and I zoom in right into the ground auto switch to walk")
+        // Zooming comes right down to about 6 m from the ground you look at; squeezing on in there, under 6 m up and looking down,
+        // puts you on foot (Ash, 15 November 2026: "If I'm on fly and I zoom in right into the ground auto switch to walk", then
+        // "only go to walk when closer to ground", and, after it was taken out to rule it out, "Add back fly into walk, it wasn't that")
         let squeeze = 1, squeezeAt = 0;
         const zoomTurn = (scale, turn) => { const R = reach(), d = look3(), L = [F.pos.x + d[0] * R, F.pos.y + d[1] * R, F.pos.z + d[2] * R];  // about the ground in the middle of the view
           const was = F.pos.clone();
-          F.yaw += turn; const R2 = bsClamp(R * scale, 20, out), e = look3(); F.pos.set(L[0] - e[0] * R2, L[1] - e[1] * R2, L[2] - e[2] * R2); keepIn();
-          // zooming in but hardly getting any closer (as close as flying goes, or down at the lowest height): a few of those and you land
-          // (only a deliberate pinch or scroll in, looking down at the ground, that has stopped getting closer: half as far again
-          // squeezed in without moving. A pinch that only turns, or one while flying low and level, never lands you.)
-          const stuck = F.pos.distanceTo(was) < 0.3 && look3()[1] < -0.35;
+          F.yaw += turn; const R2 = bsClamp(R * scale, 6, out), e = look3(); F.pos.set(L[0] - e[0] * R2, L[1] - e[1] * R2, L[2] - e[2] * R2); keepIn();
+          const stuck = F.pos.distanceTo(was) < 0.3 && look3()[1] < -0.15 && F.pos.y - ground() < 6;
           if (!T.walk && !T.tween && scale < 1 && stuck) { const now = performance.now(); if (now - squeezeAt > 700) squeeze = 1; squeezeAt = now;
             squeeze *= scale; if (squeeze < 0.5) { squeeze = 1; toMode(true); } } else if (scale >= 1 || !stuck) squeeze = 1; };
         const ptrs = new Map(); let pinch = null;
@@ -8378,18 +8511,18 @@ const handle = async (m, post) => {
         { const fly = $("bsFly"), ex = $("bsFlyX"), jb = $("bsFlyJump"), ro = new ResizeObserver(() => { if (ex.offsetWidth) fly.style.setProperty("--bs-exitw", ex.offsetWidth + "px"); if (jb.offsetWidth) fly.style.setProperty("--bs-jumpw", jb.offsetWidth + "px"); });
           ro.observe(ex); ro.observe(jb); T.unbar = () => ro.disconnect(); }
         // street names: on or off with the signpost button or N, remembered on this device (off to start with)
-        T.streets = townStreetNames(T, cfg, box, m);
-        { const nb = $("bsNamesBtn"), show = on => { T.streets.set(on); nb.setAttribute("aria-pressed", String(on)); nb.title = on ? "Hide street names (N)" : "Show street names (N)"; };
+        if (!OFF.has("streets")) T.streets = townStreetNames(T, cfg, box, m);
+        if (T.streets) { const nb = $("bsNamesBtn"), show = on => { T.streets.set(on); nb.setAttribute("aria-pressed", String(on)); nb.title = on ? "Hide street names (N)" : "Show street names (N)"; };
           show(streetsPref()); nb.hidden = false; nb.onclick = () => { const on = nb.getAttribute("aria-pressed") !== "true"; show(on); streetsSave(on); };
           T.namesToggle = () => nb.click(); }
         // admin mode: published edits for everyone, the editing tools for Ash (townAdmin)
-        try { T.admin = townAdmin(T, cfg, box, m, { ptrs }); } catch (e) { console.warn("Town model: admin mode couldn't start", e); }
+        if (!OFF.has("admin")) try { T.admin = townAdmin(T, cfg, box, m, { ptrs }); } catch (e) { console.warn("Town model: admin mode couldn't start", e); }
         // driving: Enter, or the Get in button, when a parked car is close (townCar)
-        try { T.car = townCar(T, m, F, ground, cfg.place); } catch (e) { console.warn("Town model: driving couldn't start", e); }
-        if (TOWN_TOGETHER.includes(cfg.place)) try { T.peers = townPeers(T, m, F, ground, cfg.place, box); } catch (e) { console.warn("Town model: other players couldn't start", e); }
-        try { T.me = townMe(T, m, F, ground); } catch (e) { console.warn("Town model: the construction worker couldn't start", e); }
-        try { T.traffic = townTraffic(T, m, F, ground, cfg); } catch (e) { console.warn("Town model: the traffic couldn't start", e); }
-        try { T.critter = townCritter(T, m, ground, cfg.place); } catch (e) { console.warn("Town model: the animal couldn't start", e); }
+        if (!OFF.has("rides")) try { T.car = townCar(T, m, F, ground, cfg.place); } catch (e) { console.warn("Town model: driving couldn't start", e); }
+        if (TOWN_TOGETHER.includes(cfg.place) && !OFF.has("players")) try { T.peers = townPeers(T, m, F, ground, cfg.place, box); } catch (e) { console.warn("Town model: other players couldn't start", e); }
+        if (!OFF.has("me")) try { T.me = townMe(T, m, F, ground); } catch (e) { console.warn("Town model: the construction worker couldn't start", e); }
+        if (!OFF.has("traffic")) try { T.traffic = townTraffic(T, m, F, ground, cfg); } catch (e) { console.warn("Town model: the traffic couldn't start", e); }
+        if (!OFF.has("animal")) try { T.critter = townCritter(T, m, ground, cfg.place); } catch (e) { console.warn("Town model: the animal couldn't start", e); }
         F.hot = { f: () => toMode(!T.walk),
           enter: () => T.car?.enter(), keys: () => !!T.car?.keys?.(), undo: () => !!T.admin?.undo?.(), emotes: () => !!T.peers?.menu?.(), emote: i => !!T.peers?.emote?.(i), gold: () => isAsh() && !!T.car?.toGold?.(),
           n: () => T.namesToggle?.(),
@@ -8420,7 +8553,9 @@ const handle = async (m, post) => {
     [[-57, 38.9], [57.1, 52.46], [55.2, 76.2], [40.5, 87.6], [-57, 70.5]],   // the shops across A'Beckett Street
   ];
   // The corner of A'Beckett and Reilly Streets as it really is (from Google Maps): one brick plaza, the war memorial at its
-  // lawn end and the Rotary clock a few metres on, out on the kerb's build-out. The weather's town has the clock where the
+  // lawn end and the Rotary clock a few metres on, out on the kerb's build-out, which stops at the edge of the traffic lane
+  // (Ash, 15 November 2026: "the clock shouldn't actually be on the road. There should be two lanes one each way. The clock is
+  // right next to them. The war memorial is behind the clock further away from the road"). The weather's town has the clock where the
   // memorial belongs and the memorial up by Reilly Street; the model puts both right and builds the plaza (townModelExtras).
   const TOWN_OLD_MEMORIAL = [25, 0.5];             // where the weather's own memorial stands: left out of the model
   const TOWN_PLAZA = [18, 18.6, 0.115];            // the plaza's frame: a point in it, and A'Beckett Street's slant
@@ -8428,11 +8563,11 @@ const handle = async (m, post) => {
   // The Rotary clock as in Ash's map and Street View (13 November 2026): it stands where Google Maps marks "Inverloch Mosaic
   // Art", in the garden on the corner of the plaza, 3 m east and 11 m south of the memorial. Its faces look up and down
   // A'Beckett Street (west and east), its ship sails south, and it is about 2.1 m across, its dial's foot 4.4 m up.
-  const TOWN_CLOCK = [20.2, 29.0, -1.45];           // where it stands, and which way its faces look
+  const TOWN_CLOCK = [20.29, 28.2, -1.45];          // where it stands (7.8 m from the middle of A'Beckett Street: its garden's kerb is the edge of the lane), and which way its faces look
   const TOWN_CLOCK_SIZE = 0.7;                       // the model's clock at its real size (the weather's is drawn bigger)
   // a across the plaza (along the street, east), b down it (towards the street): from the town's metres
   const townPlazaAB = (x, z) => { const [ox, oz, t] = TOWN_PLAZA, dx = x - ox, dz = z - oz; return [dx * Math.cos(t) + dz * Math.sin(t), -dx * Math.sin(t) + dz * Math.cos(t)]; };
-  const townOnPlaza = (x, z) => { const [a, b] = townPlazaAB(x, z); return (a > -5.8 && a < 5.1 && b > -4.2 && b < 3.4) || (a > -5.8 && a < 1.5 && b >= 3.4 && b < 14) || (a >= 1.5 && a < 5.8 && b > 10.1 && b < 14); };
+  const townOnPlaza = (x, z) => { const [a, b] = townPlazaAB(x, z); return (a > -5.8 && a < 5.1 && b > -4.2 && b < 3.4) || (a > -5.8 && a < 1.5 && b >= 3.4 && b < 12.15) || (a >= 1.5 && a < 5.8 && b > 7.7 && b < 12.15); };
   const townInPiece = (P, x, z) => P.every((a, i) => { const b = P[(i + 1) % P.length]; return (b[0] - a[0]) * (z - a[1]) - (b[1] - a[1]) * (x - a[0]) >= 0; });
   const townInBlock = (x, z) => TOWN_BLOCK.some(P => townInPiece(P, x, z));
   // ---- Moorooka's shops and places (Ash, 14 November 2026: "Add known businesses to moorooka ... make the post office look
@@ -8602,7 +8737,8 @@ const handle = async (m, post) => {
   // - number 6's front: a pale blue-grey pipe fence with chainwire on a low white plinth, white rendered piers, a white gate
   //   with a black garden arch behind it, a pale grey sliding gate across the driveway, the letterbox pier with its black plate
   //   and gold "6", and a solar light on the pier by number 10; banana plants by the front steps and an air conditioner on the
-  //   front wall. The same fence runs along the corner lot's Beaudesert Road side.
+  //   front wall. The same fence runs along the corner lot's Beaudesert Road side, and a plain chainwire one down the drive.
+  //   The drive itself (one wide slab from the gate to the house and on past it by the fence) is painted in edits.json.
   // - number 10: a weathered white besser block wall with its letterbox, a green gate at the south end, a brick ground floor
   //   with two cream roller doors under the house, and a green water tank down the side.
   // - crepe myrtles on the verge where the model had two big generic trees, and the timber bollards along Stimpson Park
@@ -8616,7 +8752,8 @@ const handle = async (m, post) => {
   // slow test machine).
   const MOO_NO6 = {
     six: [[-262.77, -986.34], [-256.82, -1003.76]],                       // number 6's front boundary, south to north
-    corner: [-251.06, -1020.47],                                            // the corner lot's north-west corner: its Beaudesert Road side runs on from number 6's
+    corner: [-251.06, -1020.47],
+    sideFence: [-240.77, -983.02],                                          // number 6's south side: chainwire from the front to here, then palings (the model's)                                            // the corner lot's north-west corner: its Beaudesert Road side runs on from number 6's
     ten: [[-262.52, -986.29], [-268.35, -969.53]],                        // number 10's front boundary, north to south
     tenHouse: { a: [-250.3, -983.4], b: [-252.8, -972.2], depth: 15.14, eave: 24.1 },  // number 10's front wall in the survey, north to south (eaves m AHD)
     sixHouse: { a: [-244.0, -987.3], b: [-242.4, -997.5], depth: 12.96, eave: 23.3 },  // number 6's, south to north
@@ -8692,15 +8829,16 @@ const handle = async (m, post) => {
       const six = line(S.six[0], S.six[1]), cor = line(S.six[1], S.corner);
       const BLUE = "#a9bcc6", PIER = "#f0efe9", CAP = "#e3e1da";
       const pier = (Ln, a, w = 0.42, h = 1.45, dw = 0.42) => { const F = Ln.at(a); box(F, -w / 2, w / 2, -0.15, h, -dw / 2, dw / 2, PIER); box(F, -w / 2 - 0.04, w / 2 + 0.04, h, h + 0.06, -dw / 2 - 0.04, dw / 2 + 0.04, CAP); return F; };
-      const fence = (Ln, a0, a1, posts = true) => { const n = Math.max(1, Math.ceil((a1 - a0) / 2.5));
+      // pipe posts, a top rail and chainwire between; on a low white plinth unless plinth is false
+      const fence = (Ln, a0, a1, { col = BLUE, plinth = true, h = 1.12 } = {}) => { const n = Math.max(1, Math.ceil((a1 - a0) / 2.5)), y0 = plinth ? 0.15 : 0.04;
         for (let i = 0; i < n; i++) { const b0 = a0 + (a1 - a0) * i / n, b1 = a0 + (a1 - a0) * (i + 1) / n;
-          box(Ln.F, b0, b1, -0.15, 0.15, -0.07, 0.07, "#e8e6df", { ends: false });  // the low white plinth
-          box(Ln.F, b0, b1, 1.07, 1.12, -0.025, 0.025, BLUE, { ends: false });     // the top rail
-          if (posts) bar(Ln.F, b0, 0.12, 1.15, 0.028, BLUE);
-          const q = [Ln.F(b0, 0.15, 0), Ln.F(b1, 0.15, 0), Ln.F(b1, 1.07, 0), Ln.F(b0, 1.07, 0)], T6 = 0.065;
-          for (const [A, B, C] of [[0, 1, 2], [0, 2, 3]]) { const tri3 = [q[A], q[B], q[C]], ts = [[b0, 0.15], [b1, 0.15], [b1, 1.07], [b0, 1.07]];
+          if (plinth) box(Ln.F, b0, b1, -0.15, 0.15, -0.07, 0.07, "#e8e6df", { ends: false });
+          box(Ln.F, b0, b1, h - 0.05, h, -0.025, 0.025, col, { ends: false });     // the top rail
+          bar(Ln.F, b0, y0 - 0.1, h + 0.03, 0.028, col);
+          const q = [Ln.F(b0, y0, 0), Ln.F(b1, y0, 0), Ln.F(b1, h - 0.05, 0), Ln.F(b0, h - 0.05, 0)], T6 = 0.065;
+          for (const [A, B, C] of [[0, 1, 2], [0, 2, 3]]) { const tri3 = [q[A], q[B], q[C]], ts = [[b0, y0], [b1, y0], [b1, h - 0.05], [b0, h - 0.05]];
             for (const [k, v] of [[A, tri3[0]], [B, tri3[1]], [C, tri3[2]]]) { wire.P.push(...v); wire.N.push(Ln.n[0], 0, Ln.n[1]); wire.U.push(ts[k][0] / T6, ts[k][1] / T6); } } }
-        if (posts) bar(Ln.F, a1, 0.12, 1.15, 0.028, BLUE); };
+        bar(Ln.F, a1, y0 - 0.1, h + 0.03, 0.028, col); };
       const gate = (F, a0, a1, h, hex, step, mid) => { box(F, a0, a1, 0.05, 0.13, -0.03, 0.03, hex); box(F, a0, a1, h - 0.07, h, -0.025, 0.025, hex);
         if (mid) box(F, a0, a1, mid, mid + 0.05, -0.02, 0.02, hex, { ends: false });
         box(F, a0, a0 + 0.05, 0.05, h, -0.03, 0.03, hex); box(F, a1 - 0.05, a1, 0.05, h, -0.03, 0.03, hex);
@@ -8721,6 +8859,8 @@ const handle = async (m, post) => {
         for (const y of [0.5, 1.0, 1.5]) for (const a of [-0.12, 1.12]) tube(F(a, y, -0.95), F(a, y, -1.35), 0.01, 0.01, 4, ["#232323"]); }
       pier(six, six.L);                                                   // number 6's corner with the corner lot
       fence(cor, 0.21, cor.L - 0.21); pier(cor, cor.L);
+      // down the drive (Ash's photo from the gate, 15 November 2026): a plain galvanised chainwire fence, as far as the backyard's palings
+      { const side = line(S.six[0], S.sideFence); fence(side, 0.25, side.L, { col: "#a3a7a5", plinth: false, h: 1.2 }); }
 
       // ---- number 10: its wall, letterbox, green gate, and the cream pier where number 12 starts
       const ten = line(S.ten[0], S.ten[1]), WU = (a, y) => uvOf(bsClamp((a - WALL.a0) * WPM, 0, CW), bsClamp(96 - y * WPM, 0, 96));
@@ -8862,7 +9002,8 @@ const handle = async (m, post) => {
     // the town centre round the clock: the bakery and the other shops, the war memorial, the library and the Hub, the streets
     // between them and everything on them. The things that move (the clock itself, the flags) follow the weather's own.
     let block = null;
-    if (W.invClock && tower) { const still = new Set(); [W.invClock, ...flags, ...drive, ...moving, ...cars].filter(Boolean).forEach(r => r.traverse(o => still.add(o)));  // (the clock's plaza is built afresh for the model, below)
+    const ownCars = !!(m.addCars && W.invParkedMesh && W.invParked?.length);  // the town centre's parked cars become the model's own, so any of them can be driven
+    if (W.invClock && tower) { const still = new Set(); [W.invClock, ownCars ? W.invParkedMesh : null, ...flags, ...drive, ...moving, ...cars].filter(Boolean).forEach(r => r.traverse(o => still.add(o)));  // (the clock's plaza is built afresh for the model, below)
       const t0 = performance.now();
       try { block = townModelBlock(T, m, { THREE, TG, toTG, look, glows, plain, skip: still, drop: (x, z, flat, top) => { const d = Math.hypot(x - TOWN_OLD_MEMORIAL[0], z - TOWN_OLD_MEMORIAL[1]);  // the weather's memorial and its paving (not the park's paths beside it), whatever lies under the plaza, and the benches and bins round the weather's clock
         return (flat ? top > 0.102 && (d < 2.6 || (d < 14 && top < 0.1285)) : d < 7) || (flat && (townOnPlaza(x, z) || (top > 0.132 && Math.hypot(x - 15, z - 35.5) < 5.5))) || (!flat && Math.hypot(x - D.c[0], z - D.c[1]) < 9.5); } }); } catch (e) { console.warn("Town model: the town centre couldn't be added", e); }
@@ -8875,10 +9016,25 @@ const handle = async (m, post) => {
       flags.forEach(f => { v.setFromMatrixPosition(f.matrixWorld).applyMatrix4(toTG); if (Math.hypot(v.x - TOWN_OLD_MEMORIAL[0], v.z - TOWN_OLD_MEMORIAL[1]) > 7) whole(f, block.place(v.x, v.z)); });  // (the memorial has its own two)
       // somewhere to stand for the bakery (out in the mouth of Reilly Street, across from it) and for the war memorial (in front of it)
       const standAt = (name, fx, fz, tx, tz, pitch) => { const [x, z] = block.at(fx, fz), [ax, az] = block.at(tx, tz); jumps.push({ name, target: [ax, az], walk: { x, z, yaw: Math.atan2(x - ax, z - az), pitch } }); };
+      if (ownCars) try { m.addCars(W.invParked.filter(([x, z]) => townInBlock(x, z) && !townOnPlaza(x, z) && Math.hypot(x - TOWN_CLOCK[0], z - TOWN_CLOCK[1]) > 5.5)
+        .map(([x, z, yaw, colour, kind]) => { const [X, Z] = block.at(x, z); return { x: X, z: Z, heading: yaw, colour, kind }; })); } catch (e) { console.warn("Town model: the town centre's parked cars couldn't be added", e); }
       standAt("the clock", 11.5, 33.5, TOWN_CLOCK[0], TOWN_CLOCK[1], 0.16);  // from beside the car park, as in Street View: the clock in front, the memorial to the left
       const pie = D.u.find(u => /PIEMAN/.test(u[9] || ""));
       if (pie) { const mx = (pie[0] + pie[2]) / 2, mz = (pie[1] + pie[3]) / 2; standAt("the bakery", mx + pie[4] * 27, mz + pie[5] * 27, mx, mz, 0.06); }
       standAt("the war memorial", TOWN_MEMORIAL[0] + 1.5, TOWN_MEMORIAL[1] - 11, TOWN_MEMORIAL[0], TOWN_MEMORIAL[1], 0.05);
+      // the library, from out the front of it; and the shops, from the middle of A'Beckett Street looking along both rows past the bakery
+      if (D.lib) { const [x1, z1, x2, z2, nx, nz] = D.lib, mx = (x1 + x2) / 2, mz = (z1 + z2) / 2; standAt("the library", mx + nx * 17 - nz * 5, mz + nz * 17 + nx * 5, mx, mz, 0.07); }
+      { const ab = D.r.find(r => r[0] === 20 && r[1] !== 1), f = ab?.[2];
+        if (f && pie) { const px = (pie[0] + pie[2]) / 2, pz = (pie[1] + pie[3]) / 2; let best = null;
+          for (let i = 0; i + 3 < f.length; i += 2) { const ax = f[i], az = f[i + 1], dx = f[i + 2] - ax, dz = f[i + 3] - az, L = Math.hypot(dx, dz) || 1, t = Math.max(0, Math.min(1, ((px - ax) * dx + (pz - az) * dz) / (L * L))), x = ax + dx * t, z = az + dz * t, d = Math.hypot(px - x, pz - z);
+            if (!best || d < best.d) best = { d, x, z, ux: dx / L, uz: dz / L }; }
+          const sd = [1, -1].sort((a, b) => Math.hypot(best.x + best.ux * 42 * a - D.c[0], best.z + best.uz * 42 * a - D.c[1]) - Math.hypot(best.x + best.ux * 42 * b - D.c[0], best.z + best.uz * 42 * b - D.c[1])).find(k => townInBlock(best.x + best.ux * 42 * k, best.z + best.uz * 42 * k)) || 1;
+          standAt("the shops", best.x + best.ux * 42 * sd, best.z + best.uz * 42 * sd, best.x - best.ux * 30 * sd, best.z - best.uz * 30 * sd, 0.03); } }
+      // the block's buildings are solid to a car or a plane, as the model's own are (their outlines, in the model's metres)
+      { const polys = D.b.map(([, , f]) => { const q = []; let cx = 0, cz = 0; for (let i = 0; i < f.length; i += 2) { cx += f[i]; cz += f[i + 1]; } cx /= f.length / 2; cz /= f.length / 2; if (!townInBlock(cx, cz)) return null;
+          let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; for (let i = 0; i < f.length; i += 2) { const [X, Z] = block.at(f[i], f[i + 1]); q.push(X, Z); x0 = Math.min(x0, X); x1 = Math.max(x1, X); z0 = Math.min(z0, Z); z1 = Math.max(z1, Z); } return { q, x0, x1, z0, z1 }; }).filter(Boolean);
+        T.solid = (x, z) => polys.some(({ q, x0, x1, z0, z1 }) => { if (x < x0 || x > x1 || z < z0 || z > z1) return false; let c = false;
+          for (let a = 0, b = q.length - 2; a < q.length; b = a, a += 2) if ((q[a + 1] > z) !== (q[b + 1] > z) && x < (q[b] - q[a]) * (z - q[a + 1]) / (q[b + 1] - q[a + 1]) + q[a]) c = !c; return c; }); }
       try { townModelExtras(m, block, THREE, W); } catch (e) { console.warn("Town model: the clock's plaza, café tables and signs couldn't be added", e); } }
     // without it, the Rotary clock alone, on a garden bed at the corner of A'Beckett and Reilly Streets
     else if (W.invClock) { const [x, z] = m.fromLatLon(...townLL(D.c[0], D.c[1])), top = m.addPad({ x, z, radius: 2.7, color: [0.19, 0.3, 0.12], lift: 0.3 });
@@ -9033,29 +9189,29 @@ const handle = async (m, post) => {
       // (an L: the broad piece by the lawn, a leg down the west side to the street, and a strip along the kerb; the corner
       // between them is the bed under the big tree)
       const brick = (a, b, w, d) => slab(a, b, w, d, mesh({ map: bc, mapRepeat: [w / 1.6, d / 1.6], roughness: 0.95 }), 0);
-      brick(-0.35, -0.25, 10.3, 7.3); brick(-2.0, 8.7, 7.0, 10.6);
-      [[-0.35, -4.05, 10.9, 0.3], [-5.65, 5, 0.3, 18.4], [4.95, -0.25, 0.3, 7.3], [3.2, 3.55, 3.8, 0.3], [1.65, 6.8, 0.3, 6.8], [3.5, 10.05, 4.0, 0.3], [5.35, 12.05, 0.3, 4.3], [-0.15, 14.15, 11.3, 0.3],
+      brick(-0.35, -0.25, 10.3, 7.3); brick(-2.0, 7.6, 7.0, 8.4);
+      [[-0.35, -4.05, 10.9, 0.3], [-5.65, 3.9, 0.3, 16.2], [4.95, -0.25, 0.3, 7.3], [3.2, 3.55, 3.8, 0.3], [1.65, 5.7, 0.3, 4.6], [3.5, 7.85, 4.0, 0.3], [5.35, 9.85, 0.3, 4.3], [-0.15, 11.95, 11.3, 0.3],
         [-2.0, 3.55, 7.0, 0.24], [-0.6, 1.3, 1.5, 4.4]].forEach(([a, b, w, d]) => slab(a, b, w, d, bits, 0xd6c8a8, PL + 0.015));
       const thing = (geo, colour, a, y, b, ry = 0, rx = 0, rz = 0, sx = 1, sy = 1, sz = 1) => { const [x, z] = pl(a, b); add(bits, geo, colour, x, y, z, -t + ry, rx, rz, sx, sy, sz); };
       // seats (one by the memorial, one on the kerb strip), a bin, and the kerb's row of bollards
-      [[3.9, 1.6, -Math.PI / 2], [4.2, 12.9, Math.PI]].forEach(([a, b, r]) => { const c = Math.cos(r), sn = Math.sin(r);
+      [[3.9, 1.6, -Math.PI / 2], [-3.6, 10.9, Math.PI]].forEach(([a, b, r]) => { const c = Math.cos(r), sn = Math.sin(r);
         for (let k = 0; k < 4; k++) thing(box(1.8, 0.04, 0.11), 0x8a6a45, a + sn * (k * 0.13 - 0.2), PL + 0.46, b + c * (k * 0.13 - 0.2), r);
         for (let k = 0; k < 3; k++) thing(box(1.8, 0.1, 0.035), 0x8a6a45, a - sn * 0.3, PL + 0.6 + k * 0.14, b - c * 0.3, r, -0.12);
         [-0.8, 0.8].forEach(o => { thing(box(0.06, 0.46, 0.5), 0x2d3033, a + c * o, PL + 0.23, b - sn * o, r); thing(box(0.06, 0.5, 0.05), 0x2d3033, a + c * o - sn * 0.3, PL + 0.7, b - sn * o - c * 0.3, r, -0.12); }); });
       thing(rod(0.27, 0.9, 12, 0.3), 0x2f5a3a, 0.9, PL + 0.45, 5.2); thing(rod(0.31, 0.06, 12), 0x24452d, 0.9, PL + 0.93, 5.2);
       slab(-2.0, 5.0, 7.0, 2.0, bits, 0xbfb8a8, PL + 0.02);  // the concrete walk across the brick
-      [[-0.15, 14.2, 11.5, 0.22], [-5.7, 9.1, 0.22, 10.4], [5.5, 12.1, 0.22, 4.4], [3.5, 10.0, 4.2, 0.22], [1.6, 12.1, 0.22, 4.2]].forEach(([a, b, w, d]) => slab(a, b, w, d, bits, 0xcfcac0, PL + 0.14));  // a raised kerb where the plaza and its garden meet the road
-      [[-4.9, 13.3], [1.0, 13.5]].forEach(([a, b]) => thing(box(0.16, 1.0, 0.16), 0x8a7a5e, a, PL + 0.5, b));        // timber posts at the kerb
+      [[-0.15, 12.0, 11.5, 0.22], [-5.7, 9.55, 0.22, 5.1], [5.5, 9.9, 0.22, 4.4], [3.5, 7.8, 4.2, 0.22], [1.6, 9.9, 0.22, 4.2]].forEach(([a, b, w, d]) => slab(a, b, w, d, bits, 0xcfcac0, PL + 0.14));  // a raised kerb where the plaza and its garden meet the road
+      [[-4.9, 11.3], [1.0, 11.3]].forEach(([a, b]) => thing(box(0.16, 1.0, 0.16), 0x8a7a5e, a, PL + 0.5, b));        // timber posts at the kerb
       // planting: the mulched bed under the big tree in the plaza's corner, and a strip along its west side
       const blade = new THREE.ConeGeometry(0.07, 1, 3), bush = new THREE.IcosahedronGeometry(0.5, 1), GR = [0x6f8f3c, 0xb7a258, 0x587a34, 0xc2ad62];
       const bed = (a, b, w, d) => { thing(box(w, 0.12, d), 0x4a3a2c, a, 0.14, b); const n = Math.round(w * d / 1.3);
         for (let k = 0; k < n; k++) { const pa = a + (rnd(k * 3.1 + a) - 0.5) * (w - 0.6), pb = b + (rnd(k * 5.7 + b) - 0.5) * (d - 0.6);
           if (k % 3 === 0) { const q = 0.7 + rnd(k + 9) * 0.5; thing(bush, [0x355a2b, 0x40662f][k % 6 ? 0 : 1], pa, 0.2 + 0.26 * q, pb, k, 0, 0, 1.15 * q, 0.7 * q, q); continue; }
           const h = 0.6 + rnd(k + 60) * 0.5; for (let jj = 0; jj < 9; jj++) { const tt = jj / 9 * Math.PI * 2, lean = 0.28 + rnd(k * 7 + jj) * 0.3; thing(blade, GR[k % 4], pa + Math.cos(tt) * 0.12, 0.2 + h * 0.46, pb + Math.sin(tt) * 0.12, 0, Math.sin(tt) * lean, -Math.cos(tt) * lean, 1, h, 1); } } };
-      bed(3.6, 6.8, 3.6, 6.2); bed(-6.5, 1.5, 1.2, 5.6);
+      bed(3.6, 5.7, 3.6, 4.0); bed(-6.5, 1.5, 1.2, 5.6);
       // the garden on the corner, inside its kerb: mulch, shrubs, tussocks and a few in flower
-      slab(3.55, 12.1, 3.7, 4.0, bits, 0x5a4a3a, PL + 0.06); bed(3.55, 12.1, 3.5, 3.8);
-      [[2.6, 13.2], [4.6, 11.2], [3.4, 12.6]].forEach(([a, b], k) => thing(bush, 0xd98ab0, a, 0.2 + 0.3, b, k, 0, 0, 0.9, 0.6, 0.8)); }
+      slab(3.55, 9.9, 3.7, 4.0, bits, 0x5a4a3a, PL + 0.06); bed(3.55, 9.9, 3.5, 3.8);
+      [[2.6, 11.0], [4.6, 9.0], [2.3, 8.6]].forEach(([a, b], k) => thing(bush, 0xd98ab0, a, 0.2 + 0.3, b, k, 0, 0, 0.9, 0.6, 0.8)); }
 
     // ---- the foot of the clock, in its own frame: a across (to the right, seen from the lawn side), b out towards the lawn
     if (W.invClock) { const cr = TOWN_CLOCK[2], at = (a, b) => [TOWN_CLOCK[0] + Math.cos(cr) * a + Math.sin(cr) * b, TOWN_CLOCK[1] - Math.sin(cr) * a + Math.cos(cr) * b];
@@ -9449,9 +9605,10 @@ const handle = async (m, post) => {
       if (P.got.has(i)) return; P.got.add(i); const e = tidy(b); P.e.paint.push(...e.paint); for (const kind of KINDS) P.e.gone[kind].push(...e.gone[kind]); };
     // a player's edits show for everyone for 3 hours (Ash, 15 November 2026: "If a player makes an edit keep that change for just
     // 3 hours, but keep in the admin log to decide if to make a permanent change"); ntfy's own last 3 hours, looked at on opening and every 5 minutes
-    const showFresh = () => { const cut = Date.now() / 1000 - 3 * 3600, e = blank();
-      for (const P of plans.values()) if (P.time > cut && !doneSet.has(P.id) && e.paint.length < 600) { e.paint.push(...P.e.paint); for (const kind of KINDS) e.gone[kind].push(...P.e.gone[kind]); }
-      fresh = e; apply(); };
+    let freshKey = "";
+    const showFresh = () => { const cut = Date.now() / 1000 - 3 * 3600, e = blank(), ids = [];
+      for (const P of plans.values()) if (P.time > cut && !doneSet.has(P.id) && e.paint.length < 600) { ids.push(P.id + ":" + P.got.size); e.paint.push(...P.e.paint); for (const kind of KINDS) e.gone[kind].push(...P.e.gone[kind]); }
+      const k = ids.join(","); if (k === freshKey) return; freshKey = k; fresh = e; apply(); };  // the ground is only redrawn when something changed
     const loadFresh = async () => { try { const r = await fetch(TOWN_PLANS + "/json?poll=1&since=3h"); if (r.ok) (await r.text()).split("\n").forEach(l => { if (!l.trim()) return; try { const ev = JSON.parse(l); if (ev.event === "message") planAdd(ev); } catch {} }); } catch {}
       if (!T.dead) showFresh(); };
     const freshT = [setTimeout(loadFresh, 5000), setInterval(loadFresh, 5 * 60000)];
@@ -9614,14 +9771,14 @@ const handle = async (m, post) => {
       M.compose(V.set(x, y, z), Q.setFromEuler(E.set(0, F.yaw + Math.PI, 0, "YXZ")), ONE); parts.setMatrix(0, M.elements.slice());
       const a = Math.sin(swing) * amp; parts.setMatrix(1, M.clone().multiply(SH[0]).multiply(R.makeRotationX(a)).elements); parts.setMatrix(2, M.clone().multiply(SH[1]).multiply(R.makeRotationX(-a)).elements); shown = true;
       const fx = -Math.sin(F.yaw), fz = -Math.cos(F.yaw); let d = 4.8;
-      if (m.solidAt) for (; d > 1.2; d -= 0.4) if (!m.solidAt(x - fx * d, z - fz * d)) break;
+      if (m.solidAt) for (; d > 1.2; d -= 0.4) if (!m.solidAt(x - fx * d, z - fz * d) && !T.solid?.(x - fx * d, z - fz * d)) break;
       dist += (d - dist) * Math.min(1, dt * 6 || 1);
       // a little over head height (higher if Up has raised your eyes), so you show in the middle of the screen, clear of the buttons
       const cx = x - fx * dist, cz = z - fz * dist; m.setCamera(cx, Math.max(y + Math.max(2.4, (F.pos.y - y) * 0.8), ground(cx, cz) + 1.3), cz, F.yaw, F.pitch - 0.1); };
     P.dispose = () => { try { parts?.remove(); } catch {} parts = null; };
     return P;
   }
-  // Traffic (Ash, 15 November 2026: "Animate some of the cars particularly near the player spawn"): about 16 everyday cars
+  // Traffic (Ash, 15 November 2026: "Animate some of the cars particularly near the player spawn"): three everyday cars on the main roads
   // drive the streets around where you start, most within 300 m of it, at 30 to 50 km/h, keeping left. They mostly carry on
   // straight at a corner (now and then turning, never doubling back unless the street ends), slow down into bends and corners,
   // follow the car ahead at a distance, wait for one crossing in front, and stop for you. Each sits on its four wheels the way
@@ -9632,14 +9789,18 @@ const handle = async (m, post) => {
     const P = { frame() {}, dispose() {}, cars: [] }; if (!m.addParts) return P;
     const THREE = BS.B.THREE, M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), ONE = new THREE.Vector3(1, 1, 1), wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
     const COLS = ["#f2f2ee", "#b8bcc2", "#1d1f24", "#2d5ea8", "#a8262c", "#5c6670", "#e4e1d6", "#3f6b4a", "#8c8f94", "#1f3a66"];
-    const home = T.spawn || [F.pos.x, F.pos.z], N = 16, NEAR = 300, FAR = 800;
+    // fewer than at first (Ash, 15 November 2026: "too much traffic in moorooka and they overlap ... app getting a little laggy"):
+    // Moorooka's model has cars of its own on Beaudesert Road
+    // (fewer again, and on main roads only: Ash, 15 November 2026: "less cars. They cause lag and often look silly")
+    const home = T.spawn || [F.pos.x, F.pos.z], N = 3, NEAR = 300, FAR = 800, NONE = new THREE.Matrix4().makeScale(0, 0, 0).elements;
     let roads = null, nodes = null, dead = false, last = 0;
     const key = (x, z) => Math.round(x / 2) + "," + Math.round(z / 2);
     const start = C => { // a random point on a street, mostly near the start
       const R = Math.random() < 0.7 ? NEAR : FAR * 0.85;
       for (let t = 0; t < 40; t++) { const r = roads[Math.floor(Math.random() * roads.length)], i = Math.floor(Math.random() * (r.n - 1)), x = r.p[i * 2], z = r.p[i * 2 + 1];
         if (Math.hypot(x - home[0], z - home[1]) > R) continue;
-        Object.assign(C, { r, i, d: Math.random() < 0.5 ? 1 : -1, s: 0, v: 0, y: null, p: null, rl: null, still: 0 }); if (C.d < 0) C.i = i + 1; C.h = null; return true; }
+        if (P.cars.some(D => D !== C && D.x != null && Math.hypot(D.x - x, D.z - z) < 40)) continue;  // not on top of another
+        Object.assign(C, { r, i, d: Math.random() < 0.5 ? 1 : -1, s: 0, v: 0, y: null, p: null, rl: null, still: 0, x, z }); if (C.d < 0) C.i = i + 1; C.h = null; return true; }
       return false; };
     const seg = C => { const r = C.r, a = C.i, b = C.i + C.d; return [r.p[a * 2], r.p[a * 2 + 1], r.p[b * 2], r.p[b * 2 + 1]]; };
     const next = C => { // reached vertex C.i + C.d: carry on, or turn into a street that meets here
@@ -9655,7 +9816,7 @@ const handle = async (m, post) => {
       let d; try { d = await townStreetData(cfg); } catch { return; } if (dead) return;
       if (d.town) d.roads.forEach((r, i) => { r.wd = (d.town.roads[i]?.[3] || 0) / 10; });  // Moorooka and Inverloch know each street's width
       const pick = lim => d.roads.filter(r => r.cls <= lim && r.pts.length >= 4);
-      let list = pick(4); if (list.length < 50) list = pick(5);
+      let list = pick(2); if (list.length < 20) list = pick(3);  // the main roads (classes 0 to 2) where there are enough of them
       roads = []; for (const r of list) { const p = r.pts; let near = false; for (let k = 0; k < p.length; k += 2) if (Math.hypot(p[k] - home[0], p[k + 1] - home[1]) < FAR) { near = true; break; } if (near) roads.push({ p, n: p.length / 2, lane: r.wd > 3 ? bsClamp(r.wd / 4, 1.5, 3.2) : 1.9 }); }
       if (roads.length < 3) return;
       nodes = new Map(); for (const r of roads) for (let j = 0; j < r.n; j++) { const k = key(r.p[j * 2], r.p[j * 2 + 1]); let a = nodes.get(k); if (!a) nodes.set(k, a = []); a.push([r, j]); }
@@ -9666,6 +9827,8 @@ const handle = async (m, post) => {
       // you: on foot, or in whatever you are driving
       const me = T.car?.in ? T.car.pose?.() : T.walk ? { x: F.pos.x, z: F.pos.z } : null;
       P.cars.forEach((C, ci) => {
+        // more than 450 m from you: out of sight and left where it is until you come back (no work each frame)
+        if (C.x != null && Math.hypot(C.x - F.pos.x, C.z - F.pos.z) > 450) { if (!C.away) { C.away = true; C.parts.setMatrix(0, NONE.slice()); } return; } C.away = false;
         let [ax, az, bx, bz] = seg(C), L = Math.hypot(bx - ax, bz - az) || 0.01;
         const h0 = Math.atan2(bx - ax, bz - az), ux = Math.sin(h0), uz = Math.cos(h0), cx = C.x ?? ax, cz = C.z ?? az, fh = C.h ?? h0, fx = Math.sin(fh), fz = Math.cos(fh);
         let want = C.top;
@@ -9681,11 +9844,11 @@ const handle = async (m, post) => {
         const rem = L - C.s, at = C.i + C.d, junction = (nodes.get(key(bx, bz)) || []).length > 1 || at === 0 || at === C.r.n - 1;
         if (Math.abs(wrap(h0 - fh)) > 0.3) want = Math.min(want, 6); else if (junction && rem < 16) want = Math.min(want, 5 + rem * 0.4);
         C.v += Math.max(-8 * dt, Math.min(3 * dt, want - C.v)); C.s += C.v * dt;
-        C.still = C.v < 0.2 ? (C.still || 0) + dt : 0; if (C.still > 10) { start(C); C.x = null; return; }  // stuck for 10 s: start again somewhere else
+        C.still = C.v < 0.2 ? (C.still || 0) + dt : 0; if (C.still > 10) { start(C); return; }  // stuck for 10 s: start again somewhere else
         for (let k = 0; k < 6 && C.s >= L; k++) { C.s -= L; next(C); [ax, az, bx, bz] = seg(C); L = Math.hypot(bx - ax, bz - az) || 0.01; }
         const h = Math.atan2(bx - ax, bz - az); C.h = C.h == null ? h : C.h + wrap(h - C.h) * Math.min(1, dt * 5);
         const t = Math.min(1, C.s / L), lx = Math.cos(C.h), lz = -Math.sin(C.h), x = ax + (bx - ax) * t + lx * C.r.lane, z = az + (bz - az) * t + lz * C.r.lane;
-        if (Math.hypot(x - home[0], z - home[1]) > FAR) { start(C); C.x = null; return; }
+        if (Math.hypot(x - home[0], z - home[1]) > FAR) { start(C); return; }
         C.x = x; C.z = z;
         // on its four wheels, as the car you drive sits (the middle of the four, tipped to the slope), eased so it never jumps
         const sx = Math.sin(C.h), sz = Math.cos(C.h), g = (a, b) => ground(x + sx * a - sz * b, z + sz * a + sx * b), yf = g(1.3, 0), yb = g(-1.3, 0), yr = g(0, 0.8), yl = g(0, -0.8);
@@ -10004,7 +10167,7 @@ const handle = async (m, post) => {
     const C = { in: false, enter() {}, frame() {}, dispose() {} };
     const RIDES = TOWN_RIDES[place]; if (!RIDES || !m.addParts) return C;
     // a model that knows its buildings and hands over its parked cars is asked; one that does not has neither (nothing is solid there)
-    const solid = (x, z) => m.solidAt ? m.solidAt(x, z) : false, parked = (x, z, r) => m.nearestCar && m.driveCar ? m.nearestCar(x, z, r) : null;
+    const solid = (x, z) => (m.solidAt ? m.solidAt(x, z) : false) || !!T.solid?.(x, z), parked = (x, z, r) => m.nearestCar && m.driveCar ? m.nearestCar(x, z, r) : null;
     const THREE = BS.B.THREE, btn = $("bsCarBtn"), boostBtn = $("bsBoostBtn"), chip = $("bsHeight"), wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
     const R = rideSettings(), GOLD = 1 + R.gold / 100, VMAX = R.carTop / 3.6, VREV = 5.5, VBOOST = Math.max(R.carBoostTop, R.carTop) / 3.6, LIFT = R.planeLift / 3.6, CRUISE = Math.max(R.planeTop, R.planeLift * 1.4) / 3.6, JET = Math.max(R.planeBoostTop, R.planeTop) / 3.6, canBoost = P => !P.heli && (P.gold || !!R.planeBoost), touch = matchMedia("(pointer: coarse)").matches, snd = townSound();
     snd.level(R.volume / 100);
@@ -10214,10 +10377,10 @@ const handle = async (m, post) => {
       if (btn.hidden !== !near) btn.hidden = !near; if (near && btn.textContent !== say) btn.textContent = say; };
     btn.onclick = () => { C.enter(); btn.blur(); };
     const hold = on => e => { F.boost = on && !!veh; boostBtn.classList.toggle("on", F.boost); e.preventDefault(); };
-    const press = { pointerdown: hold(true), pointerup: hold(false), pointercancel: hold(false), pointerleave: hold(false), contextmenu: e => e.preventDefault() };
+    const press = { pointerdown: hold(true), pointerup: hold(false), pointercancel: e => { bsLost("boost", null); hold(false)(e); }, pointerleave: hold(false), contextmenu: e => e.preventDefault() };
     Object.entries(press).forEach(([k, f]) => boostBtn.addEventListener(k, f));
     const handBtn = $("bsHandBtn"), pull = on => e => { F.hand = on && veh === "car"; handBtn.classList.toggle("on", !!F.hand); e.preventDefault(); };
-    const handPress = { pointerdown: pull(true), pointerup: pull(false), pointercancel: pull(false), pointerleave: pull(false), contextmenu: e => e.preventDefault() };
+    const handPress = { pointerdown: pull(true), pointerup: pull(false), pointercancel: e => { bsLost("handbrake", null); pull(false)(e); }, pointerleave: pull(false), contextmenu: e => e.preventDefault() };
     Object.entries(handPress).forEach(([k, f]) => handBtn.addEventListener(k, f));
     const hidden = () => snd.quiet(document.hidden); document.addEventListener("visibilitychange", hidden);
     C.pose = () => veh === "car" ? { k: car.bus ? "bus" : car.gold ? "gold" : "car", x: car.x, y: car.y, z: car.z, h: car.h, p: car.p, r: car.r }
@@ -10325,14 +10488,6 @@ const handle = async (m, post) => {
     // flying: held down at the lowest you can fly (Down, or C) for a moment, and you are on foot there
     if (!T.walk && !T.tween && !F.drive && F.floor && F.hot?.f) { const low = F.pos.y <= F.floor() + 0.1, down = F.vert < -0.3 || F.keys.has("KeyC"), now = performance.now();
       if (!(low && down)) T.downAt = 0; else if (!T.downAt) T.downAt = now; else if (now - T.downAt > 1200) { T.downAt = 0; F.hot.f(); } }
-    // Moorooka's and Inverloch's models have no setLabelObstacles, so their place names are kept clear of the top buttons (and of
-    // the sticks on a touch screen) here: a name that strays under them fades out, a few times a second
-    if (!m.setLabelObstacles) { const now = performance.now(); if (now - (T.lblAt || 0) > 150) { T.lblAt = now;
-      const lay = T.lblLayer?.isConnected ? T.lblLayer : (T.lblLayer = document.querySelector("#bsFly .inv-embed-labels, .inv-embed-labels"));
-      if (lay) { const H = lay.clientHeight || innerHeight, touch = T.lblTouch ??= matchMedia("(pointer: coarse)").matches;
-        for (const el of lay.children) { const v = el.style.visibility === "visible", q = v && /translate3d\((-?[\d.]+)px,\s*(-?[\d.]+)px/.exec(el.style.transform);
-          const y0 = q ? +q[2] : 0, hide = !!q && (y0 < 112 || (touch && y0 + el.offsetHeight > H - 300));
-          if (el._hid !== hide) { el._hid = hide; el.style.opacity = hide ? "0" : ""; el.style.pointerEvents = hide ? "none" : ""; } } } } }
     // the clock's hands, the koala and the wombats: wherever the weather's own are now
     if (T.live?.length) { const M = T.mtx || (T.mtx = new BS.B.THREE.Matrix4());
       T.roots.forEach(r => r.updateWorldMatrix(true, true));
@@ -10948,9 +11103,17 @@ const handle = async (m, post) => {
       <div class="beta-chips"><button type="button" class="bchip" data-tv-new>Awesome News TV (no ads)</button><button type="button" class="bchip" data-open-tv>Old TV (YouTube clips)</button></div>
       ${state.mode === "claude" ? "" : `<div class="beta-tog">${toggle("data-skipads", "1", S.skipAds, "Hide YouTube ads", "Old TV: sound off and headlines on screen while an ad plays")}</div>`}
     </div></div>
-    ${isAsh() ? ridesHTML() : ""}
+    ${isAsh() ? ridesHTML() + exPartsHTML() : ""}
     ${state.mode === "claude" ? "" : `<div class="group"><h2>Updates</h2><div class="card">${ghFieldHTML()}</div></div>`}`;
   }
+  // Explore's parts, each switched on or off on this device, for Ash to find what makes an iPhone let go of the stick (Ash,
+  // 15 November 2026: the stick, Boost and looking round stop at random, since a change made this morning). Read when a town opens.
+  const EX_PARTS = [["traffic", "Moving traffic"], ["animal", "The animal by Norman Road's helicopter"], ["rides", "Cars, planes, helicopter and bus to drive"], ["admin", "Map editing (the pencil)"],
+    ["players", "Other players and the Settings gear"], ["me", "Construction worker view"], ["no6", "6 Beaudesert Road's street detail"], ["streets", "Street names"], ["places", "Place names on the model"]];
+  const exOff = () => { try { return new Set(JSON.parse(localStorage.getItem("an3d-off") || "[]")); } catch { return new Set(); } };
+  function exPartsHTML() { const off = exOff();
+    return `<div class="group"><h2>Explore parts</h2><div class="card">${EX_PARTS.map(([k, name]) => `<button class="field" type="button" role="switch" aria-checked="${!off.has(k)}" data-ex-part="${k}"><span class="lbl">${name}<span class="sub">${off.has(k) ? "Off" : "On"}</span></span><span class="track"></span></button>`).join("")}
+    </div><p class="hint">For Ash, to find what makes the phone let go of the stick. Turn one off, close Explore and open it again, and try. On this device only.</p></div>`; }
   // Cars and planes: the numbers Ash can change (RIDE_DEF). Kept on this device; a model reads them when it opens
   function ridesHTML() { const r = rideSettings();
     return `<div class="group"><h2>Cars and planes</h2><div class="card">${Object.entries(RIDE_DEF).map(([k, [d, name, unit, lo, hi]]) =>
@@ -10987,6 +11150,11 @@ const handle = async (m, post) => {
     setTimeout(() => { try { bsPlace(); } catch {} }, 400);
   }
   function showVersion() {
+    // Ash: the commit id, small and blue in the bottom right corner of every screen, Explore included (Ash, 15 November 2026:
+    // "If in as ash show the v number in blue small bottom right"). It lets taps through to whatever is under it.
+    { const ash = /^ash(ley)?$/i.test((S.name || "").trim()), commit = document.querySelector('meta[name="an-commit"]')?.content || "";
+      let b = $("verBadge"); if (ash && !b) { b = document.createElement("div"); b.id = "verBadge"; b.setAttribute("aria-hidden", "true"); document.body.appendChild(b); }
+      if (b) { b.hidden = !ash; b.textContent = commit || "dev"; } }
     const el = $("appVer"); if (!el) return;
     const me = /^(rod|rodney|ash|ashley)$/i.test((S.name || "").trim());
     el.hidden = !me; if (!me) return;
