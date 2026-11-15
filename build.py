@@ -116,9 +116,21 @@ if os.path.exists(beta_src):
                  .replace(f"<title>{title}</title>", f"<title>{title} Beta</title>")
                  .replace('<link rel="canonical"', '<meta name="robots" content="noindex">\n<link rel="canonical"'))
     os.makedirs(os.path.join(site, "beta"), exist_ok=True)
+    # what the beta is, shown where the version goes (beta/LABEL, say "#96 4747ba4"), instead of the main app's commit
+    blabel = open(os.path.join(here, "beta", "LABEL"), encoding="utf-8").read().strip() if os.path.exists(os.path.join(here, "beta", "LABEL")) else ""
+    bstamp = (lambda h, b, d: re.sub(r'(<meta name="an-commit" content=")[^"]*"', lambda m: m.group(1) + blabel.replace('"', "") + '"', stamped(h, b, d))) if blabel else stamped
     with open(os.path.join(site, "beta", "index.html"), "w", encoding="utf-8") as f:
-        f.write(stamped(bhead, bbody, os.path.join(site, "beta")) + bbody.strip() + "\n</body>\n</html>\n")
+        f.write(bstamp(bhead, bbody, os.path.join(site, "beta")) + bbody.strip() + "\n</body>\n</html>\n")
     print(f"Built {site}/beta/index.html")
+    # ...and a page for each town's 3D model in the beta (/beta/moorooka/ and the like), which opens straight into it, so a
+    # change to Explore can be tried on a phone before it goes in the app (Ash, 15 November 2026: "show me pr 96 as a branch
+    # not in main app")
+    for bdir, bplace in (("moorooka", "moo"), ("inverloch", "inv"), ("logan", "logan")):
+        xh = (bhead.replace('<base href="../">', '<base href="../../">', 1)
+                   .replace("<head>\n", f'<head>\n<meta name="an-explore" content="{bplace}">\n', 1))
+        os.makedirs(os.path.join(site, "beta", bdir), exist_ok=True)
+        with open(os.path.join(site, "beta", bdir, "index.html"), "w", encoding="utf-8") as f:
+            f.write(bstamp(xh, bbody, os.path.join(site, "beta", bdir)) + bbody.strip() + "\n</body>\n</html>\n")
 shutil.copytree(os.path.join(here, "icons"), os.path.join(site, "icons"), dirs_exist_ok=True)
 shutil.copy(os.path.join(here, "manifest.webmanifest"), site)
 shutil.copy(os.path.join(here, "sw.js"), site)
