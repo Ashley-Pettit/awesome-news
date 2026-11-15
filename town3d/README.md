@@ -1202,3 +1202,7 @@ a car but then move around as a possum not a car. Add a teleport to kingwell str
 - **Player name counts as Ash** (Ash: "I think player name is not giving me admin"): `isAsh()` is true when either the
   news app's name or Explore's player name (shared by every town's app) is Ash or Ashley, and `isAdmin()` follows it.
   Each town's app keeps its own news-app name, so on a town's Explore page the player name was the only one set.
+- **Other towns open in place** (Ash: "When I click to another town I get the url at the top ... I want it to feel like
+  an app"): from the home screen app, a link to another town's page opened in a browser view with the address bar. The
+  links now close this town's model and open the other one on the same page (the link is still there underneath, for
+  a long press or a new tab). Share then gives the town you're in.
