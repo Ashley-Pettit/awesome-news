@@ -1486,3 +1486,13 @@ even if not on the side of the car I can hold onto a car no one is driving yet."
 - Why it didn't follow before: a car of the traffic stopped for the possum on its own roof (it took the possum for someone in
   the road ahead of it), then after 10 s stopped it was put back somewhere else. The traffic now ignores the possum it carries
   (`T.car.carrying()`).
+
+## Logan: houses no longer sunk in the middle distance (16 November 2026)
+
+Ash: "A lot of the houses in Logan are in the ground ... Lots of houses all over Logan."
+
+The Logan model raises houses out of the ground as they come within draw range (`lgGrow` in the building shader), so they
+don't pop in. It started 70% of the way out, so on Low (1 km) every house from 700 m to 1 km stood half or less of its height:
+roofs lying on the grass, everywhere you looked from a plane or a hill. The rise now happens only in the last 6% of the range
+(`smoothstep(uRange * 0.94, uRange, ...)`), so almost every house you can see stands full height. Bundle patch only;
+`logan-model.js?v=39`. The ai-forge source (`src/features/logan3d/buildings.ts`) should get the same change.
