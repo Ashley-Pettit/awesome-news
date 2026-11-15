@@ -7838,8 +7838,9 @@ const handle = async (m, post) => {
     const start = kd ? { pos: new B.THREE.Vector3(...kept.b), yaw: Math.atan2(-kd.x, -kd.z), pitch: Math.asin(bsClamp(kd.y, -1, 1)) }
       : inv && BS.W.invSpot ? { pos: new B.THREE.Vector3(...BS.W.invSpot.pos), yaw: BS.W.invSpot.yaw, pitch: BS.W.invSpot.pitch }
       : { pos: cam.position.clone(), yaw: Math.atan2(-dir.x, -dir.z), pitch: Math.asin(bsClamp(dir.y, -1, 1)) };
-    // The time stands still while exploring: now if it's daylight, otherwise midday. The slider above the sticks changes it.
-    BS.flyView = BS.view; { const v = BS.view, day = v.day || bsKey(v.ms), mins = bsMins(v.ms), m2 = mins >= 7 * 60 && mins <= 17 * 60 ? mins : 12 * 60;
+    // The time stands still while exploring, at midday: always daytime unless an admin changes it in Settings (Ash, 15 November 2026:
+    // "Let's make the time stay daytime unless as an admin I change it")
+    BS.flyView = BS.view; { const v = BS.view, day = v.day || bsKey(v.ms), m2 = 12 * 60;
       BS.view = { mode: "day", day, ms: bsMidnight(day) + m2 * 60000, play: false }; bsApply(true);
       const ti = $("bsFlyTime"), to = $("bsFlyTimeOut"); ti.value = m2; to.textContent = bsTime(BS.view.ms);
       const tb = $("bsTimeBtn"), tbox = $("bsFlyTimeBox"); $("bsTimeBtnT").textContent = bsTime(BS.view.ms); tbox.hidden = true; tb.setAttribute("aria-expanded", "false");
@@ -10101,7 +10102,7 @@ const handle = async (m, post) => {
       const tm = el("div", "bs-me-sec"), th = el("div", "bs-me-time"), tl = el("label", "bs-me-lbl", "Time of day"), tout = el("output", "", $("bsFlyTimeOut")?.textContent || ""), tr = el("input");
       tr.type = "range"; tr.id = "bsMeTime"; tl.htmlFor = "bsMeTime"; tr.min = "0"; tr.max = "1439"; tr.step = "5"; tr.value = $("bsFlyTime")?.value || "720";
       tr.oninput = () => { const ti = $("bsFlyTime"); if (!ti) return; ti.value = tr.value; ti.dispatchEvent(new Event("input")); tout.textContent = $("bsFlyTimeOut").textContent; };
-      th.append(tl, tout); tm.append(th, tr);
+      th.append(tl, tout); tm.append(th, tr); if (!isAdmin()) tm.hidden = true;  // (admins only: for everyone else it stays midday)
       // make the 3D model an app on the phone's home screen, from its own page (/<suburb>/explore/), which has its own manifest
       const app = el("div", "bs-me-sec"); app.append(el("span", "bs-me-lbl", "Make it an app"));
       // (Ash, 15 November 2026: "The make it an app instructions don't work". On an iPhone it has to be added from Safari itself,
@@ -11587,6 +11588,7 @@ const handle = async (m, post) => {
   // stick, 15 November 2026). Read when a town opens.
   const EX_PARTS = [["traffic", "A few moving cars"], ["animal", "The animal by Norman Road's helicopter"], ["rides", "Cars, planes, helicopter and bus to drive"], ["admin", "Map editing (the pencil)"],
     ["players", "Other players and the Settings gear"], ["me", "Construction worker view"], ["no6", "6 Beaudesert Road's street detail"], ["home6", "Ash, Arlo and Pandy on Beaudesert Road"], ["streets", "Street names"], ["places", "Place names on the model"]];
+  try { if (!localStorage.getItem("an3d-off-reset-1")) { localStorage.removeItem("an3d-off"); localStorage.setItem("an3d-off-reset-1", "1"); } } catch {}
   const exOff = () => { try { return new Set(JSON.parse(localStorage.getItem("an3d-off") || "[]")); } catch { return new Set(); } };
   // Ash's own Explore settings, in Explore's Settings panel (Ash, 15 November 2026: "Move the settings for explore into the
   // settings for explore rather than in the main awesome news"): the cars and planes numbers (RIDE_DEF) and Explore's parts.
