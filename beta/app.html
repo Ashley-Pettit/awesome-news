@@ -71,6 +71,9 @@ button, input, select { font: inherit; color: inherit; }
 /* No accidental zooming on phones: double-taps don't zoom, and text boxes are big enough that iPhones
    don't zoom in when you tap into them. Pinch zoom still works. */
 html, body { touch-action: manipulation; }
+#verBadge { position: fixed; right: calc(6px + env(safe-area-inset-right)); bottom: calc(4px + env(safe-area-inset-bottom)); z-index: 2147483000; pointer-events: none; padding: 1px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.82); color: #1f5fd1; font: 700 10px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.02em; }
+#verBadge[hidden] { display: none; }
+@media (prefers-color-scheme: dark) { #verBadge { background: rgba(14, 13, 22, 0.78); color: #7fb0ff; } }
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }  /* iPhone: don't enlarge the text when turned sideways (it stays wrong when turned back) */
 /* No rubber-band bounce: on iPhone it dragged the whole page down and lifted the bottom bar off the bottom (pull to refresh still works) */
 html, body { overscroll-behavior-y: none; }
@@ -7727,7 +7730,7 @@ const handle = async (m, post) => {
       const h = {
         touchstart: e => { if (id !== null) return; const t = e.changedTouches[0]; id = t.identifier; set(t); tip.classList.add("dim"); },
         touchmove: e => { const t = mine(e); if (t) set(t); },
-        touchend: e => { if (mine(e)) end(); }, touchcancel: e => { if (mine(e)) { end(); bsLost("stick"); } },
+        touchend: e => { if (mine(e)) end(); }, touchcancel: e => { if (mine(e)) { end(); bsLost("stick", e); } },
         pointerdown: e => { if (e.pointerType !== "mouse") return; id = "m"; try { el.setPointerCapture(e.pointerId); } catch {} set(e); tip.classList.add("dim"); e.preventDefault(); },
         pointermove: e => { if (e.pointerType === "mouse" && id === "m") set(e); },
         pointerup: e => { if (e.pointerType === "mouse" && id === "m") end(); },
@@ -7793,7 +7796,7 @@ const handle = async (m, post) => {
         t.x = e.clientX; t.y = e.clientY; e.preventDefault(); },
       pointerup: e => { F.drag = null; canvas.style.cursor = ""; const t = F.touches.get(e.pointerId); if (t?.move) { F.stick.x = 0; F.stick.y = 0; } F.touches.delete(e.pointerId); },
     };
-    F.on.pointercancel = e => { if (e.pointerType !== "mouse") bsLost("view"); F.on.pointerup(e); };
+    F.on.pointercancel = e => { if (e.pointerType !== "mouse") bsLost("view", null); F.on.pointerup(e); };
     addEventListener("keydown", F.on.keydown); addEventListener("keyup", F.on.keyup); addEventListener("blur", F.on.blur);
     document.addEventListener("mousemove", F.on.mousemove);
     ["pointerdown", "pointermove", "pointerup", "pointercancel"].forEach(k => canvas.addEventListener(k, F.on[k]));
@@ -7830,8 +7833,11 @@ const handle = async (m, post) => {
   // For Ash, while the sticks are being looked into: say when the phone takes a finger away (a "touchcancel") and what had the
   // page selected, so the cause shows on the device itself. Selection is cleared straight away too.
   document.addEventListener("selectionchange", () => { if (!BS.fly) return; try { const sel = getSelection(); if (sel && !sel.isCollapsed && !/^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName || "")) { bsLost.sel = String(sel).slice(0, 30); sel.removeAllRanges(); } } catch {} });
-  function bsLost(what) { if (!isAsh()) return; const now = performance.now(); if (now - (bsLost.at || 0) < 4000) return; bsLost.at = now;
-    toast(`The phone took your finger off the ${what}${bsLost.sel ? ` (it selected "${bsLost.sel}")` : ""}. Screenshot this for Claude.`, 5000); bsLost.sel = ""; }
+  function bsLost(what, e) { if (!isAsh()) return; const now = performance.now(); if (now - (bsLost.at || 0) < 4000) return; bsLost.at = now;
+    // clues: the slowest frame in the last 3 seconds (a busy page), how many fingers were down, and what had just happened
+    const slow = (BS.gaps || []).filter(g => now - g[0] < 3000).reduce((a, g) => Math.max(a, g[1]), 0), fingers = e?.touches?.length ?? "?", recent = (BS.notes || []).filter(n => now - n[0] < 3000).map(n => n[1]).join(", ");
+    toast(`The phone took your finger off the ${what}${bsLost.sel ? ` (it selected "${bsLost.sel}")` : ""}. Slowest frame ${Math.round(slow)} ms, ${fingers} other finger${fingers === 1 ? "" : "s"}${recent ? ", after: " + recent : ""}. Screenshot this for Claude.`, 7000); bsLost.sel = ""; }
+  const bsNote = what => { (BS.notes ||= []).push([performance.now(), what]); if (BS.notes.length > 20) BS.notes.shift(); };
   function bsFlyTick(dt) {
     const F = BS.fly, k = F.keys, has = (...c) => c.some(x => k.has(x));
     if (F.drive) return F.drive(dt);  // driving a car in a town model (townCar): the car moves, and the view follows it
@@ -7860,6 +7866,7 @@ const handle = async (m, post) => {
     BS.raf = requestAnimationFrame(bsLoop);
     if (document.hidden) return;
     const t = performance.now() / 1000, real = bsClamp(t - BS.lastT, 0, 1), dt = Math.min(real, 0.1); BS.lastT = t;
+    if (real > 0.15) { (BS.gaps ||= []).push([t * 1000, real * 1000]); if (BS.gaps.length > 30) BS.gaps.shift(); }  // slow frames, for bsLost
     // Play through the forecast, 30 minutes a second, then round again from now.
     const v = BS.view;
     // Play through the day; at the end of it, replay the same day from 6am.
@@ -8020,7 +8027,7 @@ const handle = async (m, post) => {
   // of: "Logan"), floodNote (the line under the list) and floodWarn (show the not-official notice first, and a banner while a flood is on).
   const TOWNS = {
     inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=17", assets: TOWN3D, place: "inv", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
-    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=24", assets: TOWN3D + "moorooka/", place: "moo", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
+    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=26", assets: TOWN3D + "moorooka/", place: "moo", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
       walkStart: { x: -269.8, z: -991.4, yaw: -1.623 },  // Ash's pick for where Moorooka starts: the Beaudesert Road footpath, looking at the house he chose
       // its floods: widest over the Oxley Creek flats along the model's western edge, seen from the east. floodWarn: the not-official notice has to be accepted
       // before the list opens, and a banner says the same while a flood is showing (Ash asked for both).
@@ -8121,7 +8128,7 @@ const handle = async (m, post) => {
     tag(cur);
     // frames a second over a short while
     const fps = ms => new Promise(ok => { let n = 0, t0 = 0; const f = t => { if (dead) return ok(0); if (!t0) t0 = t; n++; if (t - t0 < ms) requestAnimationFrame(f); else ok(n * 1000 / (t - t0)); }; requestAnimationFrame(f); });
-    const swapTo = async (to, q) => {
+    const swapTo = async (to, q) => { bsNote("sharper model swapped in");
       for (const [name, a, H] of log) { if (name === "addParts") H.real = to.addParts(...a); else to.addPad(...a); }
       for (const H of handles) for (const [ck, a] of H.calls) { const fn = ck.split(":")[0]; try { H.real[fn](...a); } catch {} }
       for (const k of LAST) if (last[k]) { try { const r = to[k](...last[k]); if (r?.then) await r; } catch {} }
@@ -8250,24 +8257,12 @@ const handle = async (m, post) => {
 
         // ---- flying: drag the view to move, pinch (or scroll) to zoom, two fingers (or right-drag) to turn ----
         const look3 = () => { const cp = Math.cos(F.pitch); return [-Math.sin(F.yaw) * cp, Math.sin(F.pitch), -Math.cos(F.yaw) * cp]; };
-        const reach = () => { const d = look3(), h = Math.max(2, F.pos.y - ground()); return bsClamp(d[1] < -0.08 ? h / -d[1] : h * 6, 6, far); };  // how far off the ground you're looking at is
+        const reach = () => { const d = look3(), h = Math.max(2, F.pos.y - ground()); return bsClamp(d[1] < -0.08 ? h / -d[1] : h * 6, 25, far); };  // how far off the ground you're looking at is
         const fovK = m.fov ? () => 2 * Math.tan(m.fov() * Math.PI / 360) : () => 1.1547;  // the model's own field of view where it gives one, so the ground stays under your finger
         const pan = (dx, dy) => { const k = fovK() * reach() / (box.clientHeight || 600), sy = Math.sin(F.yaw), cy = Math.cos(F.yaw), up = k / Math.max(0.35, Math.sin(-F.pitch));
           F.pos.x += -cy * dx * k - sy * dy * up; F.pos.z += sy * dx * k - cy * dy * up; keepIn(); };
-        // zooming on in once as close as flying goes puts you on foot where you are looking (Ash, 15 November 2026: "If I'm on fly
-        // and I zoom in right into the ground auto switch to walk")
-        let squeeze = 1, squeezeAt = 0;
         const zoomTurn = (scale, turn) => { const R = reach(), d = look3(), L = [F.pos.x + d[0] * R, F.pos.y + d[1] * R, F.pos.z + d[2] * R];  // about the ground in the middle of the view
-          const was = F.pos.clone();
-          F.yaw += turn; const R2 = bsClamp(R * scale, 6, out), e = look3(); F.pos.set(L[0] - e[0] * R2, L[1] - e[1] * R2, L[2] - e[2] * R2); keepIn();
-          // zooming in but hardly getting any closer (as close as flying goes, or down at the lowest height): a few of those and you land
-          // (only a deliberate pinch or scroll in, looking down at the ground, that has stopped getting closer: half as far again
-          // squeezed in without moving. A pinch that only turns, or one while flying low and level, never lands you.)
-          // you can zoom right down to about 6 m from the ground you look at; landing needs you there, under 6 m up, and still squeezing
-          // (Ash, 15 November 2026: "only go to walk when closer to ground. Currently shifts too early")
-          const stuck = F.pos.distanceTo(was) < 0.3 && look3()[1] < -0.15 && F.pos.y - ground() < 6;
-          if (!T.walk && !T.tween && scale < 1 && stuck) { const now = performance.now(); if (now - squeezeAt > 700) squeeze = 1; squeezeAt = now;
-            squeeze *= scale; if (squeeze < 0.5) { squeeze = 1; toMode(true); } } else if (scale >= 1 || !stuck) squeeze = 1; };
+          F.yaw += turn; const R2 = bsClamp(R * scale, 20, out), e = look3(); F.pos.set(L[0] - e[0] * R2, L[1] - e[1] * R2, L[2] - e[2] * R2); keepIn(); };
         const ptrs = new Map(); let pinch = null;
         const gest = {
           pointerdown: e => { if (T.admin?.down(e)) return; if (T.walk) return; list.hidden = true; jump.setAttribute("aria-expanded", "false"); fl.hidden = true; fb.setAttribute("aria-expanded", "false"); closeAsk(); try { box.setPointerCapture(e.pointerId); } catch {}
@@ -8608,7 +8603,8 @@ const handle = async (m, post) => {
   // - number 6's front: a pale blue-grey pipe fence with chainwire on a low white plinth, white rendered piers, a white gate
   //   with a black garden arch behind it, a pale grey sliding gate across the driveway, the letterbox pier with its black plate
   //   and gold "6", and a solar light on the pier by number 10; banana plants by the front steps and an air conditioner on the
-  //   front wall. The same fence runs along the corner lot's Beaudesert Road side.
+  //   front wall. The same fence runs along the corner lot's Beaudesert Road side, and a plain chainwire one down the drive.
+  //   The drive itself (one wide slab from the gate to the house and on past it by the fence) is painted in edits.json.
   // - number 10: a weathered white besser block wall with its letterbox, a green gate at the south end, a brick ground floor
   //   with two cream roller doors under the house, and a green water tank down the side.
   // - crepe myrtles on the verge where the model had two big generic trees, and the timber bollards along Stimpson Park
@@ -8622,7 +8618,8 @@ const handle = async (m, post) => {
   // slow test machine).
   const MOO_NO6 = {
     six: [[-262.77, -986.34], [-256.82, -1003.76]],                       // number 6's front boundary, south to north
-    corner: [-251.06, -1020.47],                                            // the corner lot's north-west corner: its Beaudesert Road side runs on from number 6's
+    corner: [-251.06, -1020.47],
+    sideFence: [-240.77, -983.02],                                          // number 6's south side: chainwire from the front to here, then palings (the model's)                                            // the corner lot's north-west corner: its Beaudesert Road side runs on from number 6's
     ten: [[-262.52, -986.29], [-268.35, -969.53]],                        // number 10's front boundary, north to south
     tenHouse: { a: [-250.3, -983.4], b: [-252.8, -972.2], depth: 15.14, eave: 24.1 },  // number 10's front wall in the survey, north to south (eaves m AHD)
     sixHouse: { a: [-244.0, -987.3], b: [-242.4, -997.5], depth: 12.96, eave: 23.3 },  // number 6's, south to north
@@ -8698,15 +8695,16 @@ const handle = async (m, post) => {
       const six = line(S.six[0], S.six[1]), cor = line(S.six[1], S.corner);
       const BLUE = "#a9bcc6", PIER = "#f0efe9", CAP = "#e3e1da";
       const pier = (Ln, a, w = 0.42, h = 1.45, dw = 0.42) => { const F = Ln.at(a); box(F, -w / 2, w / 2, -0.15, h, -dw / 2, dw / 2, PIER); box(F, -w / 2 - 0.04, w / 2 + 0.04, h, h + 0.06, -dw / 2 - 0.04, dw / 2 + 0.04, CAP); return F; };
-      const fence = (Ln, a0, a1, posts = true) => { const n = Math.max(1, Math.ceil((a1 - a0) / 2.5));
+      // pipe posts, a top rail and chainwire between; on a low white plinth unless plinth is false
+      const fence = (Ln, a0, a1, { col = BLUE, plinth = true, h = 1.12 } = {}) => { const n = Math.max(1, Math.ceil((a1 - a0) / 2.5)), y0 = plinth ? 0.15 : 0.04;
         for (let i = 0; i < n; i++) { const b0 = a0 + (a1 - a0) * i / n, b1 = a0 + (a1 - a0) * (i + 1) / n;
-          box(Ln.F, b0, b1, -0.15, 0.15, -0.07, 0.07, "#e8e6df", { ends: false });  // the low white plinth
-          box(Ln.F, b0, b1, 1.07, 1.12, -0.025, 0.025, BLUE, { ends: false });     // the top rail
-          if (posts) bar(Ln.F, b0, 0.12, 1.15, 0.028, BLUE);
-          const q = [Ln.F(b0, 0.15, 0), Ln.F(b1, 0.15, 0), Ln.F(b1, 1.07, 0), Ln.F(b0, 1.07, 0)], T6 = 0.065;
-          for (const [A, B, C] of [[0, 1, 2], [0, 2, 3]]) { const tri3 = [q[A], q[B], q[C]], ts = [[b0, 0.15], [b1, 0.15], [b1, 1.07], [b0, 1.07]];
+          if (plinth) box(Ln.F, b0, b1, -0.15, 0.15, -0.07, 0.07, "#e8e6df", { ends: false });
+          box(Ln.F, b0, b1, h - 0.05, h, -0.025, 0.025, col, { ends: false });     // the top rail
+          bar(Ln.F, b0, y0 - 0.1, h + 0.03, 0.028, col);
+          const q = [Ln.F(b0, y0, 0), Ln.F(b1, y0, 0), Ln.F(b1, h - 0.05, 0), Ln.F(b0, h - 0.05, 0)], T6 = 0.065;
+          for (const [A, B, C] of [[0, 1, 2], [0, 2, 3]]) { const tri3 = [q[A], q[B], q[C]], ts = [[b0, y0], [b1, y0], [b1, h - 0.05], [b0, h - 0.05]];
             for (const [k, v] of [[A, tri3[0]], [B, tri3[1]], [C, tri3[2]]]) { wire.P.push(...v); wire.N.push(Ln.n[0], 0, Ln.n[1]); wire.U.push(ts[k][0] / T6, ts[k][1] / T6); } } }
-        if (posts) bar(Ln.F, a1, 0.12, 1.15, 0.028, BLUE); };
+        bar(Ln.F, a1, y0 - 0.1, h + 0.03, 0.028, col); };
       const gate = (F, a0, a1, h, hex, step, mid) => { box(F, a0, a1, 0.05, 0.13, -0.03, 0.03, hex); box(F, a0, a1, h - 0.07, h, -0.025, 0.025, hex);
         if (mid) box(F, a0, a1, mid, mid + 0.05, -0.02, 0.02, hex, { ends: false });
         box(F, a0, a0 + 0.05, 0.05, h, -0.03, 0.03, hex); box(F, a1 - 0.05, a1, 0.05, h, -0.03, 0.03, hex);
@@ -8727,6 +8725,8 @@ const handle = async (m, post) => {
         for (const y of [0.5, 1.0, 1.5]) for (const a of [-0.12, 1.12]) tube(F(a, y, -0.95), F(a, y, -1.35), 0.01, 0.01, 4, ["#232323"]); }
       pier(six, six.L);                                                   // number 6's corner with the corner lot
       fence(cor, 0.21, cor.L - 0.21); pier(cor, cor.L);
+      // down the drive (Ash's photo from the gate, 15 November 2026): a plain galvanised chainwire fence, as far as the backyard's palings
+      { const side = line(S.six[0], S.sideFence); fence(side, 0.25, side.L, { col: "#a3a7a5", plinth: false, h: 1.2 }); }
 
       // ---- number 10: its wall, letterbox, green gate, and the cream pier where number 12 starts
       const ten = line(S.ten[0], S.ten[1]), WU = (a, y) => uvOf(bsClamp((a - WALL.a0) * WPM, 0, CW), bsClamp(96 - y * WPM, 0, 96));
@@ -9628,7 +9628,7 @@ const handle = async (m, post) => {
     P.dispose = () => { try { parts?.remove(); } catch {} parts = null; };
     return P;
   }
-  // Traffic (Ash, 15 November 2026: "Animate some of the cars particularly near the player spawn"): about 16 everyday cars
+  // Traffic (Ash, 15 November 2026: "Animate some of the cars particularly near the player spawn"): a few everyday cars (5 in Moorooka, 8 elsewhere)
   // drive the streets around where you start, most within 300 m of it, at 30 to 50 km/h, keeping left. They mostly carry on
   // straight at a corner (now and then turning, never doubling back unless the street ends), slow down into bends and corners,
   // follow the car ahead at a distance, wait for one crossing in front, and stop for you. Each sits on its four wheels the way
@@ -9639,14 +9639,17 @@ const handle = async (m, post) => {
     const P = { frame() {}, dispose() {}, cars: [] }; if (!m.addParts) return P;
     const THREE = BS.B.THREE, M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), ONE = new THREE.Vector3(1, 1, 1), wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
     const COLS = ["#f2f2ee", "#b8bcc2", "#1d1f24", "#2d5ea8", "#a8262c", "#5c6670", "#e4e1d6", "#3f6b4a", "#8c8f94", "#1f3a66"];
-    const home = T.spawn || [F.pos.x, F.pos.z], N = 16, NEAR = 300, FAR = 800;
+    // fewer than at first (Ash, 15 November 2026: "too much traffic in moorooka and they overlap ... app getting a little laggy"):
+    // Moorooka's model has cars of its own on Beaudesert Road
+    const home = T.spawn || [F.pos.x, F.pos.z], N = cfg.place === "moo" ? 5 : 8, NEAR = 300, FAR = 800;
     let roads = null, nodes = null, dead = false, last = 0;
     const key = (x, z) => Math.round(x / 2) + "," + Math.round(z / 2);
     const start = C => { // a random point on a street, mostly near the start
       const R = Math.random() < 0.7 ? NEAR : FAR * 0.85;
       for (let t = 0; t < 40; t++) { const r = roads[Math.floor(Math.random() * roads.length)], i = Math.floor(Math.random() * (r.n - 1)), x = r.p[i * 2], z = r.p[i * 2 + 1];
         if (Math.hypot(x - home[0], z - home[1]) > R) continue;
-        Object.assign(C, { r, i, d: Math.random() < 0.5 ? 1 : -1, s: 0, v: 0, y: null, p: null, rl: null, still: 0 }); if (C.d < 0) C.i = i + 1; C.h = null; return true; }
+        if (P.cars.some(D => D !== C && D.x != null && Math.hypot(D.x - x, D.z - z) < 40)) continue;  // not on top of another
+        Object.assign(C, { r, i, d: Math.random() < 0.5 ? 1 : -1, s: 0, v: 0, y: null, p: null, rl: null, still: 0, x, z }); if (C.d < 0) C.i = i + 1; C.h = null; return true; }
       return false; };
     const seg = C => { const r = C.r, a = C.i, b = C.i + C.d; return [r.p[a * 2], r.p[a * 2 + 1], r.p[b * 2], r.p[b * 2 + 1]]; };
     const next = C => { // reached vertex C.i + C.d: carry on, or turn into a street that meets here
@@ -9688,11 +9691,11 @@ const handle = async (m, post) => {
         const rem = L - C.s, at = C.i + C.d, junction = (nodes.get(key(bx, bz)) || []).length > 1 || at === 0 || at === C.r.n - 1;
         if (Math.abs(wrap(h0 - fh)) > 0.3) want = Math.min(want, 6); else if (junction && rem < 16) want = Math.min(want, 5 + rem * 0.4);
         C.v += Math.max(-8 * dt, Math.min(3 * dt, want - C.v)); C.s += C.v * dt;
-        C.still = C.v < 0.2 ? (C.still || 0) + dt : 0; if (C.still > 10) { start(C); C.x = null; return; }  // stuck for 10 s: start again somewhere else
+        C.still = C.v < 0.2 ? (C.still || 0) + dt : 0; if (C.still > 10) { start(C); return; }  // stuck for 10 s: start again somewhere else
         for (let k = 0; k < 6 && C.s >= L; k++) { C.s -= L; next(C); [ax, az, bx, bz] = seg(C); L = Math.hypot(bx - ax, bz - az) || 0.01; }
         const h = Math.atan2(bx - ax, bz - az); C.h = C.h == null ? h : C.h + wrap(h - C.h) * Math.min(1, dt * 5);
         const t = Math.min(1, C.s / L), lx = Math.cos(C.h), lz = -Math.sin(C.h), x = ax + (bx - ax) * t + lx * C.r.lane, z = az + (bz - az) * t + lz * C.r.lane;
-        if (Math.hypot(x - home[0], z - home[1]) > FAR) { start(C); C.x = null; return; }
+        if (Math.hypot(x - home[0], z - home[1]) > FAR) { start(C); return; }
         C.x = x; C.z = z;
         // on its four wheels, as the car you drive sits (the middle of the four, tipped to the slope), eased so it never jumps
         const sx = Math.sin(C.h), sz = Math.cos(C.h), g = (a, b) => ground(x + sx * a - sz * b, z + sz * a + sx * b), yf = g(1.3, 0), yb = g(-1.3, 0), yr = g(0, 0.8), yl = g(0, -0.8);
@@ -10329,9 +10332,6 @@ const handle = async (m, post) => {
     m.setMinutes(bsMins(BS.view.ms));
     T.streets?.update();
     T.car?.frame(); T.peers?.frame(); T.me?.frame(); T.traffic?.frame(); T.critter?.frame(); T.no6?.frame();
-    // flying: held down at the lowest you can fly (Down, or C) for a moment, and you are on foot there
-    if (!T.walk && !T.tween && !F.drive && F.floor && F.hot?.f) { const low = F.pos.y <= F.floor() + 0.1, down = F.vert < -0.3 || F.keys.has("KeyC"), now = performance.now();
-      if (!(low && down)) T.downAt = 0; else if (!T.downAt) T.downAt = now; else if (now - T.downAt > 1200) { T.downAt = 0; F.hot.f(); } }
     // Moorooka's and Inverloch's models have no setLabelObstacles, so their place names are kept clear of the top buttons (and of
     // the sticks on a touch screen) here: a name that strays under them fades out, a few times a second
     if (!m.setLabelObstacles) { const now = performance.now(); if (now - (T.lblAt || 0) > 150) { T.lblAt = now;
@@ -10994,6 +10994,11 @@ const handle = async (m, post) => {
     setTimeout(() => { try { bsPlace(); } catch {} }, 400);
   }
   function showVersion() {
+    // Ash: the commit id, small and blue in the bottom right corner of every screen, Explore included (Ash, 15 November 2026:
+    // "If in as ash show the v number in blue small bottom right"). It lets taps through to whatever is under it.
+    { const ash = /^ash(ley)?$/i.test((S.name || "").trim()), commit = document.querySelector('meta[name="an-commit"]')?.content || "";
+      let b = $("verBadge"); if (ash && !b) { b = document.createElement("div"); b.id = "verBadge"; b.setAttribute("aria-hidden", "true"); document.body.appendChild(b); }
+      if (b) { b.hidden = !ash; b.textContent = commit || "dev"; } }
     const el = $("appVer"); if (!el) return;
     const me = /^(rod|rodney|ash|ashley)$/i.test((S.name || "").trim());
     el.hidden = !me; if (!me) return;
