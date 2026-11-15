@@ -1182,3 +1182,5 @@ a car but then move around as a possum not a car. Add a teleport to kingwell str
   where it touched; Jump lets go. The pilot is told. Others see the possum up there.
 - **Ride with**: tapping the button now takes you to the player it named, even if they've rolled a little out of reach.
 - **Version** at the bottom of Explore's Settings, for everyone.
+- **Your own chat bubble**: in your own eyes' view (no figure of you to put it over) what you said shows at the top of
+  the screen, under the buttons, as "You said", for the same 30 s. In the worker view it stays over your head.
