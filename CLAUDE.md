@@ -62,3 +62,17 @@ the awesome news chat", and in the Awesome News chat: "I want this chat to be th
 get the other ones to send you push requests. I want you to be the one that merges them in." The bullet points are
 Claude's reading of that instruction (including that "pull" covers
 merging the pull request); if Ash words it differently, their wording wins.
+
+## Inverloch's 3D model: build it from the full source only
+
+`town3d/inverloch-model.js` is built from ai-forge branch `claude/inverloch-combined` (`src/features/inverloch3d/`,
+`npm run build:inverloch-embed`). Do not build it from `claude/drive-any-car` or any other branch's `town3d` copy of
+Inverloch: that copy lacks what stands the town centre in the model, and a build from it hides the bakery, the
+shops, the war memorial and the library under plain grey buildings. Put new Inverloch model work on top of
+`claude/inverloch-combined`.
+
+Where this comes from: on 15 November 2026 Ash said "When we introduced multiplayer or cars into Inverloch explore
+we've lost tonnes of great work in design." The cause was the model being rebuilt from the wrong branch (see
+`town3d/README.md`, "Inverloch put back together"). This section is Claude's safeguard against it happening again; if
+Ash words it differently, their wording wins.
+

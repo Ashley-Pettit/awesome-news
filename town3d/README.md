@@ -976,3 +976,46 @@ Ash sent ten photos of the street around number 6 (where Moorooka's Explore star
 - **Guesses:** where the photos could not settle it: the exact position of the white gate (from photo 9's proportions),
   number 10's green gate being its own (its two cars are parked inside the wall), the doors' positions under number 10,
   and that the corner lot's fence matches number 6's all along Beaudesert Road.
+
+## Inverloch put back together: the town centre and the drivable cars in one model (15 November 2026)
+
+Ash: "When we introduced multiplayer or cars into Inverloch explore we've lost tonnes of great work in design. I want
+you to try to combine the models or start from scratch. Focus on the Inverloch city. I should be able to see the
+Inverloch bakery, shops, war memorial, clock, library etc. Make it higher res but always consider open time and lag."
+
+**What had gone wrong.** `inverloch-model.js` versions 15 to 17 were built from the `town3d` copy of Inverloch on
+ai-forge `claude/drive-any-car`. That copy split off on 11 November, before `clearPolygons`, `detailLatLon`, `onGround`
+parts, the sharp ground patches, shaped cars and the street detail were written. So the model ignored the app's request
+to keep the town block clear and drew plain grey buildings and its own road over the bakery, the shops, the memorial,
+the plaza and the library. Nothing in `app.html` had been lost.
+
+**The model (`?v=18`, ai-forge `claude/inverloch-combined`, pull request 15 there).** The full Inverloch source, with
+what the other copy had added brought onto it: `nearestCar`, `driveCar`, `solidAt`, kerbside cars on every street, cars
+leaning with the ground, people off the streets, the no-shadow power poles. New: `addCars`, so the app can stand its
+own cars in the block. **Build Inverloch from that branch only.**
+
+**In `app.html`:**
+
+- **Cars in the town centre can be driven.** The weather town's parked cars (`W.invParked`) are no longer carried
+  across as one fixed shape: the model stands its own shaped cars in the same bays (`addCars`), so Enter gets you into
+  any of them. `townModelPair` replays `addCars` when the sharper model takes over. The block's buildings are solid to
+  a car or plane (`T.solid`).
+- **Shop windows and doors** (`W.invShopWin`): one 2048 by 768 picture of eight displays (bakery, café, clothes, real
+  estate, chemist, surf and gifts, supermarket, newsagent), the library's bookshelves, the Hub's foyer and four doors,
+  cut up across all 82 shopfronts and the Hub's glass in one mesh: one picture, one draw. Lit from inside at night.
+- **Roofs from the air:** each building its own sheeting colour, with air conditioners and skylights on shop roofs.
+- **Jump to** gains "The library" and "The shops".
+- **The clock is off the road** (Ash, the same day: "the clock shouldn't actually be on the road. There should be two
+  lanes one each way. The clock is right next to them. The war memorial is behind the clock further away from the
+  road"). The kerb build-out the clock stands on ran 2.2 m past the edge of the traffic lane; it now stops at the lane
+  edge (`TOWN_PLAZA` pieces, `townOnPlaza`), and the clock is 0.8 m further back (`TOWN_CLOCK`), 7.8 m from the middle
+  of the street. Both lanes are clear. The memorial is 10 m behind the clock.
+- **Not done:** Ash also said the library is too close to the road. It is on its surveyed outline (its front 29 m from
+  the middle of A'Beckett Street, 19 m back from the kerb) and has been left there, pending his say-so.
+
+**Cost.** The block carried across is 69,000 corners, down from 141,000 (its 97 cars are now instances of three
+shapes). One more texture (2048 by 768) and one more draw. Opening measured the same as before on the test machine.
+
+**Checked** in the built Coastline News with a software renderer, desktop and phone sizes: the clock, bakery, memorial,
+library and shops by day, the bakery at night, the town from the air, getting into a parked car by the clock and
+driving it, other players starting, and the ordinary weather view. Not checked on a real phone.
