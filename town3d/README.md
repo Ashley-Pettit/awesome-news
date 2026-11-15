@@ -1596,3 +1596,12 @@ change my hairdo", Venky out the back of 10 Beaudesert Road ("Fix up this house"
   two stretches that do (under 150 m long, the street running straight on), that side now has one too, at the average of its
   neighbours' distance from the kerb: 50 gaps (Ash: "need to fix up some paths so they are connected"). Data only; a rebuild of the
   surface from ai-forge would bring the gaps back unless the same rule goes into `build_surface.py`.
+
+## Fronts closer to the photos; council doors on the paving (16 November 2026)
+
+- From Ash's Street View photos: Advance Mechanical Centre's name on a red band across the whole front, with the yellow kerb; the ward
+  office on a red band; the vet's pole sign with its green cross; TerryWhite Chemmart's strip as a row of green signs (TerryWhite
+  Chemmart, PHARMACY, CareClinic) with the hair salon and cafe beside; Snap Fitness's two stairs with red rails. Front options:
+  `band`, `pole`, `rails`, `kerbPaint`.
+- Logan's sliding doors stood at the building's average floor height, which was below the paving at the door ("in the dirt"); they
+  now stand on the precinct's ground at the door.
