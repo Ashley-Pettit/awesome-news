@@ -195,7 +195,7 @@ if os.path.exists(os.path.join(here, "local", "brands.json")):
                 ehead = ehead.replace(f'"{prop}" content="{nm}"', f'"{prop}" content="{t}"')
             ehead = (ehead.replace(b["tagline"], dsc)
                           .replace(f'content="{url}"', f'content="{eu}"').replace(f'href="{url}"', f'href="{eu}"')
-                          .replace(f"{url}share.png?v=2", f"{eu}explore-share.jpg?v=1")
+                          .replace(f"{url}share.png?v=2", f"{eu}explore-share.jpg?v=2")
                           .replace(f"{nm} app icon and name", f"{t}, seen from the air")
                           .replace(f'href="{d}/icon-192.png?v=1"', f'href="{d}/explore/explore-icon.png?v=1"')
                           .replace(f'href="{d}/icon-180.png?v=1"', f'href="{d}/explore/explore-icon.png?v=1"')
