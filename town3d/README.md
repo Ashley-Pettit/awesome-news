@@ -1679,3 +1679,13 @@ fine"): its `ground.webp` is 4096 x 4096, about 89 MB of graphics memory, and th
 in pushed the phone over. On a touch screen `moorooka-model.js` (`?v=35`, patched where it names `ground.webp`) and the preload use
 `moorooka/ground-2k.webp` (2048 x 2048, about 22 MB). Rebuilding the model from source loses the patch: put it back. The beta page's
 `moorooka-model-am.js` is not patched.
+## Logan on phones: lighter in memory (16 November 2026)
+
+Logan still closed on Ash's iPhone ("By break I mean the app closed on my iPhone"). Its meshes held about 230 MB in JavaScript as well
+as on the graphics card. `logan-model.js` `?v=43` (patched in the bundle; rebuilding from source loses it, so put it back):
+
+- the precinct's ground is cut into triangles of up to 14 m, not 7 (1.05 million points down to 365,000);
+- the precinct's buildings, furniture and wires, the footpaths and the blocks call `window.anFreeCpu(mesh)` (in `app.html`). On a
+  touch screen it lets go of each mesh's JavaScript copy once it's on the graphics card. Nothing reads them back (no raycasting).
+
+JavaScript memory after loading on a phone-size test: 418 MB before, 258 MB after.
