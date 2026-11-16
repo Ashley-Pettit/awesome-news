@@ -238,6 +238,10 @@ main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dock-h) + 4
 .lb-lgwrap { position: relative; }
 .lb-explore[hidden] { display: none; }
 .lb-food .lb-ic { background: #c2551f; }
+/* Explore inside the home-screen app: the 3D site over everything, dark round the notch and the home bar */
+.ex-frame { position: fixed; inset: 0; z-index: 100000; background: #13233a; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); box-sizing: border-box; }
+.ex-frame iframe { display: block; width: 100%; height: 100%; border: 0; background: #13233a; }
+body.exframed { overflow: hidden; }
 /* The #explore link: a loading screen over everything until the 3D town is up, so the app doesn't jump about underneath */
 .ex-load { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; align-content: center; gap: 18px; padding: 24px; text-align: center;
   background: radial-gradient(120% 90% at 50% 30%, #2b5f8a 0%, #12324d 55%, #0b1d2e 100%); color: #fff; transition: opacity 0.5s ease; }
@@ -8186,7 +8190,7 @@ const handle = async (m, post) => {
     a.needsUpdate = true; W.flashStart = performance.now() / 1000;
   }
   function bsLoop() {
-    if ($("weather").hidden || !BS.D) { cancelAnimationFrame(BS.raf); BS.raf = 0; return; }
+    if ($("weather").hidden || !BS.D || BS.exFrame) { cancelAnimationFrame(BS.raf); BS.raf = 0; return; }
     BS.raf = requestAnimationFrame(bsLoop);
     if (document.hidden) return;
     const t = performance.now() / 1000, real = bsClamp(t - BS.lastT, 0, 1), dt = Math.min(real, 0.1); BS.lastT = t;
@@ -8376,9 +8380,21 @@ const handle = async (m, post) => {
   // every way into a town's 3D model goes to its page there. (The beta pages keep their own, for trying changes.)
   const EXPLORE_HOME = "https://ashley-pettit.github.io/3dModels/", exploreMoved = /^\/awesome-news\//.test(location.pathname) && !/\/beta\//.test(location.pathname);
   const exploreSite = k => EXPLORE_HOME + ({ moo: "moorooka", logan: "logan", inv: "inverloch" }[k] || "inverloch") + "/explore/";
+  // ...but in the app on the home screen, a page outside it opens in Safari with its bars, where Explore used to fill the screen
+  // (Ash, 16 November 2026: "When it opened via awesome news it was full screen"). There the 3D site opens inside the app, over the
+  // news, filling the screen, and its way out (the X) comes back to the news. The news sits still meanwhile: no refresh, no sky
+  // drawn behind, no reload for a new version (nothing heavy mid-game: CLAUDE.md, the touch sticks).
+  const exStandalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  function exploreFrame(k) { if (BS.exFrame) return;
+    const box = document.createElement("div"); box.className = "ex-frame"; const fr = document.createElement("iframe");
+    fr.src = exploreSite(k); fr.title = "Explore in 3D"; fr.setAttribute("allow", "fullscreen; autoplay"); fr.setAttribute("allowfullscreen", "");
+    box.append(fr); document.body.append(box); document.body.classList.add("exframed"); BS.exFrame = box; try { fr.focus(); } catch {} }
+  function exploreFrameClose() { const box = BS.exFrame; if (!box) return; BS.exFrame = null; box.remove(); document.body.classList.remove("exframed");
+    if (!BS.raf && BS.D && !$("weather").hidden) { BS.lastT = performance.now() / 1000; BS.raf = requestAnimationFrame(bsLoop); } }
+  addEventListener("message", e => { if (e.origin === location.origin && e.data?.an === "explore-close") exploreFrameClose(); });
   function townModelOpen(viaExplore, which) {
     if (BS.town) return;
-    if (exploreMoved) { location.href = exploreSite(TOWNS[which] ? which : "inv"); return; }
+    if (exploreMoved) { const k = TOWNS[which] ? which : "inv"; if (exStandalone) exploreFrame(k); else location.href = exploreSite(k); return; }
     if (viaExplore) try { sessionStorage.setItem("an-ex-town", TOWNS[which] ? which : "inv"); } catch {}  // (for a reload mid-game: exReload)
     townAssetWatch();
     const cfg = TOWNS[which] || TOWNS.inv;
@@ -12937,7 +12953,7 @@ const handle = async (m, post) => {
       const v = await (await fetch(new URL("version.json", location.href).href + `?t=${Date.now()}`, { cache: "no-store" })).json();
       if (v?.build && v.build !== mine) newBuild = v.build;
     } catch {}
-    if (!newBuild || L.on || openSheet) return;
+    if (!newBuild || L.on || openSheet || BS.exFrame) return;
     // Once per new version (so a stale copy somewhere can't loop), with the build in the address so it's fetched fresh.
     let tried = ""; try { tried = sessionStorage.getItem(KEY_PREFIX + "an.reloadFor") || ""; } catch {}
     if (tried === newBuild) return;
@@ -13102,8 +13118,8 @@ const handle = async (m, post) => {
     setInterval(() => { if (!document.hidden) checkBuild(); }, 10 * 60000);
     setInterval(() => { if (!document.hidden) loadWeather(); }, 15 * 60000);
     // Pick up new stories while the app stays open.
-    setInterval(() => { if (!document.hidden) loadStatic(false); }, 10 * 60000);
-    document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - Date.parse(state.status?.updatedAt || 0) > 30 * 60000) loadStatic(false); });
+    setInterval(() => { if (!document.hidden && !BS.exFrame) loadStatic(false); }, 10 * 60000);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden && !BS.exFrame && Date.now() - Date.parse(state.status?.updatedAt || 0) > 30 * 60000) loadStatic(false); });
   });
 })();
 </script>

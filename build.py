@@ -51,6 +51,7 @@ head = f"""<!doctype html>
    #explore on the main page is sent on by the app, which knows your area. Not the beta pages. */
 (function () {{ try {{
   var p = location.pathname; if (!/^\/awesome-news\//.test(p) || /\/beta\//.test(p)) return;
+  if (matchMedia("(display-mode: standalone)").matches || navigator.standalone === true) return;  /* in the home-screen app: the app opens it inside itself */
   var m = document.querySelector('meta[name="an-explore"]'), h = location.hash.slice(1),
       area = /\/logan\//.test(p) ? "logan" : /\/moorooka\//.test(p) ? "moo" : /\/inverloch\//.test(p) ? "inv" : "";
   var k = m ? m.content : h === "explore-logan" ? "logan" : h === "explore-moorooka" ? "moo" : h === "explore-inverloch" ? "inv" : h === "explore" ? area : "";
