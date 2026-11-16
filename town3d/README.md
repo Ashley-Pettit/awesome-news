@@ -1673,3 +1673,9 @@ Logan crashed on Ash's iPhone (the tab ran out of memory and reloaded). Its grou
 75 MB of graphics memory. On a touch screen (`window.anSmallGround`, set in `app.html`), `logan-model.js` (`?v=42`, patched where it
 names its files) and the preload use `ground-2k.webp` (2048 x 1728, about 19 MB) instead. Computers still get the full photo. If
 `ground.webp` is remade, remake `ground-2k.webp` from it (Lanczos, WebP quality 86).
+
+Moorooka the same, from 16 November 2026 (Ash: "When I load moorooka it loads, I play for 2 secs, crashes, reloads, and is then
+fine"): its `ground.webp` is 4096 x 4096, about 89 MB of graphics memory, and the sharper ground tiles that arrive a couple of seconds
+in pushed the phone over. On a touch screen `moorooka-model.js` (`?v=35`, patched where it names `ground.webp`) and the preload use
+`moorooka/ground-2k.webp` (2048 x 2048, about 22 MB). Rebuilding the model from source loses the patch: put it back. The beta page's
+`moorooka-model-am.js` is not patched.
