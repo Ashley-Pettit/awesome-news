@@ -1394,8 +1394,9 @@ body.bscam #bsTown .bs-review, body.bscam #bsTown .bs-ridecard { visibility: hid
 .bs-camtip { position: absolute; z-index: 6; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); transform: translateX(-50%); margin: 0; padding: 6px 12px; border-radius: 999px; background: rgba(20, 22, 34, 0.78); color: #fff; font: 600 0.78rem/1.4 var(--ui); white-space: nowrap; pointer-events: none; transition: opacity 0.6s; }
 .bs-camtip[hidden] { display: none; } .bs-camtip.fade { opacity: 0.25; }
 .bs-camtip kbd { display: inline-block; margin: 0 2px; padding: 0 5px; border-radius: 4px; background: #fff; color: #1b1830; font: 700 0.7rem/1.5 var(--ui); }
-/* on a computer the keys do these (listed in the controls): Get in and Get out, and Boost */
-@media (hover: hover) and (pointer: fine) { body.bstown #bsCarBtn, body.bstown #bsBoostBtn { display: none !important; } }
+/* on a computer Shift does Boost (listed in the controls). Get in the car shows on a computer too, with its Enter keycap, so players
+   see they can get in (Ash, 16 November 2026: "Add enter back into the screen so players on the [computer] can get into the car") */
+@media (hover: hover) and (pointer: fine) { body.bstown #bsBoostBtn { display: none !important; } }
 /* a suggested map change being reviewed (Ash, from Settings): who sent it, then Approve, Deny, Next */
 .bs-review { pointer-events: auto; position: absolute; z-index: 6; left: 50%; top: calc(124px + env(safe-area-inset-top)); transform: translateX(-50%); width: min(400px, calc(100% - 32px)); box-sizing: border-box; padding: 12px 14px; border-radius: 16px; background: rgba(22, 24, 34, 0.92); color: #fff; font: 500 0.86rem/1.35 var(--ui); }
 .bs-review[hidden] { display: none; }
@@ -2349,10 +2350,11 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
   // 2048 (about 22 MB, not 89), moorooka-model.js ?v=35 (Ash, 16 November 2026: "When I load moorooka it loads, I play for 2 secs,
   // crashes, reloads, and is then fine").
   window.anSmallGround = matchMedia("(pointer: coarse)").matches;
-  // and on a phone, Logan's big fixed meshes (the precinct's ground and buildings, the footpaths, the blocks) let go of their copy in
-  // JavaScript once they're on the graphics card: about 80 MB that sat there twice over (Ash, 16 November 2026: the app closed on his
-  // iPhone in Logan). Nothing reads them back. logan-model.js ?v=43 calls this, and draws the precinct's ground in 14 m triangles, not 7.
-  window.anFreeCpu = mesh => { if (!window.anSmallGround) return; const g = mesh?.geometry; if (!g?.attributes) return;
+  // and Logan's big fixed meshes (the precinct's ground and buildings, the footpaths, the blocks) let go of their copy in JavaScript
+  // once they're on the graphics card: about 80 MB that sat there twice over (Ash, 16 November 2026: the app closed on his iPhone in
+  // Logan; then "Consider doing the same change you did for phone for pc to reduce lag", so computers too). Nothing reads them back.
+  // logan-model.js ?v=43 calls this, and draws the precinct's ground in 14 m triangles, not 7.
+  window.anFreeCpu = mesh => { const g = mesh?.geometry; if (!g?.attributes) return;
     g.computeBoundingSphere(); g.computeBoundingBox(); const free = function () { this.array = null; };
     for (const k in g.attributes) g.attributes[k].onUpload?.(free); g.index?.onUpload?.(free); };
   // When the phone reloads the page in the middle of a game (iOS does when a tab runs out of memory), come back to the town you were
