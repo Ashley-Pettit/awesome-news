@@ -1350,7 +1350,11 @@ body.bspossum .bs-fly-x.bs-boost.on { background: #ffd166; }
   background: var(--bs-scrim); color: var(--bs-ink); font: 500 0.78rem/1.35 var(--ui); text-align: center; pointer-events: none; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14); }
 .bs-keys[hidden] { display: none; }
 /* another player's name, over them (townPeers) */
-.bs-peer { position: absolute; left: 0; top: 0; z-index: 1; padding: 2px 8px; border-radius: 999px; background: rgba(20, 22, 34, 0.72); color: #fff; font: 600 0.72rem/1.4 var(--ui); white-space: nowrap; pointer-events: none; will-change: transform; }
+.bs-peer { position: absolute; left: 0; top: 0; z-index: 1; padding: 3px 10px; border-radius: 999px; background: rgba(20, 22, 34, 0.82); color: #fff; font: 700 0.8rem/1.4 var(--ui); white-space: nowrap; pointer-events: none; will-change: transform; box-shadow: 0 0 0 2px #ffd166; }
+/* a player off the side of the screen or behind you: their name pinned to that edge, pointing their way, with how far (Ash, 16
+   November 2026: "Make the players a bit easier to locate") */
+.bs-peer-edge { position: absolute; left: 0; top: 0; z-index: 1; padding: 4px 10px; border-radius: 999px; background: #ffd166; color: #1b1830; font: 700 0.76rem/1.3 var(--ui); white-space: nowrap; pointer-events: none; will-change: transform; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35); }
+.bs-peer-edge[hidden] { display: none; }
 .bs-peer[hidden] { display: none; }
 /* what a player has just said: a white speech bubble over them, their name small on top, for about 30 s */
 .bs-peer.said { max-width: 220px; padding: 7px 11px 8px; border-radius: 14px; background: #fff; color: #1b1830; font: 600 0.82rem/1.3 var(--ui); white-space: normal; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25); }
@@ -1426,6 +1430,13 @@ body.bscam #bsTown .bs-review, body.bscam #bsTown .bs-ridecard { visibility: hid
 .bs-fly-x.bs-sprint.on { background: #8fd12e; } .bs-fly-x.bs-jumpb { bottom: calc(254px + env(safe-area-inset-bottom)); background: #fff; color: #1b1830; } .bs-fly-x.bs-sprint[hidden] { display: none; }
 .bs-askname { flex-wrap: wrap; } .bs-askname p { flex: 1 0 100%; margin: 2px 4px 2px; color: #fff; font: 700 0.86rem var(--ui); }
 .bs-askname .skip { background: rgba(255, 255, 255, 0.16); color: #fff; }
+/* the player name, asked once before you play: over everything until you type a name or Skip (Ash, 16 November 2026: "Make the
+   name field a bit bigger. User must press skip or enter name") */
+.bs-askwrap { pointer-events: auto; position: absolute; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(10, 12, 20, 0.6); touch-action: none; }
+.bs-askwrap .bs-askname { position: static; transform: none; width: min(420px, 100%); gap: 10px; padding: 16px; }
+.bs-askwrap .bs-askname p { font-size: 1.05rem; margin-bottom: 4px; }
+.bs-askwrap .bs-askname input { flex: 1 0 100%; min-height: 52px; padding: 12px 14px; font-size: 1.15rem; border-radius: 12px; box-sizing: border-box; }
+.bs-askwrap .bs-askname button { flex: 1 1 0; min-height: 46px; font-size: 1rem; border-radius: 12px; }
 .bs-chatbar input { flex: 1; min-width: 0; height: 40px; padding: 0 12px; border: 0; border-radius: 11px; background: #fff; color: #1b1830; font: 500 16px var(--ui); user-select: text; -webkit-user-select: text; }
 .bs-chatbar button { height: 40px; padding: 0 14px; border: 0; border-radius: 11px; background: #ffd166; color: #1b1830; font: 700 0.86rem var(--ui); cursor: pointer; }
 /* my player: a button on the right edge, above Emote, and the small panel it opens */
@@ -10626,18 +10637,23 @@ const handle = async (m, post) => {
     emoteBtn.onclick = () => { P.menu(); emoteBtn.blur(); };
     let room = null, sendPose = null, sendName = null, dead = false, lastSent = null, lastAt = 0, tick = 0;
     let asked = true; try { asked = !!(localStorage.getItem("an-player") || localStorage.getItem("an-player-asked")); } catch {}
-    let askBox = null;
+    let askBox = null, askWrap = null;
+    const askKeys = e => { if (askBox && !askBox.contains(e.target)) e.stopPropagation(); };  // (the game's keys wait until it's answered)
     if (!asked) setTimeout(() => { if (dead) return; askBox = document.createElement("form"); askBox.className = "bs-chatbar bs-askname";
+      askWrap = document.createElement("div"); askWrap.className = "bs-askwrap"; askWrap.append(askBox);
+      ["keydown", "keyup"].forEach(t => window.addEventListener(t, askKeys, true));
       const q = document.createElement("p"), inp = document.createElement("input"), go = document.createElement("button"), skip = document.createElement("button");
       q.textContent = "What should other players call you?"; inp.type = "text"; inp.maxLength = 16; inp.autocomplete = "off"; inp.placeholder = "Your player name"; inp.setAttribute("aria-label", "Your player name");
       go.type = "submit"; go.textContent = "Join"; skip.type = "button"; skip.className = "skip"; skip.textContent = "Skip";
-      const done = name => { try { if (name) localStorage.setItem("an-player", name); localStorage.setItem("an-player-asked", "1"); } catch {} askBox.remove(); askBox = null; tell(); toast(`You're ${playerName()}. Change it any time in Settings.`, 2800); };
-      askBox.onsubmit = e => { e.preventDefault(); done(inp.value.replace(/[<>]/g, "").trim().slice(0, 16)); };
+      const done = name => { try { if (name) localStorage.setItem("an-player", name); localStorage.setItem("an-player-asked", "1"); } catch {} askWrap.remove(); askBox = askWrap = null;
+        ["keydown", "keyup"].forEach(t => window.removeEventListener(t, askKeys, true)); tell(); toast(`You're ${playerName()}. Change it any time in Settings.`, 2800); };
+      askBox.onsubmit = e => { e.preventDefault(); const v = inp.value.replace(/[<>]/g, "").trim().slice(0, 16); if (v) done(v); else { inp.placeholder = "Type a name, or tap Skip"; inp.focus(); } };
       skip.onclick = () => done("");
       inp.onkeydown = e => e.stopPropagation(); inp.onkeyup = e => e.stopPropagation();
-      askBox.append(q, inp, go, skip); chatBar.parentElement.appendChild(askBox); }, 1800);
-    const label = id => { const el = document.createElement("div"); el.className = "bs-peer"; el.hidden = true; box.appendChild(el); return el; };
-    const drop = id => { riders?.delete(id); const q = peers.get(id); if (!q) return; try { q.parts?.remove(); } catch {} q.el.remove(); peers.delete(id); P.count = peers.size; };
+      askBox.append(q, inp, go, skip); chatBar.parentElement.appendChild(askWrap); try { inp.focus({ preventScroll: true }); } catch {} }, 1800);
+    const label = id => { const el = document.createElement("div"); el.className = "bs-peer"; el.hidden = true; box.appendChild(el);
+      const edge = el.edge = document.createElement("div"); edge.className = "bs-peer-edge"; edge.hidden = true; box.appendChild(edge); return el; };
+    const drop = id => { riders?.delete(id); const q = peers.get(id); if (!q) return; try { q.parts?.remove(); } catch {} q.el.edge?.remove(); q.el.remove(); peers.delete(id); P.count = peers.size; };
     const got = (a, id) => { if (!Array.isArray(a) || a.length < 7 || !a.slice(0, 4).every(Number.isFinite)) return;
       let q = peers.get(id); if (!q) { if (peers.size >= 12) return; q = { el: label(id), name: "", kind: "", parts: null, a: null, b: null, colour: TOPS[[...String(id)].reduce((n, ch) => n + ch.charCodeAt(0), 0) % TOPS.length] }; peers.set(id, q); P.count = peers.size; }
       const now = performance.now(), s = { x: a[0], y: a[1], z: a[2], h: a[3], p: +a[5] || 0, r: +a[6] || 0, k: SHAPES[String(a[4]).split("~")[0]] ? String(a[4]).slice(0, 40) : a[4] === "none" ? "none" : "walk", t: now };
@@ -10835,11 +10851,18 @@ const handle = async (m, post) => {
         if (kind === "possum") q.parts.setMatrix(1, M.clone().multiply(new THREE.Matrix4().makeTranslation(0, 0, -0.27)).multiply(new THREE.Matrix4().makeRotationY(0.22 * Math.sin(now / 160))).elements);  // its tail, swaying
         // their name over them, where they are on the screen
         const top = kind === "walk" ? 2.1 : kind === "builder" ? 2.25 : kind === "bus" ? 3.7 : kind === "possum" ? 0.9 : 2.9, dx = s.x - cam.x, dy = s.y + top - cam.y, dz = s.z - cam.z, depth = dx * fx + dy * fy + dz * fz;
-        if (depth < 1 || depth > 600 || !q.name) { q.el.hidden = true; continue; }
-        const sx = w / 2 + (dx * rx + dz * rz) / depth * f * (h / 2), sy = h / 2 - (dx * ux + dy * uy + dz * uz) / depth * f * (h / 2);
-        if (sx < -40 || sx > w + 40 || sy < 0 || sy > h) { q.el.hidden = true; continue; }
-        q.el.hidden = false; q.el.style.transform = `translate(${Math.round(sx)}px, ${Math.round(sy)}px) translate(-50%, -100%)`; } };
-    P.dispose = () => { document.removeEventListener("pointerdown", meOut, true); document.body.classList.remove("bsme"); meBtn.hidden = true; meBox.hidden = true; meBtn.onclick = null; clearTimeout(joining); emoteBtn.hidden = true; emoteBox.hidden = true; emoteBtn.onclick = null; chatBtn.hidden = true; chatBar.hidden = true; chatBtn.onclick = null; chatBar.onsubmit = null; meEl.remove(); askBox?.remove(); dead = true; for (const id of [...peers.keys()]) drop(id); try { room?.leave(); } catch {} room = null; sendPose = null; };
+        const sx = depth < 1 ? 0 : w / 2 + (dx * rx + dz * rz) / depth * f * (h / 2), sy = depth < 1 ? 0 : h / 2 - (dx * ux + dy * uy + dz * uz) / depth * f * (h / 2);
+        const onScreen = depth >= 1 && sx >= -40 && sx <= w + 40 && sy >= 0 && sy <= h, edge = q.el.edge, mine = riders.has(id) && T.car?.in;
+        if (!q.name || !onScreen || depth > 1500) q.el.hidden = true;
+        else { q.el.hidden = false; q.el.style.transform = `translate(${Math.round(sx)}px, ${Math.round(sy)}px) translate(-50%, -100%)`; }
+        // off the screen (or too far to name): pinned to the left or right edge, whichever way they are, with how far
+        if (edge) { if (onScreen && depth <= 1500 || mine) edge.hidden = true;
+          else { const side = dx * rx + dz * rz, right = depth < 1 ? side >= 0 : sx > w / 2, dist = Math.hypot(s.x - cam.x, s.z - cam.z),
+              t2 = (right ? "" : "\u25c0 ") + (q.name || "A player") + " " + (dist < 1000 ? Math.round(dist / 10) * 10 + " m" : (dist / 1000).toFixed(1) + " km") + (right ? " \u25b6" : "");
+            if (edge.textContent !== t2) edge.textContent = t2; edge.hidden = false;
+            const ey = Math.round(bsClamp(depth < 1 ? h * 0.4 : sy, h * 0.22, h * 0.62));
+            edge.style.transform = right ? `translate(${w - 8}px, ${ey}px) translate(-100%, -50%)` : `translate(8px, ${ey}px) translate(0, -50%)`; } } } };
+    P.dispose = () => { try { askWrap?.remove(); } catch {} ["keydown", "keyup"].forEach(t => window.removeEventListener(t, askKeys, true)); document.removeEventListener("pointerdown", meOut, true); document.body.classList.remove("bsme"); meBtn.hidden = true; meBox.hidden = true; meBtn.onclick = null; clearTimeout(joining); emoteBtn.hidden = true; emoteBox.hidden = true; emoteBtn.onclick = null; chatBtn.hidden = true; chatBar.hidden = true; chatBtn.onclick = null; chatBar.onsubmit = null; meEl.remove(); askBox?.remove(); dead = true; for (const id of [...peers.keys()]) drop(id); try { room?.leave(); } catch {} room = null; sendPose = null; };
     return P;
   }
   // The numbers behind the cars and planes, which Ash can change in Settings > Admin (14 November 2026: "Allow me to edit all these
@@ -11608,6 +11631,12 @@ const handle = async (m, post) => {
     // the roofs of the cars near the possum, found once a frame: the nearest parked car, the app's own cars and the traffic
     // (Ash, 15 November 2026: "let the possum also get ontop of cars"): it runs up on to one like a low wall, and drops off the edge
     let carTops = [], gripAsk = false, gripLook = 0;  /* (Grip pressed: taken up on the possum's next frame) */
+    // getting off a car it holds on to: it hops off the side it's on, clear of the car, down on to the road. Before, it let go straight
+    // up and landed back on the roof, and rode on there (Ash, 16 November 2026: "When gripped onto the car as the possum I couldn't get
+    // off. Make it so get off works")
+    const hopOff = (P, cx, cz, ch, hw, side) => { const sn = Math.sin(ch), cs = Math.cos(ch), out = (side >= 0 ? 1 : -1) * ((hw || 1) + 0.9);
+      const along = (P.x - cx) * sn + (P.z - cz) * cs; P.x = cx + sn * along + cs * out; P.z = cz + cs * along - sn * out;
+      P.grip = P.cling = P.ride = null; P.mode = "air"; P.vy = 4; P.v = 0; toast("You've got off.", 1800); };
     const findCarTops = (x, z) => { const out = [], add = (cx, cz, h, bus, ref) => { if (cx == null || h == null || Math.hypot(cx - x, cz - z) > 14) return; out.push({ ref, x: cx, z: cz, s: Math.sin(h), c: Math.cos(h), hl: bus ? 6 : 2.25, hw: bus ? 1.25 : 0.95, top: ground(cx, cz) + (bus ? 3.3 : 1.45) }); };
       const pc = m.nearestCar?.(x, z, 14); if (pc) add(pc.x, pc.z, pc.heading, false);
       for (const G of owns) add(G.x, G.z, G.h, G.bus, G); for (const D of T.traffic?.cars || []) add(D.x, D.z, D.h, false, D);
@@ -11831,23 +11860,33 @@ const handle = async (m, post) => {
         // the parked one was, so it grabs on to theirs). Grip again, or Jump, lets go (Ash, 16 November 2026: "Add a thing to the
         // possum called grip so even if not on the side of the car I can hold onto a car no one is driving yet")
         if (gripAsk) { gripAsk = false;
-          if (P.grip || P.cling) { if (P.cling) T.peers?.ride?.(P.cling.id, false); P.grip = P.cling = null; P.mode = "air"; P.vy = 3; toast("You've let go.", 1800); }
+          if (P.grip || P.cling) { const g = P.grip, c = P.cling, q = c && (T.peers?.list?.() || []).find(v => v.id === c.id);
+            if (c) T.peers?.ride?.(c.id, false);
+            if (g?.ref?.x != null) hopOff(P, g.ref.x, g.ref.z, g.ref.h, g.hw, g.side); else if (q) hopOff(P, q.x, q.z, q.h, q.k === "bus" ? 1.25 : 1.7, c.side);
+            else { P.grip = P.cling = null; P.mode = "air"; P.vy = 3; toast("You've got off.", 1800); } }
           else { const best = gripFind(P);
             if (!best) toast("Nothing to grip here. Get right up to a car first.", 2200);
             else if (best.peer) { const q = best.peer; P.cling = { id: q.id, name: q.name, along: bsClamp(best.along, -2.4, 2.4), side: bsClamp(best.side, -0.5, 0.5), dh: wrap(P.h - q.h) }; P.v = 0; P.ride = null;
-              T.peers?.ride?.(q.id, 2, [P.cling.along, P.cling.side, P.cling.dh].map(v => Math.round(v * 100) / 100)); toast(`Holding on to ${q.name}! Jump or Grip to let go.`, 2600); }
-            else { P.grip = { ref: best.ref, top: best.top, along: bsClamp(best.along, 0.5 - best.hl, best.hl - 0.5), side: bsClamp(best.side, 0.35 - best.hw, best.hw - 0.35), dh: wrap(P.h - best.h), last: [best.x, best.z] }; P.ride = null; P.v = 0; snd.squeak(1.1);
-              toast(best.ref.parked || best.ref === gold || owns.includes(best.ref) ? "Gripping the car. When someone drives it away, you go too. Jump or Grip to let go." : "Gripping the car! Jump or Grip to let go.", 3200); } } }
+              T.peers?.ride?.(q.id, 2, [P.cling.along, P.cling.side, P.cling.dh].map(v => Math.round(v * 100) / 100)); toast(`Holding on to ${q.name}! Jump or Get off to let go.`, 2600); }
+            else { P.grip = { ref: best.ref, top: best.top, hw: best.hw, along: bsClamp(best.along, 0.5 - best.hl, best.hl - 0.5), side: bsClamp(best.side, 0.35 - best.hw, best.hw - 0.35), dh: wrap(P.h - best.h), last: [best.x, best.z] }; P.ride = null; P.v = 0; snd.squeak(1.1);
+              toast(best.ref.parked || best.ref === gold || owns.includes(best.ref) ? "Gripping the car. When someone drives it away, you go too. Jump or Get off to let go." : "Gripping the car! Jump or Get off to let go.", 3200); } } }
         if (P.grip && !P.cling) { const g = P.grip, r = g.ref;  // carried along: its place on the roof turns and moves with the car
           if (!r || r.x == null || r.h == null || Math.hypot(r.x - g.last[0], r.z - g.last[1]) > 30) { P.grip = null; P.mode = "air"; P.vy = 0; toast("The car's gone. You've let go.", 2200); }  // (a car of the traffic that has been put back somewhere else)
           else { const sn = Math.sin(r.h), cs = Math.cos(r.h), x = r.x + sn * g.along + cs * g.side, z = r.z + cs * g.along - sn * g.side;
             P.v = Math.hypot(x - P.x, z - P.z) / Math.max(dt, 1e-3); P.x = x; P.z = z; P.y = ground(r.x, r.z) + g.top; P.h = r.h + g.dh; P.mh = P.h; P.mode = "ground"; P.vy = 0; g.last = [r.x, r.z];
-            if (jump && !P.jumped) { P.grip = null; P.mode = "air"; P.vy = 8; toast("You've let go.", 1800); } } }
+            if (jump && !P.jumped) hopOff(P, r.x, r.z, r.h, g.hw, g.side);
+            // a parked car another player has got into and driven off: on your screen the parked one stays put, so hold on to theirs
+            // instead, and they (and everyone) see you go with them (Ash, 16 November 2026: "When holding onto a car as the possum my
+            // friend couldn't see the possum")
+            else if (r.parked) { const q = (T.peers?.list?.() || []).find(v => CLING[v.k] && v.k !== "bus" && Math.hypot(v.x - r.x, v.z - r.z) < 4 && Math.hypot(v.x - r.x, v.z - r.z) > 0.6);
+              if (q) { const dx = P.x - q.x, dz = P.z - q.z, along = dx * Math.sin(q.h) + dz * Math.cos(q.h), side = dx * Math.cos(q.h) - dz * Math.sin(q.h);
+                P.cling = { id: q.id, name: q.name, along: bsClamp(along, -2.4, 2.4), side: bsClamp(side, -0.5, 0.5), dh: wrap(P.h - q.h) }; P.grip = null;
+                T.peers?.ride?.(q.id, 2, [P.cling.along, P.cling.side, P.cling.dh].map(v => Math.round(v * 100) / 100)); toast(`${q.name || "Someone"} is driving off with you on!`, 2600); } } } }
         const CL = P.cling, cq = CL && (T.peers?.list?.() || []).find(v => v.id === CL.id);
         if (CL && (!cq || !CLING[cq.k])) { P.cling = null; P.mode = "air"; P.vy = 0; toast(`${CL.name} has gone. You're off.`, 2200); }
         if (P.cling) { const q = cq, sn = Math.sin(q.h), cs = Math.cos(q.h), x = q.x + sn * CL.along + cs * CL.side, z = q.z + cs * CL.along - sn * CL.side; P.grip = null;
           P.v = Math.hypot(x - P.x, z - P.z) / Math.max(dt, 1e-3); P.x = x; P.z = z; P.y = q.y + CLING[q.k]; P.h = q.h + CL.dh; P.mode = "ground"; P.vy = 0;
-          if (jump && !P.jumped) { P.cling = null; P.mode = "air"; P.vy = 8; T.peers?.ride?.(CL.id, false); toast("You've let go.", 1800); } }
+          if (jump && !P.jumped) { T.peers?.ride?.(CL.id, false); hopOff(P, q.x, q.z, q.h, q.k === "bus" ? 1.25 : 1.7, CL.side); } }
         else if (P.grip) { /* gripping a car: carried, above */ }
         else if (P.mode === "climb") { const W = P.wall; P.v = 0;
           if (thr < -0.1 || drop || (jump && !P.jumped)) { P.mode = "air"; P.vy = jump ? 6 : 0; P.h += Math.PI; P.wall = null; }  // lets go (stick back, or Jump to spring off), turning round as it drops
@@ -11905,7 +11944,7 @@ const handle = async (m, post) => {
         const up = P.y - ground(P.x, P.z);
         hint(P.mode === "climb" ? (touch ? "Climbing. Stick forward to go up, back to let go" : "Climbing. W goes up, S lets go") : "");
         if (mission) tickMission(dt);
-        if ((gripLook -= dt) <= 0) { gripLook = 0.25; const on = !!(P.grip || P.cling), can = on || !!gripFind(P); gripBtn.hidden = !can; gripBtn.textContent = on ? "Let go" : "Grip"; gripBtn.classList.toggle("on", on); }
+        if ((gripLook -= dt) <= 0) { gripLook = 0.25; const on = !!(P.grip || P.cling), can = on || !!gripFind(P); gripBtn.hidden = !can; gripBtn.textContent = on ? "Get off" : "Grip"; gripBtn.classList.toggle("on", on); }
         o = P; D = P.cling || P.grip ? 9 : 3.4 + Math.min(3, Math.abs(P.v) / 12); text = P.cling ? `Holding on to ${P.cling.name} \u00b7 ${Math.round(P.v * 3.6)} km/h` : P.grip ? `Gripping the car \u00b7 ${Math.round(P.v * 3.6)} km/h` : P.mode === "climb" ? "Climbing \u00b7 " + Math.round(up) + " m" : Math.round(Math.abs(P.v) * 3.6) + " km/h" + (up > 1.5 ? " \u00b7 " + Math.round(up) + " m up" : "");
         if (mission) text = `\ud83d\udfe1 ${mission.got}/${mission.rings.length} rings \u00b7 ${Math.max(0, Math.ceil(mission.t))} s \u00b7 ` + text;
       } else { const P = plane, K = P.k, jet = boost && canBoost(P), top = (jet ? JET : CRUISE) * K;  // (only the golden plane has a boost)
