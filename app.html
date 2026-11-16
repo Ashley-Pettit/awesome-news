@@ -2345,7 +2345,9 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
   // name the model, from any of the apps. Holds which model: "inv", "moo" or "logan", or "" for none.
   if (document.querySelector('meta[name="an-explore"]')) addEventListener("beforeinstallprompt", e => { e.preventDefault(); window.anInstall = e; });  // Settings > Make it an app
   // Logan on a phone gets its ground photo at half size, 2048 x 1728 (about 19 MB of graphics memory, not 75): the full one ran
-  // the iPhone out of memory and the page reloaded (Ash, 16 November 2026). logan-model.js ?v=42 reads this.
+  // the iPhone out of memory and the page reloaded (Ash, 16 November 2026). logan-model.js ?v=42 reads this. Moorooka the same, 2048 x
+  // 2048 (about 22 MB, not 89), moorooka-model.js ?v=35 (Ash, 16 November 2026: "When I load moorooka it loads, I play for 2 secs,
+  // crashes, reloads, and is then fine").
   window.anSmallGround = matchMedia("(pointer: coarse)").matches;
   // and on a phone, Logan's big fixed meshes (the precinct's ground and buildings, the footpaths, the blocks) let go of their copy in
   // JavaScript once they're on the graphics card: about 80 MB that sat there twice over (Ash, 16 November 2026: the app closed on his
@@ -2376,7 +2378,7 @@ body.bsfly .toast.show { transform: translate(-50%, 0); }
   if (pendingExplore) setTimeout(() => { try { const cfg = TOWNS[pendingExplore]; if (!cfg) return;
       const hint = (href, as) => { const l = document.createElement("link"); l.rel = "preload"; l.as = as; l.href = href; if (as !== "script") l.crossOrigin = "anonymous"; document.head.appendChild(l); };
       hint("https://cdnjs.cloudflare.com/ajax/libs/three.js/0.152.2/three.min.js", "script"); hint(cfg.src, "script");
-      for (const f of cfg.pre || []) hint(cfg.assets + (f === "ground.webp" && cfg.place === "logan" && window.anSmallGround ? "ground-2k.webp" : f), /\.webp$/.test(f) && cfg.place !== "logan" ? "image" : "fetch"); } catch {} }, 0);
+      for (const f of cfg.pre || []) hint(cfg.assets + (f === "ground.webp" && (cfg.place === "logan" || cfg.place === "moo") && window.anSmallGround ? "ground-2k.webp" : f), /\.webp$/.test(f) && cfg.place !== "logan" ? "image" : "fetch"); } catch {} }, 0);
   const hash = pendingStory || pendingTV || pendingExplore ? "" : rawHash;
   const state = {
     tab: hash || store.get("brief.tab3", "foryou"),
@@ -8335,7 +8337,7 @@ const handle = async (m, post) => {
   // of: "Logan"), floodNote (the line under the list) and floodWarn (show the not-official notice first, and a banner while a flood is on).
   const TOWNS = {
     inv: { lib: "InverlochModel", src: TOWN3D + "inverloch-model.js?v=20", assets: TOWN3D, place: "inv", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.invSpot, air: [300, 620, 2350, 0.04, -0.4] },
-    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=34", assets: TOWN3D + "moorooka/", place: "moo", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
+    moo: { lib: "MoorookaModel", src: TOWN3D + "moorooka/moorooka-model.js?v=35", assets: TOWN3D + "moorooka/", place: "moo", pre: ["town.json", "height.png", "ground.webp"], up: () => !!BS.W?.moo, air: [-150, 620, 1350, 0, -0.5],
       walkStart: { x: -269.8, z: -991.4, yaw: -1.623 },  // Ash's pick for where Moorooka starts: the Beaudesert Road footpath, looking at the house he chose
       // its floods: widest over the Oxley Creek flats along the model's western edge, seen from the east. floodWarn: the not-official notice has to be accepted
       // before the list opens, and a banner says the same while a flood is showing (Ash asked for both).
