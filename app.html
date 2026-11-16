@@ -8372,8 +8372,13 @@ const handle = async (m, post) => {
   }
   // viaExplore: from "Virtually explore Inverloch" or "Virtually explore Moorooka". If the model can't load there, you stay
   // in the weather's own town instead. which: "inv" (the default), "moo" or "logan".
+  // Explore lives on its own site now (Ash, 16 November 2026: "hook up the news app so the links go here instead"): from the news app,
+  // every way into a town's 3D model goes to its page there. (The beta pages keep their own, for trying changes.)
+  const EXPLORE_HOME = "https://ashley-pettit.github.io/3dModels/", exploreMoved = /^\/awesome-news\//.test(location.pathname) && !/\/beta\//.test(location.pathname);
+  const exploreSite = k => EXPLORE_HOME + ({ moo: "moorooka", logan: "logan", inv: "inverloch" }[k] || "inverloch") + "/explore/";
   function townModelOpen(viaExplore, which) {
     if (BS.town) return;
+    if (exploreMoved) { location.href = exploreSite(TOWNS[which] ? which : "inv"); return; }
     if (viaExplore) try { sessionStorage.setItem("an-ex-town", TOWNS[which] ? which : "inv"); } catch {}  // (for a reload mid-game: exReload)
     townAssetWatch();
     const cfg = TOWNS[which] || TOWNS.inv;
@@ -10747,7 +10752,7 @@ const handle = async (m, post) => {
       // the other towns, plain links (Ash, 15 November 2026: "In settings I want to be able to change from Logan to Inverloch and
       // moorooka. Nothing fancy. Just a hyperlink"): each opens that town's Explore page
       const towns = el("div", "bs-me-sec bs-me-towns"); towns.append(el("span", "bs-me-lbl", "Other towns"));
-      { const root = exploreLink().url.replace(/(\/awesome-news\/).*$/, "$1"), row = el("p", "");
+      { const root = EXPLORE_HOME, row = el("p", "");
         [["moo", "moorooka", "Moorooka"], ["inv", "inverloch", "Inverloch"], ["logan", "logan", "Logan"]].filter(([k]) => k !== T.cfg?.place).forEach(([k, dir, name], i) => {
           if (i) row.append(" \u00b7 "); const a = el("a", "", name); a.href = `${root}${dir}/explore/`;
           // swapped in place, not a new page (Ash, 15 November 2026: "When I click to another town I get the url at the top. I don't
@@ -12241,7 +12246,7 @@ const handle = async (m, post) => {
   // Rod, who lives in Inverloch, always gets Inverloch's.
   // Share: a direct link that opens Explore in this suburb (its own app: Inverloch, Moorooka or Logan)
   function exploreLink() { const k = BS.town?.cfg?.place || ({ invTown: "inv", invBeach: "inv", moo: "moo", mooBowls: "moo", logan: "logan" })[BS.sceneKey];
-    const root = /\/awesome-news\//.test(location.pathname) ? location.origin + location.pathname.replace(/(\/awesome-news\/).*$/, "$1") : "https://ashley-pettit.github.io/awesome-news/";
+    const root = EXPLORE_HOME;  // (Explore's own site: the old pages send people on there)
     const dir = { inv: "inverloch/", moo: "moorooka/", logan: "logan/" }[k] || "", name = { inv: "Inverloch", moo: "Moorooka", logan: "Logan" }[k];
     return { url: dir ? `${root}${dir}explore/` : `${root}#explore`, name }; }  // explore/: its own link preview (a picture of the model)
   // Share (Ash, 15 November 2026: "When I click share, immediately copy the url including explore. Then also allow the person to

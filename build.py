@@ -45,6 +45,18 @@ head = f"""<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<script>
+/* Explore has moved to its own site, https://ashley-pettit.github.io/3dModels/ (Ash, 16 November 2026: "add routing to the new pages
+   from the old ones"). An old Explore page (/<suburb>/explore/) or #explore link goes straight there, before the news loads. A plain
+   #explore on the main page is sent on by the app, which knows your area. Not the beta pages. */
+(function () {{ try {{
+  var p = location.pathname; if (!/^\/awesome-news\//.test(p) || /\/beta\//.test(p)) return;
+  var m = document.querySelector('meta[name="an-explore"]'), h = location.hash.slice(1),
+      area = /\/logan\//.test(p) ? "logan" : /\/moorooka\//.test(p) ? "moo" : /\/inverloch\//.test(p) ? "inv" : "";
+  var k = m ? m.content : h === "explore-logan" ? "logan" : h === "explore-moorooka" ? "moo" : h === "explore-inverloch" ? "inv" : h === "explore" ? area : "";
+  if (k) location.replace("https://ashley-pettit.github.io/3dModels/" + ({{ moo: "moorooka", logan: "logan", inv: "inverloch" }}[k] || "inverloch") + "/explore/");
+}} catch (e) {{}} }})();
+</script>
 <title>{title}</title>
 <meta name="description" content="{desc}">
 <link rel="canonical" href="{site_url}">
