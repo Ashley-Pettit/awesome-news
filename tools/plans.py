@@ -20,7 +20,9 @@ def ok(ev):
     if len(msg) > 4096: return False
     try: b = json.loads(msg)
     except Exception: return False
-    return isinstance(b, dict) and b.get("k") == "plan" and str(b.get("town")) in TOWNS and bool(str(b.get("id") or "").strip())
+    # (also a player's own key layout, k "keys", from the 3D Models app: kept so it can be merged into the main game later. Ash,
+    # 18 November 2026: "We'll need to save his layout so that in the future we can consider merging into the main game")
+    return isinstance(b, dict) and b.get("k") in ("plan", "keys") and str(b.get("town")) in TOWNS and bool(str(b.get("id") or "").strip())
 
 
 def archive(path):
